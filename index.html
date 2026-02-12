@@ -2,79 +2,107 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<title>Test Stamboom Visualisatie</title>
+<title>Stamboom Visualisatie - Hark Hiërarchie</title>
 <script src="https://d3js.org/d3.v7.min.js"></script>
+
 <style>
   body {
     font-family: Arial, sans-serif;
     margin: 20px;
   }
+
+  h2 {
+    margin-bottom: 10px;
+  }
+
+  #upload {
+    margin-bottom: 20px;
+  }
+
+  svg {
+    border: 1px solid #ccc;
+    background-color: #fafafa;
+  }
+
   .node rect {
     fill: #cce5ff;
     stroke: #333;
     stroke-width: 1px;
   }
+
   .node text {
     font-size: 12px;
-    text-anchor: middle;
+    pointer-events: none;
   }
+
   .link {
     fill: none;
     stroke: #555;
     stroke-width: 1.5px;
   }
-  #upload {
-    margin-bottom: 20px;
-  }
 </style>
 </head>
+
 <body>
 
-<h2>Stamboom Visualisatie (Test CSV)</h2>
+<h2>Stamboom Visualisatie (Hark Hiërarchie)</h2>
 <input type="file" id="upload" accept=".csv" />
-<svg width="1000" height="600"></svg>
+<svg width="1200" height="700"></svg>
 
 <script>
-// Helper: CSV parser conform multi-value structuur
+
+// ==========================
+// CSV Parser
+// ==========================
 function parseCSV(csvText) {
     const lines = csvText.split('\n').filter(l => l.trim() !== '');
     const header = lines[0].split(';').map(h => h.trim());
     const people = [];
 
-    for(let i=1; i<lines.length; i++){
+    for (let i = 1; i < lines.length; i++) {
         const cols = lines[i].split(';').map(c => c.trim());
         const person = {};
+
         header.forEach((colName, idx) => {
             let value = cols[idx] || '';
-            switch(colName){
+
+            switch (colName) {
                 case 'VaderID':
                 case 'MoederID':
-                    person[colName] = value.split('|').map(rel=>{
-                        const [id,type] = rel.split(':');
-                        return {ID: id?.trim()||null, Type: type?.trim()||null};
-                    });
+                    person[colName] = value
+                        ? value.split('|').map(rel => {
+                            const [id, type] = rel.split(':');
+                            return { ID: id?.trim() || null, Type: type?.trim() || null };
+                        })
+                        : [];
                     break;
+
                 default:
                     person[colName] = value || null;
             }
         });
+
         people.push(person);
     }
+
     return people;
 }
 
-// Maak boomdata (verticaal) voor D3
+// ==========================
+// Boomstructuur bouwen
+// ==========================
 function buildTree(people) {
     const peopleMap = {};
-    people.forEach(p => peopleMap[p.ID] = {...p, children: []});
+    people.forEach(p => peopleMap[p.ID] = { ...p, children: [] });
 
     let root = null;
 
     people.forEach(p => {
         const vaderID = p.VaderID?.[0]?.ID;
-        if(vaderID && peopleMap[vaderID]){
+
+        if (vaderID && peopleMap[vaderID]) {
             peopleMap[vaderID].children.push(peopleMap[p.ID]);
-        } else if(!root){
+        } else if (!root) {
             root = peopleMap[p.ID];
         }
     });
@@ -82,66 +110,102 @@ function buildTree(people) {
     return root;
 }
 
-// Visualisatie
+// ==========================
+// Hark Visualisatie
+// ==========================
 function drawTree(root) {
-    const svg = d3.select('svg');
-    svg.selectAll('*').remove();
 
-    const width = +svg.attr('width');
-    const height = +svg.attr('height');
+    const svg = d3.select("svg");
+    svg.selectAll("*").remove();
 
-    // Hark layout (horizontaal)
-    const treeLayout = d3.tree().size([height - 100, width - 200]);
+    const width = +svg.attr("width");
+    const height = +svg.attr("height");
+
+    const g = svg.append("g");
+
+    // Zoom & Pan
+    svg.call(
+        d3.zoom()
+            .scaleExtent([0.5, 2])
+            .on("zoom", (event) => {
+                g.attr("transform", event.transform);
+            })
+    );
+
+    // Layout (horizontale hark)
+    const treeLayout = d3.tree()
+        .size([height - 100, width - 300]);
 
     const hierarchyData = d3.hierarchy(root, d => d.children);
+
     treeLayout(hierarchyData);
 
-    // Links (gebogen horizontaal)
-    const linkGenerator = d3.linkHorizontal()
-        .x(d => d.y)
-        .y(d => d.x);
+    // Automatisch centreren
+    const xOffset = 50;
+    const yOffset = 100;
 
-    svg.selectAll('.link')
+    // Links (gebogen)
+    const linkGenerator = d3.linkHorizontal()
+        .x(d => d.y + yOffset)
+        .y(d => d.x + xOffset);
+
+    g.selectAll(".link")
         .data(hierarchyData.links())
         .enter()
-        .append('path')
-        .attr('class', 'link')
-        .attr('d', linkGenerator);
+        .append("path")
+        .attr("class", "link")
+        .attr("d", linkGenerator);
 
     // Nodes
-    const node = svg.selectAll('.node')
+    const node = g.selectAll(".node")
         .data(hierarchyData.descendants())
         .enter()
-        .append('g')
-        .attr('class', 'node')
-        .attr('transform', d => `translate(${d.y},${d.x})`);
+        .append("g")
+        .attr("class", "node")
+        .attr("transform", d => 
+            `translate(${d.y + yOffset},${d.x + xOffset})`
+        );
 
-    node.append('rect')
-        .attr('width', 120)
-        .attr('height', 35)
-        .attr('x', 0)
-        .attr('y', -17)
-        .attr('rx', 6)
-        .attr('ry', 6);
+    node.append("rect")
+        .attr("width", 140)
+        .attr("height", 40)
+        .attr("x", 0)
+        .attr("y", -20)
+        .attr("rx", 6)
+        .attr("ry", 6);
 
-    node.append('text')
-        .attr('x', 60)
-        .attr('dy', 5)
-        .text(d => d.data.Voornaam + ' ' + d.data.Achternaam);
+    node.append("text")
+        .attr("x", 70)
+        .attr("dy", 5)
+        .attr("text-anchor", "middle")
+        .text(d => `${d.data.Voornaam || ''} ${d.data.Achternaam || ''}`);
 }
-// Upload event
-document.getElementById('upload').addEventListener('change', function(e){
+
+// ==========================
+// Upload Event
+// ==========================
+document.getElementById("upload").addEventListener("change", function (e) {
+
     const file = e.target.files[0];
-    if(file){
+
+    if (file) {
         const reader = new FileReader();
-        reader.onload = function(evt){
+
+        reader.onload = function (evt) {
             const people = parseCSV(evt.target.result);
             const root = buildTree(people);
-            drawTree(root);
+
+            if (root) {
+                drawTree(root);
+            } else {
+                alert("Geen geldige root gevonden in CSV.");
+            }
         };
+
         reader.readAsText(file);
     }
 });
+
 </script>
 </body>
 </html>
