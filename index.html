@@ -15,20 +15,17 @@
 <body>
     <h1>Welkom op mijn website</h1>
     <p>Interactieve stamboom van CSV</p>
-
     <h2>CSV Upload</h2>
     <input type="file" id="csvFile" accept=".csv">
     <button onclick="handleFile()">Upload CSV</button>
 
     <h2>Visualisatie</h2>
     <svg id="tree" width="1000" height="600"></svg>
-
     <script>
         function handleFile() {
             const fileInput = document.getElementById('csvFile');
             const file = fileInput.files[0];
             if (!file) { alert("Selecteer eerst een CSV-bestand!"); return; }
-
             Papa.parse(file, {
                 header: true,
                 skipEmptyLines: true,
@@ -36,31 +33,25 @@
                     const data = results.data;
                     const idMap = {};
                     data.forEach(r => idMap[r.ID] = {...r, children: []});
-
-                    // Voeg kinderen toe
-                    data.forEach(r => {
-                        if (r.VaderID && idMap[r.VaderID]) idMap[r.VaderID].children.push(idMap[r.ID]);
-                        if (r.MoederID && idMap[r.MoederID]) idMap[r.MoederID].children.push(idMap[r.ID]);
-                    });
-
+                     // Voeg kinderen toe met check
+                      data.forEach(r => {
+                    if (r.VaderID && idMap[r.VaderID]) idMap[r.VaderID].children.push(idMap[r.ID]);
+                    if (r.MoederID && idMap[r.MoederID]) idMap[r.MoederID].children.push(idMap[r.ID]);
+                });
                     // Root personen (geen ouders)
                     const roots = data.filter(r => !r.VaderID && !r.MoederID).map(r => idMap[r.ID]);
-
                     // Maak één dummy root als er meerdere roots zijn
                     let root;
                     if (roots.length > 1) root = { Voornaam: "Root", Achternaam: "", children: roots };
                     else root = roots[0];
-
                     // D3 tree setup
                     d3.select("#tree").selectAll("*").remove(); // clear
                     const svg = d3.select("#tree"),
                           width = +svg.attr("width"),
                           height = +svg.attr("height");
-
                     const treeLayout = d3.tree().size([width - 200, height - 100]);
                     const rootNode = d3.hierarchy(root, d => d.children);
                     treeLayout(rootNode);
-
                     // Links
                     svg.selectAll('path.link')
                         .data(rootNode.links())
@@ -71,7 +62,6 @@
                             .x(d => d.x + 100)
                             .y(d => d.y + 50)
                         );
-
                     // Nodes
                     const node = svg.selectAll('g.node')
                         .data(rootNode.descendants())
@@ -87,7 +77,6 @@
                             if(d.data.Geslacht === 'V') return '#ff8c69';
                             return '#ccc';
                         });
-
                     node.append('text')
                         .attr('dy', 4)
                         .attr('x', d => 0)
