@@ -86,45 +86,49 @@ function buildTree(people) {
 function drawTree(root) {
     const svg = d3.select('svg');
     svg.selectAll('*').remove();
+
     const width = +svg.attr('width');
     const height = +svg.attr('height');
 
-    const treeLayout = d3.tree().size([width-100, height-100]);
+    // Hark layout (horizontaal)
+    const treeLayout = d3.tree().size([height - 100, width - 200]);
+
     const hierarchyData = d3.hierarchy(root, d => d.children);
     treeLayout(hierarchyData);
 
-    // Links
+    // Links (gebogen horizontaal)
+    const linkGenerator = d3.linkHorizontal()
+        .x(d => d.y)
+        .y(d => d.x);
+
     svg.selectAll('.link')
         .data(hierarchyData.links())
         .enter()
-        .append('line')
-        .classed('link', true)
-        .attr('x1', d => d.source.x + 50)
-        .attr('y1', d => d.source.y + 50)
-        .attr('x2', d => d.target.x + 50)
-        .attr('y2', d => d.target.y + 50);
+        .append('path')
+        .attr('class', 'link')
+        .attr('d', linkGenerator);
 
     // Nodes
     const node = svg.selectAll('.node')
         .data(hierarchyData.descendants())
         .enter()
         .append('g')
-        .classed('node', true)
-        .attr('transform', d => `translate(${d.x},${d.y})`);
+        .attr('class', 'node')
+        .attr('transform', d => `translate(${d.y},${d.x})`);
 
     node.append('rect')
-        .attr('width', 100)
-        .attr('height', 30)
-        .attr('x', -50)
-        .attr('y', -15)
-        .attr('rx', 5)
-        .attr('ry', 5);
+        .attr('width', 120)
+        .attr('height', 35)
+        .attr('x', 0)
+        .attr('y', -17)
+        .attr('rx', 6)
+        .attr('ry', 6);
 
     node.append('text')
-        .text(d => d.data.Voornaam + ' ' + d.data.Achternaam)
-        .attr('dy', 4);
+        .attr('x', 60)
+        .attr('dy', 5)
+        .text(d => d.data.Voornaam + ' ' + d.data.Achternaam);
 }
-
 // Upload event
 document.getElementById('upload').addEventListener('change', function(e){
     const file = e.target.files[0];
