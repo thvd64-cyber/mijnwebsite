@@ -1,104 +1,143 @@
 <!DOCTYPE html>
-<html>
+<html lang="nl">
 <head>
-    <title>Mijn Website - Interactieve Stamboom</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        h1, h2 { color: #333; }
-        .node circle { fill: #69b3a2; stroke: steelblue; stroke-width: 2px; }
-        .node text { font: 12px sans-serif; }
-        .link { fill: none; stroke: #ccc; stroke-width: 2px; }
-    </style>
+<meta charset="UTF-8">
+<title>Test Stamboom Visualisatie</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+  }
+  .node rect {
+    fill: #cce5ff;
+    stroke: #333;
+    stroke-width: 1px;
+  }
+  .node text {
+    font-size: 12px;
+    text-anchor: middle;
+  }
+  .link {
+    fill: none;
+    stroke: #555;
+    stroke-width: 1.5px;
+  }
+  #upload {
+    margin-bottom: 20px;
+  }
+</style>
 </head>
 <body>
-    <h1>Welkom op mijn website</h1>
-    <p>Interactieve stamboom van CSV</p>
-    <h2>CSV Upload</h2>
-    <input type="file" id="csvFile" accept=".csv">
-    <button onclick="handleFile()">Upload CSV</button>
 
-    <h2>Visualisatie</h2>
-    <svg id="tree" width="1000" height="600"></svg>
-    <script>
-        function handleFile() {
-            const fileInput = document.getElementById('csvFile');
-            const file = fileInput.files[0];
-            if (!file) { alert("Selecteer eerst een CSV-bestand!"); return; }
-           Papa.parse(file, {
-    header: true,
-    skipEmptyLines: true,
-    complete: function(results) {
-        const data = results.data.filter(r => r.ID && r.Voornaam); // filter lege regels
-        const idMap = {};
-        data.forEach(r => { idMap[r.ID] = {...r, children: []}; });
+<h2>Stamboom Visualisatie (Test CSV)</h2>
+<input type="file" id="upload" accept=".csv" />
+<svg width="1000" height="600"></svg>
 
-        // Voeg kinderen toe **veilig**
-        data.forEach(r => {
-            if (r.VaderID && idMap[r.VaderID]) {
-                idMap[r.VaderID].children.push(idMap[r.ID]);
-            }
-            if (r.MoederID && idMap[r.MoederID]) {
-                idMap[r.MoederID].children.push(idMap[r.ID]);
+<script>
+// Helper: CSV parser conform multi-value structuur
+function parseCSV(csvText) {
+    const lines = csvText.split('\n').filter(l => l.trim() !== '');
+    const header = lines[0].split(';').map(h => h.trim());
+    const people = [];
+
+    for(let i=1; i<lines.length; i++){
+        const cols = lines[i].split(';').map(c => c.trim());
+        const person = {};
+        header.forEach((colName, idx) => {
+            let value = cols[idx] || '';
+            switch(colName){
+                case 'VaderID':
+                case 'MoederID':
+                    person[colName] = value.split('|').map(rel=>{
+                        const [id,type] = rel.split(':');
+                        return {ID: id?.trim()||null, Type: type?.trim()||null};
+                    });
+                    break;
+                default:
+                    person[colName] = value || null;
             }
         });
+        people.push(person);
+    }
+    return people;
+}
 
-        // Root-personen (geen ouders of ouders niet gevonden)
-        let roots = data.filter(r => !r.VaderID && !r.MoederID || (!idMap[r.VaderID] && !idMap[r.MoederID]))
-                        .map(r => idMap[r.ID]);
+// Maak boomdata (verticaal) voor D3
+function buildTree(people) {
+    const peopleMap = {};
+    people.forEach(p => peopleMap[p.ID] = {...p, children: []});
 
-        // Dummy root als er meerdere roots zijn
-        let root;
-        if (roots.length > 1) root = { Voornaam: "Root", Achternaam: "", children: roots };
-        else if (roots.length === 1) root = roots[0];
-        else root = { Voornaam: "Root", Achternaam: "", children: [] }; // altijd een root
+    let root = null;
 
-        // D3 tree code blijft hetzelfde
-        d3.select("#tree").selectAll("*").remove(); // clear
-        const svg = d3.select("#tree"),
-              width = +svg.attr("width"),
-              height = +svg.attr("height");
+    people.forEach(p => {
+        const vaderID = p.VaderID?.[0]?.ID;
+        if(vaderID && peopleMap[vaderID]){
+            peopleMap[vaderID].children.push(peopleMap[p.ID]);
+        } else if(!root){
+            root = peopleMap[p.ID];
+        }
+    });
 
-        const treeLayout = d3.tree().size([width - 200, height - 100]);
-        const rootNode = d3.hierarchy(root, d => d.children);
-        treeLayout(rootNode);
+    return root;
+}
 
-        // Links
-        svg.selectAll('path.link')
-            .data(rootNode.links())
-            .enter()
-            .append('path')
-            .attr('class','link')
-            .attr('d', d3.linkVertical()
-                .x(d => d.x + 100)
-                .y(d => d.y + 50)
-            );
+// Visualisatie
+function drawTree(root) {
+    const svg = d3.select('svg');
+    svg.selectAll('*').remove();
+    const width = +svg.attr('width');
+    const height = +svg.attr('height');
 
-        // Nodes
-        const node = svg.selectAll('g.node')
-            .data(rootNode.descendants())
-            .enter()
-            .append('g')
-            .attr('class','node')
-            .attr('transform', d => `translate(${d.x + 100},${d.y + 50})`);
+    const treeLayout = d3.tree().size([width-100, height-100]);
+    const hierarchyData = d3.hierarchy(root, d => d.children);
+    treeLayout(hierarchyData);
 
-        node.append('circle')
-            .attr('r', 20)
-            .attr('fill', d => {
-                if(d.data.Geslacht === 'M') return '#69b3a2';
-                if(d.data.Geslacht === 'V') return '#ff8c69';
-                return '#ccc';
-            });
+    // Links
+    svg.selectAll('.link')
+        .data(hierarchyData.links())
+        .enter()
+        .append('line')
+        .classed('link', true)
+        .attr('x1', d => d.source.x + 50)
+        .attr('y1', d => d.source.y + 50)
+        .attr('x2', d => d.target.x + 50)
+        .attr('y2', d => d.target.y + 50);
 
-        node.append('text')
-            .attr('dy', 4)
-            .attr('x', 0)
-            .attr('text-anchor', 'middle')
-            .text(d => d.data.Voornaam + " " + d.data.Achternaam);
+    // Nodes
+    const node = svg.selectAll('.node')
+        .data(hierarchyData.descendants())
+        .enter()
+        .append('g')
+        .classed('node', true)
+        .attr('transform', d => `translate(${d.x},${d.y})`);
+
+    node.append('rect')
+        .attr('width', 100)
+        .attr('height', 30)
+        .attr('x', -50)
+        .attr('y', -15)
+        .attr('rx', 5)
+        .attr('ry', 5);
+
+    node.append('text')
+        .text(d => d.data.Voornaam + ' ' + d.data.Achternaam)
+        .attr('dy', 4);
+}
+
+// Upload event
+document.getElementById('upload').addEventListener('change', function(e){
+    const file = e.target.files[0];
+    if(file){
+        const reader = new FileReader();
+        reader.onload = function(evt){
+            const people = parseCSV(evt.target.result);
+            const root = buildTree(people);
+            drawTree(root);
+        };
+        reader.readAsText(file);
     }
 });
-        }
-    </script>
+</script>
 </body>
 </html>
