@@ -6,5 +6,29 @@
 <body>
     <h1>Welkom op mijn website</h1>
     <p>Dit is mijn eerste GitHub website.</p>
+
+    <h2>CSV Upload</h2>
+    <input type="file" id="csvFile" accept=".csv">
+    <button onclick="handleFile()">Upload CSV</button>
+
+    <h2>Visualisatie</h2>
+    <pre id="output"></pre>
+
+    <script>
+        function handleFile() {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("Selecteer eerst een CSV-bestand!");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                document.getElementById('output').textContent = text;
+            };
+            reader.readAsText(file);
+        }
+    </script>
 </body>
 </html>
