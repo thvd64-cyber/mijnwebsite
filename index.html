@@ -32,3 +32,42 @@
     </script>
 </body>
 </html>
+<script src="https://cdn.jsdelivr.net/npm/graphlib@2.1.8/dist/graphlib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script>
+    function handleFile() {
+        const fileInput = document.getElementById('csvFile');
+        const file = fileInput.files[0];
+        if (!file) {
+            alert("Selecteer eerst een CSV-bestand!");
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const text = e.target.result;
+            const rows = text.split("\n").map(r => r.split(","));
+            const headers = rows[0];
+            const data = rows.slice(1).filter(r => r.length >= 19);
+
+            // Eenvoudige hiërarchie: ouder -> kind
+            let outputHtml = "<ul>";
+            const idMap = {};
+            data.forEach(row => {
+                idMap[row[0]] = row; // ID -> rij
+            });
+
+            data.forEach(row => {
+                const vader = row[10];
+                const moeder = row[11];
+                if (!vader && !moeder) {
+                    // root personen
+                    outputHtml += `<li>${row[1]} ${row[4]} (${row[5]})</li>`;
+                }
+            });
+            outputHtml += "</ul>";
+
+            document.getElementById('output').innerHTML = outputHtml;
+        };
+        reader.readAsText(file);
+    }
+</script>
