@@ -1,35 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Mijn Website - Stamboom</title>
+    <title>Mijn Website - Interactieve Stamboom</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         h1, h2 { color: #333; }
-        ul { list-style-type: none; }
-        li { margin: 5px 0; }
-        .person { margin-left: 20px; }
+        .node circle { fill: #69b3a2; stroke: steelblue; stroke-width: 2px; }
+        .node text { font: 12px sans-serif; }
+        .link { fill: none; stroke: #ccc; stroke-width: 2px; }
     </style>
 </head>
 <body>
     <h1>Welkom op mijn website</h1>
-    <p>Dit is mijn eerste GitHub website met CSV stamboom visualisatie.</p>
+    <p>Interactieve stamboom van CSV</p>
 
     <h2>CSV Upload</h2>
     <input type="file" id="csvFile" accept=".csv">
     <button onclick="handleFile()">Upload CSV</button>
 
     <h2>Visualisatie</h2>
-    <div id="output"></div>
+    <svg id="tree" width="1000" height="600"></svg>
 
     <script>
         function handleFile() {
             const fileInput = document.getElementById('csvFile');
             const file = fileInput.files[0];
-            if (!file) {
-                alert("Selecteer eerst een CSV-bestand!");
-                return;
-            }
+            if (!file) { alert("Selecteer eerst een CSV-bestand!"); return; }
 
             Papa.parse(file, {
                 header: true,
@@ -37,40 +35,67 @@
                 complete: function(results) {
                     const data = results.data;
                     const idMap = {};
-                    data.forEach(row => { idMap[row.ID] = row; });
+                    data.forEach(r => idMap[r.ID] = {...r, children: []});
 
-                    // functie om kinderen van een persoon te vinden
-                    function getChildren(parentID) {
-                        return data.filter(r => r.VaderID === parentID || r.MoederID === parentID);
-                    }
-
-                    // bouw boom HTML
-                    function buildTreeHTML(person) {
-                        let html = `<li>${person.Voornaam} ${person.Achternaam} (${person.Geslacht})`;
-                        const children = getChildren(person.ID);
-                        if (children.length > 0) {
-                            html += "<ul>";
-                            children.forEach(child => { html += buildTreeHTML(child); });
-                            html += "</ul>";
-                        }
-                        html += "</li>";
-                        return html;
-                    }
-
-                    // begin bij root-personen (zonder vader & moeder)
-                    let outputHtml = "<ul>";
-                    data.forEach(person => {
-                        if (!person.VaderID && !person.MoederID) {
-                            outputHtml += buildTreeHTML(person);
-                        }
+                    // Voeg kinderen toe
+                    data.forEach(r => {
+                        if (r.VaderID && idMap[r.VaderID]) idMap[r.VaderID].children.push(idMap[r.ID]);
+                        if (r.MoederID && idMap[r.MoederID]) idMap[r.MoederID].children.push(idMap[r.ID]);
                     });
-                    outputHtml += "</ul>";
 
-                    document.getElementById('output').innerHTML = outputHtml;
+                    // Root personen (geen ouders)
+                    const roots = data.filter(r => !r.VaderID && !r.MoederID).map(r => idMap[r.ID]);
+
+                    // Maak één dummy root als er meerdere roots zijn
+                    let root;
+                    if (roots.length > 1) root = { Voornaam: "Root", Achternaam: "", children: roots };
+                    else root = roots[0];
+
+                    // D3 tree setup
+                    d3.select("#tree").selectAll("*").remove(); // clear
+                    const svg = d3.select("#tree"),
+                          width = +svg.attr("width"),
+                          height = +svg.attr("height");
+
+                    const treeLayout = d3.tree().size([width - 200, height - 100]);
+                    const rootNode = d3.hierarchy(root, d => d.children);
+                    treeLayout(rootNode);
+
+                    // Links
+                    svg.selectAll('path.link')
+                        .data(rootNode.links())
+                        .enter()
+                        .append('path')
+                        .attr('class','link')
+                        .attr('d', d3.linkVertical()
+                            .x(d => d.x + 100)
+                            .y(d => d.y + 50)
+                        );
+
+                    // Nodes
+                    const node = svg.selectAll('g.node')
+                        .data(rootNode.descendants())
+                        .enter()
+                        .append('g')
+                        .attr('class','node')
+                        .attr('transform', d => `translate(${d.x + 100},${d.y + 50})`);
+
+                    node.append('circle')
+                        .attr('r', 20)
+                        .attr('fill', d => {
+                            if(d.data.Geslacht === 'M') return '#69b3a2';
+                            if(d.data.Geslacht === 'V') return '#ff8c69';
+                            return '#ccc';
+                        });
+
+                    node.append('text')
+                        .attr('dy', 4)
+                        .attr('x', d => 0)
+                        .attr('text-anchor', 'middle')
+                        .text(d => d.data.Voornaam + " " + d.data.Achternaam);
                 }
             });
         }
     </script>
 </body>
 </html>
-
