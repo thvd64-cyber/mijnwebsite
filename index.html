@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<title>Test Stamboom Visualisatie</title>
+<title>Stamboom Visualisatie</title>
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <style>
   body {
@@ -13,18 +13,28 @@
     fill: #cce5ff;
     stroke: #333;
     stroke-width: 1px;
+    rx: 5;
+    ry: 5;
   }
   .node text {
     font-size: 12px;
     text-anchor: middle;
+    dominant-baseline: middle;
   }
   .link {
     fill: none;
     stroke: #555;
     stroke-width: 1.5px;
   }
+  svg {
+    border: 1px solid #ccc;
+    overflow: visible;
+  }
   #upload {
     margin-bottom: 20px;
+  }
+  #orientation {
+    margin-left: 10px;
   }
 </style>
 </head>
@@ -32,10 +42,15 @@
 
 <h2>Stamboom Visualisatie (Test CSV)</h2>
 <input type="file" id="upload" accept=".csv" />
-<svg width="1000" height="600"></svg>
+<label for="orientation">Layout:</label>
+<select id="orientation">
+  <option value="vertical" selected>Verticaal</option>
+  <option value="horizontal">Horizontaal</option>
+</select>
+<svg width="1200" height="800"></svg>
 
 <script>
-// Helper: CSV parser conform multi-value structuur
+// CSV parser
 function parseCSV(csvText) {
     const lines = csvText.split('\n').filter(l => l.trim() !== '');
     const header = lines[0].split(';').map(h => h.trim());
@@ -45,25 +60,14 @@ function parseCSV(csvText) {
         const cols = lines[i].split(';').map(c => c.trim());
         const person = {};
         header.forEach((colName, idx) => {
-            let value = cols[idx] || '';
-            switch(colName){
-                case 'VaderID':
-                case 'MoederID':
-                    person[colName] = value.split('|').map(rel=>{
-                        const [id,type] = rel.split(':');
-                        return {ID: id?.trim()||null, Type: type?.trim()||null};
-                    });
-                    break;
-                default:
-                    person[colName] = value || null;
-            }
+            person[colName] = cols[idx] || null;
         });
         people.push(person);
     }
     return people;
 }
 
-// Maak boomdata (verticaal) voor D3
+// Bouw boomdata
 function buildTree(people) {
     const peopleMap = {};
     people.forEach(p => peopleMap[p.ID] = {...p, children: []});
@@ -71,7 +75,7 @@ function buildTree(people) {
     let root = null;
 
     people.forEach(p => {
-        const vaderID = p.VaderID?.[0]?.ID;
+        const vaderID = p.VaderID ? p.VaderID.split('|')[0].split(':')[0] : null;
         if(vaderID && peopleMap[vaderID]){
             peopleMap[vaderID].children.push(peopleMap[p.ID]);
         } else if(!root){
@@ -83,13 +87,16 @@ function buildTree(people) {
 }
 
 // Visualisatie
-function drawTree(root) {
+function drawTree(root, orientation='vertical') {
     const svg = d3.select('svg');
     svg.selectAll('*').remove();
     const width = +svg.attr('width');
     const height = +svg.attr('height');
 
-    const treeLayout = d3.tree().size([width-100, height-100]);
+    const treeLayout = d3.tree().size(
+        orientation === 'vertical' ? [width-100, height-100] : [height-100, width-100]
+    );
+
     const hierarchyData = d3.hierarchy(root, d => d.children);
     treeLayout(hierarchyData);
 
@@ -99,10 +106,10 @@ function drawTree(root) {
         .enter()
         .append('line')
         .classed('link', true)
-        .attr('x1', d => d.source.x + 50)
-        .attr('y1', d => d.source.y + 50)
-        .attr('x2', d => d.target.x + 50)
-        .attr('y2', d => d.target.y + 50);
+        .attr('x1', d => orientation==='vertical' ? d.source.x + 50 : d.source.y + 50)
+        .attr('y1', d => orientation==='vertical' ? d.source.y + 50 : d.source.x + 50)
+        .attr('x2', d => orientation==='vertical' ? d.target.x + 50 : d.target.y + 50)
+        .attr('y2', d => orientation==='vertical' ? d.target.y + 50 : d.target.x + 50);
 
     // Nodes
     const node = svg.selectAll('.node')
@@ -110,19 +117,24 @@ function drawTree(root) {
         .enter()
         .append('g')
         .classed('node', true)
-        .attr('transform', d => `translate(${d.x},${d.y})`);
+        .attr('transform', d => orientation==='vertical' ? `translate(${d.x},${d.y})` : `translate(${d.y},${d.x})`);
+
+    // Dynamische breedte op basis van naam
+    node.each(function(d){
+        const textLength = d.data.Voornaam.length + d.data.Achternaam.length;
+        d.rectWidth = Math.max(60, textLength*6); // min 60px, schaal 6px per karakter
+    });
 
     node.append('rect')
-        .attr('width', 100)
-        .attr('height', 30)
-        .attr('x', -50)
+        .attr('x', d => -d.rectWidth/2)
         .attr('y', -15)
-        .attr('rx', 5)
-        .attr('ry', 5);
+        .attr('width', d => d.rectWidth)
+        .attr('height', 30);
 
     node.append('text')
         .text(d => d.data.Voornaam + ' ' + d.data.Achternaam)
-        .attr('dy', 4);
+        .attr('dy', 0)
+        .attr('text-anchor', 'middle');
 }
 
 // Upload event
@@ -133,9 +145,20 @@ document.getElementById('upload').addEventListener('change', function(e){
         reader.onload = function(evt){
             const people = parseCSV(evt.target.result);
             const root = buildTree(people);
-            drawTree(root);
+            const orientation = document.getElementById('orientation').value;
+            drawTree(root, orientation);
         };
         reader.readAsText(file);
+    }
+});
+
+// Orientation change
+document.getElementById('orientation').addEventListener('change', function(){
+    const svg = d3.select('svg');
+    const people = window.currentPeople;
+    if(people){
+        const root = buildTree(people);
+        drawTree(root, this.value);
     }
 });
 </script>
