@@ -1,1 +1,2 @@
-console.log("Website loaded");
+// Plaats hier toekomstige interactiviteit
+console.log("Mijn Stamboom website geladen!");
