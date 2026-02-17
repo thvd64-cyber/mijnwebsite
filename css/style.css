@@ -82,4 +82,58 @@ main {
 .menu li:hover > .submenu {
     display: block;
 }
+/* Header styling */
+header {
+    background-color: #004080; /* blauwe balk */
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Hoofd navigatie */
+nav ul.menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 1rem;
+}
+
+nav ul.menu > li {
+    position: relative;
+}
+
+nav ul.menu a {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    display: block;
+}
+
+nav li.dropdown > a {
+    cursor: pointer;
+}
+
+/* Submenu / dropdown */
+nav ul.submenu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #004080;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-radius: 4px;
+    min-width: 150px;
+    z-index: 1000;
+}
+
+nav ul.submenu li a {
+    padding: 0.5rem 1rem;
+}
+
+/* D*
 
