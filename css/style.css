@@ -181,3 +181,10 @@ nav ul.submenu li a {
 .top-right a:hover {
     text-decoration: underline;  /* hover effect */
 }
+
+/* Actieve taal highlight */
+.topbar a.active {
+    font-weight: 700;           /* vetgedrukt */
+    text-decoration: underline;  /* optioneel: onderlijning */
+    color: #004080;             /* donkerblauw, past bij header */
+}
