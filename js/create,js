@@ -13,6 +13,7 @@ function generateID() {
 // Voeg persoon toe
 form.addEventListener('submit', function(e){
     e.preventDefault();
+    
     const person = {
         ID: generateID(),
         voornaam: document.getElementById('voornaam').value,
@@ -22,9 +23,23 @@ form.addEventListener('submit', function(e){
         ouderID: null,
         partnerID: null
     };
-    stamboomData.push(person);
+
+    // Als er nog geen stamboomData is, slaan we dit als rootPerson op
+    if(stamboomData.length === 0){
+        const rootPerson = person;
+        stamboomData = [rootPerson]; // start array met rootPerson
+    } else {
+        // anders gewoon toevoegen
+        stamboomData.push(person);
+    }
+
+    // Opslaan in localStorage
     localStorage.setItem('stamboomData', JSON.stringify(stamboomData));
+
+    // Render preview
     renderStamboom();
+
+    // Reset form
     form.reset();
 });
 
@@ -45,4 +60,3 @@ function renderStamboom(){
 
 // Init render
 renderStamboom();
-
