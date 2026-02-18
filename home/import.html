@@ -2,47 +2,46 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <title>Stamboom - Import</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import CSV - MyFamTreeCollab</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
 
-    <!-- ============================= -->
-    <!-- Blauwe navigatiebalk (root)   -->
-    <!-- ============================= -->
-    <nav class="navbar">
-        <div class="nav-left">
-            <a href="../index.html">Home</a>
-            <a href="../create.html">Create</a>
-            <a href="../manage.html">Manage</a>
-            <a href="../view.html">Tree View</a>
-            <a href="import.html">Import</a>
+<!-- Topbar -->
+<div class="topbar">
+    <div class="topbar-content">
+        <div class="top-left">
+            <a href="#">Login</a>
         </div>
-    </nav>
-
-    <!-- ============================= -->
-    <!-- Import Sectie                 -->
-    <!-- ============================= -->
-
-    <div class="container">
-        <h2>Importeer Stamboom CSV</h2>
-
-        <p>
-            Selecteer een CSV bestand met de juiste kolomstructuur.
-        </p>
-
-        <input type="file" id="csvFile" accept=".csv">
-        <br><br>
-        <button id="importBtn">Importeer CSV</button>
-
-        <br><br>
-        <p id="importStatus"></p>
+        <div class="top-right">
+            <a href="import.html" class="active">NL</a> | 
+            <a href="import-en.html">EN</a>
+        </div>
     </div>
+</div>
 
-    <!-- ============================= -->
-    <!-- JavaScript                    -->
-    <!-- ============================= -->
-    <script src="../js/import.js"></script>
+<header>
+    <h1>Import CSV</h1>
+    <p>Gebruik een CSV-bestand om personen toe te voegen aan uw stamboom. Taal en kolomnamen worden genegeerd.</p>
+</header>
 
+<main>
+    <section>
+        <label for="csvFileInput">Selecteer CSV-bestand:</label>
+        <input type="file" id="csvFileInput" accept=".csv">
+        <p id="importStatus"></p>
+    </section>
+
+    <section>
+        <p>Na het importeren kunt u de gegevens bekijken in <a href="../stamboom/view.html">View</a> of bewerken in <a href="../stamboom/manage.html">Manage</a>.</p>
+    </section>
+</main>
+
+<footer>
+    <p>&copy; 2026 MyFamTreeCollab website</p>
+</footer>
+
+<script src="../js/import.js"></script>
 </body>
 </html>
