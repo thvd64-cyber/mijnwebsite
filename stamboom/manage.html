@@ -8,13 +8,14 @@
     <link rel="stylesheet" href="../css/style.css">
     <style>
         /* Kleurcodes per relatie */
-        .ouders { background-color: #008080; color: white; }       /* Teal blauw */
-        .hoofd-id { background-color: #FFD700; }                  /* Geel */
-        .partner { background-color: #d3d3d3; }                   /* Lichtgrijs */
-        .kind { background-color: #90EE90; }                      /* Lichtgroen */
-        .ex-partner { background-color: #A9A9A9; }               /* Donkergrijs */
-        .broerzus { background-color: #FFFDD0; }                  /* Crème */
-        .partner-kind { background-color: #D8BFD8; }              /* Lichtpaars */
+        .ouders { background-color: #008080; color: white; }
+        .hoofd-id { background-color: #FFD700; }
+        .partner { background-color: #d3d3d3; }
+        .kind { background-color: #90EE90; }
+        .ex-partner { background-color: #A9A9A9; }
+        .broerzus { background-color: #FFFDD0; }
+        .partner-kind { background-color: #D8BFD8; }
+
         table { border-collapse: collapse; width: 100%; margin-top: 20px; }
         th, td { border: 1px solid #999; padding: 5px; text-align: left; }
         th { background-color: #eee; }
@@ -25,28 +26,25 @@
 
 <body>
 
-    <!-- ======================= NAVBAR ======================= -->
+    <!-- NAVBAR -->
     <div id="navbar"></div>
     <script>
         fetch('../navbar.html')
             .then(response => response.text())
-            .then(data => {
-                document.getElementById('navbar').innerHTML = data;
-            });
+            .then(data => document.getElementById('navbar').innerHTML = data);
     </script>
 
-    <!-- ======================= MAIN CONTENT ======================= -->
+    <!-- MAIN -->
     <main>
         <h2>Manage Stamboom</h2>
         <p>Laad een persoon via ID of naam om de tweede graad familie te beheren.</p>
 
-        <!-- Zoekbalk -->
         <input type="text" id="searchPerson" placeholder="Voer ID of naam in">
         <button id="loadBtn">Laad Persoon</button>
         <button id="refreshBtn" class="btn">Refresh</button>
         <button id="saveBtn" class="btn">Opslaan</button>
+        <button id="addBtn" class="btn">+ Toevoegen</button>
 
-        <!-- Tabel voor Manage -->
         <table id="manageTable">
             <thead>
                 <tr>
@@ -76,19 +74,17 @@
         </table>
     </main>
 
-    <!-- ======================= SCRIPT ======================= -->
+    <!-- SCRIPT -->
     <script src="../js/idGenerator.js"></script>
     <script>
-        // Haal bestaande stamboom data op uit localStorage
         let stamboomData = JSON.parse(localStorage.getItem('stamboomData') || '[]');
-
         const tableBody = document.querySelector('#manageTable tbody');
         const loadBtn = document.getElementById('loadBtn');
         const searchInput = document.getElementById('searchPerson');
         const saveBtn = document.getElementById('saveBtn');
         const refreshBtn = document.getElementById('refreshBtn');
+        const addBtn = document.getElementById('addBtn');
 
-        // Functie om de juiste klasse voor kleurcodering te bepalen
         function getRowClass(p) {
             switch (p.Relatie) {
                 case 'Ouder': return 'ouders';
@@ -102,7 +98,6 @@
             }
         }
 
-        // Relatie automatisch toevoegen als ontbreekt
         function ensureRelationship(person) {
             if (!person.Relatie) {
                 if (!person.VaderID && !person.MoederID) person.Relatie = 'Hoofd-ID';
@@ -111,7 +106,6 @@
             }
         }
 
-        // Render functie
         function renderTable(filteredData) {
             tableBody.innerHTML = '';
             filteredData.forEach(p => {
@@ -119,7 +113,6 @@
                 const tr = document.createElement('tr');
                 tr.className = getRowClass(p);
 
-                // Loop door de velden
                 const fields = ['Relatie','ID','Doopnaam','Roepnaam','Prefix','Achternaam','Geslacht',
                     'Geboortedatum','Geboorteplaats','Overlijdensdatum','Overlijdensplaats',
                     'VaderID','MoederID','PartnerID','Huwelijksdatum','Huwelijksplaats','Opmerkingen','Adres','ContactInfo','URL'];
@@ -131,9 +124,7 @@
                     } else {
                         const input = document.createElement('input');
                         input.value = p[f] || '';
-                        input.addEventListener('change', e => {
-                            p[f] = e.target.value;
-                        });
+                        input.addEventListener('change', e => { p[f] = e.target.value; });
                         td.appendChild(input);
                     }
                     tr.appendChild(td);
@@ -143,7 +134,6 @@
             });
         }
 
-        // Functie om persoon te zoeken op ID of naam
         function loadPerson() {
             const term = searchInput.value.toLowerCase();
             const filtered = stamboomData.filter(p =>
@@ -151,14 +141,10 @@
                 p.Roepnaam?.toLowerCase() === term ||
                 p.Doopnaam?.toLowerCase() === term
             );
-            if (filtered.length === 0) {
-                alert('Persoon niet gevonden');
-            } else {
-                renderTable(filtered);
-            }
+            if (filtered.length === 0) alert('Persoon niet gevonden');
+            else renderTable(filtered);
         }
 
-        // Save functie voor alle wijzigingen
         function saveData() {
             tableBody.querySelectorAll('tr').forEach(tr => {
                 const tds = tr.querySelectorAll('td');
@@ -167,49 +153,41 @@
                     'VaderID','MoederID','PartnerID','Huwelijksdatum','Huwelijksplaats','Opmerkingen','Adres','ContactInfo','URL'];
                 let p = {};
                 tds.forEach((td, i) => {
-                    if (fields[i] === 'ID' || fields[i] === 'Relatie') {
-                        p[fields[i]] = td.textContent;
-                    } else {
-                        p[fields[i]] = td.querySelector('input').value;
-                    }
+                    if (fields[i] === 'ID' || fields[i] === 'Relatie') p[fields[i]] = td.textContent;
+                    else p[fields[i]] = td.querySelector('input').value;
                 });
-                // ID genereren als ontbreekt
-                if (!p.ID) {
-                    try {
-                        p.ID = idGenerator(p.Doopnaam, p.Roepnaam, p.Achternaam, p.Geslacht || 'X');
-                    } catch (err) {
-                        p.ID = 'X000000';
-                    }
+                if (!p.ID) { 
+                    try { p.ID = idGenerator(p.Doopnaam, p.Roepnaam, p.Achternaam, p.Geslacht || 'X'); }
+                    catch { p.ID = 'X000000'; }
                 }
-                // Relatie check
                 ensureRelationship(p);
-                // Check of ID al bestaat
                 const idx = stamboomData.findIndex(x => x.ID === p.ID);
-                if (idx !== -1) {
-                    stamboomData[idx] = p; // Update bestaande persoon
-                } else {
-                    stamboomData.push(p); // Voeg nieuwe persoon toe
-                }
+                if (idx !== -1) stamboomData[idx] = p;
+                else stamboomData.push(p);
             });
             localStorage.setItem('stamboomData', JSON.stringify(stamboomData));
             alert('Wijzigingen opgeslagen!');
         }
 
-        // Refresh functie
         function refreshTable() {
             const term = searchInput.value.toLowerCase();
-            if (!term && stamboomData.length > 0) {
-                renderTable([stamboomData[0]]);
-            } else {
-                loadPerson();
-            }
+            if (!term && stamboomData.length > 0) renderTable([stamboomData[0]]);
+            else loadPerson();
+        }
+
+        // Voeg lege rij toe
+        function addNewPerson() {
+            const emptyPerson = { Relatie:'Hoofd-ID', ID:'', Doopnaam:'', Roepnaam:'', Prefix:'', Achternaam:'', Geslacht:'', 
+                Geboortedatum:'', Geboorteplaats:'', Overlijdensdatum:'', Overlijdensplaats:'',
+                VaderID:'', MoederID:'', PartnerID:'', Huwelijksdatum:'', Huwelijksplaats:'', Opmerkingen:'', Adres:'', ContactInfo:'', URL:'' };
+            renderTable([emptyPerson].concat(stamboomData));
         }
 
         loadBtn.addEventListener('click', loadPerson);
         saveBtn.addEventListener('click', saveData);
         refreshBtn.addEventListener('click', refreshTable);
+        addBtn.addEventListener('click', addNewPerson);
 
-        // Init render (toon eerste persoon als voorbeeld)
         if (stamboomData.length > 0) renderTable([stamboomData[0]]);
     </script>
 </body>
