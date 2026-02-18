@@ -2,77 +2,47 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV Template Download - MyFamTreeCollab</title>
+    <title>CSV Example - MyFamTreeCollab</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-    <header>
-        <h1>CSV Template for MyFamTreeCollab</h1>
-        <p>Use this file as an example for importing family tree data.</p>
-    </header>
 
-    <main>
-        <button id="downloadTemplateBtn" class="btn">Download CSV Template</button>
-        <p id="status"></p>
-    </main>
+<header>
+    <h1>CSV Example File</h1>
+    <p>Use this file to import family tree data into MyFamTreeCollab. All column names are recognized, language does not matter.</p>
+</header>
 
-    <footer>
-        <p>&copy; 2026 MyFamTreeCollab website</p>
-    </footer>
+<main>
+    <button id="downloadBtn">Download CSV Example</button>
+    <p id="status"></p>
+</main>
 
-    <script>
-        document.getElementById("downloadTemplateBtn").addEventListener("click", function() {
+<footer>
+    <p>&copy; 2026 MyFamTreeCollab website</p>
+</footer>
 
-            const headers = [
-                "ID",
-                "Doopnaam",
-                "Roepnaam",
-                "Prefix",
-                "Achternaam",
-                "Geslacht",
-                "Geboortedatum",
-                "Geboorteplaats",
-                "Overlijdensdatum",
-                "Overlijdensplaats",
-                "Vader",
-                "Moeder ID",
-                "Partner ID",
-                "Huwelijksdatum",
-                "Huwelijksplaats",
-                "Opmerkingen",
-                "Adres",
-                "ContactInfo",
-                "URL"
-            ];
+<script>
+    const downloadBtn = document.getElementById('downloadBtn');
+    const status = document.getElementById('status');
 
-            const sampleData = [
-                ["AAX000001","Jan","Jan","Van","Doe","M","1970-05-12","Amsterdam","","","","","","","","","","1234 AB, Amsterdam","jan@example.com",""],
-                ["AAX000002","Maria","Mari","De","Smith","F","1975-03-10","Rotterdam","","","","","","","","","","5678 CD, Rotterdam","maria@example.com",""],
-                ["AAX000003","Piet","Piet","","Jansen","M","2000-08-25","Utrecht","","","AAX000001","AAX000002","","","","","","",""]
-            ];
+    downloadBtn.addEventListener('click', () => {
+        const csvContent = `ID,BaptismName,Nickname,Prefix,LastName,Gender,BirthDate,BirthPlace,DeathDate,DeathPlace,Father,MotherID,PartnerID,MarriageDate,MarriagePlace,Notes,Address,ContactInfo,URL
+XHJ000001,John,John,de,Vermeer,M,1980-01-01,Amsterdam,,,,,,QKL000001,2005-06-12,Amsterdam,"Example note","Damstraat 1, 1012AB Amsterdam","john@example.com","https://example.com/john"
+XHJ000002,Mary,Mary,,Jansen,F,1982-02-14,Utrecht,,,,,,XHJ000001,2005-06-12,Utrecht,"Example note","Grachtstraat 5, 3512BC Utrecht","mary@example.com","https://example.com/mary"
+XHJ000003,Peter,Peter,,Vermeer,M,2008-03-20,Amsterdam,,,,,,XHJ000001,XHJ000002,,"","",,"",""`;
 
-            let csvContent = headers.join(",") + "\n";
-            sampleData.forEach(row => {
-                // Escape commas in fields by wrapping in quotes
-                const escapedRow = row.map(field => `"${field}"`);
-                csvContent += escapedRow.join(",") + "\n";
-            });
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "FamilyTree_template.csv";
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
 
-            const blob = new Blob([csvContent], { type: "text/csv" });
-            const url = URL.createObjectURL(blob);
+        status.textContent = "✅ CSV example successfully downloaded!";
+    });
+</script>
 
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "familytree_template.csv";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            document.getElementById("status").textContent = "✅ CSV Template has been downloaded.";
-        });
-    </script>
 </body>
 </html>
-
