@@ -1,89 +1,78 @@
-// ===============================
-// import.js
-// CSV import voor stamboom
-// ===============================
+// ======================= import.js =======================
 
-// Vereiste kolommen (exacte volgorde)
-const requiredHeaders = [
-    "ID",
-    "Doopnaam",
-    "Roepnaam",
-    "Prefix",
-    "Achternaam",
-    "Geslacht",
-    "Geboortedatum",
-    "Geboorteplaats",
-    "Overlijdensdatum",
-    "Overlijdensplaats",
-    "Vader",
-    "Moeder ID",
-    "Partner ID",
-    "Huwelijksdatum",
-    "Huwelijksplaats",
-    "Opmerkingen",
-    "Adres",
-    "ContactInfo",
-    "URL"
-];
+// Elementen
+const fileInput = document.getElementById('csvFileInput');
+const status = document.getElementById('importStatus');
 
-document.getElementById("importBtn").addEventListener("click", function () {
+// Functie om CSV te lezen en te importeren
+fileInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
 
-    const fileInput = document.getElementById("csvFile");
-    const status = document.getElementById("importStatus");
-
-    if (!fileInput.files.length) {
-        status.innerHTML = "❌ Geen bestand geselecteerd.";
-        status.style.color = "red";
-        return;
-    }
-
-    const file = fileInput.files[0];
     const reader = new FileReader();
+    reader.onload = function(event) {
+        const text = event.target.result;
+        const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
 
-    reader.onload = function (e) {
+        // Array voor stamboomData
+        const importedData = [];
 
-        const text = e.target.result;
-        const rows = text.split("\n").map(r => r.trim()).filter(r => r.length > 0);
+        lines.forEach((line, index) => {
+            // Sla de eerste regel over als het headers zijn (optioneel)
+            // Omdat we taal en headers negeren, gewoon elke rij als data behandelen
+            const fields = line.split(",");
 
-        if (rows.length < 2) {
-            status.innerHTML = "❌ CSV bevat geen data.";
-            status.style.color = "red";
-            return;
-        }
+            // Zorg dat elke rij precies 19 velden heeft
+            while (fields.length < 19) fields.push("");
+            fields.length = 19; // Snijd overtollige velden af
 
-        const headers = rows[0].split(",").map(h => h.trim());
+            const person = {
+                ID: fields[0].trim(),
+                Doopnaam: fields[1].trim(),
+                Roepnaam: fields[2].trim(),
+                Prefix: fields[3].trim(),
+                Achternaam: fields[4].trim(),
+                Geslacht: fields[5].trim(),
+                Geboortedatum: fields[6].trim(),
+                Geboorteplaats: fields[7].trim(),
+                Overlijdensdatum: fields[8].trim(),
+                Overlijdensplaats: fields[9].trim(),
+                Vader: fields[10].trim(),
+                MoederID: fields[11].trim(),
+                PartnerID: fields[12].trim(),
+                Huwelijksdatum: fields[13].trim(),
+                Huwelijksplaats: fields[14].trim(),
+                Opmerkingen: fields[15].trim(),
+                Adres: fields[16].trim(),
+                ContactInfo: fields[17].trim(),
+                URL: fields[18].trim()
+            };
 
-        // Controleer of headers exact overeenkomen
-        const isValid = requiredHeaders.every((header, index) => header === headers[index]);
-
-        if (!isValid) {
-            status.innerHTML = "❌ Kolommen komen niet overeen met vereiste structuur.";
-            status.style.color = "red";
-            return;
-        }
-
-        const data = [];
-
-        for (let i = 1; i < rows.length; i++) {
-
-            const values = rows[i].split(",").map(v => v.trim());
-
-            const person = {};
-
-            requiredHeaders.forEach((header, index) => {
-                person[header] = values[index] || "";
-            });
-
-            data.push(person);
-        }
+            importedData.push(person);
+        });
 
         // Opslaan in localStorage
-        localStorage.setItem("stamboomData", JSON.stringify(data));
+        if (importedData.length > 0) {
+            // Bestaande data behouden en nieuwe rijen toevoegen
+            const existingData = JSON.parse(localStorage.getItem('stamboomData') || '[]');
 
-        status.innerHTML = "✅ CSV succesvol geladen (" + data.length + " personen).";
-        status.style.color = "green";
+            // Voeg alleen nieuwe ID’s toe, bestaande ID’s niet overschrijven
+            importedData.forEach(p => {
+                if (!existingData.some(e => e.ID === p.ID)) {
+                    existingData.push(p);
+                }
+            });
+
+            localStorage.setItem('stamboomData', JSON.stringify(existingData));
+            status.textContent = `✅ CSV geladen: ${importedData.length} personen toegevoegd.`;
+        } else {
+            status.textContent = "⚠️ Geen data gevonden in CSV.";
+        }
+    };
+
+    reader.onerror = function() {
+        status.textContent = "❌ Fout bij het lezen van het bestand.";
     };
 
     reader.readAsText(file);
 });
-
