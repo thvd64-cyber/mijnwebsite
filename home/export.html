@@ -1,15 +1,45 @@
 <!DOCTYPE html>
-<html>
+<html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <title>Export</title>
+    <title>Stamboom - Export</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
 
-    <h1>Export pagina</h1>
-    <a href="index.html">Terug naar Home</a>
+    <!-- ============================= -->
+    <!-- Navigatiebalk                 -->
+    <!-- ============================= -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="../index.html">Home</a>
+            <a href="../stamboom/create.html">Create</a>
+            <a href="../stamboom/manage.html">Manage</a>
+            <a href="../stamboom/view.html">Tree View</a>
+            <a href="import.html">Import</a>
+            <a href="export.html">Export</a>
+        </div>
+    </nav>
 
-    <script src="../js/script.js"></script>
+    <!-- ============================= -->
+    <!-- Export Sectie                 -->
+    <!-- ============================= -->
+
+    <div class="container">
+        <h2>Exporteer Stamboom naar CSV</h2>
+
+        <p>
+            Klik op de knop om alle opgeslagen personen als CSV te downloaden.
+        </p>
+
+        <button id="exportBtn">Exporteer CSV</button>
+
+        <br><br>
+
+        <p id="exportStatus"></p>
+    </div>
+
+    <script src="../js/export.js"></script>
+
 </body>
 </html>
