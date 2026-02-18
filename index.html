@@ -1,104 +1,113 @@
-<!DOCTYPE html>
-<html lang="nl">
+<!DOCTYPE html> <!-- Geeft aan dat dit een HTML5 document is -->
+<html lang="nl"> <!-- Start van de HTML-pagina, 'lang="nl"' betekent dat de inhoud Nederlands is -->
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyFamTreeCollab</title>
-    <link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8"> <!-- Stelt tekencodering in op UTF-8 voor speciale tekens -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Zorgt dat de pagina responsief is op mobiele apparaten -->
+    <title>MyFamTreeCollab</title> <!-- Titel die in het browser-tabblad verschijnt -->
+    <link rel="stylesheet" href="css/style.css"> <!-- Verbindt de pagina met de externe CSS-stylesheet -->
 </head>
     
-<body>
-<div class="topbar">
-    <div class="topbar-content">
-        <div class="top-left">
-            <a href="#">Login</a>
+<body> <!-- Begin van de body: hier komt alle zichtbare inhoud -->
+
+<!-- ======================= TOPBAR (bovenaan de pagina) ======================= -->
+<div class="topbar"> <!-- Grijze balk boven de header voor login/taal -->
+    <div class="topbar-content"> <!-- Inhoud binnen de topbar, gecentreerd en gespreid -->
+        <div class="top-left"> <!-- Linkerkant van de topbar -->
+            <a href="#">Login</a> <!-- Link voor login; nog geen functionaliteit -->
         </div>
-        <div class="top-right">
-    <a href="index.html" class="active">NL</a> | <a href="index-en.html">EN</a>
-</div>
+        <div class="top-right"> <!-- Rechterkant van de topbar -->
+            <a href="index.html" class="active">NL</a> | <!-- Link naar Nederlandse versie, actief gemarkeerd -->
+            <a href="index-en.html">EN</a> <!-- Link naar Engelse versie -->
+        </div>
     </div>
 </div>
+
+<!-- ======================= HEADER ======================= -->
 <header>
-    <h1>MyFamTreeCollab</h1>
+    <h1>MyFamTreeCollab</h1> <!-- Hoofdtitel van de website -->
+    
+    <!-- ======================= NAVIGATIE MENU ======================= -->
     <nav>
-        <ul class="menu">
+        <ul class="menu"> <!-- Hoofdmenu, flexbox horizontaal -->
+           <li class="dropdown"> <!-- Dropdown-menu-item -->
+               <a href="#">Home ▼</a> <!-- Klikbare hoofd-link, '▼' geeft dropdown aan -->
+               <ul class="submenu"> <!-- Submenu dat verschijnt bij hover -->
+                   <li><a href="home/create.html">Create</a></li>
+                   <li><a href="home/import.html">Import</a></li>
+                   <li><a href="home/export.html">Export</a></li>
+                   <li><a href="home/print.html">Print</a></li>
+                   <li><a href="home/about.html">About</a></li>
+               </ul>
+           </li>
+
            <li class="dropdown">
-    <a href="#">Home ▼</a>
-    <ul class="submenu">
-         <li><a href="home/create.html">Create</a></li>
-        <li><a href="home/import.html">Import</a></li>
-        <li><a href="home/export.html">Export</a></li>
-        <li><a href="home/print.html">Print</a></li>
-        <li><a href="home/about.html">About</a></li>
-    </ul>
-</li>
+               <a href="#">Stamboom ▼</a> <!-- Hoofdmenu-item 'Stamboom' -->
+               <ul class="submenu">
+                   <li><a href="stamboom/view.html">View</a></li>
+                   <li><a href="stamboom/manage.html">Manage</a></li>
+                   <li><a href="stamboom/stats.html">Stats</a></li>
+               </ul>
+           </li>
 
-            <li class="dropdown">
-                <a href="#">Stamboom ▼</a>
-                <ul class="submenu">
-                    <li><a href="stamboom/view.html">View</a></li>
-                    <li><a href="stamboom/manage.html">Manage</a></li>
-                    <li><a href="stamboom/stats.html">Stats</a></li>
-                </ul>
-            </li>
+           <li class="dropdown">
+               <a href="#">Abonnementen ▼</a>
+               <ul class="submenu">
+                   <li><a href="abonnementen/overview.html">Overview</a></li>
+                   <li><a href="abonnementen/compare.html">Compare</a></li>
+                   <li><a href="abonnementen/pricing.html">Pricing</a></li>
+                   <li><a href="abonnementen/benefits.html">Benefits</a></li>
+               </ul>
+           </li>
 
-            <li class="dropdown">
-                <a href="#">Abonnementen ▼</a>
-                <ul class="submenu">
-                    <li><a href="abonnementen/overview.html">Overview</a></li>
-                    <li><a href="abonnementen/compare.html">Compare</a></li>
-                    <li><a href="abonnementen/pricing.html">Pricing</a></li>
-                    <li><a href="abonnementen/benefits.html">Benefits</a></li>
-                </ul>
-            </li>
+           <li class="dropdown">
+               <a href="#">Bronnen ▼</a>
+               <ul class="submenu">
+                   <li><a href="bronnen/manuals.html">Manuals</a></li>
+                   <li><a href="bronnen/articles.html">Articles</a></li>
+                   <li><a href="bronnen/tutorials.html">Tutorials</a></li>
+                   <li><a href="bronnen/external.html">External</a></li>
+               </ul>
+           </li>
 
-            <li class="dropdown">
-                <a href="#">Bronnen ▼</a>
-                <ul class="submenu">
-                    <li><a href="bronnen/manuals.html">Manuals</a></li>
-                    <li><a href="bronnen/articles.html">Articles</a></li>
-                    <li><a href="bronnen/tutorials.html">Tutorials</a></li>
-                    <li><a href="bronnen/external.html">External</a></li>
-                </ul>
-            </li>
-
-            <li class="dropdown">
-                <a href="#">Gemeenschap ▼</a>
-                <ul class="submenu">
-                    <li><a href="gemeenschap/forum.html">Forum</a></li>
-                    <li><a href="gemeenschap/discussions.html">Discussions</a></li>
-                    <li><a href="gemeenschap/groups.html">Groups</a></li>
-                    <li><a href="gemeenschap/events.html">Events</a></li>
-                    <li><a href="gemeenschap/contact.html">Contact</a></li>
-                </ul>
-            </li>
+           <li class="dropdown">
+               <a href="#">Gemeenschap ▼</a>
+               <ul class="submenu">
+                   <li><a href="gemeenschap/forum.html">Forum</a></li>
+                   <li><a href="gemeenschap/discussions.html">Discussions</a></li>
+                   <li><a href="gemeenschap/groups.html">Groups</a></li>
+                   <li><a href="gemeenschap/events.html">Events</a></li>
+                   <li><a href="gemeenschap/contact.html">Contact</a></li>
+               </ul>
+           </li>
         </ul>
     </nav>
 </header>
 
+<!-- ======================= MAIN CONTENT ======================= -->
 <main id="home">
-    <section>
-        <h2>Welkom op de MyFamTreeCollab website</h2>
-        <p>Ontdek uw stamboom, abonnementen en bronnen eenvoudig via de navigatie hierboven.</p>
+    <section> <!-- Eerste sectie van de pagina -->
+        <h2>Welkom op de MyFamTreeCollab website</h2> <!-- Titel van sectie -->
+        <p>Ontdek uw stamboom, abonnementen en bronnen eenvoudig via de navigatie hierboven.</p> <!-- Intro tekst -->
     </section>
 
-    <section>
+    <section> <!-- Tweede sectie -->
         <h2>Start uw Stamboom</h2>
         <p>Begin vandaag nog met het ontdekken en beheren van uw familiegeschiedenis.</p>
-        <a href="stamboom/index.html" class="btn">Start Nu</a>
+        <a href="stamboom/index.html" class="btn">Start Nu</a> <!-- Button die doorverwijst naar stamboom starten -->
     </section>
 
-    <section>
+    <section> <!-- Derde sectie -->
         <h2>Nieuws & Updates</h2>
         <p>Bekijk de laatste functies en tips voor het beheren van uw stamboom.</p>
     </section>
 </main>
 
+<!-- ======================= FOOTER ======================= -->
 <footer>
-    <p>&copy; 2026 MyFamTreeCollab website</p>
+    <p>&copy; 2026 MyFamTreeCollab website</p> <!-- Copyright informatie -->
 </footer>
 
-<script src="js/script.js"></script>
+<script src="js/script.js"></script> <!-- Verbindt externe JavaScript voor interacties -->
 </body>
-</html>
-
+</html> <!-- Einde HTML-document -->
