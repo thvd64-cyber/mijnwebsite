@@ -1,74 +1,68 @@
-// Haal data op of start met lege array
-let stamboomData = JSON.parse(localStorage.getItem('stamboomData') || '[]'); // r.2
+// 1. Haal bestaande stamboom data op of start met lege array
+let stamboomData = JSON.parse(localStorage.getItem('stamboomData') || '[]');
 
-// Elementen ophalen
-const form = document.getElementById('addPersonForm'); // r.5
-const preview = document.getElementById('stamboomPreview'); // r.6
+// 2. Elementen uit de HTML
+const form = document.getElementById('addPersonForm');       // het formulier
+const preview = document.getElementById('stamboomPreview');  // div voor preview
 
-// Functie om unieke ID te genereren
+// 3. Functie om een unieke ID te maken
 function generateID() {
-    return 'p' + Date.now(); // r.10
+    return 'p' + Date.now(); // gebruikt timestamp voor uniek ID
 }
 
-// Voeg persoon toe bij formulier submit
+// 4. Voeg persoon toe bij submit
 form.addEventListener('submit', function(e){
-    e.preventDefault(); // voorkom standaard submit
+    e.preventDefault(); // voorkomt dat de pagina refresh bij submit
 
-    // Nieuw persoon-object met alle velden
+    // 5. Maak persoon-object
     const person = {
-        ID: generateID(), // unieke ID
-        doopnaam: document.getElementById('doopnaam').value, // doopnaam
-        roepnaam: document.getElementById('roepnaam').value, // roepnaam
-        prefix: document.getElementById('prefix').value,     // bv van, de
+        ID: generateID(),
+        voornaam: document.getElementById('voornaam').value,
+        roepnaam: document.getElementById('roepnaam').value,
+        prefix: document.getElementById('prefix').value,
         achternaam: document.getElementById('achternaam').value,
-        geboorte: document.getElementById('geboorte').value,
+        geboorte: document.getElementById('geboorte').value, // calendar picker
         geslacht: document.getElementById('geslacht').value,
         ouderID: null,
         partnerID: null
     };
 
-    // RootPerson check: eerste persoon in array
+    // 6. RootPerson check
     if(stamboomData.length === 0){
-        const rootPerson = person; // r.25
-        stamboomData = [rootPerson]; // start array met root
+        const rootPerson = person;
+        stamboomData = [rootPerson]; // eerste persoon wordt root
     } else {
-        stamboomData.push(person); // voeg extra persoon toe
+        stamboomData.push(person); // extra personen toevoegen
     }
 
-    // Opslaan in localStorage
+    // 7. Opslaan in localStorage
     localStorage.setItem('stamboomData', JSON.stringify(stamboomData));
 
-    // Preview updaten
+    // 8. Render preview
     renderStamboom();
 
-    // Formulier resetten
+    // 9. Reset formulier
     form.reset();
 });
 
-// Render preview van stamboom
+// 10. Render stamboom preview
 function renderStamboom(){
-    preview.innerHTML = ''; // reset preview
-
+    preview.innerHTML = ''; // leegmaken van oude preview
     if(stamboomData.length === 0){
         preview.innerHTML = '<p>Geen leden toegevoegd. Voeg de eerste persoon toe.</p>';
         return;
     }
-
     stamboomData.forEach(p => {
         const div = document.createElement('div');
         div.className = 'node';
 
-        // Bouw volledige naam
-        let fullName = p.doopnaam; // doopnaam altijd zichtbaar
-        if(p.roepnaam) fullName += ` (${p.roepnaam})`; // roepnaam optioneel
-        if(p.prefix) fullName += ` ${p.prefix}`;       // prefix optioneel
-        fullName += ` ${p.achternaam}`;              // achternaam
-        if(p.geboorte) fullName += ` (${p.geboorte})`; // geboorte optioneel
+        // Alleen het jaar tonen uit de kalender datum
+        let geboortejaar = p.geboorte ? p.geboorte.split('-')[0] : '';
 
-        div.textContent = fullName; // tekst in preview div
+        div.textContent = `${p.voornaam} "${p.roepnaam}" ${p.prefix} ${p.achternaam} (${geboortejaar})`;
         preview.appendChild(div);
     });
 }
 
-// Init render
+// 11. Init render
 renderStamboom();
