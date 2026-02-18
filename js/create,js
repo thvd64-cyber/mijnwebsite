@@ -16,7 +16,9 @@ form.addEventListener('submit', function(e){
     
     const person = {
         ID: generateID(),
-        voornaam: document.getElementById('voornaam').value,
+        doopnaam: document.getElementById('doopnaam').value,   // voornaam / doopnaam
+        roepnaam: document.getElementById('roepnaam').value,   // roepnaam
+        prefix: document.getElementById('prefix').value,       // bv van, de
         achternaam: document.getElementById('achternaam').value,
         geboorte: document.getElementById('geboorte').value,
         geslacht: document.getElementById('geslacht').value,
@@ -53,7 +55,11 @@ function renderStamboom(){
     stamboomData.forEach(p => {
         const div = document.createElement('div');
         div.className = 'node';
-        div.textContent = `${p.voornaam} ${p.achternaam} (${p.geboorte || ''})`;
+        let fullName = `${p.doopnaam} (${p.roepnaam}) `;
+        if(p.prefix) fullName += p.prefix + ' ';
+        fullName += p.achternaam;
+        if(p.geboorte) fullName += ` (${p.geboorte})`;
+        div.textContent = fullName;
         preview.appendChild(div);
     });
 }
