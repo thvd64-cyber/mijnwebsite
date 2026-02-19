@@ -8,15 +8,16 @@ let stamboomData = JSON.parse(localStorage.getItem('stamboomData') || '[]');
 
 // Elementen
 const form = document.getElementById('addPersonForm');
+const statusMessage = document.getElementById('statusMessage');
 
-// Functie om ID te genereren (optioneel, aparte idGenerator.js wordt gebruikt)
-// function generateID() {
-//     return 'p' + Date.now();
-// }
+// Eenvoudige ID-generator
+function genereerCode(doopnaam, roepnaam, achternaam, geslacht) {
+    // Bijvoorbeeld: eerste letters + timestamp
+    const code = (doopnaam[0] || '') + (roepnaam[0] || '') + (achternaam[0] || '') + geslacht[0] + Date.now();
+    return code.toUpperCase();
+}
 
-// =======================
 // Voeg persoon toe bij submit
-// =======================
 form.addEventListener('submit', function(e){
     e.preventDefault();
 
@@ -27,12 +28,11 @@ form.addEventListener('submit', function(e){
     const geboorte = document.getElementById('geboorte').value;
     const geslacht = document.getElementById('geslacht').value;
 
-    // Genereer automatisch unieke ID via idGenerator.js
     const uniekeID = genereerCode(doopnaam, roepnaam, achternaam, geslacht);
 
     const person = {
-        ID: uniekeID,           // unieke code als ID
-        Relatie: 'Hoofd-ID',    // standaard eerste persoon
+        ID: uniekeID,
+        Relatie: 'Hoofd-ID',
         Doopnaam: doopnaam,
         Roepnaam: roepnaam,
         Prefix: prefix,
@@ -53,12 +53,18 @@ form.addEventListener('submit', function(e){
         URL: ''
     };
 
-    // Voeg toe aan stamboomdata
     stamboomData.push(person);
-
-    // Sla op in localStorage
     localStorage.setItem('stamboomData', JSON.stringify(stamboomData));
 
     // Reset formulier
     form.reset();
+
+    // Toon statusmelding
+    statusMessage.style.display = 'block';
+    statusMessage.style.backgroundColor = '#d4edda';
+    statusMessage.style.color = '#155724';
+    statusMessage.textContent = `${doopnaam} is toegevoegd!`;
+
+    // Verberg na 3 seconden
+    setTimeout(() => { statusMessage.style.display = 'none'; }, 3000);
 });
