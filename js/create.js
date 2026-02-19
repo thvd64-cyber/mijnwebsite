@@ -1,105 +1,73 @@
 // =======================================
-// manage.js
-// Toon alle personen vanuit sessionStorage met volledige kolommen
+// create.js
+// Beheer van de create-pagina: toevoegen van eerste persoon
 // =======================================
 
+// Gebruik sessionStorage zodat data verdwijnt bij sluiten van het tabblad
 let stamboomData = JSON.parse(sessionStorage.getItem('stamboomData') || '[]');
-const tableBody = document.querySelector('#manageTable tbody');
-const loadBtn = document.getElementById('loadBtn');
-const searchInput = document.getElementById('searchPerson');
-const saveBtn = document.getElementById('saveBtn');
-const refreshBtn = document.getElementById('refreshBtn');
-const addBtn = document.getElementById('addBtn');
 
-// Kleurcodering per relatie
-function getRowClass(p) {
-    switch(p.Relatie) {
-        case 'Ouder': return 'ouders';
-        case 'Hoofd-ID': return 'hoofd-id';
-        case 'Partner': return 'partner';
-        case 'Kind': return 'kind';
-        case 'Ex-Partner': return 'ex-partner';
-        case 'Broer/Zus': return 'broerzus';
-        case 'Partner-Kind': return 'partner-kind';
-        default: return '';
-    }
-}
-
-// Alle kolommen
-const fields = ['Relatie','ID','Doopnaam','Roepnaam','Prefix','Achternaam','Geslacht',
-    'Geboortedatum','Geboorteplaats','Overlijdensdatum','Overlijdensplaats',
-    'VaderID','MoederID','PartnerID','Huwelijksdatum','Huwelijksplaats',
-    'Opmerkingen','Adres','ContactInfo','URL'];
+const form = document.getElementById('addPersonForm');
+const statusMessage = document.getElementById('statusMessage');
 
 // =======================
-// Tabel renderen
+// ID-generator
 // =======================
-function renderTable(data = stamboomData) {
-    tableBody.innerHTML = '';
-
-    if(data.length === 0){
-        tableBody.innerHTML = '<tr><td colspan="20">Geen personen toegevoegd.</td></tr>';
-        return;
-    }
-
-    data.forEach(p => {
-        const tr = document.createElement('tr');
-        tr.className = getRowClass(p);
-
-        fields.forEach(f => {
-            const td = document.createElement('td');
-            if(f === 'ID' || f === 'Relatie'){
-                td.textContent = p[f] || '';
-            } else {
-                const input = document.createElement('input');
-                input.value = p[f] || '';
-                input.addEventListener('change', e => { p[f] = e.target.value; });
-                td.appendChild(input);
-            }
-            tr.appendChild(td);
-        });
-
-        tableBody.appendChild(tr);
-    });
+function genereerCode(doopnaam, roepnaam, achternaam, geslacht) {
+    return (doopnaam[0] || '') + (roepnaam[0] || '') + (achternaam[0] || '') + (geslacht[0] || 'X') + Date.now();
 }
 
 // =======================
-// Zoek persoon
+// Form submit handler
 // =======================
-function loadPerson() {
-    const term = searchInput.value.toLowerCase();
-    const filtered = stamboomData.filter(p =>
-        p.ID.toLowerCase() === term ||
-        p.Roepnaam?.toLowerCase() === term ||
-        p.Doopnaam?.toLowerCase() === term
-    );
-    if(filtered.length === 0) alert('Persoon niet gevonden');
-    else renderTable(filtered);
-}
+form.addEventListener('submit', function(e) {
+    e.preventDefault();
 
-// =======================
-// Opslaan
-// =======================
-function saveData() {
+    const doopnaam = document.getElementById('doopnaam').value.trim();
+    const roepnaam = document.getElementById('roepnaam').value.trim();
+    const prefix = document.getElementById('prefix').value.trim();
+    const achternaam = document.getElementById('achternaam').value.trim();
+    const geboorte = document.getElementById('geboorte').value;
+    const geslacht = document.getElementById('geslacht').value;
+
+    const uniekeID = genereerCode(doopnaam, roepnaam, achternaam, geslacht);
+
+    // Vul alle kolommen, lege velden met '' of null
+    const person = {
+        ID: uniekeID,
+        Relatie: 'Hoofd-ID',
+        Doopnaam: doopnaam,
+        Roepnaam: roepnaam,
+        Prefix: prefix,
+        Achternaam: achternaam,
+        Geslacht: geslacht,
+        Geboortedatum: geboorte,
+        Geboorteplaats: '',
+        Overlijdensdatum: '',
+        Overlijdensplaats: '',
+        VaderID: null,
+        MoederID: null,
+        PartnerID: null,
+        Huwelijksdatum: '',
+        Huwelijksplaats: '',
+        Opmerkingen: '',
+        Adres: '',
+        ContactInfo: '',
+        URL: ''
+    };
+
+    stamboomData.push(person);
     sessionStorage.setItem('stamboomData', JSON.stringify(stamboomData));
-    alert('Wijzigingen opgeslagen!');
-}
 
-// =======================
-// Voeg lege persoon toe
-// =======================
-function addNewPerson() {
-    const emptyPerson = {};
-    fields.forEach(f => emptyPerson[f] = (f === 'VaderID' || f === 'MoederID' || f === 'PartnerID') ? null : '');
-    emptyPerson.Relatie = 'Hoofd-ID';
-    renderTable([emptyPerson].concat(stamboomData));
-}
+    form.reset();
 
-// Event listeners
-loadBtn.addEventListener('click', loadPerson);
-saveBtn.addEventListener('click', saveData);
-refreshBtn.addEventListener('click', () => renderTable());
-addBtn.addEventListener('click', addNewPerson);
+    // Statusmelding
+    statusMessage.style.display = 'block';
+    statusMessage.style.backgroundColor = '#d4edda';
+    statusMessage.style.color = '#155724';
+    statusMessage.textContent = `${doopnaam} is toegevoegd!`;
 
-// Init render
-renderTable();
+    setTimeout(() => { statusMessage.style.display = 'none'; }, 3000);
+
+    // Optioneel: automatisch naar Manage-pagina
+    // window.location.href = '../manage/manage.html';
+});
