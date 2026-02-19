@@ -1,8 +1,9 @@
 // =======================================
 // manage.js
-// Toon alle personen vanuit sessionStorage met volledige kolommen
+// Beheer van stamboom: tonen en bewerken van personen
 // =======================================
 
+// Haal bestaande stamboomdata op of start met lege array
 let stamboomData = JSON.parse(sessionStorage.getItem('stamboomData') || '[]');
 const tableBody = document.querySelector('#manageTable tbody');
 const loadBtn = document.getElementById('loadBtn');
@@ -13,7 +14,7 @@ const addBtn = document.getElementById('addBtn');
 
 // Kleurcodering per relatie
 function getRowClass(p) {
-    switch(p.Relatie) {
+    switch(p.Relatie){
         case 'Ouder': return 'ouders';
         case 'Hoofd-ID': return 'hoofd-id';
         case 'Partner': return 'partner';
@@ -25,14 +26,14 @@ function getRowClass(p) {
     }
 }
 
-// Alle kolommen
+// Alle kolommen behouden
 const fields = ['Relatie','ID','Doopnaam','Roepnaam','Prefix','Achternaam','Geslacht',
     'Geboortedatum','Geboorteplaats','Overlijdensdatum','Overlijdensplaats',
     'VaderID','MoederID','PartnerID','Huwelijksdatum','Huwelijksplaats',
     'Opmerkingen','Adres','ContactInfo','URL'];
 
 // =======================
-// Tabel renderen
+// Render tabel
 // =======================
 function renderTable(data = stamboomData) {
     tableBody.innerHTML = '';
