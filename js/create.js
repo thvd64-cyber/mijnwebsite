@@ -16,6 +16,12 @@ function genereerCode(doopnaam, roepnaam, achternaam, geslacht) {
     return (doopnaam[0] || '') + (roepnaam[0] || '') + (achternaam[0] || '') + (geslacht[0] || 'X') + Date.now();
 }
 
+// Alle kolommen die Manage nodig heeft
+const fields = ['ID','Relatie','Doopnaam','Roepnaam','Prefix','Achternaam','Geslacht',
+    'Geboortedatum','Geboorteplaats','Overlijdensdatum','Overlijdensplaats',
+    'VaderID','MoederID','PartnerID','Huwelijksdatum','Huwelijksplaats',
+    'Opmerkingen','Adres','ContactInfo','URL'];
+
 // =======================
 // Form submit handler
 // =======================
@@ -32,28 +38,23 @@ form.addEventListener('submit', function(e) {
     const uniekeID = genereerCode(doopnaam, roepnaam, achternaam, geslacht);
 
     // Vul alle kolommen, lege velden met '' of null
-    const person = {
-        ID: uniekeID,
-        Relatie: 'Hoofd-ID',
-        Doopnaam: doopnaam,
-        Roepnaam: roepnaam,
-        Prefix: prefix,
-        Achternaam: achternaam,
-        Geslacht: geslacht,
-        Geboortedatum: geboorte,
-        Geboorteplaats: '',
-        Overlijdensdatum: '',
-        Overlijdensplaats: '',
-        VaderID: null,
-        MoederID: null,
-        PartnerID: null,
-        Huwelijksdatum: '',
-        Huwelijksplaats: '',
-        Opmerkingen: '',
-        Adres: '',
-        ContactInfo: '',
-        URL: ''
-    };
+    const person = {};
+    fields.forEach(f => {
+        switch(f){
+            case 'ID': person[f] = uniekeID; break;
+            case 'Relatie': person[f] = 'Hoofd-ID'; break;
+            case 'Doopnaam': person[f] = doopnaam; break;
+            case 'Roepnaam': person[f] = roepnaam; break;
+            case 'Prefix': person[f] = prefix; break;
+            case 'Achternaam': person[f] = achternaam; break;
+            case 'Geslacht': person[f] = geslacht; break;
+            case 'Geboortedatum': person[f] = geboorte; break;
+            case 'VaderID':
+            case 'MoederID':
+            case 'PartnerID': person[f] = null; break;
+            default: person[f] = ''; break;
+        }
+    });
 
     stamboomData.push(person);
     sessionStorage.setItem('stamboomData', JSON.stringify(stamboomData));
@@ -67,7 +68,4 @@ form.addEventListener('submit', function(e) {
     statusMessage.textContent = `${doopnaam} is toegevoegd!`;
 
     setTimeout(() => { statusMessage.style.display = 'none'; }, 3000);
-
-    // Optioneel: automatisch naar Manage-pagina
-    // window.location.href = '../manage/manage.html';
 });
