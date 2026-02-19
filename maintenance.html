@@ -10,7 +10,13 @@
     <meta http-equiv="refresh" content="5; url=/mijnwebsite/">
 </head>
 <body>
-
+<!-- NAVBAR -->
+<div id="navbar"></div>
+<script>
+    fetch('../navbar.html')
+        .then(response => response.text())
+        .then(data => document.getElementById('navbar').innerHTML = data);
+</script>
 <header>
     <h1>Mijn Website</h1>
 </header>
