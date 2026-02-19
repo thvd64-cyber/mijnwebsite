@@ -5,18 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tijdelijk niet beschikbaar</title>
     <link rel="stylesheet" href="css/style.css">
-
-    <!-- Automatisch terug naar home na 5 seconden -->
-    <meta http-equiv="refresh" content="5; url=/mijnwebsite/">
 </head>
 <body>
-<!-- NAVBAR -->
-<div id="navbar"></div>
-<script>
-    fetch('../navbar.html')
-        .then(response => response.text())
-        .then(data => document.getElementById('navbar').innerHTML = data);
-</script>
 <header>
     <h1>Mijn Website</h1>
 </header>
@@ -25,10 +15,25 @@
     <h2>Pagina tijdelijk niet bereikbaar</h2>
     <p>Deze pagina is momenteel in ontwikkeling of tijdelijk niet beschikbaar.</p>
     <p>Onze excuses voor het ongemak.</p>
-    <p>U wordt automatisch doorgestuurd naar de homepage...</p>
+    <p>U wordt automatisch doorgestuurd naar de homepage in <span id="countdown">5</span> seconden...</p>
     <br>
     <a href="/mijnwebsite/" class="btn">Ga direct naar Home</a>
 </main>
+
+<script>
+    // Aftelling instellen
+    let countdown = 5; // seconden
+    const countdownElement = document.getElementById('countdown');
+
+    const interval = setInterval(() => {
+        countdown--;
+        countdownElement.textContent = countdown;
+        if (countdown <= 0) {
+            clearInterval(interval);
+            window.location.href = '/mijnwebsite/';
+        }
+    }, 1000);
+</script>
 
 </body>
 </html>
