@@ -6,21 +6,35 @@
     <title>Stamboom Create</title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
-        /* Basis styling */
         body { font-family: Arial, sans-serif; padding: 20px; background: #f8f8f8; }
         h1 { color: #333; }
+        p.intro { margin-bottom: 20px; }
         form { background: #fff; padding: 20px; border-radius: 8px; max-width: 400px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
         label { display: block; margin: 10px 0 5px; font-weight: bold; }
         input, select { width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc; }
         button { padding: 10px 20px; background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
         button:hover { background: #0056b3; }
+        #statusMessage { display:none; margin-top:15px; padding:12px; border-radius:6px; }
     </style>
 </head>
 <body>
+
+    <!-- NAVBAR -->
+    <div id="navbar"></div>
+    <script>
+        fetch('../navbar.html')
+            .then(response => response.text())
+            .then(data => document.getElementById('navbar').innerHTML = data);
+    </script>
+
+    <!-- Introductie -->
     <h1>Start je Stamboom</h1>
+    <p class="intro">Vul hier de gegevens van de eerste persoon in je stamboom in. Het systeem genereert automatisch een unieke ID.</p>
+
+    <!-- Formulier -->
     <form id="addPersonForm">
         <label>Doopnaam</label>
-        <input type="text" id="voornaam" required>
+        <input type="text" id="doopnaam" required>
 
         <label>Roepnaam</label>
         <input type="text" id="roepnaam" required>
@@ -32,7 +46,6 @@
         <input type="text" id="achternaam" required>
 
         <label>Geboortedatum</label>
-        <!-- Calendar picker -->
         <input type="date" id="geboorte" required>
 
         <label>Geslacht</label>
@@ -45,8 +58,10 @@
         <button type="submit">Voeg toe</button>
     </form>
 
-    <div id="statusMessage" style="display:none; margin-top:15px; padding:12px; border-radius:6px;"></div>
+    <!-- Statusmelding -->
+    <div id="statusMessage"></div>
 
+    <!-- JS -->
     <script src="../js/create.js"></script>
 </body>
 </html>
