@@ -2,88 +2,93 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <title>Stamboom - Export</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stamboom Export - MyFamTreeCollab</title>
     <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f8f8f8; }
+        .container { background: #fff; padding: 20px; border-radius: 8px; max-width: 600px; margin: 20px auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
+        button { padding: 10px 20px; background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #exportStatus { margin-top: 15px; padding: 12px; border-radius: 6px; color: #333; }
+        /* Page title spacing */
+        .page-title { max-width: 1100px; margin: 40px auto 20px auto; padding: 0 20px; }
+        .page-title h2 { margin-bottom: 10px; font-size: 1.8rem; font-weight: 600; }
+        .page-title p { color: #555; font-size: 1rem; line-height: 1.5; }
+    </style>
 </head>
 <body>
 
-    <!-- ============================= -->
-    <!-- Navigatiebalk                 -->
-    <!-- ============================= -->
-    <nav class="navbar">
-        <div class="nav-left">
-            <a href="../index.html">Home</a>
-            <a href="../stamboom/create.html">Create</a>
-            <a href="../stamboom/manage.html">Manage</a>
-            <a href="../stamboom/view.html">Tree View</a>
-            <a href="import.html">Import</a>
-            <a href="export.html" class="active">Export</a>
-        </div>
-    </nav>
+<!-- ======================= NAVBAR ======================= -->
+<div id="navbar-placeholder"></div>
+<script>
+fetch('../navbar.html')
+    .then(response => response.text())
+    .then(data => {
+        document.getElementById('navbar-placeholder').innerHTML = data;
 
-    <!-- ============================= -->
-    <!-- Export Sectie                 -->
-    <!-- ============================= -->
+        // Optioneel: stijl navbar specifiek voor deze pagina
+        const navbar = document.getElementById('navbar-placeholder');
+        navbar.style.color = '#fff';
+        navbar.querySelectorAll('a').forEach(link => link.style.color = '#fff');
+    });
+</script>
 
+<!-- ======================= PAGE TITLE ======================= -->
+<section class="page-title">
+    <h2>Exporteer Stamboom</h2>
+    <p>Klik op de knop hieronder om alle opgeslagen personen als CSV te downloaden.</p>
+</section>
+
+<!-- ======================= MAIN CONTENT ======================= -->
+<main>
     <div class="container">
-        <h2>Exporteer Stamboom naar CSV</h2>
-
-        <p>
-            Klik op de knop om alle opgeslagen personen als CSV te downloaden.
-        </p>
-
         <button id="exportBtn">Exporteer CSV</button>
-
-        <br><br>
-
         <p id="exportStatus"></p>
     </div>
+</main>
 
-    <script>
-        const exportBtn = document.getElementById('exportBtn');
-        const exportStatus = document.getElementById('exportStatus');
+<!-- ======================= EXPORT JS ======================= -->
+<script>
+const exportBtn = document.getElementById('exportBtn');
+const exportStatus = document.getElementById('exportStatus');
 
-        exportBtn.addEventListener('click', function() {
-            let data = JSON.parse(localStorage.getItem('stamboomData') || '[]');
+exportBtn.addEventListener('click', function() {
+    let data = JSON.parse(localStorage.getItem('stamboomData') || '[]');
 
-            if (data.length === 0) {
-                exportStatus.textContent = "⚠️ Geen personen gevonden om te exporteren.";
-                return;
-            }
+    if (data.length === 0) {
+        exportStatus.textContent = "⚠️ Geen personen gevonden om te exporteren.";
+        return;
+    }
 
-            // CSV kolommen
-            const columns = ["ID","Doopnaam","Roepnaam","Prefix","Achternaam","Geslacht","Geboortedatum","Geboorteplaats","Overlijdensdatum","Overlijdensplaats","Vader","MoederID","PartnerID","Huwelijksdatum","Huwelijksplaats","Opmerkingen","Adres","ContactInfo","URL"];
-            
-            // CSV regels samenstellen
-            let csvContent = columns.join(",") + "\n";
-            data.forEach(person => {
-                const row = columns.map(col => {
-                    // Komma's in velden escaperen
-                    let value = person[col] || "";
-                    if (value.includes(",")) value = `"${value}"`;
-                    return value;
-                }).join(",");
-                csvContent += row + "\n";
-            });
+    const columns = ["ID","Doopnaam","Roepnaam","Prefix","Achternaam","Geslacht","Geboortedatum","Geboorteplaats","Overlijdensdatum","Overlijdensplaats","Vader","MoederID","PartnerID","Huwelijksdatum","Huwelijksplaats","Opmerkingen","Adres","ContactInfo","URL"];
 
-            // Bestandsnaam: Stamboom.csv, voeg datum/tijd toe bij bestaande export
-            const now = new Date();
-            const timestamp = now.toISOString().replace(/[:.]/g,"-");
-            const filename = `Stamboom_${timestamp}.csv`;
+    let csvContent = columns.join(",") + "\n";
+    data.forEach(person => {
+        const row = columns.map(col => {
+            let value = person[col] || "";
+            if (value.includes(",")) value = `"${value}"`;
+            return value;
+        }).join(",");
+        csvContent += row + "\n";
+    });
 
-            // CSV downloaden
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = filename;
-            link.style.display = "none";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+    const now = new Date();
+    const timestamp = now.toISOString().replace(/[:.]/g,"-");
+    const filename = `Stamboom_${timestamp}.csv`;
 
-            exportStatus.textContent = `✅ Export succesvol: ${data.length} personen in ${filename}`;
-        });
-    </script>
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    exportStatus.textContent = `✅ Export succesvol: ${data.length} personen in ${filename}`;
+});
+</script>
 
 </body>
 </html>
