@@ -2,17 +2,29 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <title>Voorbeeld CSV - MyFamTreeCollab</title>
+    <title>CSV Template - MyFamTreeCollab</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
 
 <header>
-    <h1>Voorbeeld CSV-bestand</h1>
-    <p>Gebruik dit bestand om stamboom data te importeren in MyFamTreeCollab. Alle kolomnamen worden herkend, taal maakt niet uit. ID’s volgen de idGenerator-logica.</p>
+    <h1>CSV Template</h1>
+    <p>Gebruik deze downloadbare CSV om stamboomdata te importeren in MyFamTreeCollab. 
+       Alle kolomnamen worden herkend en het template is volledig conform het huidige schema. 
+       ID’s volgen de idGenerator-logica.</p>
 </header>
 
 <main>
+    <!-- Hard-coded voorbeeldrecord alleen ter referentie op de pagina -->
+    <section>
+        <h2>Voorbeeldrecord (alleen visueel)</h2>
+        <p>
+            ID: JJVMMHoofdID | Doopnaam: Jan | Roepnaam: Jan | Geslacht: M | Geboortedatum: 1980-01-01 | 
+            Geboorteplaats: Amsterdam | PartnerID: (leeg)
+        </p>
+    </section>
+
+    <!-- Download button -->
     <button id="downloadBtn">Download CSV Voorbeeld</button>
     <p id="status"></p>
 </main>
@@ -25,12 +37,18 @@
 const downloadBtn = document.getElementById('downloadBtn');
 const status = document.getElementById('status');
 
+// Functie genereert CSV met headers + 2 lege rijen
 downloadBtn.addEventListener('click', () => {
-    // CSV content met alle 20 kolommen en ID’s volgens idGenerator-logica
-    const csvContent = `ID,Relatie,Doopnaam,Roepnaam,Prefix,Achternaam,Geslacht,Geboortedatum,Geboorteplaats,Overlijdensdatum,Overlijdensplaats,VaderID,MoederID,PartnerID,Huwelijksdatum,Huwelijksplaats,Opmerkingen,Adres,ContactInfo,URL
-JJVMMHoofdID,Hoofd-ID,Jan,Jan,de,Vermeer,M,1980-01-01,Amsterdam,,,,,,,"2005-06-12",Amsterdam,"Voorbeeldopmerking","Damstraat 1, 1012AB Amsterdam","jan@voorbeeld.nl","https://example.com/jan"
-MMFJKKind,Kind,Marie,Marieke,,Jansen,F,1982-02-14,Utrecht,,,,,,JJVMMHoofdID,2005-06-12,Utrecht,"Voorbeeldopmerking","Grachtstraat 5, 3512BC Utrecht","marie@voorbeeld.nl","https://example.com/marie"
-PPMVKKind,Kind,Pieter,Piet,,Vermeer,M,2008-03-20,Amsterdam,,,,,JJVMMHoofdID,MMFJKKind,,,"","","",""`;
+    if (!window.StamboomSchema) {
+        status.textContent = "❌ Fout: StamboomSchema niet geladen.";
+        return;
+    }
+
+    // Headers ophalen uit schema
+    const headers = StamboomSchema.header();
+    // 2 lege rijen genereren
+    const emptyRow = Array(StamboomSchema.count()).fill("").join(",");
+    const csvContent = `${headers}\n${emptyRow}\n${emptyRow}`;
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
@@ -41,7 +59,7 @@ PPMVKKind,Kind,Pieter,Piet,,Vermeer,M,2008-03-20,Amsterdam,,,,,JJVMMHoofdID,MMFJ
     link.click();
     document.body.removeChild(link);
 
-    status.textContent = "✅ CSV voorbeeld succesvol gedownload!";
+    status.textContent = "✅ CSV template succesvol gedownload!";
 });
 </script>
 
