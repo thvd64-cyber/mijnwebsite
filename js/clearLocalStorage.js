@@ -1,9 +1,9 @@
 // ===============================
-// Auto-clear localStorage op export/create + ID-data
+// Clear localStorage bij "Voeg toe" knop
 // ===============================
 (function() {
-    const prefixes = ["import_", "create_", "export_"]; // prefix keys
-    const extraKeys = ["ID"]; // losse keys zoals ID die ook verwijderd moeten worden
+    const prefixes = ["import_", "create_", "export_"]; // keys met deze prefixes
+    const extraKeys = ["ID"]; // losse keys zoals ID
 
     function clearAppLocalStorage() {
         try {
@@ -23,9 +23,12 @@
         }
     }
 
-    // Detecteer automatisch alle knoppen met data-action export of create
-    const buttons = document.querySelectorAll('[data-action="export"], [data-action="create"]');
-    buttons.forEach(btn => btn.addEventListener("click", clearAppLocalStorage));
-
-    console.log(`Auto-clear active op ${buttons.length} knoppen.`);
+    // Koppel de functie aan de "Voeg toe" knop
+    const voegToeButton = document.querySelector("#voegToeBtn");
+    if(voegToeButton) {
+        voegToeButton.addEventListener("click", clearAppLocalStorage);
+        console.log(`LocalStorage auto-clear actief op "Voeg toe" knop.`);
+    } else {
+        console.warn('Knop "Voeg toe" niet gevonden.');
+    }
 })();
