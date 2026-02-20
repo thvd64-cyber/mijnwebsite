@@ -1,8 +1,8 @@
 // ===============================
-// Clear localStorage bij "Bestand kiezen" knop
+// Universeel Auto-clear LocalStorage Script
 // ===============================
 (function() {
-    const prefixes = ["import_", "create_", "export_"]; // keys die we willen verwijderen
+    const prefixes = ["import_", "create_", "export_"]; // keys die verwijderd worden
     const extraKeys = ["ID"]; // losse keys zoals ID
 
     function clearAppLocalStorage() {
@@ -23,12 +23,11 @@
         }
     }
 
-    // Koppel de functie aan de "Bestand kiezen" knop
-    const bestandKiezenButton = document.querySelector("#bestandKiezenBtn");
-    if(bestandKiezenButton) {
-        bestandKiezenButton.addEventListener("click", clearAppLocalStorage);
-        console.log(`LocalStorage auto-clear actief op "Bestand kiezen" knop.`);
-    } else {
-        console.warn('Knop "Bestand kiezen" niet gevonden.');
-    }
+    // Koppel automatisch aan knoppen via data-action attribute
+    const actions = ["create", "import", "refresh"];
+    actions.forEach(action => {
+        const buttons = document.querySelectorAll(`[data-action="${action}"]`);
+        buttons.forEach(btn => btn.addEventListener("click", clearAppLocalStorage));
+        console.log(`LocalStorage auto-clear actief op ${buttons.length} "${action}" knop(pen).`);
+    });
 })();
