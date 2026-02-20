@@ -1,15 +1,16 @@
 // ===============================
-// Auto-clear localStorage na export/create
+// Auto-clear localStorage op export/create + ID-data
 // ===============================
 (function() {
-    const prefixes = ["import_", "create_", "export_"]; // keys die we willen verwijderen
+    const prefixes = ["import_", "create_", "export_"]; // prefix keys
+    const extraKeys = ["ID"]; // losse keys zoals ID die ook verwijderd moeten worden
 
     function clearAppLocalStorage() {
         try {
             const keysToRemove = [];
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
-                if (prefixes.some(prefix => key.startsWith(prefix))) {
+                if (prefixes.some(prefix => key.startsWith(prefix)) || extraKeys.includes(key)) {
                     keysToRemove.push(key);
                 }
             }
@@ -22,10 +23,9 @@
         }
     }
 
-    // Vervang hier de selectors door je eigen knoppen
-    const exportButton = document.querySelector("#exportBtn");
-    const createButton = document.querySelector("#createBtn");
+    // Detecteer automatisch alle knoppen met data-action export of create
+    const buttons = document.querySelectorAll('[data-action="export"], [data-action="create"]');
+    buttons.forEach(btn => btn.addEventListener("click", clearAppLocalStorage));
 
-    if(exportButton) exportButton.addEventListener("click", clearAppLocalStorage);
-    if(createButton) createButton.addEventListener("click", clearAppLocalStorage);
+    console.log(`Auto-clear active op ${buttons.length} knoppen.`);
 })();
