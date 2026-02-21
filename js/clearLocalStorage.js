@@ -1,29 +1,24 @@
 // ===============================
-// manageLocalStorage.js
-// Wis alle MyFamTreeCollab data + table cleanup + unieke ID generatie
+// manageLocalStorage.js – aangepaste flow
 // ===============================
 
 (function() {
 
-    // ===========================
-    // Configuratie
-    // ===========================
     const prefixes = ["personen_", "import_", "create_", "export_"];
     const extraKeys = ["ID"];
     const dynamicIDPattern = /^XHJ\d+$/; 
     const tableSelector = "#personTable tbody"; // pas aan naar jouw tabel tbody selector
 
     // ===========================
-    // Functie: Clear alle personen data
+    // Functie: Wis LocalStorage en tabel
     // ===========================
     function clearPersonData() {
         try {
-            // Wis LocalStorage keys
             const keysToRemove = [];
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 if (
-                    prefixes.some(prefix => key.startsWith(key)) ||
+                    prefixes.some(prefix => key.startsWith(prefix)) ||
                     extraKeys.includes(key) ||
                     dynamicIDPattern.test(key)
                 ) {
@@ -31,17 +26,12 @@
                 }
             }
             keysToRemove.forEach(key => localStorage.removeItem(key));
-            if(keysToRemove.length) {
-                console.log(`MyFamTreeCollab data verwijderd: ${keysToRemove.join(", ")}`);
-            }
+            if(keysToRemove.length) console.log(`Data verwijderd: ${keysToRemove.join(", ")}`);
 
-            // Wis alle tabelrijen
             const tbody = document.querySelector(tableSelector);
             if(tbody) {
-                while(tbody.firstChild) {
-                    tbody.removeChild(tbody.firstChild);
-                }
-                console.log("Tabelinhoud verwijderd voor een clean start.");
+                while(tbody.firstChild) tbody.removeChild(tbody.firstChild);
+                console.log("Tabelinhoud verwijderd voor clean start.");
             }
 
         } catch (error) {
@@ -64,31 +54,42 @@
     }
 
     // ===========================
-    // Auto-koppeling aan knoppen
+    // Event: Knoppen create/import/refresh
     // ===========================
     const actions = ["create", "import", "refresh"];
     actions.forEach(action => {
         const buttons = document.querySelectorAll(`[data-action="${action}"]`);
-        if(buttons.length) {
-            buttons.forEach(btn => {
-                btn.addEventListener("click", () => {
+        buttons.forEach(btn => {
+            btn.addEventListener("click", e => {
+
+                // Alleen clear voor create of import, niet voor refresh
+                if(action === "create" || action === "import") {
                     clearPersonData();
 
-                    // Voor create-knop: genereer nieuwe unieke ID
                     if(action === "create") {
                         const newID = generateUniqueID();
                         localStorage.setItem(newID, JSON.stringify({id: newID}));
                         console.log(`Nieuwe unieke ID aangemaakt: ${newID}`);
                     }
-                });
+                }
+
+                // Refresh kan hier eventueel de tabel visual refresh triggeren
+                if(action === "refresh") {
+                    console.log("Refresh-knop: geen LocalStorage gewist.");
+                }
+
             });
-            console.log(`Auto-clear + table cleanup + ID-gen actief op ${buttons.length} "${action}" knop(pen).`);
-        }
+        });
     });
 
     // ===========================
-    // Wis bij verlaten / afsluiten pagina
+    // Pagina afsluiten of form submit
     // ===========================
-    window.addEventListener("beforeunload", clearPersonData);
+    window.addEventListener("unload", clearPersonData);
+    document.querySelectorAll("form").forEach(form => {
+        form.addEventListener("submit", e => {
+            clearPersonData();
+        });
+    });
 
 })();
