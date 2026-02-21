@@ -24,6 +24,7 @@ fields.forEach(f => {
 // Helper: row class
 // =======================
 function getRowClass(p) {
+    if (!p.Relatie || p.Relatie === 'Onbekend') return ''; // geen kleur bij nieuwe rijen
     switch(p.Relatie){
         case 'Ouder': return 'ouders';
         case 'Hoofd-ID': return 'hoofd-id';
@@ -194,7 +195,7 @@ function generateMissingIDs() {
         if(!p.ID){
             let newID;
             do {
-                newID = idGenerator(p.Doopnaam, p.Roepnaam, p.Achternaam, p.Geslacht || 'X');
+                newID = idGenerator(p.Doopnaam, p.Roepnaam, p.Achternaam, p.Geslacht || '');
             } while(existingIDs.has(newID));
             p.ID = newID;
             existingIDs.add(newID);
@@ -223,7 +224,8 @@ function saveData() {
 // =======================
 function addNewPerson() {
     const empty = window.StamboomSchema.empty();
-    empty.Relatie = 'Hoofd-ID';
+    empty.Relatie = '';   // nog geen relatie
+    empty.Geslacht = '';  // geen X meer
     stamboomData.unshift(empty);
     renderTable([empty]);
 }
