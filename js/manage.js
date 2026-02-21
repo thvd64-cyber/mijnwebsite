@@ -235,8 +235,7 @@ function addNewPerson() {
     const empty = window.StamboomSchema.empty();
     empty.Relatie = '';             // geen styling class
     empty.Geslacht = '';            // geen default waarde
-    empty.ID = 'TEMP_' + Date.now(); // tijdelijke unieke ID
-
+    
     // Nieuwe persoon vooraan plaatsen in array
     stamboomData.unshift(empty);
 
