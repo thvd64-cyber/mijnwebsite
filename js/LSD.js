@@ -3,21 +3,31 @@
 // ================================
 
 // Functie check of admin modus aan staat
+// Controleert localStorage of de admin modus actief is
 function isAdmin() {
     return localStorage.getItem("ft_admin_mode") === "true";
 }
 
 // Admin menu tonen/verbergen
+// Vroeger selecteerde dit de eerste dropdown (bijv. Home), wat fout ging
+// Nu targeten we specifiek het Admin menu via ID 'adminDropdown'
 function updateAdminMenu() {
-    const dropdown = document.querySelector("li.dropdown");
-    if (!dropdown) return;
+    const dropdown = document.getElementById("adminDropdown"); // target correct element
+    if (!dropdown) return; // check of element bestaat
 
     if (isAdmin()) {
-        dropdown.style.display = "block";
+        dropdown.style.display = "block"; // admin menu zichtbaar
     } else {
-        dropdown.style.display = "none";
+        dropdown.style.display = "none";  // admin menu verborgen
     }
 }
+
+// Run bij DOM ready
+// Zorgt dat het menu direct correct wordt weergegeven zodra de pagina geladen is
+document.addEventListener("DOMContentLoaded", updateAdminMenu);
+
+// Optioneel: activeer admin via geheime code in console
+// localStorage.setItem("ft_admin_mode", "true"); location.reload();
 
 // Run bij DOM ready
 document.addEventListener("DOMContentLoaded", updateAdminMenu);
