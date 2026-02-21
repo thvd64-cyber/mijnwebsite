@@ -1,8 +1,6 @@
 // ===============================
 // manageLocalStorage.js
-// Wis alle MyFamTreeCollab personen data
-// Genereer unieke ID voor nieuwe personen
-// Dubbele ID detectie + auto-generate
+// Wis alle MyFamTreeCollab data + table cleanup + unieke ID generatie
 // ===============================
 
 (function() {
@@ -10,20 +8,22 @@
     // ===========================
     // Configuratie
     // ===========================
-    const prefixes = ["personen_", "import_", "create_", "export_"]; // keys met personen data
-    const extraKeys = ["ID"]; // losse keys
-    const dynamicIDPattern = /^XHJ\d+$/; // losse IDs zoals XHJ000001
+    const prefixes = ["personen_", "import_", "create_", "export_"];
+    const extraKeys = ["ID"];
+    const dynamicIDPattern = /^XHJ\d+$/; 
+    const tableSelector = "#personTable tbody"; // pas aan naar jouw tabel tbody selector
 
     // ===========================
     // Functie: Clear alle personen data
     // ===========================
     function clearPersonData() {
         try {
+            // Wis LocalStorage keys
             const keysToRemove = [];
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 if (
-                    prefixes.some(prefix => key.startsWith(prefix)) ||
+                    prefixes.some(prefix => key.startsWith(key)) ||
                     extraKeys.includes(key) ||
                     dynamicIDPattern.test(key)
                 ) {
@@ -34,21 +34,30 @@
             if(keysToRemove.length) {
                 console.log(`MyFamTreeCollab data verwijderd: ${keysToRemove.join(", ")}`);
             }
+
+            // Wis alle tabelrijen
+            const tbody = document.querySelector(tableSelector);
+            if(tbody) {
+                while(tbody.firstChild) {
+                    tbody.removeChild(tbody.firstChild);
+                }
+                console.log("Tabelinhoud verwijderd voor een clean start.");
+            }
+
         } catch (error) {
-            console.error("Fout bij verwijderen van MyFamTreeCollab data:", error);
+            console.error("Fout bij verwijderen MyFamTreeCollab data:", error);
         }
     }
 
     // ===========================
     // Functie: Genereer unieke ID
-    // Formaat: XHJ + 6 cijfers
     // ===========================
     function generateUniqueID() {
         let newID;
         const existingIDs = Object.keys(localStorage)
             .filter(key => dynamicIDPattern.test(key) || key === "ID");
         do {
-            const randomNumber = Math.floor(Math.random() * 999999) + 1; // 1–999999
+            const randomNumber = Math.floor(Math.random() * 999999) + 1;
             newID = "XHJ" + String(randomNumber).padStart(6, "0");
         } while(existingIDs.includes(newID));
         return newID;
@@ -62,11 +71,10 @@
         const buttons = document.querySelectorAll(`[data-action="${action}"]`);
         if(buttons.length) {
             buttons.forEach(btn => {
-                // Wis eerst oude data
                 btn.addEventListener("click", () => {
                     clearPersonData();
 
-                    // Voor create-knop: genereer ID voor nieuwe persoon
+                    // Voor create-knop: genereer nieuwe unieke ID
                     if(action === "create") {
                         const newID = generateUniqueID();
                         localStorage.setItem(newID, JSON.stringify({id: newID}));
@@ -74,7 +82,7 @@
                     }
                 });
             });
-            console.log(`Auto-clear + ID-gen actief op ${buttons.length} "${action}" knop(pen).`);
+            console.log(`Auto-clear + table cleanup + ID-gen actief op ${buttons.length} "${action}" knop(pen).`);
         }
     });
 
