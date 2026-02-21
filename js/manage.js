@@ -276,5 +276,3 @@ addBtn.addEventListener('click', addNewPerson);
 // === Pagina start ===
 clearTable(); // tabel leeg bij openen
 
-// Knoptekst aanpassen met limietvermelding
-addBtn.textContent = 'Voeg persoon toe (max. 10 tegelijk bewerken)';
