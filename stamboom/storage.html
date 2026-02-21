@@ -1,1 +1,180 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storage Overzicht - MyFamTreeCollab</title>
+    <link rel="stylesheet" href="../css/style.css">
 
+    <style>
+        .storage-container {
+            padding: 20px;
+        }
+
+        .storage-info {
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        .empty {
+            margin-top: 20px;
+            font-style: italic;
+            color: #777;
+        }
+
+        .btn-reset {
+            margin-top: 15px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- ======================= TOPBAR ======================= -->
+<div class="topbar">
+    <div class="topbar-content">
+        <div class="top-left">
+            <a href="#">Login</a>
+        </div>
+        <div class="top-right">
+            <a href="#" class="lang-link" data-lang="nl">NL</a> |
+            <a href="#" class="lang-link" data-lang="en">EN</a>
+        </div>
+    </div>
+</div>
+
+<!-- ======================= HEADER ======================= -->
+<header>
+    <h1>MyFamTreeCollab</h1>
+
+    <!-- ======================= NAVIGATION ======================= -->
+    <nav>
+        <ul class="menu">
+            <li class="dropdown">
+                <a href="#" class="menu-title">Home ▼</a>
+                <ul class="submenu">
+                    <li><a href="/MyFamTreeCollab/home/create.html">Create</a></li>
+                    <li><a href="/MyFamTreeCollab/home/import.html">Import</a></li>
+                    <li><a href="/MyFamTreeCollab/home/export.html">Export</a></li>
+                    <li><a href="/MyFamTreeCollab/home/print.html">Print</a></li>
+                    <li><a href="/MyFamTreeCollab/home/about.html">About</a></li>
+                </ul>
+            </li>
+
+            <li class="dropdown">
+                <a href="#" class="menu-title">Stamboom ▼</a>
+                <ul class="submenu">
+                    <li><a href="/MyFamTreeCollab/stamboom/view.html">View</a></li>
+                    <li><a href="/MyFamTreeCollab/stamboom/manage.html">Manage</a></li>
+                    <li><a href="/MyFamTreeCollab/stamboom/stats.html">Stats</a></li>
+                    <li><a href="/MyFamTreeCollab/stamboom/storage.html">Storage</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<!-- ======================= CONTENT ======================= -->
+<div class="storage-container">
+
+    <h2>📦 Local Storage Overzicht</h2>
+
+    <div class="storage-info" id="storageInfo"></div>
+
+    <div id="storageContainer"></div>
+
+    <button class="btn-reset" id="resetBtn">Reset Storage</button>
+
+</div>
+
+<!-- ======================= SCRIPTS ======================= -->
+<script src="../js/storage.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const container = document.getElementById('storageContainer');
+    const info = document.getElementById('storageInfo');
+    const resetBtn = document.getElementById('resetBtn');
+
+    function renderTable() {
+
+        const data = StamboomStorage.get();
+
+        container.innerHTML = "";
+
+        info.innerHTML = 
+            "Storage versie: " + StamboomStorage.version + 
+            " | Aantal records: " + data.length;
+
+        if (!data.length) {
+            container.innerHTML = '<div class="empty">Geen data gevonden in localStorage.</div>';
+            return;
+        }
+
+        const columns = Object.keys(data[0]);
+
+        const table = document.createElement('table');
+
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+
+        columns.forEach(col => {
+            const th = document.createElement('th');
+            th.textContent = col;
+            headerRow.appendChild(th);
+        });
+
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+
+        data.forEach(person => {
+            const row = document.createElement('tr');
+
+            columns.forEach(col => {
+                const td = document.createElement('td');
+                td.textContent = person[col] ?? '';
+                row.appendChild(td);
+            });
+
+            tbody.appendChild(row);
+        });
+
+        table.appendChild(tbody);
+        container.appendChild(table);
+    }
+
+    resetBtn.addEventListener('click', function () {
+        if (confirm("Weet je zeker dat je alle storage wilt wissen?")) {
+            StamboomStorage.clear();
+            renderTable();
+        }
+    });
+
+    renderTable();
+
+});
+</script>
+
+</body>
+</html>
