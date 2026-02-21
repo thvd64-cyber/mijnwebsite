@@ -225,7 +225,7 @@ function saveData() {
 function addNewPerson() {
 
     // Controle: maximaal 10 tijdelijke personen tegelijk
-    const tempCount = stamboomData.filter(p => p.ID && p.ID.startsWith('TEMP_')).length;
+    const tempCount = stamboomData.filter(p => !p.ID).length; // telt alleen personen zonder ID
     if (tempCount >= 10) {
         alert('⚠️ Je kunt maximaal 10 personen tegelijk toevoegen. Gebruik opslaan en refresh om de volgende 10 personen toe te voegen.');
         return; // stopt de functie
