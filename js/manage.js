@@ -223,11 +223,47 @@ function saveData() {
 // Voeg lege persoon toe
 // =======================
 function addNewPerson() {
+
+    // Controle: maximaal 10 personen tegelijk tonen
+    if (stamboomData.length >= 10) {
+        alert('Maximaal 10 personen tegelijk toegestaan.');
+        return;
+    }
+    // → voorkomt onbeperkte groei
+    // → beschermt tegen dubbele lege invoer
+    // → houdt UI overzichtelijk
+    // → performance controle
+
+    // Nieuw leeg persoon-object maken via schema
     const empty = window.StamboomSchema.empty();
-    empty.Relatie = '';   // nog geen relatie
-    empty.Geslacht = '';  // geen X meer
+    // → zorgt voor consistente veldstructuur
+    // → voorkomt undefined properties
+
+    // Relatie leeg zetten
+    empty.Relatie = '';
+    // → geen styling class
+    // → neutrale nieuwe invoer
+
+    // Geslacht leeg zetten
+    empty.Geslacht = '';
+    // → geen default waarde
+    // → correcte ID generatie later
+
+    // Tijdelijke unieke ID genereren
+    empty.ID = 'TEMP_' + Date.now();
+    // → gegarandeerd uniek
+    // → voorkomt dubbele matches
+    // → onderscheid nieuwe records
+
+    // Nieuwe persoon vooraan plaatsen
     stamboomData.unshift(empty);
+    // → nieuwste bovenaan
+    // → direct beschikbaar in array
+
+    // Alleen deze persoon tonen
     renderTable([empty]);
+    // → tabel wordt eerst leeggemaakt
+    // → voorkomt duplicatie
 }
 
 // =======================
@@ -239,3 +275,6 @@ addBtn.addEventListener('click', addNewPerson);
 
 // === Pagina start ===
 clearTable(); // tabel leeg bij openen
+
+// Knoptekst aanpassen met limietvermelding
+addBtn.textContent = 'Voeg persoon toe (max. 10 tegelijk bewerken)';
