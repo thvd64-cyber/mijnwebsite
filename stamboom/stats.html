@@ -1,81 +1,40 @@
+<!-- ======================= stats.html ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stamboom Stats - Onder Constructie</title>
+    <title>Import CSV - MyFamTreeCollab</title>
     <link rel="stylesheet" href="../css/style.css">
-
-    <!-- Automatisch terug naar Home na 5 seconden -->
-    <meta http-equiv="refresh" content="5; url=/MyFamTreeCollab/">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #fdfdfd;
-            color: #333;
-            text-align: center;
-        }
-
-        header {
-            background-color: #004080;
-            color: white;
-            padding: 1rem 2rem;
-        }
-
-        main {
-            padding: 4rem 2rem;
-        }
-
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-        }
-
-        h2 {
-            color: #004080;
-            margin-bottom: 1rem;
-        }
-
-        p {
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 0.6rem 1.2rem;
-            background-color: #0080ff;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: bold;
-            transition: background 0.3s;
-        }
-
-        .btn:hover {
-            background-color: #005bb5;
-        }
-    </style>
 </head>
 <body>
 
-<header>
-    <h1>Mijn Website</h1>
-</header>
+<!-- ======================= NAVBAR ======================= -->
+<div id="navbar-placeholder"></div>
+<script>
+fetch('/MyFamTreeCollab/navbar.html')
+    .then(resp => resp.text())
+    .then(data => {
+        document.getElementById('navbar-placeholder').innerHTML = data;
+    });
+</script>
 
-<main>
-    <h1>Stamboom Stats</h1>
-    <h2>Pagina tijdelijk niet bereikbaar</h2>
-    <p>Deze pagina is momenteel in ontwikkeling of tijdelijk niet beschikbaar.</p>
-    <p>Onze excuses voor het ongemak.</p>
-    <p>U wordt automatisch doorgestuurd naar de homepage over 5 seconden.</p>
-    <br>
-    <a href="/MyFamTreeCollab/" class="btn">Ga direct naar Home</a>
-</main>
+    
+<!-- ======================= main site code  ======================= -->
 
-<script src="../js/script.js"></script>
+<!-- ======================= Under Construction ======================= -->
+<div class="under-construction" style="text-align:center; padding:50px 20px; background:#fff3cd; border:1px solid #ffeeba; border-radius:8px; margin-top:20px;">
+    <h2 style="color:#856404; font-size:2rem; margin-bottom:10px;">⚠️ Under Construction</h2>
+    <p style="color:#856404; font-size:1.1rem;">Deze pagina is momenteel in aanbouw. Kom binnenkort terug voor updates!</p>
+</div>
+<!-- ======================= CSS ======================= -->
+
+
+<!-- ======================= Scripts ======================= -->
+<!-- ======================= FOOTER ======================= -->
+<footer>
+    <p>&copy; 2026 MyFamTreeCollab website</p>
+</footer>
+
 </body>
 </html>
-
