@@ -24,7 +24,7 @@ fields.forEach(f => {
 // Helper: row class
 // =======================
 function getRowClass(p) {
-    if (!p.Relatie || p.Relatie === 'Onbekend') return ''; // geen kleur bij nieuwe rijen
+    if (!p.Relatie || p.Relatie === 'Onbekend') return '';
     switch(p.Relatie){
         case 'Ouder': return 'ouders';
         case 'Hoofd-ID': return 'hoofd-id';
@@ -128,14 +128,12 @@ function loadPerson() {
         return;
     }
 
-    // 1 match: direct render
     if(matches.length === 1){
         const hierData = sortByHierarchy(stamboomData, matches[0].ID);
         renderTable(hierData);
         return;
     }
 
-    // Meerdere matches → popup modal
     showPersonSelectionPopup(matches);
 }
 
@@ -143,7 +141,6 @@ function loadPerson() {
 // Popup selectie voor meerdere matches
 // =======================
 function showPersonSelectionPopup(matches){
-    // Maak modal
     let modal = document.createElement('div');
     modal.className = 'modal-popup';
     modal.style.position = 'fixed';
@@ -175,7 +172,6 @@ function showPersonSelectionPopup(matches){
     });
     modal.appendChild(list);
 
-    // Sluit knop
     const closeBtn = document.createElement('button');
     closeBtn.textContent = 'Sluiten';
     closeBtn.addEventListener('click', () => document.body.removeChild(modal));
@@ -192,7 +188,7 @@ function generateMissingIDs() {
     let duplicates = 0;
 
     stamboomData.forEach(p => {
-        if(!p.ID){
+        if(!p.ID && p.Doopnaam){
             let newID;
             do {
                 newID = idGenerator(p.Doopnaam, p.Roepnaam, p.Achternaam, p.Geslacht || '');
@@ -210,57 +206,78 @@ function generateMissingIDs() {
     }
 }
 
+// =======================
+// Save data
+// =======================
 function saveData() {
-    // Alle tijdelijke rijen ophalen
-    const tempRows = tableBody.querySelectorAll('tr.temp-row');
+    const tempRows = tableBody.querySelectorAll('tr');
+    const existingIDs = new Set(stamboomData.map(p => p.ID));
+
     tempRows.forEach(tr => {
-        const newPerson = window.StamboomSchema.empty();
+        const rowData = {};
+        let hasData = false;
+
+        // Verzamel alle velden uit input of cell
         fields.forEach((f, i) => {
-            if(f !== 'ID' && f !== 'Relatie'){
-                const input = tr.cells[i].querySelector('input');
-                newPerson[f] = input ? input.value : '';
-            }
+            const input = tr.cells[i].querySelector('input');
+            const value = input ? input.value.trim() : tr.cells[i].textContent.trim();
+            rowData[f] = value;
+            if(value) hasData = true;
         });
 
-        // Genereer ID voor nieuwe persoon
-        newPerson.ID = idGenerator(newPerson.Doopnaam, newPerson.Roepnaam, newPerson.Achternaam, newPerson.Geslacht || '');
+        // Sla lege rijen over of rijen zonder Doopnaam
+        if(!hasData || !rowData.Doopnaam) return;
 
-        // Voeg toe aan stamboomData
-        stamboomData.unshift(newPerson);
+        // ID afhandeling
+        if(!rowData.ID || existingIDs.has(rowData.ID)){
+            let newID;
+            do {
+                newID = idGenerator(rowData.Doopnaam, rowData.Roepnaam, rowData.Achternaam, rowData.Geslacht || '');
+            } while(existingIDs.has(newID));
+            rowData.ID = newID;
+        }
+
+        // Update bestaande of voeg nieuwe toe
+        const existingIndex = stamboomData.findIndex(p => p.ID === rowData.ID);
+        if(existingIndex > -1){
+            Object.keys(rowData).forEach(k => {
+                if(k !== 'Relatie' && rowData[k] && rowData[k] !== stamboomData[existingIndex][k]){
+                    stamboomData[existingIndex][k] = rowData[k];
+                }
+            });
+        } else {
+            stamboomData.unshift(rowData);
+        }
+
+        existingIDs.add(rowData.ID);
     });
 
-    // Sla alles op in localStorage
     localStorage.setItem('stamboomData', JSON.stringify(stamboomData));
     alert('Wijzigingen opgeslagen!');
-
-    // Refresh tabel: leeg en eventueel later familie van hoofdpersoon tonen
     clearTable();
 }
+
 // =======================
 // Voeg tijdelijke lege persoon toe
 // =======================
 function addNewPerson() {
-    // Controle: maximaal 10 tijdelijke rijen tegelijk in tabel
     const currentTempRows = tableBody.querySelectorAll('tr.temp-row').length;
     if(currentTempRows >= 10){
-        alert('⚠️ Je kunt maximaal 10 personen tegelijk toevoegen. Gebruik opslaan en refresh voor de volgende 10.');
+        alert('⚠️ Maximaal 10 personen tegelijk toevoegen.');
         return;
     }
 
-    // Maak tijdelijk leeg object (alle velden leeg, geen ID)
     const empty = window.StamboomSchema.empty();
     empty.Relatie = '';
     empty.Geslacht = '';
-    
-    // Maak tijdelijke tr-element
-    const tr = document.createElement('tr');
-    tr.className = 'temp-row'; // markeer als tijdelijke rij
 
-    // Vul rijen met inputvelden
+    const tr = document.createElement('tr');
+    tr.className = 'temp-row';
+
     fields.forEach(f => {
         const td = document.createElement('td');
         if(f === 'ID' || f === 'Relatie'){
-            td.textContent = ''; // tijdelijk leeg
+            td.textContent = '';
         } else {
             const input = document.createElement('input');
             input.value = '';
@@ -270,7 +287,6 @@ function addNewPerson() {
         tr.appendChild(td);
     });
 
-    // Voeg tijdelijk toe aan tabel (nog niet in stamboomData)
     tableBody.appendChild(tr);
 }
 
@@ -282,5 +298,4 @@ saveBtn.addEventListener('click', saveData);
 addBtn.addEventListener('click', addNewPerson);
 
 // === Pagina start ===
-clearTable(); // tabel leeg bij openen
-
+clearTable();
