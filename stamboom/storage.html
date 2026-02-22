@@ -21,7 +21,28 @@ fetch('/MyFamTreeCollab/navbar.html')
 
     
 <!-- ======================= main site code  ======================= -->
-<!-- Storage overzicht pagina MyFamTreeCollab -->
+<!-- ======================= Pagina Titel dynamisch ======================= -->
+<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px; text-align:left;"></div>
+
+<script>
+// Haal de pagina naam uit het webadres
+document.addEventListener('DOMContentLoaded', function() {
+    const pageTitleDiv = document.getElementById('pageTitle');
+
+    // Pak het laatste deel van het pad uit de URL, bv. "storage.html"
+    let path = window.location.pathname.split("/").pop();
+
+    // Verwijder de extensie .html
+    let title = path.replace('.html','');
+
+    // Optioneel: underscores of koppeltekens vervangen door spaties en hoofdletters
+    title = title.replace(/[-_]/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+
+    // Voeg de titel toe aan de pagina
+    pageTitleDiv.textContent = title;
+});
+</script>
+    <!-- Storage overzicht pagina MyFamTreeCollab -->
 
 <!-- Hoofd HTML structuur -->
 <div class="main-container" id="mainContainer">
