@@ -1,5 +1,30 @@
+<!-- ======================= storage.html ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import CSV - MyFamTreeCollab</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<!-- ======================= NAVBAR ======================= -->
+<div id="navbar-placeholder"></div>
+<script>
+fetch('/MyFamTreeCollab/navbar.html')
+    .then(resp => resp.text())
+    .then(data => {
+        document.getElementById('navbar-placeholder').innerHTML = data;
+    });
+</script>
+
+<!-- ======================= PAGINA-TITEL ======================= -->
+<section class="page-title">
+    <h2>Import CSV</h2>
+    <p>Gebruik een CSV-bestand om personen toe te voegen aan uw stamboom. Taal en kolomnamen worden genegeerd.</p>
+    
+<!-- ======================= orginele code  ======================= -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,12 +51,6 @@
     </style>
 </head>
 <body>
-
-<!-- ======================= NAVBAR ======================= -->
-</head>
-<body>
-    <p> hier komt de NAVBAR</p>
-</body>
 
 <!-- ===== Scripts ===== -->
 <script src="../js/storage.js"></script>
