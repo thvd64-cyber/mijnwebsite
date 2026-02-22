@@ -1,17 +1,18 @@
 <!-- ======================= Bottom Bar ======================= -->
 <div class="bottombar">
     <div class="bottombar-content">
+        
         <div class="bottom-left">
-            <a href="#">"bottom left space"</a>
+            <a href="#">links</a>
         </div>
-      <div class="bottom-center">
-            <a href="#">" data-lang="bottom left"</a> |
-            <a href="#">" data-lang="space">EN</a>
+
+        <div class="bottom-center">
+            <a href="#">midden</a>
         </div>
+
         <div class="bottom-right">
-          <a href="#" class="lang-link" data-lang="bottom left"</a> |
-            <a href="#">" data-lang="bottom left"</a> |
-            <a href="">" data-lang="space">EN</a>
+            <a href="#">rechts</a>
         </div>
+
     </div>
 </div>
