@@ -27,22 +27,39 @@
 </head>
 <body>
 
-<!-- ===== Global Navbar Include ===== -->
-<div id="navbar-placeholder"></div>
+<!-- ===== Navbar Include (robust) ===== -->
+<div id="navbar-placeholder"></div> <!-- Placeholder voor de navbar -->
+
 <script>
-fetch('/MyFamTreeCollab/navbar.html')
-    .then(resp => resp.text())
-    .then(html => {
+(async function(){
+    try {
+        // Bepaal dynamisch pad naar Layout folder t.o.v. huidige pagina
+        let depth = window.location.pathname.split('/').length - 2; 
+        // Als root pagina (index.html) → depth = 0
+        // Als /stamboom/manage.html → depth = 1
+
+        let prefix = '';
+        for(let i=0; i<depth; i++){ prefix += '../'; } 
+        // Bouw prefix voor subfolders, bijvoorbeeld '../' of '../../'
+
+        const navbarPath = prefix + 'Layout/Navbar.html'; // Pad naar navbar.html
+
+        // Fetch de navbar
+        const resp = await fetch(navbarPath);
+        const html = await resp.text();
         document.getElementById('navbar-placeholder').innerHTML = html;
 
-        // Actief menu-item markeren
-        const currentPage = window.location.pathname.split('/').pop();
+        // ==================== Actief menu-item markeren ====================
+        const currentPage = window.location.pathname.split('/').pop(); // Huidige pagina
         document.querySelectorAll('#navbar-placeholder a').forEach(link => {
             if(link.getAttribute('href') && link.getAttribute('href').endsWith(currentPage)){
-                link.classList.add('active');
+                link.classList.add('active'); // Voeg class 'active' toe
             }
         });
-    });
+    } catch(err) {
+        console.error('Fout bij laden van Navbar:', err);
+    }
+})();
 </script>
 
 <!-- ===== Main Content ===== -->
