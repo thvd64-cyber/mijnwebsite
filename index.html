@@ -53,11 +53,25 @@
     </main>
 
     <!-- ======================= FOOTER ======================= -->
+       <footer id="bottombar"></footer>
     <footer>
         <p>&copy; 2026 MyFamTreeCollab website</p>
     </footer>
+    <!-- ======================= -->
+    <!-- JS voor componenten -->
+    <!-- ======================= -->
+    <script>
+        async function loadComponent(id, url) {
+            const resp = await fetch(url);
+            document.getElementById(id).innerHTML = await resp.text();
+        }
 
-    <script src="js/script.js"></script>
+        // Componenten inladen
+        loadComponent('topbar', '/Layout/TopBar.html');
+        loadComponent('navbar', '/Layout/Navbar.html');
+        loadComponent('pagetitle', '/Layout/PaginaTitel.html');
+        loadComponent('header', '/Layout/Header.html');
+        loadComponent('bottombar', '/Layout/BottomBar.html');
+    <js/script>
 </body>
-
 </html>
