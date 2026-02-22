@@ -28,35 +28,10 @@
 <body>
 
 <!-- ======================= NAVBAR ======================= -->
-<div id="navbar-placeholder"></div> <!-- Placeholder voor navbar -->
-
-<script>
-(async function() {
-    try {
-        // Laad Navbar vanuit Layout folder
-        const resp = await fetch('Layout/Navbar.html'); 
-        const html = await resp.text(); 
-        document.getElementById('navbar-placeholder').innerHTML = html;
-
-        // Actief menu-item markeren
-        const currentPage = window.location.pathname.split('/').pop(); 
-        document.querySelectorAll('#navbar-placeholder a').forEach(link => {
-            if(link.getAttribute('href') && link.getAttribute('href').endsWith(currentPage)){
-                link.classList.add('active');
-            }
-        });
-    } catch(err) {
-        console.error('Fout bij laden van Navbar:', err);
-    }
-})();
-</script>
-<!-- ===== Main Content ===== -->
-<div class="main-container">
-    <h2>📦 Local Storage Overzicht</h2>
-    <div class="storage-info" id="storageInfo"></div>
-    <div id="storageContainer"></div>
-    <button class="btn-reset" id="resetBtn">Reset Storage</button>
-</div>
+</head>
+<body>
+    <p> hier komt de NAVBAR</p>
+</body>
 
 <!-- ===== Scripts ===== -->
 <script src="../js/storage.js"></script>
