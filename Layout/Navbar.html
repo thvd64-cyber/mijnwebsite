@@ -1,12 +1,12 @@
 <!-- ======================= NAVIGATION MENU ======================= -->
 <nav id="navbar">
-    <!-- Hoofdsite titel -->
-    <div class="navbar-header">
-        <h1 class="site-title">MyFamTreeCollab</h1>
-        <h2 class="page-title"></h2> <!-- Dynamische pagina titel -->
-    </div>
-
     <ul class="menu">
+        <!-- Links: Projecttitel en paginatitel -->
+        <li class="menu-title project-info">
+            <span class="project-name">MyFamTreeCollab</span>
+            <span class="current-page" id="currentPageTitle"></span>
+        </li>
+
         <!-- Home dropdown -->
         <li class="dropdown">
             <a href="#" class="menu-title">Home ▼</a>
@@ -65,7 +65,7 @@
             </ul>
         </li>
 
-        <!-- Admin dropdown als laatste -->
+        <!-- Admin dropdown -->
         <li class="dropdown" id="adminDropdown">
             <a href="#" class="menu-title">Administrator ▼</a>
             <ul class="submenu">
@@ -80,12 +80,31 @@
 </nav>
 
 <script>
-    // Dynamische pagina titel uit URL halen
-    const pageTitleElement = document.querySelector('.page-title');
-    const pathParts = window.location.pathname.split('/');
-    const pageFile = pathParts[pathParts.length - 1]; // bijv. create.html
-    const pageName = pageFile.replace('.html','').replace(/_/g,' ').replace(/%20/g,' ');
-
-    // Eerste letter hoofdletter
-    pageTitleElement.textContent = pageName.charAt(0).toUpperCase() + pageName.slice(1);
+    // Dynamisch de paginatitel uit de URL halen
+    const path = window.location.pathname;
+    const page = path.substring(path.lastIndexOf('/') + 1).replace('.html','');
+    const formattedTitle = page.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    document.getElementById('currentPageTitle').textContent = formattedTitle;
 </script>
+
+<style>
+    /* Projecttitel naast menu-items */
+    .menu li.project-info {
+        display: flex;
+        flex-direction: column;
+        margin-right: 20px;
+    }
+    .project-name {
+        font-weight: bold;
+    }
+    .current-page {
+        font-size: 0.9em;
+        color: #888;
+    }
+    /* Optioneel: items horizontaal uitlijnen */
+    #navbar ul.menu {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+</style>
