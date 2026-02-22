@@ -1,1 +1,33 @@
+/* ======================= BOTTOM BAR ======================= */
 
+.bottombar {
+    background-color: #000; /* Zwarte achtergrond */
+    color: #fff; /* Witte standaard tekstkleur */
+    padding: 12px 0; /* Verticale ruimte boven en onder */
+    font-size: 14px; /* Tekstgrootte */
+}
+
+.bottombar a {
+    color: #fff; /* Links wit maken */
+    text-decoration: none; /* Geen onderstreping standaard */
+}
+
+.bottombar a:hover {
+    text-decoration: underline; /* Onderstreping bij hover */
+}
+
+.bottombar-content {
+    max-width: 1200px; /* Maximale breedte van content */
+    margin: 0 auto; /* Centreert horizontaal */
+    display: flex; /* Zet children naast elkaar */
+    align-items: center; /* Verticale uitlijning */
+    justify-content: space-between; /* Links en rechts uit elkaar */
+    padding: 0 20px; /* Binnenruimte links en rechts */
+    position: relative; /* Nodig voor absolute centrering */
+}
+
+.bottom-center {
+    position: absolute; /* Haalt midden uit flex flow */
+    left: 50%; /* Plaatst op 50% van container */
+    transform: translateX(-50%); /* Corrigeert exact naar midden */
+}
