@@ -16,7 +16,7 @@
 
 <script>
     // Laad navbar.html vanuit Layout folder
-    fetch('/Layout/Navbar.html')
+    fetch('Layout/Navbar.html')
         .then(response => response.text())
         .then(data => {
             document.getElementById('navbar').innerHTML = data;
