@@ -1,123 +1,54 @@
 <!-- ======================= index.html ======================= -->
-<!DOCTYPE html> <!-- Geeft aan dat dit een HTML5-document is -->
-<html lang="nl"> <!-- Start van het HTML-document, taal ingesteld op Nederlands -->
+<!DOCTYPE html>
+<html lang="nl">
 
 <head>
-    <meta charset="UTF-8"> <!-- Zorgt dat speciale tekens correct worden weergegeven -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-    <!-- Zorgt voor correcte weergave en schaal op mobiele apparaten -->
-
-    <title>MyFamTreeCollab</title> <!-- Titel die in de browser-tab wordt getoond -->
-
-    <!-- ======================= GLOBALE STYLING ======================= -->
-    <link rel="stylesheet" href="css/style.css"> 
-    <!-- Algemene basis styling (body, fonts, globale layout) -->
-
-    <!-- ======================= COMPONENT STYLING ======================= -->
-    <link rel="stylesheet" href="css/TopBar.css"> 
-    <!-- Styling specifiek voor de TopBar -->
-
-    <link rel="stylesheet" href="css/Navbar.css"> 
-    <!-- Styling voor navigatiemenu inclusief dropdowns -->
-
-    <link rel="stylesheet" href="css/Paginatitel.css"> 
-    <!-- Styling voor de pagina titel sectie -->
-
-    <link rel="stylesheet" href="css/Header.css"> 
-    <!-- Styling voor de header banner -->
-
-    <link rel="stylesheet" href="css/BottomBar.css"> 
-    <!-- Styling voor de footer/bottombar -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyFamTreeCollab</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body> <!-- Start van de zichtbare inhoud van de pagina -->
+<body>
 
-    <!-- ======================= TOPBAR COMPONENT ======================= -->
-    <div id="topbar"></div> 
-    <!-- Placeholder waarin TopBar.html dynamisch wordt geladen -->
+    <!-- ======================= NAVBAR (geïmporteerd vanuit Layout) ======================= -->
+<div id="navbar"></div> <!-- Placeholder voor navbar -->
 
-    <!-- ======================= NAVBAR COMPONENT ======================= -->
-    <div id="navbar"></div> 
-    <!-- Placeholder waarin Navbar.html dynamisch wordt geladen -->
-
-    <!-- ======================= PAGINATITEL COMPONENT ======================= -->
-    <div id="pagetitle"></div> 
-    <!-- Placeholder waarin PaginaTitel.html dynamisch wordt geladen -->
-
-    <!-- ======================= HEADER COMPONENT ======================= -->
-    <header id="header"></header> 
-    <!-- Placeholder waarin Header.html dynamisch wordt geladen -->
-
-    <!-- ======================= HOOFDINHOUD ======================= -->
-    <main id="content"> 
-    <!-- Centrale inhoud van de pagina; dit deel wijzig je per pagina -->
-
-        <section> <!-- Eerste contentblok -->
-            <h2>Welkom op de MyFamTreeCollab website</h2> 
-            <!-- Koptekst van deze sectie -->
+<script>
+    // Laad navbar.html vanuit Layout folder
+    fetch('/Layout/Navbar.html')
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('navbar').innerHTML = data;
+        })
+        .catch(err => console.error('Navbar laden mislukt:', err));
+</script>
+    
+    <!-- ======================= MAIN CONTENT ======================= -->
+    <main id="home">
+        <section>
+            <h2>Welkom op de MyFamTreeCollab website</h2>
             <p>Ontdek uw stamboom, abonnementen en bronnen eenvoudig via de navigatie hierboven.</p>
-            <!-- Beschrijvende tekst -->
         </section>
 
-        <section> <!-- Tweede contentblok -->
+        <section>
             <h2>Start uw Stamboom</h2>
             <p>Begin vandaag nog met het ontdekken en beheren van uw familiegeschiedenis.</p>
             <a href="stamboom/index.html" class="btn">Start Nu</a>
-            <!-- Call-to-action knop -->
         </section>
 
-        <section> <!-- Derde contentblok -->
+        <section>
             <h2>Nieuws & Updates</h2>
             <p>Bekijk de laatste functies en tips voor het beheren van uw stamboom.</p>
         </section>
+    </main>
 
-    </main> <!-- Einde hoofdinhoud -->
+    <!-- ======================= FOOTER ======================= -->
+    <footer>
+        <p>&copy; 2026 MyFamTreeCollab website</p>
+    </footer>
 
-    <!-- ======================= BOTTOMBAR COMPONENT ======================= -->
-    <footer id="bottombar"></footer> 
-    <!-- Placeholder waarin BottomBar.html dynamisch wordt geladen -->
+    <script src="js/script.js"></script>
+</body>
 
-    <!-- ======================= COMPONENT LOADER SCRIPT ======================= -->
-    <script>
-        // Algemene functie om een HTML-component in te laden
-        async function loadComponent(id, url) {
-            try {
-                const resp = await fetch(url); 
-                // Haalt het HTML-bestand op via fetch()
-
-                const html = await resp.text(); 
-                // Zet de response om naar tekst (HTML)
-
-                document.getElementById(id).innerHTML = html; 
-                // Plaatst de opgehaalde HTML in de juiste placeholder
-            } catch (err) {
-                console.error(`Component ${id} laden mislukt:`, err); 
-                // Toont foutmelding in console indien laden mislukt
-            }
-        }
-
-        // ======================= COMPONENTEN LADEN =======================
-
-        loadComponent('topbar', '/Layout/TopBar.html'); 
-        // Laadt TopBar component uit Layout map
-
-        loadComponent('navbar', '/Layout/Navbar.html'); 
-        // Laadt Navbar component uit Layout map
-
-        loadComponent('pagetitle', '/Layout/PaginaTitel.html'); 
-        // Laadt PaginaTitel component uit Layout map
-
-        loadComponent('header', '/Layout/Header.html'); 
-        // Laadt Header component uit Layout map
-
-        loadComponent('bottombar', '/Layout/BottomBar.html'); 
-        // Laadt BottomBar component uit Layout map
-    </script>
-
-    <!-- ======================= GLOBALE JAVASCRIPT ======================= -->
-    <script src="js/script.js"></script> 
-    <!-- Extern JavaScript bestand voor algemene functionaliteit -->
-
-</body> <!-- Einde zichtbare inhoud -->
-
-</html> <!-- Einde HTML-document -->
+</html>
