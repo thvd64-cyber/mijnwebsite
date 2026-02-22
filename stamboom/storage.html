@@ -21,54 +21,87 @@ fetch('/MyFamTreeCollab/navbar.html')
 
     
 <!-- ======================= orginele code  ======================= -->
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📦 Storage Overzicht - MyFamTreeCollab</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <style>
-        /* ===== Body & Container ===== */
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f8f8f8; }
-        .main-container { max-width: 1100px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+<!-- Storage overzicht pagina MyFamTreeCollab -->
 
-        /* ===== Storage Table ===== */
-        .storage-info { font-weight: bold; margin-bottom: 15px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        th { background-color: #f4f4f4; }
-        .empty { font-style: italic; color: #777; margin-top: 20px; }
-        .btn-reset { padding: 8px 12px; cursor: pointer; background-color: #d9534f; color: #fff; border: none; border-radius: 4px; margin-top: 15px; }
-        .btn-reset:hover { background-color: #c9302c; }
+<!-- Hoofd HTML structuur -->
+<div class="main-container" id="mainContainer">
+    <!-- Info over storage versie en aantal records -->
+    <div class="storage-info" id="storageInfo"></div>
 
-        /* ===== Responsive ===== */
-        @media(max-width: 768px) {
-            table, th, td { font-size: 0.9rem; }
-        }
-    </style>
-</head>
-<body>
+    <!-- Container waar de tabel of lege boodschap wordt weergegeven -->
+    <div id="storageContainer"></div>
 
-<!-- ===== Scripts ===== -->
+    <!-- Reset-knop om alle storage te wissen -->
+    <button class="btn-reset" id="resetBtn">Wis alle data</button>
+</div>
+
+<!-- ======================= CSS ======================= -->
+<style>
+    /* ===== Body & Container ===== */
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f8f8f8; }
+
+    .main-container {
+        max-width: 1100px; /* breedte van de content */
+        margin: 20px auto; /* centreren van container */
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* subtiele schaduw */
+    }
+
+    /* ===== Storage Table ===== */
+    .storage-info { font-weight: bold; margin-bottom: 15px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f4f4f4; }
+    .empty { font-style: italic; color: #777; margin-top: 20px; }
+
+    /* Reset knop styling */
+    .btn-reset {
+        padding: 8px 12px;
+        cursor: pointer;
+        background-color: #d9534f;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        margin-top: 15px;
+    }
+    .btn-reset:hover { background-color: #c9302c; }
+
+    /* ===== Responsive ===== */
+    @media(max-width: 768px) {
+        table, th, td { font-size: 0.9rem; }
+    }
+</style>
+
+<!-- ======================= Scripts ======================= -->
 <script src="../js/storage.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // DOM-elementen ophalen
     const container = document.getElementById('storageContainer');
     const info = document.getElementById('storageInfo');
     const resetBtn = document.getElementById('resetBtn');
 
-    const columns = ['ID', 'Doopnaam', 'Achternaam']; // Consistente kolomvolgorde
+    // Kolommen die altijd worden weergegeven
+    const columns = ['ID', 'Doopnaam', 'Achternaam'];
 
+    // Functie om tabel te renderen
     function renderTable() {
-        const data = StamboomStorage.get();
-        container.innerHTML = "";
+        const data = StamboomStorage.get(); // Haal alle data op uit storage
+        container.innerHTML = ""; // Oude content verwijderen
         info.innerHTML = `Storage versie: ${StamboomStorage.version} | Aantal records: ${data.length}`;
 
         if(!data.length){
+            // Geen data aanwezig → toon boodschap
             container.innerHTML = '<div class="empty">Geen data gevonden in localStorage.</div>';
             return;
         }
 
+        // Tabel opbouwen
         const table = document.createElement('table');
+
+        // Header
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
         columns.forEach(col => {
@@ -79,31 +112,31 @@ document.addEventListener('DOMContentLoaded', function () {
         thead.appendChild(headerRow);
         table.appendChild(thead);
 
+        // Body
         const tbody = document.createElement('tbody');
         data.forEach(person => {
             const row = document.createElement('tr');
             columns.forEach(col => {
                 const td = document.createElement('td');
-                td.textContent = person[col] ?? '';
+                td.textContent = person[col] ?? ''; // Als waarde niet bestaat, leeg laten
                 row.appendChild(td);
             });
             tbody.appendChild(row);
         });
         table.appendChild(tbody);
 
-        container.appendChild(table);
+        container.appendChild(table); // Tabel toevoegen aan DOM
     }
 
+    // Reset-knop functie
     resetBtn.addEventListener('click', function() {
         if(confirm("Weet je zeker dat je alle storage wilt wissen?")){
-            StamboomStorage.clear();
-            renderTable();
+            StamboomStorage.clear(); // Alles wissen
+            renderTable();           // Tabel opnieuw renderen
         }
     });
 
+    // Initial render
     renderTable();
 });
 </script>
-
-</body>
-</html>
