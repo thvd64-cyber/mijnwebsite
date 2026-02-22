@@ -1,70 +1,59 @@
-<!-- ============================= -->
-<!-- FamTreeCollab - PaginaTemplate -->
-<!-- ============================= -->
+<!-- ============================= PaginaTemplate ============================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pagina Titel</title>
-
-    <!-- Globale CSS -->
-    <link rel="stylesheet" href="/css/style.css">
-
-    <!-- Component CSS -->
-    <link rel="stylesheet" href="/css/TopBar.css">
-    <link rel="stylesheet" href="/css/Navbar.css">
-    <link rel="stylesheet" href="/css/Paginatitel.css">
-    <link rel="stylesheet" href="/css/Header.css">
-    <link rel="stylesheet" href="/css/BottomBar.css">
+    <title>Import CSV - MyFamTreeCollab</title>
+    <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-    <!-- ======================= -->
-    <!-- TopBar -->
-    <!-- ======================= -->
-    <div id="topbar"></div>
 
-    <!-- ======================= -->
-    <!-- Navbar -->
-    <!-- ======================= -->
-    <div id="navbar"></div>
+<!-- ======================= NAVBAR ======================= -->
+<div id="navbar-placeholder"></div>
+<script>
+fetch('/MyFamTreeCollab/navbar.html')
+    .then(resp => resp.text())
+    .then(data => {
+        document.getElementById('navbar-placeholder').innerHTML = data;
+    });
+</script>
 
-    <!-- ======================= -->
-    <!-- Page Title / Header -->
-    <!-- ======================= -->
-    <div id="pagetitle"></div>
-    <header id="header"></header>
+    
+<!-- ======================= main site code  ======================= -->
+<!-- ======================= Pagina Titel dynamisch ======================= -->
+<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px; text-align:left;"></div>
 
-    <!-- ======================= -->
-    <!-- Hoofd Content -->
-    <!-- ======================= -->
-    <main id="content">
-        <section>
-            <h2>Welkom op deze pagina</h2>
-            <p>Vervang dit gedeelte door je page-specifieke content. Voeg hier formulieren, tabellen of secties toe.</p>
-        </section>
-    </main>
+<script>
+// Haal de pagina naam uit het webadres
+document.addEventListener('DOMContentLoaded', function() {
+    const pageTitleDiv = document.getElementById('pageTitle');
 
-    <!-- ======================= -->
-    <!-- Footer / BottomBar -->
-    <!-- ======================= -->
-    <footer id="bottombar"></footer>
+    // Pak het laatste deel van het pad uit de URL, bv. "storage.html"
+    let path = window.location.pathname.split("/").pop();
 
-    <!-- ======================= -->
-    <!-- JS voor componenten -->
-    <!-- ======================= -->
-    <script>
-        async function loadComponent(id, url) {
-            const resp = await fetch(url);
-            document.getElementById(id).innerHTML = await resp.text();
-        }
+    // Verwijder de extensie .html
+    let title = path.replace('.html','');
 
-        // Componenten inladen
-        loadComponent('topbar', '/Layout/TopBar.html');
-        loadComponent('navbar', '/Layout/Navbar.html');
-        loadComponent('pagetitle', '/Layout/PaginaTitel.html');
-        loadComponent('header', '/Layout/Header.html');
-        loadComponent('bottombar', '/Layout/BottomBar.html');
-    </script>
+    // Optioneel: underscores of koppeltekens vervangen door spaties en hoofdletters
+    title = title.replace(/[-_]/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+
+    // Voeg de titel toe aan de pagina
+    pageTitleDiv.textContent = title;
+});
+</script>
+<!-- ======================= yellow message Under Construction ======================= -->
+<div class="under-construction" style="text-align:center; padding:50px 20px; background:#fff3cd; border:1px solid #ffeeba; border-radius:8px; margin-top:20px;">
+    <h2 style="color:#856404; font-size:2rem; margin-bottom:10px;">⚠️ Under Construction</h2>
+    <p style="color:#856404; font-size:1.1rem;">Deze pagina is momenteel in aanbouw. Kom binnenkort terug voor updates!</p>
+</div>
+<!-- ======================= CSS ======================= -->
+
+
+<!-- ======================= Scripts ======================= -->
+<!-- ======================= FOOTER ======================= -->
+<footer>
+    <p>&copy; 2026 MyFamTreeCollab website</p>
+</footer>
+
 </body>
-</html>
