@@ -1,0 +1,70 @@
+<!-- ============================= -->
+<!-- FamTreeCollab - PaginaTemplate -->
+<!-- ============================= -->
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagina Titel</title>
+
+    <!-- Globale CSS -->
+    <link rel="stylesheet" href="/css/style.css">
+
+    <!-- Component CSS -->
+    <link rel="stylesheet" href="/css/TopBar.css">
+    <link rel="stylesheet" href="/css/Navbar.css">
+    <link rel="stylesheet" href="/css/Paginatitel.css">
+    <link rel="stylesheet" href="/css/Header.css">
+    <link rel="stylesheet" href="/css/BottomBar.css">
+</head>
+<body>
+    <!-- ======================= -->
+    <!-- TopBar -->
+    <!-- ======================= -->
+    <div id="topbar"></div>
+
+    <!-- ======================= -->
+    <!-- Navbar -->
+    <!-- ======================= -->
+    <div id="navbar"></div>
+
+    <!-- ======================= -->
+    <!-- Page Title / Header -->
+    <!-- ======================= -->
+    <div id="pagetitle"></div>
+    <header id="header"></header>
+
+    <!-- ======================= -->
+    <!-- Hoofd Content -->
+    <!-- ======================= -->
+    <main id="content">
+        <section>
+            <h2>Welkom op deze pagina</h2>
+            <p>Vervang dit gedeelte door je page-specifieke content. Voeg hier formulieren, tabellen of secties toe.</p>
+        </section>
+    </main>
+
+    <!-- ======================= -->
+    <!-- Footer / BottomBar -->
+    <!-- ======================= -->
+    <footer id="bottombar"></footer>
+
+    <!-- ======================= -->
+    <!-- JS voor componenten -->
+    <!-- ======================= -->
+    <script>
+        async function loadComponent(id, url) {
+            const resp = await fetch(url);
+            document.getElementById(id).innerHTML = await resp.text();
+        }
+
+        // Componenten inladen
+        loadComponent('topbar', '/Layout/TopBar.html');
+        loadComponent('navbar', '/Layout/Navbar.html');
+        loadComponent('pagetitle', '/Layout/PaginaTitel.html');
+        loadComponent('header', '/Layout/Header.html');
+        loadComponent('bottombar', '/Layout/BottomBar.html');
+    </script>
+</body>
+</html>
