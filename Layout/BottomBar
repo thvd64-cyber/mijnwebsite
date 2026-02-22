@@ -1,17 +1,21 @@
 <!-- ======================= Bottom Bar ======================= -->
-<div class="bottombar">
-    <div class="bottombar-content">
+<div class="bottombar"> <!-- Hoofdcontainer van de zwarte onderbalk -->
+    
+    <div class="bottombar-content"> <!-- Binnencontainer voor breedte en uitlijning -->
         
-        <div class="bottom-left">
-            <a href="#">links</a>
+        <!-- Links -->
+        <div class="bottom-left"> <!-- Linker gedeelte -->
+            <a href="#">links</a> <!-- Placeholder link -->
         </div>
 
-        <div class="bottom-center">
-            <a href="#">midden</a>
+        <!-- Midden -->
+        <div class="bottom-center"> <!-- Middengedeelte -->
+            <a href="#">midden</a> <!-- Placeholder link -->
         </div>
 
-        <div class="bottom-right">
-            <a href="#">rechts</a>
+        <!-- Rechts -->
+        <div class="bottom-right"> <!-- Rechter gedeelte -->
+            <a href="#">rechts</a> <!-- Placeholder link -->
         </div>
 
     </div>
