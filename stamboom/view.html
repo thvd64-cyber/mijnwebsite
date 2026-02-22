@@ -1,80 +1,64 @@
+<!-- ======================= View.html ======================= -->>
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View - Onder Constructie</title>
+    <title>Manage Stamboom - MyFamTreeCollab</title>
     <link rel="stylesheet" href="../css/style.css">
-
-    <!-- Automatisch terug naar Home na 5 seconden -->
-    <meta http-equiv="refresh" content="5; url=/MyFamTreeCollab/">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #fdfdfd;
-            color: #333;
-            text-align: center;
-        }
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f8f8f8; }
+        main .container { background: #fff; padding: 20px; border-radius: 8px; max-width: 1100px; margin: 20px auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-        header {
-            background-color: #004080;
-            color: white;
-            padding: 1rem 2rem;
-        }
+        /* Kleurcodes per relatie */
+        .ouders { background-color: #008080; color: white; }
+        .hoofd-id { background-color: #FFD700; }
+        .partner { background-color: #d3d3d3; }
+        .kind { background-color: #90EE90; }
+        .partner-kind { background-color: #D8BFD8; }
+        .ex-partner { background-color: #A9A9A9; }
+        .broerzus { background-color: #FFE4C4; }
 
-        main {
-            padding: 4rem 2rem;
-        }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #999; padding: 5px; text-align: left; }
+        th { background-color: #eee; }
+        input { width: 100%; }
+        .btn { padding: 6px 12px; margin: 5px; cursor: pointer; }
 
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-        }
-
-        h2 {
-            color: #004080;
-            margin-bottom: 1rem;
-        }
-
-        p {
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 0.6rem 1.2rem;
-            background-color: #0080ff;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: bold;
-            transition: background 0.3s;
-        }
-
-        .btn:hover {
-            background-color: #005bb5;
-        }
+        /* Page title styling */
+        .page-title { max-width: 1100px; margin: 40px auto 20px auto; padding: 0 20px; }
+        .page-title h2 { margin-bottom: 10px; font-size: 1.8rem; font-weight: 600; }
+        .page-title p { color: #555; font-size: 1rem; line-height: 1.5; }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>Mijn Website</h1>
-</header>
+<!-- ======================= NAVBAR ======================= -->
+<div id="navbar-placeholder"></div>
+<script>
+fetch('../navbar.html')
+    .then(response => response.text())
+    .then(data => {
+        document.getElementById('navbar-placeholder').innerHTML = data;
+        // Optioneel: pagina-specifieke navbar styling
+        const navbar = document.getElementById('navbar-placeholder');
+        navbar.querySelectorAll('a').forEach(link => link.style.color = '#fff');
+    });
+</script>
 
-<main>
-    <h1>View</h1>
-    <h2>Pagina tijdelijk niet bereikbaar</h2>
-    <p>Deze pagina is momenteel in ontwikkeling of tijdelijk niet beschikbaar.</p>
-    <p>Onze excuses voor het ongemak.</p>
-    <p>U wordt automatisch doorgestuurd naar de homepage over 5 seconden.</p>
-    <br>
-    <a href="/MyFamTreeCollab/" class="btn">Ga direct naar Home</a>
-</main>
+<!-- ======================= PAGE TITLE ======================= -->
+<section class="page-title">
+    <h2>Manage Stamboom</h2>
+    <p>- Laad een persoon via ID of naam om familie te beheren. - Je kunt maximaal 10 personen tegelijk aanmaken en laden. - ID's tweede kolom worden automatisc toegewezen bij het opslaan.</p>
+</section>
 
-<script src="../js/script.js"></script>
+<!-- ======================= MAIN CONTENT ======================= -->
+
+
+<!-- ======================= PAGE-SPECIFIC JS ======================= -->
+<!-- <script src="../js/schema.js"></script> -->
+<!-- <script src="../js/idGenerator.js"></script> -->
+<!-- <script src="../js/manage.js"></script> -->
+
 </body>
 </html>
