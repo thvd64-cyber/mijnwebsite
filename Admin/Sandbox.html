@@ -32,15 +32,6 @@ fetch('/MyFamTreeCollab/Layout/navbar.html') // Doel: extern Navbar bestand opha
     });
 </script>
 
-<!-- ======================= NAVBAR ======================= -->
-<div id="navbar-placeholder"></div>  <!-- Doel: container voor navbar content -->
-<script>
-fetch('/MyFamTreeCollab/navbar.html')       // Doel: pad naar het externe navbar bestand
-    .then(resp => resp.text())              // Doel: lees de inhoud van het bestand als tekst
-    .then(data => {                         // Doel: werk met de opgehaalde HTML data
-        document.getElementById('navbar-placeholder').innerHTML = data;  // Doel: plaats de navbar HTML in de placeholder
-    });
-</script>
 <!-- ======================= Hoofd pagina ======================= -->
   <!-- ======================= Pagina Titel Manueel  ======================= -->
 <!-- ======================= Pagina Titel Manueel ======================= -->
