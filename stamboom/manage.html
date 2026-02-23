@@ -4,31 +4,30 @@
 <head>
     <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
-    <title>MyFamTreeCollab - Manage</title> <!-- ⚠️ Browser tab titel -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor volledige styling -->
+    <title>MyFamTreeCollab - Manage</title> <!-- Browser tab titel -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor styling -->
 </head>
 <body>
 <!-- ======================= layout/TopBar.html ======================= -->
-
-<!-- Placeholder waar de TopBar.html inhoud wordt ingeladen -->
 <div id="topbar-placeholder"></div>  <!-- container voor TopBar content -->
 
 <script>
 fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
-    .then(resp => resp.text())                // lees de inhoud van het bestand Converteert response naar tekst
-    .then(data => {                           // werk met de opgehaalde HTML data
-        document.getElementById('topbar-placeholder').innerHTML = data;  // plaats de TopBar HTML in de placeholder
+    .then(resp => resp.text())                // Converteert response naar tekst
+    .then(data => {                           // Werk met opgehaalde HTML
+        document.getElementById('topbar-placeholder').innerHTML = data;  // Injecteer TopBar
     });
 </script>
+
 <!-- ======================= layout/Navbar.html ======================= -->
 <div id="Navbar-placeholder"></div> <!-- plek waar Navbar komt -->
 
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
-    .then(resp => resp.text())               // omzetten naar HTML tekst
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Haal Navbar bestand op
+    .then(resp => resp.text())               // Omzetten naar HTML tekst
     .then(data => {
         const placeholder = document.getElementById('Navbar-placeholder'); // placeholder ophalen
-        if (placeholder) {                   // controleren of element bestaat
+        if (placeholder) {                   // controleer of element bestaat
             placeholder.innerHTML = data;    // Navbar injecteren
         } else {
             console.error('Navbar-placeholder niet gevonden'); // Debugmelding
@@ -37,13 +36,12 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
 </script>
 
 <!-- ======================= Hoofd pagina ======================= -->
-<!-- ======================= Pagina Titel Manueel ======================= -->
 <div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const pageTitleDiv = document.getElementById('pageTitle');  // Doel div
-    const title = "Manage stamboom";            // ⚠️ Zelf invullen title
+    const title = "Manage stamboom";            // Titel tekst
     pageTitleDiv.textContent = title
         .replace(/[-_]/g,' ')          // underscore/koppelteken → spatie
         .replace(/\b\w/g, c => c.toUpperCase()); // eerste letter hoofdletter
@@ -53,34 +51,97 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- ======================= MAIN CONTENT ======================= -->
 <main>
     <div class="container">
-        <input type="text" id="searchPerson" placeholder="Voer ID of naam in">
-        <button id="loadBtn" class="btn">Laad Persoon</button>
-        <button id="refreshBtn" class="btn">Refresh</button>
-        <button id="saveBtn" class="btn">Opslaan</button>
-        <button id="addBtn" class="btn">+ Toevoegen</button>
+        <input type="text" id="searchPerson" placeholder="Voer ID of naam in"> <!-- zoek input -->
+        <button id="loadBtn" class="btn">Laad Persoon</button> <!-- trigger load functie -->
+        <button id="refreshBtn" class="btn">Refresh</button> <!-- trigger refresh functie -->
+        <button id="saveBtn" class="btn">Opslaan</button> <!-- trigger save functie -->
+        <button id="addBtn" class="btn">+ Toevoegen</button> <!-- trigger add functie -->
 
         <table id="manageTable">
-            <thead><tr></tr></thead>
-            <tbody></tbody>
+            <thead><tr></tr></thead> <!-- dynamisch via JS gevuld met schema velden -->
+            <tbody></tbody> <!-- rijen worden dynamisch toegevoegd in JS -->
         </table>
     </div>
 </main>
 
 <!-- ======================= PAGE-SPECIFIC JS ======================= -->
-    <!-- activeren als:Personen gaat tonen, Data uit localStorage leest, ID’s moet genereren, Tabellen moet renderen, Opslaan moet ondersteunen  -->   
-<script src="../js/schema.js"></script> <!-- Rol: Datastructuur - Type: Model -->
-<script src="../js/idGenerator.js"></script> <!-- Rol:Unieke ID’s - Type: Utility -->
-<script src="../js/manage.js"></script> <!-- Rol: Logica & interactie - Type Controller  -->
+<script src="../js/schema.js"></script> <!-- Datastructuur & model -->
+<script src="../js/idGenerator.js"></script> <!-- Unieke ID’s -->
+<script src="../js/manage.js"></script> <!-- Controller: load, add, save, render -->
+
 <!-- ======================= bottom bar ======================= -->
-  <!-- ======================= layout/Footer.html ======================= -->
-<div id="footer-placeholder"></div>  <!-- Doel: container voor Footer content -->
+<div id="footer-placeholder"></div>  <!-- container voor Footer content -->
 
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html')  // pad naar de layout/Footer.html
-    .then(resp => resp.text())                // response omzetten naar leesbare HTML
+fetch('/MyFamTreeCollab/Layout/Footer.html')  // Haal Footer HTML op
+    .then(resp => resp.text())                // Omzetten naar leesbare HTML
     .then(data => {                           // werk met de opgehaalde HTML
         document.getElementById('footer-placeholder').innerHTML = data; // Footer injecteren
     });
+</script>
+
+<!-- ======================= VIEW LOGICA VOOR RELATIES ======================= -->
+<script>
+/**
+ * renderDirectRelations: alleen directe relaties van hoofd-ID renderen
+ * Relatie wordt alleen in de view berekend, niet opgeslagen
+ */
+function renderDirectRelations(hoofdID) {
+    const data = JSON.parse(localStorage.getItem('stamboomData') || '[]'); // data uit storage
+    const tableBody = document.querySelector('#manageTable tbody'); // doel tabel body
+    tableBody.innerHTML = ''; // clear oude rijen
+
+    // helper: bepaal relatie voor de view
+    function bepaalRelatie(p, hoofd) {
+        if(p.ID === hoofd.ID) return 'Hoofd-ID';
+        if(p.ID === hoofd.VaderID || p.ID === hoofd.MoederID) return 'Ouder';
+        if(p.ID === hoofd.PartnerID) return 'Partner';
+        if(p.VaderID === hoofd.ID || p.MoederID === hoofd.ID) return 'Kind';
+        // broer/zus
+        if(p.VaderID === hoofd.VaderID && p.MoederID === hoofd.MoederID && p.ID !== hoofd.ID) return 'Broer/Zus';
+        // partner-kind
+        if(p.PartnerID === hoofd.ID) return 'Partner-Kind';
+        return ''; // onbekend
+    }
+
+    const hoofd = data.find(p => p.ID === hoofdID); // hoofd ophalen
+    if(!hoofd) return alert('Hoofd-ID niet gevonden');
+
+    // haal alle directe relaties
+    const subset = data.filter(p => 
+        p.ID === hoofd.ID ||
+        p.ID === hoofd.VaderID || p.ID === hoofd.MoederID ||
+        p.ID === hoofd.PartnerID ||
+        p.VaderID === hoofd.ID || p.MoederID === hoofd.ID ||
+        (p.VaderID === hoofd.VaderID && p.MoederID === hoofd.MoederID && p.ID !== hoofd.ID) ||
+        p.PartnerID === hoofd.ID
+    );
+
+    subset.forEach(p => {
+        const tr = document.createElement('tr'); // nieuwe rij
+        tr.className = bepaalRelatie(p, hoofd).toLowerCase().replace(/\s+/g,'-'); // row-class op basis van relatie
+
+        // voeg velden uit schema toe
+        window.StamboomSchema.fields.forEach(f => {
+            const td = document.createElement('td'); // cel maken
+            if(f === 'ID'){
+                td.textContent = p.ID || ''; // ID direct tonen
+            } else {
+                const input = document.createElement('input'); // input voor editable velden
+                input.value = p[f] || ''; // waarde vullen
+                input.addEventListener('change', e => p[f] = e.target.value); // update lokaal object
+                td.appendChild(input);
+            }
+            tr.appendChild(td);
+        });
+
+        // Relatie kolom view-only toevoegen
+        const tdRel = document.createElement('td');
+        tdRel.textContent = bepaalRelatie(p, hoofd); // relatie alleen voor de view
+        tr.prepend(tdRel); // eerste kolom
+        tableBody.appendChild(tr); // rij toevoegen aan tabel
+    });
+}
 </script>
 </body>
 </html>
