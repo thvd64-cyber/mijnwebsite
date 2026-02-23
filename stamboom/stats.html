@@ -35,14 +35,14 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
         }
     });
 </script>
- !-- ======================= Hoofd pagina ======================= -->
+<!-- ======================= Hoofd pagina ======================= -->
 <!-- ======================= Pagina Titel Manueel ======================= -->
 <div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const pageTitleDiv = document.getElementById('pageTitle');  // Doel div
-    const title = "Stamboom Statetieken";            // ⚠️ Zelf invullen title
+    const title = "Stamboom statestieken";            // ⚠️ Zelf invullen title
     pageTitleDiv.textContent = title
         .replace(/[-_]/g,' ')          // underscore/koppelteken → spatie
         .replace(/\b\w/g, c => c.toUpperCase()); // eerste letter hoofdletter
