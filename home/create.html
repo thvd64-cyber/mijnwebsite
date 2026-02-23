@@ -1,9 +1,10 @@
+<!-- ======================= Home/Create.html ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
-    <title>MyFamTreeCollab - [PAGINA NAAM]</title> <!-- Browser tab titel -->
+    <title>MyFamTreeCollab - Create</title> <!-- Browser tab titel -->
     <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor volledige styling -->
 </head>
 <body>
@@ -42,7 +43,7 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const pageTitleDiv = document.getElementById('pageTitle');  // Doel div
-    const title = "Sandbox";            // ⚠️ Zelf invullen title
+    const title = "Create";            // ⚠️ Zelf invullen title
     pageTitleDiv.textContent = title
         .replace(/[-_]/g,' ')          // underscore/koppelteken → spatie
         .replace(/\b\w/g, c => c.toUpperCase()); // eerste letter hoofdletter
