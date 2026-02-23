@@ -1,57 +1,54 @@
-<!-- ======================= View.html ======================= -->>
+<!-- ======================= stamboom/view.html ======================= -->>
 <!DOCTYPE html>
 <html lang="nl">
-    
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Stamboom - MyFamTreeCollab</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background: #f8f8f8; }
-        main .container { background: #fff; padding: 20px; border-radius: 8px; max-width: 1100px; margin: 20px auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-
-        /* Kleurcodes per relatie */
-        .ouders { background-color: #008080; color: white; }
-        .hoofd-id { background-color: #FFD700; }
-        .partner { background-color: #d3d3d3; }
-        .kind { background-color: #90EE90; }
-        .partner-kind { background-color: #D8BFD8; }
-        .ex-partner { background-color: #A9A9A9; }
-        .broerzus { background-color: #FFE4C4; }
-
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-        th, td { border: 1px solid #999; padding: 5px; text-align: left; }
-        th { background-color: #eee; }
-        input { width: 100%; }
-        .btn { padding: 6px 12px; margin: 5px; cursor: pointer; }
-
-        /* Page title styling */
-        .page-title { max-width: 1100px; margin: 40px auto 20px auto; padding: 0 20px; }
-        .page-title h2 { margin-bottom: 10px; font-size: 1.8rem; font-weight: 600; }
-        .page-title p { color: #555; font-size: 1rem; line-height: 1.5; }
-    </style>
+    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
+    <title>MyFamTreeCollab - View</title> <!-- ⚠️ Browser tab titel -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor volledige styling -->
 </head>
 <body>
+<!-- ======================= layout/TopBar.html ======================= -->
 
-<!-- ======================= NAVBAR ======================= -->
-<div id="navbar-placeholder"></div>
+<!-- Placeholder waar de TopBar.html inhoud wordt ingeladen -->
+<div id="topbar-placeholder"></div>  <!-- container voor TopBar content -->
+
 <script>
-fetch('../navbar.html')
-    .then(response => response.text())
+fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
+    .then(resp => resp.text())                // lees de inhoud van het bestand Converteert response naar tekst
+    .then(data => {                           // werk met de opgehaalde HTML data
+        document.getElementById('topbar-placeholder').innerHTML = data;  // plaats de TopBar HTML in de placeholder
+    });
+</script>
+<!-- ======================= layout/Navbar.html ======================= -->
+<div id="Navbar-placeholder"></div> <!-- plek waar Navbar komt -->
+
+<script>
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
+    .then(resp => resp.text())               // omzetten naar HTML tekst
     .then(data => {
-        document.getElementById('navbar-placeholder').innerHTML = data;
-        // Optioneel: pagina-specifieke navbar styling
-        const navbar = document.getElementById('navbar-placeholder');
-        navbar.querySelectorAll('a').forEach(link => link.style.color = '#fff');
+        const placeholder = document.getElementById('Navbar-placeholder'); // placeholder ophalen
+        if (placeholder) {                   // controleren of element bestaat
+            placeholder.innerHTML = data;    // Navbar injecteren
+        } else {
+            console.error('Navbar-placeholder niet gevonden'); // Debugmelding
+        }
     });
 </script>
 
-<!-- ======================= PAGE TITLE ======================= -->
-<section class="page-title">
-    <h2>Manage Stamboom</h2>
-    <p>- Laad een persoon via ID of naam om familie te beheren. - Je kunt maximaal 10 personen tegelijk aanmaken en laden. - ID's tweede kolom worden automatisc toegewezen bij het opslaan.</p>
-</section>
+<!-- ======================= Hoofd pagina ======================= -->
+<!-- ======================= Pagina Titel Manueel ======================= -->
+<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const pageTitleDiv = document.getElementById('pageTitle');  // Doel div
+    const title = "View";            // ⚠️ Zelf invullen title
+    pageTitleDiv.textContent = title
+        .replace(/[-_]/g,' ')          // underscore/koppelteken → spatie
+        .replace(/\b\w/g, c => c.toUpperCase()); // eerste letter hoofdletter
+});
+</script>
 
 <!-- ======================= MAIN CONTENT ======================= -->
 
