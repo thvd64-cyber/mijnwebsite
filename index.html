@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<!-- ======================= TopBar ======================= -->
+<!-- ======================= layout/TopBar.html ======================= -->
 <div id="topbar-placeholder"></div> <!-- Container voor TopBar -->
 
 <script>
@@ -20,40 +20,22 @@ fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
     });
 </script>
 
-<!-- ======================= Navbar ======================= -->
-<div id="Navbar-placeholder"></div> <!-- Container voor Navbar -->
+!-- ======================= layout/Navbar.html ======================= -->
+<div id="Navbar-placeholder"></div> <!-- plek waar Navbar komt -->
 
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // Haalt Navbar HTML op
-    .then(resp => resp.text())               // Converteert response naar tekst
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
+    .then(resp => resp.text())               // omzetten naar HTML tekst
     .then(data => {
-        const placeholder = document.getElementById('Navbar-placeholder'); // Haal placeholder op
-        if (placeholder) {
-            placeholder.innerHTML = data; // Injecteer de HTML
-
-            // ⚡ Extra: forceer horizontale layout via flex in geval CSS nog niet volledig is toegepast
-            const nav = placeholder.querySelector('ul'); // Selecteer de <ul> in de Navbar
-            if (nav) {
-                nav.style.display = 'flex'; // Horizontaal
-                nav.style.listStyle = 'none'; // Geen bullets
-                nav.style.backgroundColor = '#007bff'; // Blauwe achtergrond
-                nav.style.padding = '0';
-                nav.style.margin = '0';
-            }
-
-            // Maak alle <a> links wit met padding
-            const links = placeholder.querySelectorAll('a');
-            links.forEach(a => {
-                a.style.color = '#fff';
-                a.style.textDecoration = 'none';
-                a.style.padding = '10px 15px';
-            });
+        const placeholder = document.getElementById('Navbar-placeholder'); // placeholder ophalen
+        if (placeholder) {                   // controleren of element bestaat
+            placeholder.innerHTML = data;    // Navbar injecteren
         } else {
-            console.error('Navbar-placeholder niet gevonden'); // Debug melding
+            console.error('Navbar-placeholder niet gevonden'); // Debugmelding
         }
     });
 </script>
-
+<!-- ======================= Hoofd pagina ======================= -->
 <!-- ======================= Pagina Titel ======================= -->
 <div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:20px;"></div> <!-- Dynamische paginatitel -->
 
@@ -67,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-<!-- ======================= MAIN CONTENT ======================= -->
+<!-- ======================= Content ======================= -->
 <main id="home" style="padding:20px;">
     <section>
         <h2>Welkom op MyFamTreeCollab</h2>
@@ -90,9 +72,9 @@ document.addEventListener('DOMContentLoaded', () => {
 <div id="footer-placeholder"></div> <!-- Container voor Footer -->
 
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html') // Haalt Footer HTML op
-    .then(resp => resp.text())                // Converteert response naar tekst
-    .then(data => {
+fetch('/MyFamTreeCollab/Layout/Footer.html') // Haalt layout/Footer.html op
+    .then(resp => resp.text())                // Converteert response naar leesbare html
+    .then(data => {                        // werk met de opgehaalde HTML
         document.getElementById('footer-placeholder').innerHTML = data; // Plaats Footer
     });
 </script>
