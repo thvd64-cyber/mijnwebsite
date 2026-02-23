@@ -1,88 +1,158 @@
-<!-- ======================= stamboom/stats.html (statestieken)  ======================= -->
+<!-- ======================= stamboom/stats.html (volledige KPI dashboard) ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
-    <title>MyFamTreeCollab - Statistiek</title> <!-- ⚠️ Browser tab titel -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor volledige styling -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief -->
+    <title>MyFamTreeCollab - Statistiek</title>
+    <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-<!-- ======================= layout/TopBar.html ======================= -->
 
-<!-- Placeholder waar de TopBar.html inhoud wordt ingeladen -->
-<div id="topbar-placeholder"></div>  <!-- container voor TopBar content -->
-
+<!-- TopBar -->
+<div id="topbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
-    .then(resp => resp.text())                // lees de inhoud van het bestand Converteert response naar tekst
-    .then(data => {                           // werk met de opgehaalde HTML data
-        document.getElementById('topbar-placeholder').innerHTML = data;  // plaats de TopBar HTML in de placeholder
-    });
+fetch('/MyFamTreeCollab/Layout/TopBar.html')
+  .then(resp => resp.text())
+  .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
 </script>
-<!-- ======================= layout/Navbar.html ======================= -->
-<div id="Navbar-placeholder"></div> <!-- plek waar Navbar komt -->
 
+<!-- Navbar -->
+<div id="Navbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
-    .then(resp => resp.text())               // omzetten naar HTML tekst
-    .then(data => {
-        const placeholder = document.getElementById('Navbar-placeholder'); // placeholder ophalen
-        if (placeholder) {                   // controleren of element bestaat
-            placeholder.innerHTML = data;    // Navbar injecteren
-        } else {
-            console.error('Navbar-placeholder niet gevonden'); // Debugmelding
-        }
-    });
+fetch('/MyFamTreeCollab/Layout/Navbar.html')
+  .then(resp => resp.text())
+  .then(data => {
+    const placeholder = document.getElementById('Navbar-placeholder');
+    if (placeholder) placeholder.innerHTML = data;
+    else console.error('Navbar-placeholder niet gevonden');
+  });
 </script>
-<!-- ======================= Hoofd pagina ======================= -->
-<!-- ======================= Pagina Titel Manueel ======================= -->
+
+<!-- Pagina Titel -->
 <div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const pageTitleDiv = document.getElementById('pageTitle');  // Doel div
-    const title = "Stamboom statestieken";            // ⚠️ Zelf invullen title
-    pageTitleDiv.textContent = title
-        .replace(/[-_]/g,' ')          // underscore/koppelteken → spatie
-        .replace(/\b\w/g, c => c.toUpperCase()); // eerste letter hoofdletter
+    const pageTitleDiv = document.getElementById('pageTitle'); 
+    const title = "Stamboom Statistieken"; 
+    pageTitleDiv.textContent = title.replace(/[-_]/g,' ').replace(/\b\w/g, c=>c.toUpperCase());
 });
 </script>
-    <!-- ======================= MAIN INTRO CONTENT ======================= -->
-<section style="margin-top:20px; padding:20px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
-    <h2 style="margin-bottom:15px;">Stamboomstatistieken</h2>
-    <p style="margin-bottom:15px; line-height:1.6;">
-        Ontdek inzichten over jouw familiegeschiedenis. Deze pagina toont een overzicht van personen, generaties en relaties binnen jouw stamboom.
-    </p>
-    <p style="margin-bottom:15px; line-height:1.6;">
-        Met de statistieken kun je bijvoorbeeld:
-    </p>
-    <ul style="margin-left:20px; line-height:1.6;">
-        <li>Het aantal geregistreerde familieleden zien</li>
-        <li>Verdeling per generatie of familienaam analyseren</li>
-        <li>Belangrijke trends en relaties in beeld brengen</li>
-        <li>Data eenvoudig filteren en vergelijken</li>
-    </ul>
-    <p style="margin-top:15px; line-height:1.6;">
-        Meer geavanceerde analyses en grafieken volgen binnenkort.
-    </p>
-</section>
-  <!-- ======================= yellow message Under Construction ======================= -->
-<div class="under-construction" style="text-align:center; padding:50px 20px; background:#fff3cd; border:1px solid #ffeeba; border-radius:8px; margin-top:20px;">
-    <h2 style="color:#856404; font-size:2rem; margin-bottom:10px;">⚠️ Under Construction</h2>
-    <p style="color:#856404; font-size:1.1rem;">Deze pagina is momenteel in aanbouw. Kom binnenkort terug voor updates!</p>
-</div>
-  <!-- ======================= CSS ======================= -->
-  <!-- ======================= Scripts ======================= -->
-<!-- ======================= bottom bar ======================= -->
-  <!-- ======================= layout/Footer.html ======================= -->
-<div id="footer-placeholder"></div>  <!-- Doel: container voor Footer content -->
 
+<!-- ======================= KPI-blokken ======================= -->
+<section id="kpiContainer" style="display:flex; flex-wrap:wrap; gap:20px; margin-top:20px;"></section>
+
+<!-- ======================= Familie Overzicht ======================= -->
+<section id="familiesContainer" style="margin-top:20px; padding:20px; background:#fff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+    <h2>Overzicht Familieën</h2>
+    <ul id="familyList" style="margin-left:20px; line-height:1.6;"></ul>
+</section>
+
+<!-- CSS voor KPI-blokken -->
+<style>
+.kpi-block { flex:1; min-width:200px; padding:20px; border-radius:8px; text-align:center; box-shadow:0 2px 4px rgba(0,0,0,0.1); transition: transform 0.2s; }
+.kpi-block:hover { transform: translateY(-3px); }
+.kpi-value { font-size:2rem; font-weight:bold; margin-bottom:5px; }
+.kpi-label { font-size:1rem; color:#555; }
+.kpi-persons { background:#007bff; color:#fff; }
+.kpi-update { background:#28a745; color:#fff; }
+.kpi-version { background:#ffc107; color:#fff; }
+.kpi-generations { background:#17a2b8; color:#fff; }
+.kpi-mostcommon { background:#6f42c1; color:#fff; }
+.kpi-gender { background:#fd7e14; color:#fff; }
+.kpi-families { background:#e83e8c; color:#fff; }
+</style>
+
+<!-- Scripts -->
+<script src="../js/storage.js"></script>
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html')  // pad naar de layout/Footer.html
-    .then(resp => resp.text())                // response omzetten naar leesbare HTML
-    .then(data => {                           // werk met de opgehaalde HTML
-        document.getElementById('footer-placeholder').innerHTML = data; // Footer injecteren
+document.addEventListener('DOMContentLoaded', function(){
+
+    if(typeof StamboomStorage === "undefined"){ console.error("StamboomStorage niet geladen."); return; }
+
+    const data = StamboomStorage.get(); // Alle personen ophalen
+    const lastUpdate = localStorage.getItem('lastUpdate') || 'Onbekend';
+    const version = StamboomStorage.version;
+    const kpiContainer = document.getElementById('kpiContainer');
+    const familyList = document.getElementById('familyList');
+
+    // Functie om KPI blok te maken
+    function createKPI(value, label, extraClass){
+        const div = document.createElement('div');
+        div.classList.add('kpi-block');
+        if(extraClass) div.classList.add(extraClass);
+        const valSpan = document.createElement('div');
+        valSpan.classList.add('kpi-value');
+        valSpan.textContent = value;
+        const labelSpan = document.createElement('div');
+        labelSpan.classList.add('kpi-label');
+        labelSpan.textContent = label;
+        div.appendChild(valSpan);
+        div.appendChild(labelSpan);
+        return div;
+    }
+
+    // ===============================
+    // Bereken extra statistieken
+    // ===============================
+
+    // Generaties (aannames: veld 'Generation' bestaat)
+    const generations = new Set(data.map(p => p.Generation)).size;
+
+    // Meest voorkomende achternaam
+    const surnameCounts = {};
+    data.forEach(p => { surnameCounts[p.Achternaam] = (surnameCounts[p.Achternaam] || 0) +1; });
+    let mostCommonSurname = '';
+    let maxCount = 0;
+    for(const [name, count] of Object.entries(surnameCounts)){
+        if(count > maxCount){ maxCount = count; mostCommonSurname = name; }
+    }
+
+    // Aantal man/vrouw (velden 'Geslacht' verwacht: M/V)
+    const genderCounts = data.reduce((acc,p)=>{ 
+        if(p.Geslacht==='M') acc.M++; 
+        else if(p.Geslacht==='V') acc.V++; 
+        return acc; 
+    }, {M:0,V:0});
+
+    // Families & familieleden
+    const families = {}; // groep op Achternaam
+    data.forEach(p=>{
+        if(!families[p.Achternaam]) families[p.Achternaam]=[];
+        families[p.Achternaam].push(p);
     });
+    const familyCount = Object.keys(families).length;
+
+    // ===============================
+    // Voeg KPI-blokken toe
+    // ===============================
+    kpiContainer.appendChild(createKPI(data.length,'Aantal Personen','kpi-persons'));
+    kpiContainer.appendChild(createKPI(lastUpdate,'Laatste Update','kpi-update'));
+    kpiContainer.appendChild(createKPI(version,'Versie','kpi-version'));
+    kpiContainer.appendChild(createKPI(generations,'Aantal Generaties','kpi-generations'));
+    kpiContainer.appendChild(createKPI(mostCommonSurname,'Meest Voorkomende Achternaam','kpi-mostcommon'));
+    kpiContainer.appendChild(createKPI(`${genderCounts.M}M / ${genderCounts.V}V`,'Man/Vrouw','kpi-gender'));
+    kpiContainer.appendChild(createKPI(familyCount,'Aantal Families','kpi-families'));
+
+    // ===============================
+    // Familie-overzicht lijst
+    // ===============================
+    Object.entries(families).forEach(([familyName, members])=>{
+        const li = document.createElement('li');
+        li.textContent = `${familyName} (${members.length} leden)`;
+        familyList.appendChild(li);
+    });
+
+});
 </script>
+
+<!-- Footer -->
+<div id="footer-placeholder"></div>
+<script>
+fetch('/MyFamTreeCollab/Layout/Footer.html')
+    .then(resp=>resp.text())
+    .then(data=>{ document.getElementById('footer-placeholder').innerHTML = data; });
+</script>
+
 </body>
+</html>
