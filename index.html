@@ -2,117 +2,85 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Import CSV - MyFamTreeCollab</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <meta charset="UTF-8"> <!-- Stelt tekencodering in op UTF-8 voor juiste weergave van tekens -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Zorgt voor responsieve layout op mobiel/tablet/desktop -->
+    <title>MyFamTreeCollab - Home</title> <!-- Titel van de pagina in browser tab -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt CSS stylesheet voor styling van de site -->
 </head>
 <body>
 
-<!-- ======================= layout/TopBar.html ======================= -->
-
-<!-- Placeholder waar de TopBar.html inhoud wordt ingeladen -->
-<div id="topbar-placeholder"></div>  <!-- Doel: container voor TopBar content -->
+<!-- ======================= TopBar ======================= -->
+<div id="topbar-placeholder"></div> <!-- Container waar TopBar wordt geladen -->
 
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Doel: pad naar het externe topbar bestand
-    .then(resp => resp.text())                // Doel: lees de inhoud van het bestand als tekst
-    .then(data => {                           // Doel: werk met de opgehaalde HTML data
-        document.getElementById('topbar-placeholder').innerHTML = data;  // Doel: plaats de TopBar HTML in de placeholder
+fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML bestand op
+    .then(resp => resp.text())                 // Converteert response naar tekst
+    .then(data => {                            // Verwerkt de opgehaalde HTML
+        document.getElementById('topbar-placeholder').innerHTML = data; // Injecteert TopBar in de placeholder
     });
 </script>
-<!-- ======================= layout/Navbar.html ======================= -->
-<div id="Navbar-placeholder"></div> <!-- Doel: plek waar Navbar komt -->
+
+<!-- ======================= Navbar ======================= -->
+<div id="Navbar-placeholder"></div> <!-- Container voor Navbar -->
 
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // Doel: Navbar bestand ophalen
-    .then(resp => resp.text())               // Doel: omzetten naar HTML tekst
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Haalt Navbar HTML bestand op
+    .then(resp => resp.text())               // Converteert response naar tekst
     .then(data => {
-        const placeholder = document.getElementById('Navbar-placeholder'); // Doel: placeholder ophalen
-        if (placeholder) {                   // Doel: controleren of element bestaat
-            placeholder.innerHTML = data;    // Doel: Navbar injecteren
+        const placeholder = document.getElementById('Navbar-placeholder'); // Haal placeholder op
+        if (placeholder) {
+            placeholder.innerHTML = data; // Plaats Navbar in de container
         } else {
-            console.error('Navbar-placeholder niet gevonden'); // Debugmelding
+            console.error('Navbar-placeholder niet gevonden'); // Debug melding indien niet gevonden
         }
     });
 </script>
 
-    
-<!-- ======================= main site code  ======================= -->
-<!-- ======================= Pagina Titel dynamisch ======================= -->
-<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px; text-align:left;"></div>
+<!-- ======================= Pagina Titel ======================= -->
+<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:20px;"></div> <!-- Dynamische paginatitel -->
 
 <script>
-// Haal de pagina naam uit het webadres
-document.addEventListener('DOMContentLoaded', function() {
-    const pageTitleDiv = document.getElementById('pageTitle');
-
-    // Pak het laatste deel van het pad uit de URL, bv. "storage.html"
-    let path = window.location.pathname.split("/").pop();
-
-    // Verwijder de extensie .html
-    let title = path.replace('.html','');
-
-    // Optioneel: underscores of koppeltekens vervangen door spaties en hoofdletters
-    title = title.replace(/[-_]/g,' ').replace(/\b\w/g, c => c.toUpperCase());
-
-    // Voeg de titel toe aan de pagina
-    pageTitleDiv.textContent = title;
+document.addEventListener('DOMContentLoaded', () => {
+    const pageTitleDiv = document.getElementById('pageTitle'); // Doel div ophalen
+    const path = window.location.pathname.split("/").pop();   // Haal bestandsnaam uit URL
+    let title = path.replace('.html','');                      // Verwijder extensie
+    title = title.replace(/[-_]/g,' ').replace(/\b\w/g, c => c.toUpperCase()); // Format: spaties + hoofdletters
+    pageTitleDiv.textContent = title;                          // Voeg titel toe aan div
 });
 </script>
 
+<!-- ======================= MAIN CONTENT ======================= -->
+<main id="home" style="padding:20px;">
+    <!-- Welkomstsectie -->
+    <section>
+        <h2>Welkom op MyFamTreeCollab</h2> <!-- Sectietitel -->
+        <p>Ontdek uw stamboom, bronnen en abonnementen eenvoudig via de navigatie hierboven.</p> <!-- Introductietekst -->
+    </section>
 
-<!-- ======================= FOOTER ======================= -->
-<footer>
-    <p>&copy; 2026 MyFamTreeCollab website</p>
-</footer>
+    <!-- Start Stamboom sectie -->
+    <section>
+        <h2>Start uw Stamboom</h2> <!-- Sectietitel -->
+        <p>Begin vandaag nog met het ontdekken en beheren van uw familiegeschiedenis.</p> <!-- Info tekst -->
+        <a href="stamboom/index.html" class="btn">Start Nu</a> <!-- Call-to-action knop -->
+    </section>
 
-</body>
-</html>
-    <!-- ======================= MAIN CONTENT ======================= -->
-    <main id="home">
-        <section>
-            <h2>Welkom op de MyFamTreeCollab website</h2> <!-- Titel sectie -->
-            <p>Ontdek uw stamboom, abonnementen en bronnen eenvoudig via de navigatie hierboven.</p> <!-- Intro tekst -->
-        </section>
+    <!-- Nieuws & Updates sectie -->
+    <section>
+        <h2>Nieuws & Updates</h2> <!-- Sectietitel -->
+        <p>Bekijk de laatste functies en tips voor het beheren van uw stamboom.</p> <!-- Info tekst -->
+    </section>
+</main>
 
-        <section>
-            <h2>Start uw Stamboom</h2> <!-- Titel sectie -->
-            <p>Begin vandaag nog met het ontdekken en beheren van uw familiegeschiedenis.</p> <!-- Info tekst -->
-            <a href="stamboom/index.html" class="btn">Start Nu</a> <!-- Call-to-action knop -->
-        </section>
+<!-- ======================= Footer ======================= -->
+<div id="footer-placeholder"></div> <!-- Container voor Footer -->
 
-        <section>
-            <h2>Nieuws & Updates</h2> <!-- Titel sectie -->
-            <p>Bekijk de laatste functies en tips voor het beheren van uw stamboom.</p> <!-- Info tekst -->
-        </section>
-    </main>
-
-    <!-- ======================= JS COMPONENT LOADER ======================= -->
-     <!--  <script>  -->
-        <!--   // Functie om een component te laden vanuit Layout folder, robuust met try/catch  -->
-         <!--  async function loadComponent(id, url) {  -->
-           <!--    try {  -->
-                <!--   const resp = await fetch(url); // Fetch het component bestand  -->
-              <!--     const data = await resp.text(); // Lees de HTML tekst  -->
-            <!--       document.getElementById(id).innerHTML = data; // Plaats HTML in de juiste placeholder  -->
-           <!--    } catch (error) { -->
-           <!--        console.error('Fout bij laden van ' + url, error); // Log fout indien component niet geladen kan worden -->
-          <!--     } -->
-        <!--   } -->
-
-         <!--  // ======================= LAAD COMPONENTEN =======================  -->
-         <!--  // Gebruik relatieve paden, werkt zowel lokaal als op GitHub Pages -->
-          <!-- loadComponent('topbar', 'Layout/TopBar.html'); // Laad TopBar component -->
-          <!-- loadComponent('navbar', 'Layout/Navbar.html'); // Laad Navbar component -->
-          <!-- loadComponent('pagetitle', 'Layout/PaginaTitel.html'); // Laad PaginaTitel component -->
-          <!-- loadComponent('header', 'Layout/Header.html'); // Laad Header component -->
-          <!-- loadComponent('bottombar', 'Layout/BottomBar.html'); // Laad BottomBar component -->
-     <!--  </script> -->
+<script>
+fetch('/MyFamTreeCollab/Layout/Footer.html') // Haalt Footer HTML bestand op
+    .then(resp => resp.text())                // Converteert response naar tekst
+    .then(data => {
+        document.getElementById('footer-placeholder').innerHTML = data; // Plaats Footer in placeholder
+    });
+</script>
 
 </body>
-<!-- ======================= FOOTER ======================= -->
-<footer>
-    <p>&copy; 2026 MyFamTreeCollab website</p>
-</footer>
 </html>
