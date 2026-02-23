@@ -58,7 +58,17 @@ document.addEventListener('DOMContentLoaded', () => {
   <!-- ======================= CSS ======================= -->
   <!-- ======================= Scripts ======================= -->
 <!-- ======================= bottom bar ======================= -->
-  <!-- ======================= FOOTER ======================= -->
+  <!-- ======================= layout/Footer.html ======================= -->
+<div id="footer-placeholder"></div>  <!-- Doel: container voor Footer content -->
+
+<script>
+fetch('/MyFamTreeCollab/Layout/Footer.html')  // Doel: pad naar het externe Footer bestand
+    .then(resp => resp.text())                // Doel: response omzetten naar leesbare HTML
+    .then(data => {                           // Doel: werk met de opgehaalde HTML
+        document.getElementById('footer-placeholder').innerHTML = data; // Doel: Footer injecteren
+    });
+</script>
+    <!-- ======================= FOOTER ======================= -->
 <footer>
     <p>&copy; 2026 MyFamTreeCollab website</p>
 </footer>
