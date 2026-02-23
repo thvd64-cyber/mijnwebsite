@@ -1,58 +1,63 @@
-<!-- ======================= storage.html ======================= -->
+<!-- ======================= stamboom/storage.html ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Import CSV - MyFamTreeCollab</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
+    <title>MyFamTreeCollab - Stamboom opgeslagen</title> <!-- ⚠️ Browser tab titel -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor volledige styling -->
 </head>
 <body>
+<!-- ======================= layout/TopBar.html ======================= -->
+<!-- Placeholder waar de TopBar.html inhoud wordt ingeladen -->
+<div id="topbar-placeholder"></div>  <!-- container voor TopBar content -->
 
-<!-- ======================= NAVBAR ======================= -->
-<div id="navbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/navbar.html')
-    .then(resp => resp.text())
+fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
+    .then(resp => resp.text())                // lees de inhoud van het bestand Converteert response naar tekst
+    .then(data => {                           // werk met de opgehaalde HTML data
+        document.getElementById('topbar-placeholder').innerHTML = data;  // plaats de TopBar HTML in de placeholder
+    });
+</script>
+<!-- ======================= layout/Navbar.html ======================= -->
+<div id="Navbar-placeholder"></div> <!-- plek waar Navbar komt -->
+
+<script>
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
+    .then(resp => resp.text())               // omzetten naar HTML tekst
     .then(data => {
-        document.getElementById('navbar-placeholder').innerHTML = data;
+        const placeholder = document.getElementById('Navbar-placeholder'); // placeholder ophalen
+        if (placeholder) {                   // controleren of element bestaat
+            placeholder.innerHTML = data;    // Navbar injecteren
+        } else {
+            console.error('Navbar-placeholder niet gevonden'); // Debugmelding
+        }
     });
 </script>
 
-    
-<!-- ======================= main site code  ======================= -->
-<!-- ======================= Pagina Titel dynamisch ======================= -->
-<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px; text-align:left;"></div>
+<!-- ======================= Hoofd pagina ======================= -->
+<!-- ======================= Pagina Titel Manueel ======================= -->
+<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
 
 <script>
-// Haal de pagina naam uit het webadres
-document.addEventListener('DOMContentLoaded', function() {
-    const pageTitleDiv = document.getElementById('pageTitle');
-
-    // Pak het laatste deel van het pad uit de URL, bv. "storage.html"
-    let path = window.location.pathname.split("/").pop();
-
-    // Verwijder de extensie .html
-    let title = path.replace('.html','');
-
-    // Optioneel: underscores of koppeltekens vervangen door spaties en hoofdletters
-    title = title.replace(/[-_]/g,' ').replace(/\b\w/g, c => c.toUpperCase());
-
-    // Voeg de titel toe aan de pagina
-    pageTitleDiv.textContent = title;
+document.addEventListener('DOMContentLoaded', () => {
+    const pageTitleDiv = document.getElementById('pageTitle');  // Doel div
+    const title = "Stamboom data opgeslagen";            // ⚠️ Zelf invullen title
+    pageTitleDiv.textContent = title
+        .replace(/[-_]/g,' ')          // underscore/koppelteken → spatie
+        .replace(/\b\w/g, c => c.toUpperCase()); // eerste letter hoofdletter
 });
 </script>
-    <!-- Storage overzicht pagina MyFamTreeCollab -->
-
-<!-- Hoofd HTML structuur -->
+<!-- ======================= Storage overzicht pagina MyFamTreeCollab  ======================= -->
+ <!-- Hoofd HTML structuur -->
 <div class="main-container" id="mainContainer">
     <!-- Info over storage versie en aantal records -->
     <div class="storage-info" id="storageInfo"></div>
 
-    <!-- Container waar de tabel of lege boodschap wordt weergegeven -->
+  <!-- Container waar de tabel of lege boodschap wordt weergegeven -->
     <div id="storageContainer"></div>
 
-    <!-- Reset-knop om alle storage te wissen -->
+<!-- Reset-knop om alle storage te wissen -->
     <button class="btn-reset" id="resetBtn">Wis alle data</button>
 </div>
 
@@ -97,75 +102,154 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- ======================= Scripts ======================= -->
 <script src="../js/storage.js"></script>
+
 <script>
+// Wacht tot volledige DOM geladen is voordat we elementen aanspreken
 document.addEventListener('DOMContentLoaded', function () {
-    // DOM-elementen ophalen
-    const container = document.getElementById('storageContainer');
-    const info = document.getElementById('storageInfo');
-    const resetBtn = document.getElementById('resetBtn');
 
-    // Kolommen die altijd worden weergegeven
-    const columns = ['ID', 'Doopnaam', 'Achternaam'];
+    // ===============================
+    // Veiligheidscontrole
+    // ===============================
 
-    // Functie om tabel te renderen
-    function renderTable() {
-        const data = StamboomStorage.get(); // Haal alle data op uit storage
-        container.innerHTML = ""; // Oude content verwijderen
-        info.innerHTML = `Storage versie: ${StamboomStorage.version} | Aantal records: ${data.length}`;
-
-        if(!data.length){
-            // Geen data aanwezig → toon boodschap
-            container.innerHTML = '<div class="empty">Geen data gevonden in localStorage.</div>';
-            return;
-        }
-
-        // Tabel opbouwen
-        const table = document.createElement('table');
-
-        // Header
-        const thead = document.createElement('thead');
-        const headerRow = document.createElement('tr');
-        columns.forEach(col => {
-            const th = document.createElement('th');
-            th.textContent = col;
-            headerRow.appendChild(th);
-        });
-        thead.appendChild(headerRow);
-        table.appendChild(thead);
-
-        // Body
-        const tbody = document.createElement('tbody');
-        data.forEach(person => {
-            const row = document.createElement('tr');
-            columns.forEach(col => {
-                const td = document.createElement('td');
-                td.textContent = person[col] ?? ''; // Als waarde niet bestaat, leeg laten
-                row.appendChild(td);
-            });
-            tbody.appendChild(row);
-        });
-        table.appendChild(tbody);
-
-        container.appendChild(table); // Tabel toevoegen aan DOM
+    // Controleer of StamboomStorage beschikbaar is (voorkomt crash als script niet laadt)
+    if (typeof StamboomStorage === "undefined") {
+        console.error("StamboomStorage niet geladen."); // Toon foutmelding in console
+        return; // Stop verdere uitvoering
     }
 
-    // Reset-knop functie
+    // ===============================
+    // DOM-elementen ophalen
+    // ===============================
+
+    const container = document.getElementById('storageContainer'); // Container voor tabel of lege melding
+    const info = document.getElementById('storageInfo');           // Element voor versie + record info
+    const resetBtn = document.getElementById('resetBtn');          // Reset knop
+
+    // ===============================
+    // Kolommen definitie
+    // ===============================
+
+    // Vaste kolommen die standaard worden weergegeven
+    const columns = ['ID', 'Doopnaam', 'Achternaam'];
+
+    // ===============================
+    // Functie: renderTable
+    // ===============================
+
+    function renderTable() {
+
+        let data = []; // Variabele voor opslag data
+
+        try {
+            data = StamboomStorage.get(); // Data ophalen uit localStorage via centrale storage module
+        } catch (e) {
+            console.error("Fout bij ophalen storage:", e); // Log fout bij corrupte storage
+            data = []; // Fallback naar lege array
+        }
+
+        container.innerHTML = ""; // Oude content verwijderen (voorkomt dubbele rendering)
+
+        // Toon storage versie + aantal records bovenaan
+        info.innerHTML = 
+            `Storage versie: ${StamboomStorage.version} | Aantal records: ${data.length}`;
+
+        // ===============================
+        // Geen data aanwezig
+        // ===============================
+
+        if (!data.length) { // Controle of array leeg is
+            container.innerHTML = 
+                '<div class="empty">Geen data gevonden in localStorage.</div>'; // Toon melding
+            return; // Stop functie, geen tabel nodig
+        }
+
+        // ===============================
+        // Tabel opbouwen
+        // ===============================
+
+        const table = document.createElement('table'); // Maak nieuw table element
+        table.classList.add('storage-table'); // Voeg class toe voor styling
+
+        // ===== THEAD =====
+
+        const thead = document.createElement('thead'); // Maak header container
+        const headerRow = document.createElement('tr'); // Maak rij voor kolomtitels
+
+        columns.forEach(col => { // Loop door elke kolomnaam
+            const th = document.createElement('th'); // Maak header cel
+            th.textContent = col; // Plaats kolomnaam als tekst
+            headerRow.appendChild(th); // Voeg header cel toe aan header rij
+        });
+
+        thead.appendChild(headerRow); // Voeg header rij toe aan thead
+        table.appendChild(thead);     // Voeg thead toe aan tabel
+
+        // ===== TBODY =====
+
+        const tbody = document.createElement('tbody'); // Maak tbody container
+
+        const fragment = document.createDocumentFragment(); 
+        // DocumentFragment voorkomt meerdere DOM reflows (betere performance)
+
+        data.forEach(person => { // Loop door elke persoon in storage
+
+            const row = document.createElement('tr'); // Maak nieuwe rij
+
+            columns.forEach(col => { // Loop door elke kolom
+
+                const td = document.createElement('td'); // Maak cel
+
+                // Toon waarde als die bestaat, anders lege string (null-safe)
+                td.textContent = person[col] ?? '';
+
+                row.appendChild(td); // Voeg cel toe aan rij
+            });
+
+            fragment.appendChild(row); // Voeg rij toe aan fragment (nog niet in DOM)
+        });
+
+        tbody.appendChild(fragment); // Voeg alle rijen in één keer toe aan tbody
+        table.appendChild(tbody);    // Voeg tbody toe aan tabel
+
+        container.appendChild(table); // Voeg complete tabel toe aan de pagina
+    }
+
+    // ===============================
+    // Reset knop functionaliteit
+    // ===============================
+
     resetBtn.addEventListener('click', function() {
-        if(confirm("Weet je zeker dat je alle storage wilt wissen?")){
-            StamboomStorage.clear(); // Alles wissen
-            renderTable();           // Tabel opnieuw renderen
+
+        const currentData = StamboomStorage.get(); // Haal huidige data op
+
+        if (!currentData.length) return; 
+        // Stop als er geen data is (voorkomt onnodige confirm popup)
+
+        if (confirm("Weet je zeker dat je alle storage wilt wissen?")) {
+            StamboomStorage.clear(); // Wis volledige localStorage via storage module
+            renderTable();           // Render tabel opnieuw (nu leeg)
+            console.log("Storage succesvol gewist."); // Log bevestiging
         }
     });
 
-    // Initial render
-    renderTable();
+    // ===============================
+    // Initiale render
+    // ===============================
+
+    renderTable(); // Voer eerste keer render uit bij laden pagina
 });
 </script>
 
-<!-- ======================= FOOTER ======================= -->
-<footer>
-    <p>&copy; 2026 MyFamTreeCollab website</p>
-</footer>
+<!-- ======================= bottom bar ======================= -->
+  <!-- ======================= layout/Footer.html ======================= -->
+<div id="footer-placeholder"></div>  <!-- Doel: container voor Footer content -->
 
+<script>
+fetch('/MyFamTreeCollab/Layout/Footer.html')  // pad naar de layout/Footer.html
+    .then(resp => resp.text())                // response omzetten naar leesbare HTML
+    .then(data => {                           // werk met de opgehaalde HTML
+        document.getElementById('footer-placeholder').innerHTML = data; // Footer injecteren
+    });
+</script>
 </body>
 </html>
