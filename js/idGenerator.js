@@ -1,74 +1,53 @@
 // =======================================
 // idGenerator.js
 // Functie voor het automatisch genereren van unieke ID/codes
-// alternatieven X, Q, Y
-// Geschikt voor create.html en manage.html
+// fallback X
 // =======================================
+// js/idGenerator.js
+(function () {
+    'use strict';
 
-/**
- * Genereert een unieke code voor een persoon op basis van:
- * - Doopnaam
- * - Roepnaam
- * - Achternaam
- * - Geslacht (M, F, X)
- * 
- * Formaat: L1L2L3G + 6-cijferig nummer
- * L1 = eerste letter doopnaam, L2 = roepnaam, L3 = achternaam
- * G = geslacht
- * Nummer = oplopend per combinatie
- * 
- * Lege velden krijgen placeholder letters: X (standaard), Q of Y als alternatief
- */
-function genereerCode(doopnaam, roepnaam, achternaam, geslacht) {
-    // Zorg dat geslacht geldig is
-    geslacht = geslacht.toUpperCase();
-    if (!['M','F','X'].includes(geslacht)) {
-        throw new Error("Geslacht moet M, F of X zijn");
+    function firstLetter(value, fallback = "X") {
+        if (!value || typeof value !== "string") return fallback;
+        const trimmed = value.trim();
+        return trimmed ? trimmed[0].toUpperCase() : fallback;
     }
 
-    // Functie om eerste letter te kiezen met placeholder
-    function eersteLetter(naam) {
-        if (!naam || naam.trim() === '') {
-            // Placeholder letters in volgorde van gebruik
-            const alternatieven = ['X', 'Q', 'Y'];
-            return alternatieven[0]; // standaard X
+    function genereerCode(persoon, bestaandeDataset) {
+
+        if (!persoon || typeof persoon !== "object") {
+            throw new Error("Ongeldig persoon-object voor ID generatie.");
         }
-        return naam[0].toUpperCase();
+
+        const fields = window.StamboomSchema.fields;
+        const idField = fields[0]; // ID is altijd eerste kolom
+
+        // Als ID al bestaat → nooit overschrijven
+        if (persoon[idField]) {
+            return persoon[idField];
+        }
+
+        const basis =
+            firstLetter(persoon.Doopnaam) +
+            firstLetter(persoon.Roepnaam) +
+            firstLetter(persoon.Achternaam) +
+            firstLetter(persoon.Geslacht, "X");
+
+        const bestaandeIDs = (bestaandeDataset || [])
+            .map(p => p[idField])
+            .filter(Boolean);
+
+        let teller = 1;
+        let nieuweID;
+
+        do {
+            nieuweID = basis + String(teller).padStart(5, "0");
+            teller++;
+        } while (bestaandeIDs.includes(nieuweID));
+
+        return nieuweID;
     }
 
-    // Eerste letters ophalen
-    const L1 = eersteLetter(doopnaam);
-    const L2 = eersteLetter(roepnaam);
-    const L3 = eersteLetter(achternaam);
+    window.genereerCode = genereerCode;
 
-    // Basisletters + geslacht
-    const basis = L1 + L2 + L3 + geslacht;
-
-    // Ophalen van bestaande codes uit localStorage
-    let bestaandeCodes = JSON.parse(localStorage.getItem('codes') || '[]');
-
-    // Vind het eerst beschikbare 6-cijferige nummer
-    let nummer = 1;
-    let code;
-    do {
-        const nummerStr = nummer.toString().padStart(6, '0'); // altijd 6 cijfers
-        code = basis + nummerStr;
-        nummer++;
-    } while (bestaandeCodes.includes(code) && nummer <= 999999);
-
-    if (nummer > 999999) {
-        throw new Error("Geen vrije codes meer voor deze lettercombinatie");
-    }
-
-    // Sla de code op in localStorage zodat deze niet opnieuw gebruikt wordt
-    bestaandeCodes.push(code);
-    localStorage.setItem('codes', JSON.stringify(bestaandeCodes));
-
-    return code;
-}
-
-/**
- * Voorbeeld gebruik:
- * let nieuweCode = genereerCode("Jan", "Hendrik", "Vermeer", "M");
- * console.log("Nieuwe unieke code:", nieuweCode);
- */
+})();
