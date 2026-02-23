@@ -61,10 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
 <div id="footer-placeholder"></div>  <!-- Doel: container voor Footer content -->
 
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html')  // Doel: pad naar het externe Footer bestand
-    .then(resp => resp.text())                // Doel: response omzetten naar leesbare HTML
-    .then(data => {                           // Doel: werk met de opgehaalde HTML
-        document.getElementById('footer-placeholder').innerHTML = data; // Doel: Footer injecteren
+fetch('/MyFamTreeCollab/Layout/Footer.html')  // pad naar de layout/Footer.html
+    .then(resp => resp.text())                // response omzetten naar leesbare HTML
+    .then(data => {                           // werk met de opgehaalde HTML
+        document.getElementById('footer-placeholder').innerHTML = data; // Footer injecteren
     });
 </script>
 </body>
