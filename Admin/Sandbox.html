@@ -37,14 +37,13 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html') // Doel: Navbar bestand ophalen
 </script>
 
 <!-- ======================= Hoofd pagina ======================= -->
-  <!-- ======================= Pagina Titel Manueel  ======================= -->
 <!-- ======================= Pagina Titel Manueel ======================= -->
 <div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const pageTitleDiv = document.getElementById('pageTitle');  // Doel div
-    const title = "Vul hier zelf de paginatitel in";            // ⚠️ Zelf invullen
+    const title = "Sandbox";            // ⚠️ Zelf invullen title
     pageTitleDiv.textContent = title
         .replace(/[-_]/g,' ')          // underscore/koppelteken → spatie
         .replace(/\b\w/g, c => c.toUpperCase()); // eerste letter hoofdletter
@@ -68,8 +67,4 @@ fetch('/MyFamTreeCollab/Layout/Footer.html')  // Doel: pad naar het externe Foot
         document.getElementById('footer-placeholder').innerHTML = data; // Doel: Footer injecteren
     });
 </script>
-    <!-- ======================= FOOTER ======================= -->
-<footer>
-    <p>&copy; 2026 MyFamTreeCollab website</p>
-</footer>
 </body>
