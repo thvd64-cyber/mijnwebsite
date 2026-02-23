@@ -1,307 +1,152 @@
-// =======================
-// js/manage.js
-// =======================
-'use strict';
+// manage.js
+(function () {
+    'use strict';
 
-// =======================
-// Configuratie & DOM 
-// =======================
-let stamboomData = JSON.parse(localStorage.getItem('stamboomData') || '[]');
-const tableBody = document.querySelector('#manageTable tbody');
-const theadRow = document.querySelector('#manageTable thead tr');
-const loadBtn = document.getElementById('loadBtn');
-const searchInput = document.getElementById('searchPerson');
-const saveBtn = document.getElementById('saveBtn');
-const addBtn = document.getElementById('addBtn');
+    const tableBody = document.querySelector('#manageTable tbody');
+    const theadRow = document.querySelector('#manageTable thead tr');
+    const addBtn = document.getElementById('addBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const loadBtn = document.getElementById('loadBtn');
+    const searchInput = document.getElementById('searchPerson');
 
-// Kolommen dynamisch vanuit schema
-const fields = ['Relatie'].concat(window.StamboomSchema.fields);
-theadRow.innerHTML = '';
-fields.forEach(f => {
-    const th = document.createElement('th');
-    th.textContent = f;
-    theadRow.appendChild(th);
-});
+    const FIELDS = window.StamboomSchema.fields;
+    const ID_FIELD = FIELDS[0];
 
-// =======================
-// Helper: row class
-// =======================
-function getRowClass(p) {
-    if (!p.Relatie || p.Relatie === 'Onbekend') return '';
-    switch(p.Relatie){
-        case 'Ouder': return 'ouders';
-        case 'Hoofd-ID': return 'hoofd-id';
-        case 'Partner': return 'partner';
-        case 'Kind': return 'kind';
-        case 'Ex-Partner': return 'ex-partner';
-        case 'Broer/Zus': return 'broerzus';
-        case 'Partner-Kind': return 'partner-kind';
-        default: return '';
-    }
-}
+    let dataset = window.StamboomStorage.get() || [];
 
-// =======================
-// Helper: sorteer hiërarchie
-// =======================
-function sortByHierarchy(data, hoofdID) {
-    const result = [];
-    const hoofd = data.find(p => p.ID === hoofdID);
-    if(!hoofd) return result;
-
-    // Ouders
-    data.filter(p => p.ID === hoofd.VaderID || p.ID === hoofd.MoederID)
-        .forEach(p => result.push(p));
-
-    // Hoofd
-    result.push(hoofd);
-
-    // Partner
-    if(hoofd.PartnerID) {
-        const partner = data.find(p => p.ID === hoofd.PartnerID);
-        if(partner) result.push(partner);
+    /* ==============================
+       Header opbouwen vanuit schema
+    ============================== */
+    function buildHeader() {
+        theadRow.innerHTML = '';
+        FIELDS.forEach(field => {
+            const th = document.createElement('th');
+            th.textContent = field;
+            theadRow.appendChild(th);
+        });
     }
 
-    // Kinderen en partner-kind
-    const children = data.filter(p => p.VaderID === hoofd.ID || p.MoederID === hoofd.ID);
-    children.forEach(c => {
-        result.push(c);
-        if(c.PartnerID){
-            const cPartner = data.find(p => p.ID === c.PartnerID);
-            if(cPartner) result.push(cPartner);
-        }
-    });
+    /* ==============================
+       Tabel renderen
+    ============================== */
+    function renderTable(data) {
+        tableBody.innerHTML = '';
 
-    // Broer/Zus
-    const siblings = data.filter(p => p.VaderID === hoofd.VaderID && p.MoederID === hoofd.MoederID && p.ID !== hoofd.ID);
-    siblings.forEach(s => result.push(s));
+        data.forEach(persoon => {
+            const tr = document.createElement('tr');
 
-    return result;
-}
+            FIELDS.forEach(field => {
+                const td = document.createElement('td');
 
-// =======================
-// Render tabel
-// =======================
-function renderTable(data) {
-    tableBody.innerHTML = '';
-    data.forEach(p => {
-        const tr = document.createElement('tr');
-        tr.className = getRowClass(p);
+                if (field === ID_FIELD) {
+                    td.textContent = persoon[field] || '';
+                } else {
+                    const input = document.createElement('input');
+                    input.value = persoon[field] || '';
+                    input.dataset.field = field;
+                    td.appendChild(input);
+                }
 
-        fields.forEach(f => {
-            const td = document.createElement('td');
-            if(f === 'ID' || f === 'Relatie'){
-                td.textContent = p[f] || '';
-            } else {
-                const input = document.createElement('input');
-                input.value = p[f] || '';
-                input.addEventListener('change', e => p[f] = e.target.value);
-                td.appendChild(input);
+                tr.appendChild(td);
+            });
+
+            tableBody.appendChild(tr);
+        });
+    }
+
+    /* ==============================
+       Nieuwe persoon toevoegen
+    ============================== */
+    function addPersoon() {
+
+        const nieuw = window.StamboomSchema.empty();
+
+        // 1️⃣ ID genereren
+        nieuw[ID_FIELD] = window.genereerCode(nieuw, dataset);
+
+        // Direct in dataset zetten
+        dataset.push(nieuw);
+
+        renderTable(dataset);
+    }
+
+    /* ==============================
+       Opslaan (volledige dataset)
+    ============================== */
+    function saveDataset() {
+
+        const rows = tableBody.querySelectorAll('tr');
+        const nieuweDataset = [];
+        const idSet = new Set();
+
+        rows.forEach(tr => {
+
+            const persoon = window.StamboomSchema.empty();
+
+            FIELDS.forEach((field, index) => {
+
+                const cell = tr.cells[index];
+
+                if (field === ID_FIELD) {
+                    persoon[field] = cell.textContent.trim();
+                } else {
+                    const input = cell.querySelector('input');
+                    persoon[field] = input ? input.value.trim() : "";
+                }
+            });
+
+            // 2️⃣ Validatie
+            if (!window.StamboomSchema.validate(persoon)) {
+                throw new Error(`Validatie mislukt voor ID ${persoon[ID_FIELD]}`);
             }
-            tr.appendChild(td);
-        });
-        tableBody.appendChild(tr);
-    });
-}
 
-// =======================
-// Clear table
-// =======================
-function clearTable() {
-    tableBody.innerHTML = '';
-}
+            // 3️⃣ Duplicate check (alleen ID)
+            if (idSet.has(persoon[ID_FIELD])) {
+                throw new Error(`Duplicate ID gevonden: ${persoon[ID_FIELD]}`);
+            }
 
-// =======================
-// Zoek persoon
-// =======================
-function loadPerson() {
-    clearTable();
-    if(stamboomData.length === 0) return alert('Geen data beschikbaar.');
-
-    const term = searchInput.value.trim();
-    if(term.length < 3) return alert('Voer minimaal 3 letters/cijfers in.');
-
-    const matches = stamboomData.filter(p =>
-        (p.ID && p.ID.toLowerCase().includes(term.toLowerCase())) ||
-        (p.Doopnaam && p.Doopnaam.toLowerCase().includes(term.toLowerCase())) ||
-        (p.Achternaam && p.Achternaam.toLowerCase().includes(term.toLowerCase()))
-    );
-
-    if(matches.length === 0){
-        alert('Geen persoon gevonden');
-        return;
-    }
-
-    if(matches.length === 1){
-        const hierData = sortByHierarchy(stamboomData, matches[0].ID);
-        renderTable(hierData);
-        return;
-    }
-
-    showPersonSelectionPopup(matches);
-}
-
-// =======================
-// Popup selectie voor meerdere matches
-// =======================
-function showPersonSelectionPopup(matches){
-    let modal = document.createElement('div');
-    modal.className = 'modal-popup';
-    modal.style.position = 'fixed';
-    modal.style.top = '50%';
-    modal.style.left = '50%';
-    modal.style.transform = 'translate(-50%, -50%)';
-    modal.style.background = '#fff';
-    modal.style.padding = '20px';
-    modal.style.border = '1px solid #333';
-    modal.style.zIndex = '1000';
-    modal.style.maxHeight = '400px';
-    modal.style.overflowY = 'auto';
-
-    const title = document.createElement('h3');
-    title.textContent = 'Kies de juiste persoon';
-    modal.appendChild(title);
-
-    const list = document.createElement('ul');
-    matches.forEach(p => {
-        const li = document.createElement('li');
-        li.style.cursor = 'pointer';
-        li.textContent = `${p.Doopnaam || ''} ${p.Prefix || ''} ${p.Achternaam || ''} (${p.Geboortedatum || ''})`;
-        li.addEventListener('click', () => {
-            const hierData = sortByHierarchy(stamboomData, p.ID);
-            renderTable(hierData);
-            document.body.removeChild(modal);
-        });
-        list.appendChild(li);
-    });
-    modal.appendChild(list);
-
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = 'Sluiten';
-    closeBtn.addEventListener('click', () => document.body.removeChild(modal));
-    modal.appendChild(closeBtn);
-
-    document.body.appendChild(modal);
-}
-
-// =======================
-// Genereer ID's voor lege velden
-// =======================
-function generateMissingIDs() {
-    const existingIDs = new Set(stamboomData.map(p => p.ID));
-    let duplicates = 0;
-
-    stamboomData.forEach(p => {
-        if(!p.ID && p.Doopnaam){
-            let newID;
-            do {
-                newID = idGenerator(p.Doopnaam, p.Roepnaam, p.Achternaam, p.Geslacht || '');
-            } while(existingIDs.has(newID));
-            p.ID = newID;
-            existingIDs.add(newID);
-        } else {
-            if(existingIDs.has(p.ID)) duplicates++;
-            existingIDs.add(p.ID);
-        }
-    });
-
-    if(duplicates > 0){
-        alert(`⚠️ Er zijn ${duplicates} dubbele ID(s) gevonden! Controleer de data.`);
-    }
-}
-
-// =======================
-// Save stamboom data
-// =======================
-function saveData() {
-    const rows = tableBody.querySelectorAll('tr');
-    const newData = []; // Alle geldige personen voor storage
-    const existingIDs = new Set(stamboomData.map(p => p.ID));
-
-    rows.forEach(tr => {
-        const rowData = {};
-        let hasData = false;
-
-        // Lees alle velden uit de tabel
-        fields.forEach((f, i) => {
-            const input = tr.cells[i].querySelector('input');
-            const value = input ? input.value.trim() : tr.cells[i].textContent.trim();
-            rowData[f] = value;
-            if(value) hasData = true;
+            idSet.add(persoon[ID_FIELD]);
+            nieuweDataset.push(persoon);
         });
 
-        // Skip lege rijen of rijen zonder Doopnaam/Achternaam
-        if(!hasData || !rowData.Doopnaam || !rowData.Achternaam){
+        // 4️⃣ Opslaan
+        window.StamboomStorage.set(nieuweDataset);
+        dataset = nieuweDataset;
+
+        alert("Dataset succesvol opgeslagen.");
+    }
+
+    /* ==============================
+       Zoeken
+    ============================== */
+    function loadFiltered() {
+
+        dataset = window.StamboomStorage.get() || [];
+
+        const term = searchInput.value.trim().toLowerCase();
+
+        if (!term) {
+            renderTable(dataset);
             return;
         }
 
-        // ID genereren als leeg of duplicate
-        if(!rowData.ID || existingIDs.has(rowData.ID)){
-            let newID;
-            do {
-                newID = idGenerator(rowData.Doopnaam, rowData.Roepnaam, rowData.Achternaam, rowData.Geslacht || '');
-            } while(existingIDs.has(newID));
-            rowData.ID = newID;
-        }
+        const filtered = dataset.filter(p =>
+            (p.ID && p.ID.toLowerCase().includes(term)) ||
+            (p.Doopnaam && p.Doopnaam.toLowerCase().includes(term)) ||
+            (p.Achternaam && p.Achternaam.toLowerCase().includes(term))
+        );
 
-        existingIDs.add(rowData.ID);
-
-        // Voeg toe aan nieuwe dataset
-        newData.push(rowData);
-    });
-
-    if(newData.length === 0){
-        alert('Geen geldige personen om op te slaan. Vul minimaal Doopnaam en Achternaam in.');
-        return;
+        renderTable(filtered);
     }
 
-    // Gebruik centrale storage module
-    if(window.StamboomStorage.set(newData)){
-        alert('Wijzigingen succesvol opgeslagen!');
-        stamboomData = window.StamboomStorage.get(); // refresh lokaal
-        clearTable();
-    } else {
-        alert('Opslaan mislukt. Controleer dat alle personen een ID, Doopnaam en Achternaam hebben.');
-    }
-}
-// =======================
-// Voeg tijdelijke lege persoon toe
-// =======================
-function addNewPerson() {
-    const currentTempRows = tableBody.querySelectorAll('tr.temp-row').length;
-    if(currentTempRows >= 10){
-        alert('⚠️ Maximaal 10 personen tegelijk toevoegen.');
-        return;
-    }
+    /* ==============================
+       Init
+    ============================== */
+    buildHeader();
+    renderTable(dataset);
 
-    const empty = window.StamboomSchema.empty();
-    empty.Relatie = '';
-    empty.Geslacht = '';
+    addBtn.addEventListener('click', addPersoon);
+    saveBtn.addEventListener('click', saveDataset);
+    loadBtn.addEventListener('click', loadFiltered);
 
-    const tr = document.createElement('tr');
-    tr.className = 'temp-row';
-
-    fields.forEach(f => {
-        const td = document.createElement('td');
-        if(f === 'ID' || f === 'Relatie'){
-            td.textContent = '';
-        } else {
-            const input = document.createElement('input');
-            input.value = '';
-            input.addEventListener('change', e => empty[f] = e.target.value);
-            td.appendChild(input);
-        }
-        tr.appendChild(td);
-    });
-
-    tableBody.appendChild(tr);
-}
-
-// =======================
-// Event listeners
-// =======================
-loadBtn.addEventListener('click', loadPerson);
-saveBtn.addEventListener('click', saveData);
-addBtn.addEventListener('click', addNewPerson);
-
-// === Pagina start ===
-clearTable();
+})();
