@@ -1,3 +1,6 @@
+// =======================
+// js/manage.js
+// =======================
 'use strict';
 
 // =======================
@@ -207,7 +210,7 @@ function generateMissingIDs() {
 }
 
 // =======================
-// Save data (robust)
+// Save stamboom data
 // =======================
 function saveData() {
     const rows = tableBody.querySelectorAll('tr');
@@ -217,7 +220,6 @@ function saveData() {
         const rowData = {};
         let hasData = false;
 
-        // Verzamel alle velden
         fields.forEach((f, i) => {
             const input = tr.cells[i].querySelector('input');
             const value = input ? input.value.trim() : tr.cells[i].textContent.trim();
@@ -225,11 +227,10 @@ function saveData() {
             if(value) hasData = true;
         });
 
-        // Skip lege rijen of zonder Doopnaam
         if(!hasData || !rowData.Doopnaam) return;
 
-        // ID aanmaken of controleren op duplicaat
-        if(!rowData.ID || existingIDs.has(rowData.ID)){
+        // ID aanmaken als leeg
+        if(!rowData.ID) {
             let newID;
             do {
                 newID = idGenerator(rowData.Doopnaam, rowData.Roepnaam, rowData.Achternaam, rowData.Geslacht || '');
@@ -237,16 +238,13 @@ function saveData() {
             rowData.ID = newID;
         }
 
-        // Bestaande ID updaten of nieuwe toevoegen
         const existingIndex = stamboomData.findIndex(p => p.ID === rowData.ID);
         if(existingIndex > -1){
-            Object.keys(rowData).forEach(k => {
-                if(k !== 'Relatie' && rowData[k] && rowData[k] !== stamboomData[existingIndex][k]){
-                    stamboomData[existingIndex][k] = rowData[k];
-                }
-            });
+            // update bestaande persoon
+            stamboomData[existingIndex] = {...stamboomData[existingIndex], ...rowData};
         } else {
-            stamboomData.unshift(rowData);
+            // voeg nieuwe persoon toe
+            stamboomData.push(rowData);
         }
 
         existingIDs.add(rowData.ID);
@@ -256,7 +254,6 @@ function saveData() {
     alert('Wijzigingen opgeslagen!');
     clearTable();
 }
-
 // =======================
 // Voeg tijdelijke lege persoon toe
 // =======================
