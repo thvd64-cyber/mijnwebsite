@@ -2,34 +2,34 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Import CSV - MyFamTreeCollab</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
+    <title>MyFamTreeCollab - [PAGINA NAAM]</title> <!-- Browser tab titel -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor volledige styling -->
 </head>
 <body>
 <!-- ======================= layout/TopBar.html ======================= -->
 
 <!-- Placeholder waar de TopBar.html inhoud wordt ingeladen -->
-<div id="topbar-placeholder"></div>  <!-- Doel: container voor TopBar content -->
+<div id="topbar-placeholder"></div>  <!-- container voor TopBar content -->
 
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Doel: pad naar het externe topbar bestand
-    .then(resp => resp.text())                // Doel: lees de inhoud van het bestand als tekst
-    .then(data => {                           // Doel: werk met de opgehaalde HTML data
-        document.getElementById('topbar-placeholder').innerHTML = data;  // Doel: plaats de TopBar HTML in de placeholder
+fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
+    .then(resp => resp.text())                // lees de inhoud van het bestand Converteert response naar tekst
+    .then(data => {                           // werk met de opgehaalde HTML data
+        document.getElementById('topbar-placeholder').innerHTML = data;  // plaats de TopBar HTML in de placeholder
     });
 </script>
 <!-- ======================= layout/Navbar.html ======================= -->
-<div id="Navbar-placeholder"></div> <!-- Doel: plek waar Navbar komt -->
+<div id="Navbar-placeholder"></div> <!-- plek waar Navbar komt -->
 
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // Doel: Navbar bestand ophalen
-    .then(resp => resp.text())               // Doel: omzetten naar HTML tekst
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
+    .then(resp => resp.text())               // omzetten naar HTML tekst
     .then(data => {
-        const placeholder = document.getElementById('Navbar-placeholder'); // Doel: placeholder ophalen
-        if (placeholder) {                   // Doel: controleren of element bestaat
-            placeholder.innerHTML = data;    // Doel: Navbar injecteren
+        const placeholder = document.getElementById('Navbar-placeholder'); // placeholder ophalen
+        if (placeholder) {                   // controleren of element bestaat
+            placeholder.innerHTML = data;    // Navbar injecteren
         } else {
             console.error('Navbar-placeholder niet gevonden'); // Debugmelding
         }
