@@ -21,14 +21,18 @@ fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Doel: pad naar het externe topb
     });
 </script>
 <!-- ======================= layout/Navbar.html ======================= -->
-
-<div id="navbar-placeholder"></div> <!-- Doel: container waar Navbar.html wordt geplaatst -->
+<div id="Navbar-placeholder"></div> <!-- Doel: plek waar Navbar komt -->
 
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // Doel: extern Navbar bestand ophalen
-    .then(resp => resp.text())               // Doel: response omzetten naar leesbare HTML tekst
-    .then(data => {                          // Doel: werken met opgehaalde HTML
-        document.getElementById('Navbar-placeholder').innerHTML = data; // Doel: Navbar invoegen in placeholder
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Doel: Navbar bestand ophalen
+    .then(resp => resp.text())               // Doel: omzetten naar HTML tekst
+    .then(data => {
+        const placeholder = document.getElementById('Navbar-placeholder'); // Doel: placeholder ophalen
+        if (placeholder) {                   // Doel: controleren of element bestaat
+            placeholder.innerHTML = data;    // Doel: Navbar injecteren
+        } else {
+            console.error('Navbar-placeholder niet gevonden'); // Debugmelding
+        }
     });
 </script>
 
