@@ -214,12 +214,14 @@ function generateMissingIDs() {
 // =======================
 function saveData() {
     const rows = tableBody.querySelectorAll('tr');
+    const newData = []; // Alle geldige personen voor storage
     const existingIDs = new Set(stamboomData.map(p => p.ID));
 
     rows.forEach(tr => {
         const rowData = {};
         let hasData = false;
 
+        // Lees alle velden uit de tabel
         fields.forEach((f, i) => {
             const input = tr.cells[i].querySelector('input');
             const value = input ? input.value.trim() : tr.cells[i].textContent.trim();
@@ -227,10 +229,13 @@ function saveData() {
             if(value) hasData = true;
         });
 
-        if(!hasData || !rowData.Doopnaam) return;
+        // Skip lege rijen of rijen zonder Doopnaam/Achternaam
+        if(!hasData || !rowData.Doopnaam || !rowData.Achternaam){
+            return;
+        }
 
-        // ID aanmaken als leeg
-        if(!rowData.ID) {
+        // ID genereren als leeg of duplicate
+        if(!rowData.ID || existingIDs.has(rowData.ID)){
             let newID;
             do {
                 newID = idGenerator(rowData.Doopnaam, rowData.Roepnaam, rowData.Achternaam, rowData.Geslacht || '');
@@ -238,21 +243,25 @@ function saveData() {
             rowData.ID = newID;
         }
 
-        const existingIndex = stamboomData.findIndex(p => p.ID === rowData.ID);
-        if(existingIndex > -1){
-            // update bestaande persoon
-            stamboomData[existingIndex] = {...stamboomData[existingIndex], ...rowData};
-        } else {
-            // voeg nieuwe persoon toe
-            stamboomData.push(rowData);
-        }
-
         existingIDs.add(rowData.ID);
+
+        // Voeg toe aan nieuwe dataset
+        newData.push(rowData);
     });
 
-    localStorage.setItem('stamboomData', JSON.stringify(stamboomData));
-    alert('Wijzigingen opgeslagen!');
-    clearTable();
+    if(newData.length === 0){
+        alert('Geen geldige personen om op te slaan. Vul minimaal Doopnaam en Achternaam in.');
+        return;
+    }
+
+    // Gebruik centrale storage module
+    if(window.StamboomStorage.set(newData)){
+        alert('Wijzigingen succesvol opgeslagen!');
+        stamboomData = window.StamboomStorage.get(); // refresh lokaal
+        clearTable();
+    } else {
+        alert('Opslaan mislukt. Controleer dat alle personen een ID, Doopnaam en Achternaam hebben.');
+    }
 }
 // =======================
 // Voeg tijdelijke lege persoon toe
