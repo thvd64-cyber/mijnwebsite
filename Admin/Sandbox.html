@@ -1,13 +1,45 @@
 <!-- ======================= Sandbox v0.0.0 ======================= -->
-
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import CSV - MyFamTreeCollab</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
 <!-- ======================= Top bar ======================= -->
-
-<!-- ======================= Navigatie Menu ======================= -->
-
-<!-- ======================= Titel ======================= -->
-
-<!-- ======================= Header ======================= -->
-
+<!-- ======================= NAVBAR ======================= -->
+<div id="navbar-placeholder"></div>
+<script>
+fetch('/MyFamTreeCollab/navbar.html')
+    .then(resp => resp.text())
+    .then(data => {
+        document.getElementById('navbar-placeholder').innerHTML = data;
+    });
+</script>
 <!-- ======================= Hoofd pagina ======================= -->
-
+  <!-- ======================= Pagina Titel Manueel  ======================= -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const pageTitleDiv = document.getElementById('pageTitle');    // Doel div
+    const title = "Vul hier zelf de paginatitel in";            // ⚠️ Zelf invullen
+    pageTitleDiv.textContent = title
+        .replace(/[-_]/g,' ')                   // underscore of koppelteken -> spatie
+        .replace(/\b\w/g, c => c.toUpperCase());  // eerste letter van elk woord hoofdletter
+});
+</script>
+  
+  <!-- ======================= yellow message Under Construction ======================= -->
+<div class="under-construction" style="text-align:center; padding:50px 20px; background:#fff3cd; border:1px solid #ffeeba; border-radius:8px; margin-top:20px;">
+    <h2 style="color:#856404; font-size:2rem; margin-bottom:10px;">⚠️ Under Construction</h2>
+    <p style="color:#856404; font-size:1.1rem;">Deze pagina is momenteel in aanbouw. Kom binnenkort terug voor updates!</p>
+</div>
+  <!-- ======================= CSS ======================= -->
+  <!-- ======================= Scripts ======================= -->
 <!-- ======================= bottom bar ======================= -->
+  <!-- ======================= FOOTER ======================= -->
+<footer>
+    <p>&copy; 2026 MyFamTreeCollab website</p>
+</footer>
+</body>
