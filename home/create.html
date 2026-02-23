@@ -87,11 +87,13 @@ document.addEventListener('DOMContentLoaded', () => {
 </section>
 <!-- ======================= MAIN CONTENT ======================= -->
 <!-- ======================= PERSOON FORMULIER ======================= -->
-<form id="persoonForm" style="display:flex; flex-direction:column; gap:15px; max-width:500px;"> 
-    <!-- Flex container: verticale stapeling, gap tussen rijen, max breedte -->
+<form id="persoonForm" 
+      style="display:flex; flex-direction:column; gap:15px; max-width:500px; margin:0 auto; align-items:center;">
+    <!-- Flex container: verticale stapeling, gap tussen rijen, max breedte, gecentreerd horizontaal -->
 
     <!-- Doopnaam en Roepnaam -->
-    <div style="display:flex; gap:10px;">
+    <div style="display:flex; gap:10px; width:100%;">
+        <!-- Flex container voor twee velden naast elkaar, volledige breedte van het formulier -->
         <div style="flex:1;">
             <label for="doopnaam">Doopnaam:</label>
             <input type="text" id="doopnaam" name="doopnaam" placeholder="Doopnaam" style="width:100%; padding:5px;">
@@ -103,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
 
     <!-- Prefix en Achternaam -->
-    <div style="display:flex; gap:10px;">
+    <div style="display:flex; gap:10px; width:100%;">
         <div style="flex:1;">
             <label for="prefix">Prefix:</label>
             <input type="text" id="prefix" name="prefix" placeholder="Prefix" style="width:100%; padding:5px;">
@@ -115,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
 
     <!-- Geboortedatum en Geslacht -->
-    <div style="display:flex; gap:10px;">
+    <div style="display:flex; gap:10px; width:100%;">
         <div style="flex:1;">
             <label for="geboortedatum">Geboortedatum:</label>
             <input type="date" id="geboortedatum" name="geboortedatum" style="width:100%; padding:5px;">
@@ -123,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="flex:1;">
             <label for="geslacht">Geslacht:</label>
             <select id="geslacht" name="geslacht" style="width:100%; padding:5px;">
-                <option value="">Selecteer</option> <!-- lege waarde -->
+                <option value="">Selecteer</option>
                 <option value="M">Man</option>
                 <option value="V">Vrouw</option>
                 <option value="X">Anders / Non-binair</option>
@@ -132,11 +134,12 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
 
     <!-- Opslaan knop -->
-    <button type="submit" style="padding:10px 20px; background:#4CAF50; color:#fff; border:none; border-radius:5px; cursor:pointer; width:150px;">
+    <button type="submit" 
+            style="padding:10px 20px; background:#1E90FF; color:#fff; border:none; border-radius:5px; cursor:pointer; width:150px;">
         Opslaan
     </button>
+    <!-- Knop is nu blauw (#1E90FF), witte tekst, afgeronde hoeken, cursor-pointer, vaste breedte -->
 </form>
-
   <!-- ======================= layout/Footer.html ======================= -->
 <div id="footer-placeholder"></div>  <!-- Doel: container voor Footer content -->
 
