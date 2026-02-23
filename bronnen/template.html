@@ -1,44 +1,55 @@
+<!-- ======================= bronnen/template.html ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV Template - MyFamTreeCollab</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background: #f8f8f8; }
-        main .container { background: #fff; padding: 20px; border-radius: 8px; max-width: 1100px; margin: 20px auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
-        button { padding: 10px 20px; background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        #status { margin-top: 15px; padding: 12px; border-radius: 6px; color: #333; }
-        /* Page title styling */
-        .page-title { max-width: 1100px; margin: 40px auto 20px auto; padding: 0 20px; }
-        .page-title h2 { margin-bottom: 10px; font-size: 1.8rem; font-weight: 600; }
-        .page-title p { color: #555; font-size: 1rem; line-height: 1.5; }
-    </style>
+    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
+    <title>MyFamTreeCollab - Template (CSV)</title> <!-- ⚠️ Browser tab titel -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor volledige styling -->
 </head>
 <body>
+<!-- ======================= layout/TopBar.html ======================= -->
 
-<!-- ======================= NAVBAR ======================= -->
-<div id="navbar-placeholder"></div>
+<!-- Placeholder waar de TopBar.html inhoud wordt ingeladen -->
+<div id="topbar-placeholder"></div>  <!-- container voor TopBar content -->
+
 <script>
-fetch('../navbar.html')
-    .then(response => response.text())
+fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
+    .then(resp => resp.text())                // lees de inhoud van het bestand Converteert response naar tekst
+    .then(data => {                           // werk met de opgehaalde HTML data
+        document.getElementById('topbar-placeholder').innerHTML = data;  // plaats de TopBar HTML in de placeholder
+    });
+</script>
+<!-- ======================= layout/Navbar.html ======================= -->
+<div id="Navbar-placeholder"></div> <!-- plek waar Navbar komt -->
+
+<script>
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
+    .then(resp => resp.text())               // omzetten naar HTML tekst
     .then(data => {
-        document.getElementById('navbar-placeholder').innerHTML = data;
-        // Optioneel: pagina-specifieke navbar styling
-        const navbar = document.getElementById('navbar-placeholder');
-        navbar.querySelectorAll('a').forEach(link => link.style.color = '#fff');
+        const placeholder = document.getElementById('Navbar-placeholder'); // placeholder ophalen
+        if (placeholder) {                   // controleren of element bestaat
+            placeholder.innerHTML = data;    // Navbar injecteren
+        } else {
+            console.error('Navbar-placeholder niet gevonden'); // Debugmelding
+        }
     });
 </script>
 
-<!-- ======================= PAGE TITLE ======================= -->
-<section class="page-title">
-    <h2>CSV Template</h2>
-    <p>Gebruik deze downloadbare CSV om stamboomdata te importeren in MyFamTreeCollab. Alle kolomnamen worden herkend en het template is volledig conform het huidige schema. ID’s volgen de idGenerator-logica.</p>
-</section>
+<!-- ======================= Hoofd pagina ======================= -->
+    <!-- ======================= Pagina Titel Manueel ======================= -->
+<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
 
-<!-- ======================= MAIN CONTENT ======================= -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const pageTitleDiv = document.getElementById('pageTitle');  // Doel div
+    const title = "Template (CSV)";            // ⚠️ Zelf invullen title
+    pageTitleDiv.textContent = title
+        .replace(/[-_]/g,' ')          // underscore/koppelteken → spatie
+        .replace(/\b\w/g, c => c.toUpperCase()); // eerste letter hoofdletter
+});
+</script>
+    <!-- ======================= MAIN CONTENT ======================= -->
 <main>
     <div class="container">
         <section>
@@ -53,11 +64,6 @@ fetch('../navbar.html')
         <p id="status"></p>
     </div>
 </main>
-
-<!-- ======================= FOOTER ======================= -->
-<footer>
-    <p>&copy; 2026 MyFamTreeCollab website</p>
-</footer>
 
 <!-- ======================= PAGE-SPECIFIC JS ======================= -->
 <script>
@@ -85,6 +91,16 @@ downloadBtn.addEventListener('click', () => {
     status.textContent = "✅ CSV template succesvol gedownload!";
 });
 </script>
+<!-- ======================= bottom bar ======================= -->
+  <!-- ======================= layout/Footer.html ======================= -->
+<div id="footer-placeholder"></div>  <!-- Doel: container voor Footer content -->
 
+<script>
+fetch('/MyFamTreeCollab/Layout/Footer.html')  // pad naar de layout/Footer.html
+    .then(resp => resp.text())                // response omzetten naar leesbare HTML
+    .then(data => {                           // werk met de opgehaalde HTML
+        document.getElementById('footer-placeholder').innerHTML = data; // Footer injecteren
+    });
+</script>
 </body>
 </html>
