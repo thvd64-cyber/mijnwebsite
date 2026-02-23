@@ -1,29 +1,54 @@
-<!-- ======================= import.html ======================= -->
+<!-- ======================= home/import.html ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Import CSV - MyFamTreeCollab</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
+    <title>MyFamTreeCollab - Import</title> <!-- ⚠️ Browser tab titel -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor volledige styling -->
 </head>
 <body>
+<!-- ======================= layout/TopBar.html ======================= -->
 
-<!-- ======================= NAVBAR ======================= -->
-<div id="navbar-placeholder"></div>
+<!-- Placeholder waar de TopBar.html inhoud wordt ingeladen -->
+<div id="topbar-placeholder"></div>  <!-- container voor TopBar content -->
+
 <script>
-fetch('/MyFamTreeCollab/navbar.html')
-    .then(resp => resp.text())
+fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
+    .then(resp => resp.text())                // lees de inhoud van het bestand Converteert response naar tekst
+    .then(data => {                           // werk met de opgehaalde HTML data
+        document.getElementById('topbar-placeholder').innerHTML = data;  // plaats de TopBar HTML in de placeholder
+    });
+</script>
+<!-- ======================= layout/Navbar.html ======================= -->
+<div id="Navbar-placeholder"></div> <!-- plek waar Navbar komt -->
+
+<script>
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
+    .then(resp => resp.text())               // omzetten naar HTML tekst
     .then(data => {
-        document.getElementById('navbar-placeholder').innerHTML = data;
+        const placeholder = document.getElementById('Navbar-placeholder'); // placeholder ophalen
+        if (placeholder) {                   // controleren of element bestaat
+            placeholder.innerHTML = data;    // Navbar injecteren
+        } else {
+            console.error('Navbar-placeholder niet gevonden'); // Debugmelding
+        }
     });
 </script>
 
-<!-- ======================= PAGINA-TITEL ======================= -->
-<section class="page-title">
-    <h2>Import CSV</h2>
-    <p>Gebruik een CSV-bestand om personen toe te voegen aan uw stamboom. Taal en kolomnamen worden genegeerd.</p>
-</section>
+<!-- ======================= Hoofd pagina ======================= -->
+<!-- ======================= Pagina Titel Manueel ======================= -->
+<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const pageTitleDiv = document.getElementById('pageTitle');  // Doel div
+    const title = "Import";            // ⚠️ Zelf invullen title
+    pageTitleDiv.textContent = title
+        .replace(/[-_]/g,' ')          // underscore/koppelteken → spatie
+        .replace(/\b\w/g, c => c.toUpperCase()); // eerste letter hoofdletter
+});
+</script>
 
 <!-- ======================= MAIN CONTENT ======================= -->
 <main>
@@ -43,11 +68,16 @@ fetch('/MyFamTreeCollab/navbar.html')
     </section>
 </main>
 
-<!-- ======================= FOOTER ======================= -->
-<footer>
-    <p>&copy; 2026 MyFamTreeCollab website</p>
-</footer>
+ <!-- ======================= layout/Footer.html ======================= -->
+<div id="footer-placeholder"></div>  <!-- Doel: container voor Footer content -->
 
+<script>
+fetch('/MyFamTreeCollab/Layout/Footer.html')  // pad naar de layout/Footer.html
+    .then(resp => resp.text())                // response omzetten naar leesbare HTML
+    .then(data => {                           // werk met de opgehaalde HTML
+        document.getElementById('footer-placeholder').innerHTML = data; // Footer injecteren
+    });
+</script>
 <!-- ======================= IMPORT JS ======================= -->
 <script src="../js/import.js"></script>
 </body>
