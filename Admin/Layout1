@@ -50,6 +50,26 @@ document.addEventListener('DOMContentLoaded', () => {
         .replace(/\b\w/g, c => c.toUpperCase()); // eerste letter hoofdletter
 });
 </script>
+<!-- ======================= MAIN INTRO CONTENT ======================= -->
+<section style="margin-top:20px; padding:20px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+    <h2 style="margin-bottom:15px;">Welkom bij Layout1</h2>
+    <p style="margin-bottom:15px; line-height:1.6;">
+        Deze pagina toont een overzicht van de kernfunctionaliteiten van jouw stamboomomgeving.
+        Hier kan je gegevens verkennen, relaties analyseren en de structuur van je familie eenvoudig bekijken.
+    </p>
+    <p style="margin-bottom:15px; line-height:1.6;">
+        Enkele mogelijkheden die je op deze pagina vindt:
+    </p>
+    <ul style="margin-left:20px; line-height:1.6;">
+        <li>Overzicht van personen en generaties</li>
+        <li>Visualisatie van relaties en familieverbanden</li>
+        <li>Filteren en zoeken binnen je stamboom</li>
+        <li>Snelle toegang tot detailinformatie per familielid</li>
+    </ul>
+    <p style="margin-top:15px; line-height:1.6;">
+        Meer interactieve functies worden stapsgewijs toegevoegd.
+    </p>
+</section>
   <!-- ======================= yellow message Under Construction ======================= -->
 <div class="under-construction" style="text-align:center; padding:50px 20px; background:#fff3cd; border:1px solid #ffeeba; border-radius:8px; margin-top:20px;">
     <h2 style="color:#856404; font-size:2rem; margin-bottom:10px;">⚠️ Under Construction</h2>
