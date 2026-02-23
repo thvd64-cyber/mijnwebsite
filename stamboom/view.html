@@ -51,12 +51,26 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <!-- ======================= MAIN CONTENT ======================= -->
-
+  <!-- ======================= yellow message Under Construction ======================= -->
+<div class="under-construction" style="text-align:center; padding:50px 20px; background:#fff3cd; border:1px solid #ffeeba; border-radius:8px; margin-top:20px;">
+    <h2 style="color:#856404; font-size:2rem; margin-bottom:10px;">⚠️ Under Construction</h2>
+    <p style="color:#856404; font-size:1.1rem;">Deze pagina is momenteel in aanbouw. Kom binnenkort terug voor updates!</p>
+</div>
 
 <!-- ======================= PAGE-SPECIFIC JS ======================= -->
 <!-- <script src="../js/schema.js"></script> -->
 <!-- <script src="../js/idGenerator.js"></script> -->
 <!-- <script src="../js/manage.js"></script> -->
+<!-- ======================= bottom bar ======================= -->
+  <!-- ======================= layout/Footer.html ======================= -->
+<div id="footer-placeholder"></div>  <!-- Doel: container voor Footer content -->
 
+<script>
+fetch('/MyFamTreeCollab/Layout/Footer.html')  // pad naar de layout/Footer.html
+    .then(resp => resp.text())                // response omzetten naar leesbare HTML
+    .then(data => {                           // werk met de opgehaalde HTML
+        document.getElementById('footer-placeholder').innerHTML = data; // Footer injecteren
+    });
+</script>
 </body>
 </html>
