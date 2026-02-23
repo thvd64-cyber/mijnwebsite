@@ -1,48 +1,54 @@
 // storage.js
-// Centrale opslagmodule voor Stamboom applicatie
-// Production-proof, geoptimaliseerd
+// Centrale opslagmodule – lean, schema-driven, future-proof
 
 (function () {
     'use strict';
 
     const STORAGE_KEY = 'stamboomData';
     const VERSION_KEY = 'stamboomDataVersion';
-    const STORAGE_VERSION = '2.0.0';
+    const STORAGE_VERSION = '3.0.0';
 
-    /**
-     * Veilig JSON parsen
-     */
+    if (!window.StamboomSchema) {
+        console.error('StamboomSchema niet geladen. Laad schema.js vóór storage.js');
+        return;
+    }
+
+    /* =========================
+       Veilig JSON parsen
+    ========================== */
     function safeParse(json) {
         try {
             return JSON.parse(json);
         } catch (error) {
-            console.error('JSON parse fout in localStorage:', error);
+            console.error('JSON parse fout:', error);
             return null;
         }
     }
 
-    /**
-     * Controleert of object geldige persoon structuur heeft
-     */
-    function isValidPersoon(p) {
-        return (
-            p &&
-            typeof p === 'object' &&
-            typeof p.ID === 'string' &&
-            typeof p.Doopnaam === 'string' &&
-            typeof p.Achternaam === 'string'
-        );
-    }
-
-    /**
-     * Valideert volledige dataset
-     */
+    /* =========================
+       Dataset validatie
+    ========================== */
     function validateDataset(data) {
+
         if (!Array.isArray(data)) return false;
 
+        const requiredFields = window.StamboomSchema.fields;
+
         for (let i = 0; i < data.length; i++) {
-            if (!isValidPersoon(data[i])) {
-                console.warn('Ongeldige persoon gevonden op index:', i);
+
+            const persoon = data[i];
+
+            // Check of alle velden bestaan volgens schema
+            for (let field of requiredFields) {
+                if (!(field in persoon)) {
+                    console.warn(`Ontbrekend veld ${field} in record index ${i}`);
+                    return false;
+                }
+            }
+
+            // Gebruik schema validatie
+            if (!window.StamboomSchema.validate(persoon)) {
+                console.warn(`Ongeldig persoon volgens schema op index ${i}`);
                 return false;
             }
         }
@@ -50,91 +56,58 @@
         return true;
     }
 
-    /**
-     * Reset storage veilig
-     * Alleen gebruikt bij handmatige reset of import
-     */
-    function clearStamboomStorage() {
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.setItem(VERSION_KEY, STORAGE_VERSION);
-        console.warn('Stamboom localStorage is gereset.');
-        return true;
-    }
-
-    /**
-     * Haalt dataset veilig op
-     * Valideert, maar clear niet automatisch
-     */
+    /* =========================
+       Dataset ophalen
+    ========================== */
     function getStamboomData() {
+
         const raw = localStorage.getItem(STORAGE_KEY);
+
         if (!raw) return [];
 
         const parsed = safeParse(raw);
-        if (!parsed || !validateDataset(parsed)) {
-            console.warn('Dataset is corrupt of ongeldig. Lege array wordt teruggegeven.');
+
+        if (!parsed) {
+            console.warn('Storage corrupt. Lege dataset teruggegeven.');
+            return [];
+        }
+
+        if (!validateDataset(parsed)) {
+            console.warn('Dataset ongeldig volgens schema. Lege dataset teruggegeven.');
             return [];
         }
 
         return parsed;
     }
 
-    /**
-     * Slaat dataset veilig op
-     */
-    function setStamboomData(data) {
-        if (!validateDataset(data)) {
-            console.error('Opslaan geweigerd: dataset ongeldig.');
-            return false;
-        }
+    /* =========================
+       Dataset wissen
+    ========================== */
+    function clearStamboomStorage() {
 
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-            localStorage.setItem(VERSION_KEY, STORAGE_VERSION);
-            return true;
-        } catch (error) {
-            console.error('Fout bij opslaan in localStorage:', error);
-            return false;
-        }
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.setItem(VERSON_KEY = VERSION_KEY, STORAGE_VERSION);
+
+        console.warn('Stamboom storage volledig gereset.');
+        return true;
     }
 
-    /**
-     * Voegt persoon toe met duplicate ID check
-     */
-    function addPersoon(persoon) {
+    /* =========================
+       Raw database tonen (read-only)
+    ========================== */
+    function showRaw() {
         const data = getStamboomData();
-
-        const exists = data.some(p => p.ID === persoon.ID);
-        if (exists) {
-            console.error('Duplicate ID gedetecteerd:', persoon.ID);
-            return false;
-        }
-
-        data.push(persoon);
-        return setStamboomData(data);
+        console.table(data);
+        return data;
     }
 
-    /**
-     * Vervangt volledige dataset (bij import)
-     */
-    function replaceDataset(newData) {
-        if (!validateDataset(newData)) {
-            console.error('Import geweigerd: dataset ongeldig.');
-            return false;
-        }
-
-        clearStamboomStorage();
-        return setStamboomData(newData);
-    }
-
-    /**
-     * Expose publieke API
-     */
+    /* =========================
+       Publieke API
+    ========================== */
     window.StamboomStorage = {
-        get: getStamboomData,
-        set: setStamboomData,
-        add: addPersoon,
-        replace: replaceDataset,
-        clear: clearStamboomStorage,
+        get: getStamboomData,   // haalt volledige dataset op volgens schema
+        clear: clearStamboomStorage, // wist alles
+        raw: showRaw,          // toont raw dataset volgens schema
         version: STORAGE_VERSION
     };
 
