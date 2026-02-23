@@ -1,32 +1,24 @@
-<!-- ======================= ToBar ======================= -->
-    <!-- ======================= Style override ======================= -->
-<style>
-/* Hoge specificiteit + scoped op .topbar */
-div.topbar,
-div.topbar * {
-    color: #ffffff !important;   /* Forceert tekstkleur binnen topbar */
-}
+<!-- ======================= TopBar.html ======================= -->
+<!-- Schone zwarte topbar, ready to fetch -->
 
-/* Specifiek voor links */
-div.topbar a {
-    color: #ffffff !important;
-    text-decoration: none;
-}
-
-/* Hover-effect */
-div.topbar a:hover {
-    color: #dddddd !important;
-}
-</style>
-    <!-- ======================= TopBar text ======================= -->
-<div class="topbar">
-    <div class="topbar-content">
+<div class="topbar" style="background-color:#f8f9fa; color:#000000; padding:10px 20px; font-family:Arial, sans-serif;">
+    <div class="topbar-content" style="display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:0 auto;">
+        
+        <!-- Links -->
         <div class="top-left">
-            <a href="#">Login layout</a>
+            <a href="#" style="color:#000000; text-decoration:none;">Login layout</a>
         </div>
+
+        <!-- Midden -->
+        <div class="top-center">
+            <span style="color:#000000;">Midden</span>
+        </div>
+
+        <!-- Rechts -->
         <div class="top-right">
-            <a href="#" class="lang-link" data-lang="nl">NL</a> |
-            <a href="#" class="lang-link" data-lang="en">EN</a>
+            <a href="#" class="lang-link" data-lang="nl" style="color:#000000; text-decoration:none;">NL</a> |
+            <a href="#" class="lang-link" data-lang="en" style="color:#000000; text-decoration:none;">EN</a>
         </div>
+
     </div>
 </div>
