@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-<!-- ======================= Top bar ======================= -->
+<!-- ======================= layout/TopBar.html ======================= -->
 
 <!-- Placeholder waar de TopBar.html inhoud wordt ingeladen -->
 <div id="topbar-placeholder"></div>  <!-- Doel: container voor TopBar content -->
@@ -20,15 +20,15 @@ fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Doel: pad naar het externe topb
         document.getElementById('topbar-placeholder').innerHTML = data;  // Doel: plaats de TopBar HTML in de placeholder
     });
 </script>
-<!-- ======================= Navbar layout ======================= -->
+<!-- ======================= layout/Navbar.html ======================= -->
 
 <div id="navbar-placeholder"></div> <!-- Doel: container waar Navbar.html wordt geplaatst -->
 
 <script>
-fetch('/MyFamTreeCollab/Layout/navbar.html') // Doel: extern Navbar bestand ophalen
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Doel: extern Navbar bestand ophalen
     .then(resp => resp.text())               // Doel: response omzetten naar leesbare HTML tekst
     .then(data => {                          // Doel: werken met opgehaalde HTML
-        document.getElementById('navbar-placeholder').innerHTML = data; // Doel: Navbar invoegen in placeholder
+        document.getElementById('Navbar-placeholder').innerHTML = data; // Doel: Navbar invoegen in placeholder
     });
 </script>
 
