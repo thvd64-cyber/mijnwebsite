@@ -52,17 +52,18 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- ======================= Pagina knop  ======================= -->
     
     <!-- ======================= MAIN INTRO CONTENT ======================= -->
+<!-- ======================= MAIN INTRO CONTENT ======================= -->
 <section style="margin-top:20px; padding:20px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
-    <!-- Sectie container met wit vlak, padding, afgeronde hoeken en lichte schaduw -->
+    <!-- Sectie container: wit vlak, padding, afgeronde hoeken, lichte schaduw -->
     
     <h2 style="margin-bottom:15px;">Nieuwe personen toevoegen</h2>
-    <!-- Titel van de sectie, margin onder voor spacing -->
+    <!-- Titel van de sectie met margin onder -->
 
     <p style="margin-bottom:15px; line-height:1.6;">
         Op deze pagina maak je de eerste persoon aan in je stamboom. 
         Daarna breid je de stamboom uit op de <strong>Manage</strong>-pagina. Vul je kerngegevens in om te beginnen.
     </p>
-    <!-- Introductie tekst, uitleg van functie van deze pagina, line-height voor betere leesbaarheid -->
+    <!-- Introductie tekst, uitleg van functie van deze pagina -->
 
     <p style="margin-bottom:15px; line-height:1.6;">
         Enkele functies die je hier vindt:
@@ -76,44 +77,65 @@ document.addEventListener('DOMContentLoaded', () => {
     </ul>
 
     <p style="margin-top:20px;">
-        <!-- Paragraaf container voor de knop, margin-top voor spacing boven knop -->
-        <a href="stamboom/manage.html" 
+        <!-- Container voor de knop, margin-top voor spacing boven knop -->
+        <a href="https://thvd64-cyber.github.io/MyFamTreeCollab/stamboom/manage.html" 
            style="display:inline-block; padding:10px 20px; background:#4CAF50; color:#fff; text-decoration:none; border-radius:5px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
            Ga naar Manage pagina
         </a>
-        <!-- Klikbare knop naar de manage pagina, groene achtergrond, witte tekst, afgeronde hoeken en lichte schaduw -->
+        <!-- Klikbare knop naar de manage pagina via volledige URL, groene achtergrond, witte tekst, afgeronde hoeken en lichte schaduw -->
     </p>
 </section>
 <!-- ======================= MAIN CONTENT ======================= -->
-<main>
-    <form id="addPersonForm">
-        <label>Doopnaam</label>
-        <input type="text" id="doopnaam" required>
+<!-- ======================= PERSOON FORMULIER ======================= -->
+<form id="persoonForm" style="display:flex; flex-direction:column; gap:15px; max-width:500px;"> 
+    <!-- Flex container: verticale stapeling, gap tussen rijen, max breedte -->
 
-        <label>Roepnaam</label>
-        <input type="text" id="roepnaam" required>
+    <!-- Doopnaam en Roepnaam -->
+    <div style="display:flex; gap:10px;">
+        <div style="flex:1;">
+            <label for="doopnaam">Doopnaam:</label>
+            <input type="text" id="doopnaam" name="doopnaam" placeholder="Doopnaam" style="width:100%; padding:5px;">
+        </div>
+        <div style="flex:1;">
+            <label for="roepnaam">Roepnaam:</label>
+            <input type="text" id="roepnaam" name="roepnaam" placeholder="Roepnaam" style="width:100%; padding:5px;">
+        </div>
+    </div>
 
-        <label>Prefix</label>
-        <input type="text" id="prefix">
+    <!-- Prefix en Achternaam -->
+    <div style="display:flex; gap:10px;">
+        <div style="flex:1;">
+            <label for="prefix">Prefix:</label>
+            <input type="text" id="prefix" name="prefix" placeholder="Prefix" style="width:100%; padding:5px;">
+        </div>
+        <div style="flex:1;">
+            <label for="achternaam">Achternaam:</label>
+            <input type="text" id="achternaam" name="achternaam" placeholder="Achternaam" style="width:100%; padding:5px;">
+        </div>
+    </div>
 
-        <label>Achternaam</label>
-        <input type="text" id="achternaam" required>
+    <!-- Geboortedatum en Geslacht -->
+    <div style="display:flex; gap:10px;">
+        <div style="flex:1;">
+            <label for="geboortedatum">Geboortedatum:</label>
+            <input type="date" id="geboortedatum" name="geboortedatum" style="width:100%; padding:5px;">
+        </div>
+        <div style="flex:1;">
+            <label for="geslacht">Geslacht:</label>
+            <select id="geslacht" name="geslacht" style="width:100%; padding:5px;">
+                <option value="">Selecteer</option> <!-- lege waarde -->
+                <option value="M">Man</option>
+                <option value="V">Vrouw</option>
+                <option value="X">Anders / Non-binair</option>
+            </select>
+        </div>
+    </div>
 
-        <label>Geboortedatum</label>
-        <input type="date" id="geboorte" required>
-
-        <label>Geslacht</label>
-        <select id="geslacht">
-            <option value="Man">Man</option>
-            <option value="Vrouw">Vrouw</option>
-            <option value="Anders">Anders</option>
-        </select>
-
-        <button type="submit">Voeg toe</button>
-    </form>
-
-    <div id="statusMessage"></div>
-</main>
+    <!-- Opslaan knop -->
+    <button type="submit" style="padding:10px 20px; background:#4CAF50; color:#fff; border:none; border-radius:5px; cursor:pointer; width:150px;">
+        Opslaan
+    </button>
+</form>
 
   <!-- ======================= layout/Footer.html ======================= -->
 <div id="footer-placeholder"></div>  <!-- Doel: container voor Footer content -->
