@@ -9,6 +9,13 @@
 </head>
 <body>
 <!-- ======================= Top bar ======================= -->
+<script>
+fetch('/MyFamTreeCollab/Layout/TopBar.html')  // pad naar het nieuwe bestand
+    .then(resp => resp.text())
+    .then(data => {
+        document.getElementById('topbar-placeholder').innerHTML = data;
+    });
+</script>
 <!-- ======================= NAVBAR ======================= -->
 <div id="navbar-placeholder"></div>
 <script>
