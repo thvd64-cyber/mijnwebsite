@@ -2,21 +2,21 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8"> <!-- Stelt tekencodering in op UTF-8 voor juiste weergave van tekens -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Zorgt voor responsieve layout op mobiel/tablet/desktop -->
-    <<title>Import CSV - MyFamTreeCollab</title> <!-- Titel van de pagina in browser tab -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt CSS stylesheet voor styling van de site -->
+    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
+    <title>MyFamTreeCollab - Home</title> <!-- Browser tab titel -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor volledige styling -->
 </head>
 <body>
 
 <!-- ======================= TopBar ======================= -->
-<div id="topbar-placeholder"></div> <!-- Container waar TopBar wordt geladen -->
+<div id="topbar-placeholder"></div> <!-- Container voor TopBar -->
 
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML bestand op
+fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
     .then(resp => resp.text())                 // Converteert response naar tekst
-    .then(data => {                            // Verwerkt de opgehaalde HTML
-        document.getElementById('topbar-placeholder').innerHTML = data; // Injecteert TopBar in de placeholder
+    .then(data => {
+        document.getElementById('topbar-placeholder').innerHTML = data; // Plaats TopBar in placeholder
     });
 </script>
 
@@ -24,14 +24,32 @@ fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML bestand op
 <div id="Navbar-placeholder"></div> <!-- Container voor Navbar -->
 
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // Haalt Navbar HTML bestand op
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Haalt Navbar HTML op
     .then(resp => resp.text())               // Converteert response naar tekst
     .then(data => {
         const placeholder = document.getElementById('Navbar-placeholder'); // Haal placeholder op
         if (placeholder) {
-            placeholder.innerHTML = data; // Plaats Navbar in de container
+            placeholder.innerHTML = data; // Injecteer de HTML
+
+            // ⚡ Extra: forceer horizontale layout via flex in geval CSS nog niet volledig is toegepast
+            const nav = placeholder.querySelector('ul'); // Selecteer de <ul> in de Navbar
+            if (nav) {
+                nav.style.display = 'flex'; // Horizontaal
+                nav.style.listStyle = 'none'; // Geen bullets
+                nav.style.backgroundColor = '#007bff'; // Blauwe achtergrond
+                nav.style.padding = '0';
+                nav.style.margin = '0';
+            }
+
+            // Maak alle <a> links wit met padding
+            const links = placeholder.querySelectorAll('a');
+            links.forEach(a => {
+                a.style.color = '#fff';
+                a.style.textDecoration = 'none';
+                a.style.padding = '10px 15px';
+            });
         } else {
-            console.error('Navbar-placeholder niet gevonden'); // Debug melding indien niet gevonden
+            console.error('Navbar-placeholder niet gevonden'); // Debug melding
         }
     });
 </script>
@@ -41,33 +59,30 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html') // Haalt Navbar HTML bestand op
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const pageTitleDiv = document.getElementById('pageTitle'); // Doel div ophalen
+    const pageTitleDiv = document.getElementById('pageTitle'); // Div ophalen
     const path = window.location.pathname.split("/").pop();   // Haal bestandsnaam uit URL
     let title = path.replace('.html','');                      // Verwijder extensie
     title = title.replace(/[-_]/g,' ').replace(/\b\w/g, c => c.toUpperCase()); // Format: spaties + hoofdletters
-    pageTitleDiv.textContent = title;                          // Voeg titel toe aan div
+    pageTitleDiv.textContent = title;                          // Voeg titel toe
 });
 </script>
 
 <!-- ======================= MAIN CONTENT ======================= -->
 <main id="home" style="padding:20px;">
-    <!-- Welkomstsectie -->
     <section>
-        <h2>Welkom op MyFamTreeCollab</h2> <!-- Sectietitel -->
-        <p>Ontdek uw stamboom, bronnen en abonnementen eenvoudig via de navigatie hierboven.</p> <!-- Introductietekst -->
+        <h2>Welkom op MyFamTreeCollab</h2>
+        <p>Ontdek uw stamboom, bronnen en abonnementen eenvoudig via de navigatie hierboven.</p>
     </section>
 
-    <!-- Start Stamboom sectie -->
     <section>
-        <h2>Start uw Stamboom</h2> <!-- Sectietitel -->
-        <p>Begin vandaag nog met het ontdekken en beheren van uw familiegeschiedenis.</p> <!-- Info tekst -->
-        <a href="stamboom/index.html" class="btn">Start Nu</a> <!-- Call-to-action knop -->
+        <h2>Start uw Stamboom</h2>
+        <p>Begin vandaag nog met het ontdekken en beheren van uw familiegeschiedenis.</p>
+        <a href="stamboom/index.html" class="btn">Start Nu</a>
     </section>
 
-    <!-- Nieuws & Updates sectie -->
     <section>
-        <h2>Nieuws & Updates</h2> <!-- Sectietitel -->
-        <p>Bekijk de laatste functies en tips voor het beheren van uw stamboom.</p> <!-- Info tekst -->
+        <h2>Nieuws & Updates</h2>
+        <p>Bekijk de laatste functies en tips voor het beheren van uw stamboom.</p>
     </section>
 </main>
 
@@ -75,10 +90,10 @@ document.addEventListener('DOMContentLoaded', () => {
 <div id="footer-placeholder"></div> <!-- Container voor Footer -->
 
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html') // Haalt Footer HTML bestand op
+fetch('/MyFamTreeCollab/Layout/Footer.html') // Haalt Footer HTML op
     .then(resp => resp.text())                // Converteert response naar tekst
     .then(data => {
-        document.getElementById('footer-placeholder').innerHTML = data; // Plaats Footer in placeholder
+        document.getElementById('footer-placeholder').innerHTML = data; // Plaats Footer
     });
 </script>
 
