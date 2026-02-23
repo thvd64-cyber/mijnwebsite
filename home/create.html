@@ -1,46 +1,53 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stamboom Create - MyFamTreeCollab</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background: #f8f8f8; }
-        form { background: #fff; padding: 20px; border-radius: 8px; max-width: 400px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
-        label { display: block; margin: 10px 0 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc; }
-        button { padding: 10px 20px; background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        #statusMessage { display:none; margin-top:15px; padding:12px; border-radius:6px; }
-        /* Page title spacing */
-        .page-title { max-width: 1100px; margin: 40px auto 20px auto; padding: 0 20px; }
-        .page-title h2 { margin-bottom: 10px; font-size: 1.8rem; font-weight: 600; }
-        .page-title p { color: #555; font-size: 1rem; line-height: 1.5; }
-    </style>
+    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
+    <title>MyFamTreeCollab - [PAGINA NAAM]</title> <!-- Browser tab titel -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor volledige styling -->
 </head>
 <body>
+<!-- ======================= layout/TopBar.html ======================= -->
 
-<!-- ======================= NAVBAR ======================= -->
-<div id="navbar-placeholder"></div>
+<!-- Placeholder waar de TopBar.html inhoud wordt ingeladen -->
+<div id="topbar-placeholder"></div>  <!-- container voor TopBar content -->
+
 <script>
-fetch('../navbar.html')
-    .then(response => response.text())
-    .then(data => {
-        document.getElementById('navbar-placeholder').innerHTML = data;
+fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
+    .then(resp => resp.text())                // lees de inhoud van het bestand Converteert response naar tekst
+    .then(data => {                           // werk met de opgehaalde HTML data
+        document.getElementById('topbar-placeholder').innerHTML = data;  // plaats de TopBar HTML in de placeholder
+    });
+</script>
+<!-- ======================= layout/Navbar.html ======================= -->
+<div id="Navbar-placeholder"></div> <!-- plek waar Navbar komt -->
 
-        // Optioneel: stijl navbar specifiek voor deze pagina
-        const navbar = document.getElementById('navbar-placeholder');
-        navbar.style.color = '#fff';
-        navbar.querySelectorAll('a').forEach(link => link.style.color = '#fff');
+<script>
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
+    .then(resp => resp.text())               // omzetten naar HTML tekst
+    .then(data => {
+        const placeholder = document.getElementById('Navbar-placeholder'); // placeholder ophalen
+        if (placeholder) {                   // controleren of element bestaat
+            placeholder.innerHTML = data;    // Navbar injecteren
+        } else {
+            console.error('Navbar-placeholder niet gevonden'); // Debugmelding
+        }
     });
 </script>
 
-<!-- ======================= PAGE TITLE ======================= -->
-<section class="page-title">
-    <h2>Start je Stamboom</h2>
-    <p>Vul hier de gegevens van de eerste persoon in je stamboom in. Het systeem genereert automatisch een unieke ID.</p>
-</section>
+<!-- ======================= Hoofd pagina ======================= -->
+<!-- ======================= Pagina Titel Manueel ======================= -->
+<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const pageTitleDiv = document.getElementById('pageTitle');  // Doel div
+    const title = "Sandbox";            // ⚠️ Zelf invullen title
+    pageTitleDiv.textContent = title
+        .replace(/[-_]/g,' ')          // underscore/koppelteken → spatie
+        .replace(/\b\w/g, c => c.toUpperCase()); // eerste letter hoofdletter
+});
+</script>
 
 <!-- ======================= MAIN CONTENT ======================= -->
 <main>
@@ -73,7 +80,15 @@ fetch('../navbar.html')
     <div id="statusMessage"></div>
 </main>
 
-<!-- JS -->
-<script src="../js/create.js"></script>
+  <!-- ======================= layout/Footer.html ======================= -->
+<div id="footer-placeholder"></div>  <!-- Doel: container voor Footer content -->
+
+<script>
+fetch('/MyFamTreeCollab/Layout/Footer.html')  // pad naar de layout/Footer.html
+    .then(resp => resp.text())                // response omzetten naar leesbare HTML
+    .then(data => {                           // werk met de opgehaalde HTML
+        document.getElementById('footer-placeholder').innerHTML = data; // Footer injecteren
+    });
+</script>
 </body>
 </html>
