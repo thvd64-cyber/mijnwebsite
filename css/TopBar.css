@@ -1,24 +1,17 @@
-<!-- ======================= TOPBAR ======================= -->
-<div class="topbar"> <!-- Hoofdcontainer van de grijze bovenbalk -->
-    
-    <div class="topbar-content"> <!-- Binnencontainer voor uitlijning en maximale breedte -->
-        
-        <!-- Links -->
-        <div class="top-left"> <!-- Linker gedeelte van de topbar -->
-            <a href="#">Login</a> <!-- Placeholder link voor login -->
-        </div>
+/* ======================= TopBar.css Styel override ======================= */
+/* Hoge specificiteit + scoped op .topbar */
+div.topbar,
+div.topbar * {
+    color: #000000 !important;   /* ✅ Tekstkleur zwart */
+}
 
-        <!-- Midden -->
-        <div class="top-center"> <!-- Middengedeelte, wordt gecentreerd via CSS -->
-            <span>Midden</span> <!-- Placeholder tekst -->
-        </div>
+/* Specifiek voor links */
+div.topbar a {
+    color: #000000 !important;   /* ✅ Links zwart */
+    text-decoration: none;
+}
 
-        <!-- Rechts -->
-        <div class="top-right"> <!-- Rechter gedeelte van de topbar -->
-            <a href="#" class="lang-link" data-lang="nl">NL</a> <!-- Nederlandse taal -->
-            | <!-- Scheidingsteken -->
-            <a href="#" class="lang-link" data-lang="en">EN</a> <!-- Engelse taal -->
-        </div>
-
-    </div>
-</div>
+/* Hover-effect */
+div.topbar a:hover {
+    color: #333333 !important;   /* ✅ Donkergrijs bij hover */
+}
