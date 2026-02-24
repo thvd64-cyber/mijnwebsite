@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <script src="../js/storage.js"></script> <!-- StamboomStorage module -->
 
 <script>
-document.addEventListener('DOMContentLoaded', () => { // wacht tot DOM geladen
+document.addEventListener('DOMContentLoaded', ()=>{ // wacht tot DOM geladen
 
     // ======================= DOM ELEMENTEN =======================
     const tableBody = document.querySelector('#manageTable tbody'); // doel tbody voor rijen
@@ -86,70 +86,66 @@ document.addEventListener('DOMContentLoaded', () => { // wacht tot DOM geladen
     const confirmBtn = document.getElementById('confirmBtn'); // confirm knop
     const warningMessage = document.getElementById('warningMessage'); // waarschuwing div
 
+    // ======================= INIT DATA =======================
+    let dataset = StamboomStorage.get(); // haal data uit storage
+    renderTable(dataset); // initial render van tabel
+
     // ======================= TABEL RENDEREN =======================
     function renderTable(data){ // render dataset in tabel
         tableBody.innerHTML = ''; // clear oude rijen
-
-        if(data.length === 0){ // geen data
-            tableBody.innerHTML = '<tr><td colspan="'+(StamboomSchema.fields.length+1)+'">Geen personen gevonden</td></tr>';
+        if(data.length === 0){ // geen data aanwezig
+            tableBody.innerHTML = '<tr><td colspan="'+(StamboomSchema.fields.length+1)+'">Geen personen gevonden</td></tr>'; // fallback bericht
             return;
         }
-
-        // render elke persoon
-        data.forEach(p => {
+        data.forEach(p =>{ // voor elke persoon
             const tr = document.createElement('tr'); // nieuwe rij
-            tr.dataset.id = p.ID; // row-ID
+            tr.dataset.id = p.ID; // rij-ID
 
             // velden uit schema
-            StamboomSchema.fields.forEach(f => {
-                const td = document.createElement('td'); // cel
-                if(f === 'ID'){ // ID readonly
-                    td.textContent = p[f] || '';
-                } else {
-                    const input = document.createElement('input'); // input voor bewerken
-                    input.value = p[f] || '';
-                    input.addEventListener('change', e => p[f] = e.target.value); // update object
-                    td.appendChild(input);
+            StamboomSchema.fields.forEach(f =>{
+                const td = document.createElement('td'); // cel maken
+                if(f==='ID'){ td.textContent = p[f] || ''; } // readonly ID
+                else{
+                    const input = document.createElement('input'); // input voor editable velden
+                    input.value = p[f] || ''; // vul waarde
+                    input.addEventListener('change', e=> p[f]=e.target.value); // update object bij wijziging
+                    td.appendChild(input); // voeg toe aan cel
                 }
-                tr.appendChild(td); // voeg cel toe
+                tr.appendChild(td); // voeg cel toe aan rij
             });
 
-            // Relatie kolom (view-only)
+            // Relatie kolom view-only
             const tdRel = document.createElement('td');
             tdRel.textContent = p.Relatie || '';
             tr.prepend(tdRel); // eerste kolom
-            tableBody.appendChild(tr); // voeg rij toe
+            tableBody.appendChild(tr); // voeg rij toe aan tabel
         });
     }
 
-    // ======================= INIT =======================
-    let dataset = StamboomStorage.get(); // haal data uit storage
-    renderTable(dataset); // init render
-
     // ======================= REFRESH KNOP =======================
-    refreshBtn.addEventListener('click', ()=>{ // klik refresh
+    refreshBtn.addEventListener('click', ()=>{
         dataset = StamboomStorage.get(); // opnieuw ophalen
-        renderTable(dataset); // renderen
+        renderTable(dataset); // render opnieuw
     });
 
     // ======================= OPSLAAN =======================
-    saveBtn.addEventListener('click', ()=>{ // klik opslaan
+    saveBtn.addEventListener('click', ()=>{
         StamboomStorage.set(dataset); // schrijf dataset naar storage
         alert('Wijzigingen opgeslagen!'); // feedback
     });
 
     // ======================= TOEVOEGEN NIEUWE PERSOON =======================
-    addBtn.addEventListener('click', ()=>{ // klik + toevoegen
-        const newPerson = { // lege default persoon
-            ID: 'P'+Date.now(), // uniek ID
+    addBtn.addEventListener('click', ()=>{
+        const newPerson = { // default nieuw persoon
+            ID: 'P'+Date.now(), // unieke ID fallback
             Doopnaam:'', Roepnaam:'', Prefix:'', Achternaam:'', Geslacht:'', Geboortedatum:'', Relatie:'Hoofd-ID', PartnerID:[]
         };
-        previewContent.textContent = JSON.stringify(newPerson, null, 2); // JSON preview
-        previewDiv.style.display = 'block'; // toon preview
+        previewContent.textContent = JSON.stringify(newPerson,null,2); // toon JSON preview
+        previewDiv.style.display = 'block'; // preview zichtbaar
     });
 
     // ======================= CONFIRM NIEUWE PERSOON =======================
-    confirmBtn.addEventListener('click', ()=>{ // bevestig
+    confirmBtn.addEventListener('click', ()=>{
         const person = JSON.parse(previewContent.textContent); // parse JSON
         dataset.push(person); // voeg toe aan dataset
         StamboomStorage.set(dataset); // update storage
@@ -158,15 +154,15 @@ document.addEventListener('DOMContentLoaded', () => { // wacht tot DOM geladen
     });
 
     // ======================= ZOEK FUNCTIE =======================
-    loadBtn.addEventListener('click', ()=>{ // klik laad
+    loadBtn.addEventListener('click', ()=>{
         const term = searchInput.value.trim().toLowerCase(); // zoekterm
         const filtered = dataset.filter(p => 
-            p.ID.toLowerCase().includes(term) || 
+            p.ID.toLowerCase().includes(term) ||
             p.Doopnaam.toLowerCase().includes(term) ||
             p.Roepnaam.toLowerCase().includes(term) ||
             p.Achternaam.toLowerCase().includes(term)
         );
-        renderTable(filtered); // render filtered
+        renderTable(filtered); // render gefilterde dataset
     });
 
 });
@@ -176,8 +172,8 @@ document.addEventListener('DOMContentLoaded', () => { // wacht tot DOM geladen
 <div id="footer-placeholder"></div>
 <script>
 fetch('/MyFamTreeCollab/Layout/Footer.html') // fetch footer
-    .then(resp => resp.text())
-    .then(data => document.getElementById('footer-placeholder').innerHTML = data);
+    .then(resp=>resp.text())
+    .then(data=>document.getElementById('footer-placeholder').innerHTML=data); // injecteer footer
 </script>
 
 </body>
