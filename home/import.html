@@ -2,73 +2,73 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 voor correcte tekens -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsieve weergave op mobiel/tablet/desktop -->
+    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
     <title>MyFamTreeCollab - Import</title> <!-- Browser tab titel -->
     <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor styling -->
 </head>
 <body>
 <!-- ======================= layout/TopBar.html ======================= -->
-<div id="topbar-placeholder"></div>  <!-- Container waar TopBar HTML wordt ingeladen -->
+<div id="topbar-placeholder"></div> <!-- Container voor TopBar -->
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haal TopBar HTML op via fetch
-    .then(resp => resp.text())                // Converteer de response naar tekst
+fetch('/MyFamTreeCollab/Layout/TopBar.html') // Haal TopBar HTML op
+    .then(resp => resp.text())                 // Converteer response naar tekst
     .then(data => {                           
-        document.getElementById('topbar-placeholder').innerHTML = data;  // Injecteer TopBar content in DOM
+        document.getElementById('topbar-placeholder').innerHTML = data; // Injecteer TopBar in DOM
     });
 </script>
 
 <!-- ======================= layout/Navbar.html ======================= -->
-<div id="Navbar-placeholder"></div> <!-- Container waar Navbar HTML wordt ingeladen -->
+<div id="Navbar-placeholder"></div> <!-- Container voor Navbar -->
 <script>
 fetch('/MyFamTreeCollab/Layout/Navbar.html') // Haal Navbar HTML op
-    .then(resp => resp.text())               // Converteer response naar tekst
+    .then(resp => resp.text())                 // Converteer response naar tekst
     .then(data => {
-        const placeholder = document.getElementById('Navbar-placeholder'); // Haal placeholder DOM element op
-        if (placeholder) placeholder.innerHTML = data; // Injecteer Navbar HTML in placeholder
-        else console.error('Navbar-placeholder niet gevonden'); // Log error als placeholder ontbreekt
+        const placeholder = document.getElementById('Navbar-placeholder'); // placeholder ophalen
+        if (placeholder) placeholder.innerHTML = data; // Injecteer Navbar
+        else console.error('Navbar-placeholder niet gevonden'); // fallback debug
     });
 </script>
 
 <!-- ======================= Pagina Titel ======================= -->
-<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div> <!-- Container voor paginatitel, dynamisch via CSS/JS -->
+<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div> <!-- Titel container -->
 
 <!-- ======================= MAIN CONTENT ======================= -->
 <main>
     <section>
-        <label for="csvFileInput">Selecteer CSV-bestand:</label> <!-- Label voor CSV input -->
-        <input type="file" id="csvFileInput" accept=".csv"> <!-- File input element voor CSV-bestand -->
-        <button id="uploadBtn">Upload & Verwerk CSV</button> <!-- Knop om CSV te uploaden en verwerken -->
-        <p id="importStatus" style="margin-top:10px; font-weight:bold;"></p> <!-- Status / feedback element voor gebruiker -->
+        <label for="csvFileInput">Selecteer CSV-bestand:</label> <!-- Label voor file input -->
+        <input type="file" id="csvFileInput" accept=".csv"> <!-- Bestand input -->
+        <button id="uploadBtn">Upload & Verwerk CSV</button> <!-- Upload knop -->
+        <p id="importStatus" style="margin-top:10px; font-weight:bold;"></p> <!-- Status / feedback element -->
     </section>
 
     <section>
         <p>
             Na het importeren kunt u de gegevens bekijken in 
-            <a href="/MyFamTreeCollab/stamboom/view.html">View</a> <!-- Link naar view pagina -->
+            <a href="/MyFamTreeCollab/stamboom/view.html">View</a> 
             of bewerken in 
-            <a href="/MyFamTreeCollab/stamboom/manage.html">Manage</a>. <!-- Link naar manage pagina -->
+            <a href="/MyFamTreeCollab/stamboom/manage.html">Manage</a>.
         </p>
     </section>
 </main>
 
 <!-- ======================= layout/Footer.html ======================= -->
-<div id="footer-placeholder"></div> <!-- Container waar Footer HTML wordt ingeladen -->
+<div id="footer-placeholder"></div> <!-- Container voor Footer -->
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html')  // Haal Footer HTML op
-    .then(resp => resp.text())                // Converteer response naar tekst
+fetch('/MyFamTreeCollab/Layout/Footer.html') // Haal footer HTML op
+    .then(resp => resp.text())                 // Converteer response naar tekst
     .then(data => {
-        document.getElementById('footer-placeholder').innerHTML = data; // Injecteer Footer in DOM
+        document.getElementById('footer-placeholder').innerHTML = data; // Injecteer footer
     });
 </script>
 
 <!-- ======================= Dependencies ======================= -->
-<script src="../js/storage.js"></script>      <!-- Laad StamboomStorage (sessionStorage API) -->
-<script src="../js/schema.js"></script>       <!-- Laad CSV ↔ object conversie logica -->
-<script src="../js/idGenerator.js"></script>  <!-- Laad unieke ID generator (window.genereerCode) -->
+<script src="../js/schema.js"></script>       <!-- CSV ↔ object conversie logica, moet eerst -->
+<script src="../js/idGenerator.js"></script>  <!-- Unieke ID generator, window.genereerCode -->
+<script src="../js/storage.js"></script>      <!-- StamboomStorage (sessionStorage API) -->
 
-<!-- ======================= IMPORT JS ======================= -->
-<script src="../js/import.js"></script>       <!-- Laad CSV import logica die de DOM elementen gebruikt -->
+<!-- ======================= IMPORT LOGICA ======================= -->
+<script src="../js/import.js"></script>       <!-- CSV import logica, wacht op DOMContentLoaded -->
 
 </body>
 </html>
