@@ -1,72 +1,73 @@
-// ======================= import.js – CSV import naar sessionStorage =======================
+// ======================= import.js – CSV import naar StamboomStorage =======================
+document.addEventListener('DOMContentLoaded', () => { // Wacht tot DOM volledig geladen is
 
-// DOM-elementen ophalen
-const fileInput = document.getElementById('csvFileInput');  // input-element voor CSV-bestand
-const uploadBtn = document.getElementById('uploadBtn');     // upload knop element
-const status = document.getElementById('importStatus');     // element om status/feedback aan gebruiker te tonen
+    // ======================= DOM ELEMENTEN =======================
+    const fileInput = document.getElementById('csvFileInput');  // file input element
+    const uploadBtn = document.getElementById('uploadBtn');     // upload knop
+    const status = document.getElementById('importStatus');     // status / feedback element
 
-// Functie om CSV-bestand te verwerken
-function handleFile(file){
-    if(!file) return;                                      // stop als er geen bestand is geselecteerd
-    const reader = new FileReader();                       // maak een FileReader object om CSV in te lezen
+    // ======================= FUNCTIE VOOR CSV VERWERKING =======================
+    function handleFile(file){
+        if(!file) return; // stop als geen bestand geselecteerd
 
-    // Callback wanneer CSV volledig ingeladen is
-    reader.onload = function(event){
-        const text = event.target.result;                  // haal CSV tekst op
-        let lines = text.split(/\r?\n/)                    // split CSV in afzonderlijke regels
-                        .filter(l => l.trim() !== "");     // verwijder lege regels
-        const importedData = [];                            // buffer voor nieuwe personen
-        const existingData = JSON.parse(sessionStorage.getItem('stamboomData') || "[]"); // huidige dataset ophalen
+        const reader = new FileReader(); // CSV lezen
+        reader.onload = function(event){
+            const text = event.target.result; // CSV tekst
+            let lines = text.split(/\r?\n/).filter(l => l.trim() !== ""); // split in regels en verwijder lege regels
+            const importedData = []; // buffer voor nieuwe personen
+            const existingData = StamboomStorage.get() || []; // huidige dataset ophalen via StamboomStorage
 
-        // Limiteer import tot maximaal 500 personen
-        if(lines.length > 500){
-            status.textContent = `⚠️ CSV bevat meer dan 500 rijen. Alleen de eerste 500 worden geïmporteerd.`; // waarschuwing
-            lines = lines.slice(0,500);                    // behoud alleen eerste 500 regels
-        }
-
-        // Verwerk elke CSV regel
-        lines.forEach((line,index)=>{
-            const person = schema.fromCSV(line);    // converteer CSV naar object volgens schema
-            if(!person){                                    // parsing mislukt
-                console.warn(`Rij ${index+1} kon niet worden verwerkt.`); // log waarschuwing
-                return;                                     // sla deze rij over
+            // Limiteer tot max 500 rijen
+            if(lines.length > 500){ 
+                lines = lines.slice(0,500);
+                status.textContent = "⚠️ Alleen de eerste 500 rijen worden geïmporteerd."; 
             }
 
-            // Default waarden instellen
-            if(!person.PartnerID) person.PartnerID = schema.stringifyPartners([]); // lege partners indien niet aanwezig
-            if(!person.Geslacht) person.Geslacht = 'X';                                     // default onbekend geslacht
+            // Verwerk elke CSV regel
+            lines.forEach((line,index) => {
+                const person = schema.fromCSV(line); // converteer CSV naar object via schema
+                if(!person){ 
+                    console.warn(`Rij ${index+1} kon niet verwerkt worden.`); 
+                    return; // sla deze rij over
+                }
 
-            // Unieke ID genereren via IDGenerator als nog niet aanwezig of duplicaat
-            if(!person.ID || existingData.some(p => p.ID === person.ID)){
-                person.ID = window.genereerCode(person, existingData);                     // genereer unieke ID
-            }
+                // Default waarden instellen
+                if(!person.PartnerID) person.PartnerID = schema.stringifyPartners([]);
+                if(!person.Geslacht) person.Geslacht = 'X';
 
-            // Voeg persoon toe als niet duplicaat
-            if(!existingData.some(p => p.ID === person.ID)){
-                existingData.push(person);  // voeg toe aan centrale dataset
-                importedData.push(person);  // voeg toe aan buffer voor statusmelding
-            }
-        });
+                // Unieke ID genereren indien nodig
+                if(!person.ID || existingData.some(p => p.ID === person.ID)){
+                    person.ID = window.genereerCode(person, existingData); 
+                }
 
-        // Opslaan in sessionStorage (levensduur: huidige sessie/tab)
-        sessionStorage.setItem('stamboomData', JSON.stringify(existingData));
+                // Voeg toe als niet duplicaat
+                if(!existingData.some(p => p.ID === person.ID)){
+                    existingData.push(person);
+                    importedData.push(person);
+                }
+            });
 
-        // Toon statusmelding naar gebruiker
-        status.textContent = importedData.length
-            ? `✅ CSV geladen: ${importedData.length} personen toegevoegd.`  // positief bericht
-            : `⚠️ Geen nieuwe personen toegevoegd.`;                       // waarschuwing als geen nieuwe data
-    };
+            // Opslaan via StamboomStorage
+            StamboomStorage.set(existingData);
 
-    // Callback bij fout tijdens lezen bestand
-    reader.onerror = function(){
-        status.textContent = "❌ Fout bij het lezen van het bestand.";      // foutmelding tonen
-    };
+            // Statusmelding tonen
+            status.textContent = importedData.length
+                ? `✅ CSV geladen: ${importedData.length} personen toegevoegd.`
+                : `⚠️ Geen nieuwe personen toegevoegd.`;
+        };
 
-    reader.readAsText(file);                                               // start lezen CSV als tekst
-}
+        // Fout bij lezen bestand
+        reader.onerror = function(){ 
+            status.textContent = "❌ Fout bij het lezen van het bestand."; 
+        };
 
-// Event listener upload knop
-uploadBtn.addEventListener('click', ()=>{
-    const file = fileInput.files[0];   // pak geselecteerd bestand
-    handleFile(file);                  // verwerk CSV via handleFile functie
-});
+        reader.readAsText(file); // start lezen CSV
+    }
+
+    // ======================= EVENT LISTENER =======================
+    uploadBtn.addEventListener('click', () => {
+        const file = fileInput.files[0]; // pak geselecteerd bestand
+        handleFile(file); // verwerk CSV
+    });
+
+}); // einde DOMContentLoaded
