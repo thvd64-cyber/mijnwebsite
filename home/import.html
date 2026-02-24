@@ -44,12 +44,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <!-- ======================= MAIN CONTENT ======================= -->
 <main>
-    <section>
+        <section>
         <label for="csvFileInput">Selecteer CSV-bestand:</label> <!-- label voor file input -->
-        <input type="file" id="csvFileInput" accept=".csv">       <!-- file input element -->
-        <button id="uploadBtn">📤 Upload CSV</button>             <!-- upload knop om verwerking te starten -->
-        <p id="importStatus" style="margin-top:10px; color:green; font-weight:bold;"></p> <!-- statusmelding -->
-    </section>
+        <input type="file" id="csvFileInput" accept=".csv"> <!-- bestand input -->
+        <button id="uploadBtn">Upload & Verwerk CSV</button> <!-- upload knop, gekoppeld aan import.js -->
+        <p id="importStatus" style="margin-top:10px; font-weight:bold;"></p> <!-- status / feedback element -->
+    </section
 
     <section>
         <p>
