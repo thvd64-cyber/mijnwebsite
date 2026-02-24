@@ -3,97 +3,59 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief -->
     <title>MyFamTreeCollab - Create</title> <!-- Browser tab titel -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor volledige styling -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Externe CSS -->
 </head>
 <body>
-<!-- ======================= layout/TopBar.html ======================= -->
-
-<!-- Placeholder waar de TopBar.html inhoud wordt ingeladen -->
+<!-- ======================= TopBar ======================= -->
 <div id="topbar-placeholder"></div>  <!-- container voor TopBar content -->
-
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
-    .then(resp => resp.text())                // lees de inhoud van het bestand Converteert response naar tekst
-    .then(data => {                           // werk met de opgehaalde HTML data
-        document.getElementById('topbar-placeholder').innerHTML = data;  // plaats de TopBar HTML in de placeholder
-    });
+fetch('/MyFamTreeCollab/Layout/TopBar.html')
+    .then(resp => resp.text())
+    .then(data => { document.getElementById('topbar-placeholder').innerHTML = data; });
 </script>
-<!-- ======================= layout/Navbar.html ======================= -->
-<div id="Navbar-placeholder"></div> <!-- plek waar Navbar komt -->
 
+<!-- ======================= Navbar ======================= -->
+<div id="Navbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
-    .then(resp => resp.text())               // omzetten naar HTML tekst
+fetch('/MyFamTreeCollab/Layout/Navbar.html')
+    .then(resp => resp.text())
     .then(data => {
-        const placeholder = document.getElementById('Navbar-placeholder'); // placeholder ophalen
-        if (placeholder) {                   // controleren of element bestaat
-            placeholder.innerHTML = data;    // Navbar injecteren
-        } else {
-            console.error('Navbar-placeholder niet gevonden'); // Debugmelding
-        }
+        const placeholder = document.getElementById('Navbar-placeholder');
+        if(placeholder) placeholder.innerHTML = data;
+        else console.error('Navbar-placeholder niet gevonden');
     });
 </script>
 
-<!-- ======================= Hoofd pagina ======================= -->
-<!-- ======================= Pagina Titel Manueel ======================= -->
+<!-- ======================= Pagina Titel ======================= -->
 <div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const pageTitleDiv = document.getElementById('pageTitle');  // Doel div
-    const title = "Create";            // ⚠️ Zelf invullen title
-    pageTitleDiv.textContent = title
-        .replace(/[-_]/g,' ')          // underscore/koppelteken → spatie
-        .replace(/\b\w/g, c => c.toUpperCase()); // eerste letter hoofdletter
+    const pageTitleDiv = document.getElementById('pageTitle');
+    const title = "Create";
+    pageTitleDiv.textContent = title.replace(/[-_]/g,' ').replace(/\b\w/g, c => c.toUpperCase());
 });
 </script>
-<!-- ======================= Pagina knop  ======================= -->
-    
-    <!-- ======================= MAIN INTRO CONTENT ======================= -->
-<!-- ======================= MAIN INTRO CONTENT ======================= -->
+
+<!-- ======================= Introductie ======================= -->
 <section style="margin-top:20px; padding:20px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
-    <!-- Sectie container: wit vlak, padding, afgeronde hoeken, lichte schaduw -->
-    
     <h2 style="margin-bottom:15px;">Nieuwe personen toevoegen</h2>
-    <!-- Titel van de sectie met margin onder -->
-
-    <p style="margin-bottom:15px; line-height:1.6;">
-        Op deze pagina maak je de eerste persoon aan in je stamboom. 
-        Daarna breid je de stamboom uit op de <strong>Manage</strong>-pagina. Vul je kerngegevens in om te beginnen.
-    </p>
-    <!-- Introductie tekst, uitleg van functie van deze pagina -->
-
-    <p style="margin-bottom:15px; line-height:1.6;">
-        Enkele functies die je hier vindt:
-    </p>
-    <!-- Korte inleiding naar de lijst met functies -->
-
+    <p>Op deze pagina maak je de eerste persoon aan in je stamboom. Daarna breid je de stamboom uit op de <strong>Manage</strong>-pagina.</p>
     <ul style="margin-left:20px; line-height:1.6;">
-        <!-- Lijst container met kleine linker margin en line-height voor leesbaarheid -->
         <li>Toevoegen van de eerste personen met basisinformatie (naam, geboortedatum, enz.)</li>
-        <!-- Lijstitem met uitleg wat je hier kunt doen -->
     </ul>
-
     <p style="margin-top:20px;">
-        <!-- Container voor de knop, margin-top voor spacing boven knop -->
         <a href="https://thvd64-cyber.github.io/MyFamTreeCollab/stamboom/manage.html" 
            style="display:inline-block; padding:10px 20px; background:#4CAF50; color:#fff; text-decoration:none; border-radius:5px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
            Ga naar Manage pagina
         </a>
-        <!-- Klikbare knop naar de manage pagina via volledige URL, groene achtergrond, witte tekst, afgeronde hoeken en lichte schaduw -->
     </p>
 </section>
-<!-- ======================= MAIN CONTENT ======================= -->
-<!-- ======================= PERSOON FORMULIER ======================= -->
-<form id="persoonForm" 
-      style="display:flex; flex-direction:column; gap:15px; max-width:500px; margin:0 auto; align-items:center;">
-    <!-- Flex container: verticale stapeling, gap tussen rijen, max breedte, gecentreerd horizontaal -->
 
-    <!-- Doopnaam en Roepnaam -->
+<!-- ======================= Persoon Formulier ======================= -->
+<form id="persoonForm" style="display:flex; flex-direction:column; gap:15px; max-width:500px; margin:0 auto; align-items:center;">
     <div style="display:flex; gap:10px; width:100%;">
-        <!-- Flex container voor twee velden naast elkaar, volledige breedte van het formulier -->
         <div style="flex:1;">
             <label for="doopnaam">Doopnaam:</label>
             <input type="text" id="doopnaam" name="doopnaam" placeholder="Doopnaam" style="width:100%; padding:5px;">
@@ -103,8 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <input type="text" id="roepnaam" name="roepnaam" placeholder="Roepnaam" style="width:100%; padding:5px;">
         </div>
     </div>
-
-    <!-- Prefix en Achternaam -->
     <div style="display:flex; gap:10px; width:100%;">
         <div style="flex:1;">
             <label for="prefix">Prefix:</label>
@@ -115,8 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <input type="text" id="achternaam" name="achternaam" placeholder="Achternaam" style="width:100%; padding:5px;">
         </div>
     </div>
-
-    <!-- Geboortedatum en Geslacht -->
     <div style="display:flex; gap:10px; width:100%;">
         <div style="flex:1;">
             <label for="geboortedatum">Geboortedatum:</label>
@@ -132,28 +90,36 @@ document.addEventListener('DOMContentLoaded', () => {
             </select>
         </div>
     </div>
-
-    <!-- Opslaan knop -->
-    <button type="submit" 
-            style="padding:10px 20px; background:#1E90FF; color:#fff; border:none; border-radius:5px; cursor:pointer; width:150px; margin-bottom:50px;">
+    <button type="submit" style="padding:10px 20px; background:#1E90FF; color:#fff; border:none; border-radius:5px; cursor:pointer; width:150px; margin-bottom:50px;">
         Opslaan
     </button>
-    <!-- Knop is nu blauw (#1E90FF), witte tekst, afgeronde hoeken, cursor-pointer, vaste breedte -->
 </form>
-  <!-- ======================= layout/Footer.html ======================= -->
-<div id="footer-placeholder"></div>  <!-- Doel: container voor Footer content -->
 
+<!-- ======================= Preview, Confirm & Warning ======================= -->
+<div id="personPreview" style="display:none; margin-top:20px; padding:15px; border:1px solid #ccc; border-radius:8px; background:#f9f9f9; max-width:500px; margin-left:auto; margin-right:auto;">
+    <h3>Bevestig de persoon</h3>
+    <pre id="previewContent" style="white-space:pre-wrap;"></pre>
+    <button id="confirmBtn" 
+            style="padding:10px 20px; background:#28a745; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-top:10px;">
+        Bevestigen & Ga naar Manage
+    </button>
+</div>
+
+<div id="warningMessage" style="display:none; max-width:500px; margin:10px auto; padding:10px; background:#fff3cd; color:#856404; border-radius:5px; border:1px solid #ffeeba;">
+</div>
+
+<!-- ======================= Footer ======================= -->
+<div id="footer-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html')  // pad naar de layout/Footer.html
-    .then(resp => resp.text())                // response omzetten naar leesbare HTML
-    .then(data => {                           // werk met de opgehaalde HTML
-        document.getElementById('footer-placeholder').innerHTML = data; // Footer injecteren
-    });
+fetch('/MyFamTreeCollab/Layout/Footer.html')
+    .then(resp => resp.text())
+    .then(data => { document.getElementById('footer-placeholder').innerHTML = data; });
 </script>
-    <!-- ======================= Load JS voor Create ======================= -->
-<script src="../js/schema.js"></script>        <!-- Laad schema voor velden en validatie -->
-<script src="../js/idGenerator.js"></script>  <!-- Laad ID generator functie -->
-<script src="../js/storage.js"></script>      <!-- Laad StamboomStorage module -->
-<script src="../js/create.js"></script>       <!-- Laad Create functionaliteit -->
+
+<!-- ======================= Load JS voor Create ======================= -->
+<script src="../js/schema.js"></script>
+<script src="../js/idGenerator.js"></script>
+<script src="../js/storage.js"></script>
+<script src="../js/create.js"></script>
 </body>
 </html>
