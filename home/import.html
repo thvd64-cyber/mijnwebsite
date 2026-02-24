@@ -4,58 +4,50 @@
 <head>
     <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
-    <title>MyFamTreeCollab - Import</title> <!-- ⚠️ Browser tab titel -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor volledige styling -->
+    <title>MyFamTreeCollab - Import</title> <!-- Browser tab titel -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor styling -->
 </head>
 <body>
 <!-- ======================= layout/TopBar.html ======================= -->
-
-<!-- Placeholder waar de TopBar.html inhoud wordt ingeladen -->
 <div id="topbar-placeholder"></div>  <!-- container voor TopBar content -->
-
 <script>
 fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
-    .then(resp => resp.text())                // lees de inhoud van het bestand Converteert response naar tekst
-    .then(data => {                           // werk met de opgehaalde HTML data
-        document.getElementById('topbar-placeholder').innerHTML = data;  // plaats de TopBar HTML in de placeholder
+    .then(resp => resp.text())                // Converteer response naar tekst
+    .then(data => {                           
+        document.getElementById('topbar-placeholder').innerHTML = data;  // Injecteer TopBar in DOM
     });
 </script>
-<!-- ======================= layout/Navbar.html ======================= -->
-<div id="Navbar-placeholder"></div> <!-- plek waar Navbar komt -->
 
+<!-- ======================= layout/Navbar.html ======================= -->
+<div id="Navbar-placeholder"></div> <!-- container voor Navbar -->
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
-    .then(resp => resp.text())               // omzetten naar HTML tekst
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Haal Navbar op
+    .then(resp => resp.text())               // Converteer naar tekst
     .then(data => {
         const placeholder = document.getElementById('Navbar-placeholder'); // placeholder ophalen
-        if (placeholder) {                   // controleren of element bestaat
-            placeholder.innerHTML = data;    // Navbar injecteren
-        } else {
-            console.error('Navbar-placeholder niet gevonden'); // Debugmelding
-        }
+        if (placeholder) placeholder.innerHTML = data; // injecteer Navbar
+        else console.error('Navbar-placeholder niet gevonden'); // fallback debug
     });
 </script>
 
-<!-- ======================= Hoofd pagina ======================= -->
-<!-- ======================= Pagina Titel Manueel ======================= -->
+<!-- ======================= Pagina Titel ======================= -->
 <div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const pageTitleDiv = document.getElementById('pageTitle');  // Doel div
-    const title = "Import";            // ⚠️ Zelf invullen title
+    const pageTitleDiv = document.getElementById('pageTitle');  // doel div
+    const title = "Import";                                      // titel tekst
     pageTitleDiv.textContent = title
-        .replace(/[-_]/g,' ')          // underscore/koppelteken → spatie
-        .replace(/\b\w/g, c => c.toUpperCase()); // eerste letter hoofdletter
+        .replace(/[-_]/g,' ')                                    // vervang streepjes/underscores door spaties
+        .replace(/\b\w/g, c => c.toUpperCase());                 // hoofdletter per woord
 });
 </script>
 
 <!-- ======================= MAIN CONTENT ======================= -->
 <main>
     <section>
-        <label for="csvFileInput">Selecteer CSV-bestand:</label>
-        <input type="file" id="csvFileInput" accept=".csv"> <!-- input veld -->
-        <button id="uploadBtn">📤 Upload CSV</button>        <!-- nieuwe upload knop -->
+        <label for="csvFileInput">Selecteer CSV-bestand:</label> <!-- label voor file input -->
+        <input type="file" id="csvFileInput" accept=".csv">       <!-- file input element -->
+        <button id="uploadBtn">📤 Upload CSV</button>             <!-- upload knop om verwerking te starten -->
         <p id="importStatus" style="margin-top:10px; color:green; font-weight:bold;"></p> <!-- statusmelding -->
     </section>
 
@@ -69,17 +61,63 @@ document.addEventListener('DOMContentLoaded', () => {
     </section>
 </main>
 
- <!-- ======================= layout/Footer.html ======================= -->
-<div id="footer-placeholder"></div>  <!-- Doel: container voor Footer content -->
-
+<!-- ======================= layout/Footer.html ======================= -->
+<div id="footer-placeholder"></div> <!-- container voor Footer content -->
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html')  // pad naar de layout/Footer.html
-    .then(resp => resp.text())                // response omzetten naar leesbare HTML
-    .then(data => {                           // werk met de opgehaalde HTML
-        document.getElementById('footer-placeholder').innerHTML = data; // Footer injecteren
+fetch('/MyFamTreeCollab/Layout/Footer.html')  // Haal footer HTML op
+    .then(resp => resp.text())                // converteer naar tekst
+    .then(data => {
+        document.getElementById('footer-placeholder').innerHTML = data; // injecteer footer
     });
 </script>
+
 <!-- ======================= IMPORT JS ======================= -->
-<script src="../js/import.js"></script>
+<script src="../js/import.js"></script> <!-- originele import logica -->
+<script>
+document.addEventListener('DOMContentLoaded', ()=>{
+    // DOM-elementen ophalen
+    const fileInput = document.getElementById('csvFileInput');  // file input element
+    const uploadBtn = document.getElementById('uploadBtn');     // upload knop
+    const status = document.getElementById('importStatus');     // element voor status feedback
+
+    // Functie om CSV bestand te verwerken
+    function handleFile(file){
+        if(!file) return;                                      // stop als er geen bestand is geselecteerd
+        const reader = new FileReader();                       // FileReader om CSV in te lezen
+        reader.onload = function(event){
+            const text = event.target.result;                  // CSV tekst ophalen
+            let lines = text.split(/\r?\n/).filter(l=>l.trim()!==""); // split in regels en verwijder lege regels
+            const importedData = [];                            // buffer voor nieuwe personen
+            const existingData = JSON.parse(sessionStorage.getItem('stamboomData') || "[]"); // huidige dataset ophalen
+            if(lines.length > 500){ lines = lines.slice(0,500); status.textContent = "⚠️ Alleen de eerste 500 rijen worden geïmporteerd."; } // max 500
+
+            // Verwerk elke CSV regel
+            lines.forEach((line,index)=>{
+                const person = StamboomSchema.fromCSV(line);    // converteer CSV naar object volgens schema
+                if(!person){ console.warn(`Rij ${index+1} kon niet verwerkt worden.`); return; } // parsing check
+                if(!person.PartnerID) person.PartnerID = StamboomSchema.stringifyPartners([]); // lege partner array indien nodig
+                if(!person.Geslacht) person.Geslacht = 'X';       // default geslacht
+                if(!person.ID || existingData.some(p=>p.ID===person.ID)) person.ID = window.genereerCode(person,existingData); // unieke ID
+                if(!existingData.some(p=>p.ID===person.ID)){ existingData.push(person); importedData.push(person); } // toevoegen
+            });
+
+            // Opslaan in sessionStorage
+            sessionStorage.setItem('stamboomData', JSON.stringify(existingData));
+            // Statusmelding voor gebruiker
+            status.textContent = importedData.length 
+                ? `✅ CSV geladen: ${importedData.length} personen toegevoegd.` 
+                : `⚠️ Geen nieuwe personen toegevoegd.`;
+        };
+        reader.onerror = function(){ status.textContent = "❌ Fout bij het lezen van het bestand."; }; // foutmelding
+        reader.readAsText(file);                                  // start lezen van CSV
+    }
+
+    // Event listener upload knop
+    uploadBtn.addEventListener('click', ()=>{
+        const file = fileInput.files[0];   // pak geselecteerd bestand
+        handleFile(file);                  // verwerk bestand
+    });
+});
+</script>
 </body>
 </html>
