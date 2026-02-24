@@ -26,14 +26,14 @@ function handleFile(file){
 
         // Verwerk elke CSV regel
         lines.forEach((line,index)=>{
-            const person = StamboomSchema.fromCSV(line);    // converteer CSV naar object volgens schema
+            const person = schema.fromCSV(line);    // converteer CSV naar object volgens schema
             if(!person){                                    // parsing mislukt
                 console.warn(`Rij ${index+1} kon niet worden verwerkt.`); // log waarschuwing
                 return;                                     // sla deze rij over
             }
 
             // Default waarden instellen
-            if(!person.PartnerID) person.PartnerID = StamboomSchema.stringifyPartners([]); // lege partners indien niet aanwezig
+            if(!person.PartnerID) person.PartnerID = schema.stringifyPartners([]); // lege partners indien niet aanwezig
             if(!person.Geslacht) person.Geslacht = 'X';                                     // default onbekend geslacht
 
             // Unieke ID genereren via IDGenerator als nog niet aanwezig of duplicaat
