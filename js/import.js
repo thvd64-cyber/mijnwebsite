@@ -1,73 +1,53 @@
-// ======================= import.js – CSV import naar StamboomStorage =======================
-document.addEventListener('DOMContentLoaded', () => { // Wacht tot DOM volledig geladen is
+// ======================= import.js =======================
+document.addEventListener('DOMContentLoaded', () => { // Wacht tot DOM en dependencies geladen zijn
 
-    // ======================= DOM ELEMENTEN =======================
-    const fileInput = document.getElementById('csvFileInput');  // file input element
-    const uploadBtn = document.getElementById('uploadBtn');     // upload knop
-    const status = document.getElementById('importStatus');     // status / feedback element
+    // DOM-elementen ophalen
+    const fileInput = document.getElementById('csvFileInput'); // file input element
+    const uploadBtn = document.getElementById('uploadBtn');    // upload knop element
+    const status = document.getElementById('importStatus');    // element voor status feedback
 
-    // ======================= FUNCTIE VOOR CSV VERWERKING =======================
+    // Functie om CSV-bestand te verwerken
     function handleFile(file){
-        if(!file) return; // stop als geen bestand geselecteerd
+        if(!file) return;                                      // stop als er geen bestand is geselecteerd
+        const reader = new FileReader();                       // maak FileReader object
 
-        const reader = new FileReader(); // CSV lezen
-        reader.onload = function(event){
-            const text = event.target.result; // CSV tekst
-            let lines = text.split(/\r?\n/).filter(l => l.trim() !== ""); // split in regels en verwijder lege regels
-            const importedData = []; // buffer voor nieuwe personen
-            const existingData = StamboomStorage.get() || []; // huidige dataset ophalen via StamboomStorage
+        reader.onload = function(event){                       // callback bij laden bestand
+            const text = event.target.result;                  // haal CSV tekst op
+            let lines = text.split(/\r?\n/).filter(l => l.trim() !== ""); // split in regels en verwijder lege
+            const importedData = [];                            // buffer voor nieuwe personen
+            const existingData = JSON.parse(sessionStorage.getItem('stamboomData') || "[]"); // huidige dataset
 
-            // Limiteer tot max 500 rijen
-            if(lines.length > 500){ 
-                lines = lines.slice(0,500);
-                status.textContent = "⚠️ Alleen de eerste 500 rijen worden geïmporteerd."; 
+            if(lines.length > 500){                             // limiet max 500 rijen
+                status.textContent = `⚠️ CSV bevat meer dan 500 rijen. Alleen de eerste 500 worden geïmporteerd.`;
+                lines = lines.slice(0,500);                     // behoud eerste 500 regels
             }
 
             // Verwerk elke CSV regel
             lines.forEach((line,index) => {
-                const person = schema.fromCSV(line); // converteer CSV naar object via schema
+                const person = schema.fromCSV(line);           // converteer CSV naar object via schema
                 if(!person){ 
-                    console.warn(`Rij ${index+1} kon niet verwerkt worden.`); 
-                    return; // sla deze rij over
+                    console.warn(`Rij ${index+1} kon niet verwerkt worden.`); // log waarschuwing
+                    return;                                     // sla deze rij over
                 }
-
-                // Default waarden instellen
-                if(!person.PartnerID) person.PartnerID = schema.stringifyPartners([]);
-                if(!person.Geslacht) person.Geslacht = 'X';
-
-                // Unieke ID genereren indien nodig
-                if(!person.ID || existingData.some(p => p.ID === person.ID)){
-                    person.ID = window.genereerCode(person, existingData); 
-                }
-
-                // Voeg toe als niet duplicaat
-                if(!existingData.some(p => p.ID === person.ID)){
-                    existingData.push(person);
-                    importedData.push(person);
-                }
+                if(!person.PartnerID) person.PartnerID = schema.stringifyPartners([]); // lege partnerlijst
+                if(!person.Geslacht) person.Geslacht = 'X';      // default geslacht
+                if(!person.ID || existingData.some(p=>p.ID===person.ID)) person.ID = window.genereerCode(person, existingData); // unieke ID
+                if(!existingData.some(p=>p.ID===person.ID)){ existingData.push(person); importedData.push(person); } // toevoegen
             });
 
-            // Opslaan via StamboomStorage
-            StamboomStorage.set(existingData);
-
-            // Statusmelding tonen
+            sessionStorage.setItem('stamboomData', JSON.stringify(existingData)); // opslaan
             status.textContent = importedData.length
-                ? `✅ CSV geladen: ${importedData.length} personen toegevoegd.`
-                : `⚠️ Geen nieuwe personen toegevoegd.`;
+                ? `✅ CSV geladen: ${importedData.length} personen toegevoegd.` // positief bericht
+                : `⚠️ Geen nieuwe personen toegevoegd.`;                     // waarschuwing
         };
 
-        // Fout bij lezen bestand
-        reader.onerror = function(){ 
-            status.textContent = "❌ Fout bij het lezen van het bestand."; 
-        };
-
+        reader.onerror = ()=>{ status.textContent = "❌ Fout bij het lezen van het bestand."; }; // foutmelding
         reader.readAsText(file); // start lezen CSV
     }
 
-    // ======================= EVENT LISTENER =======================
-    uploadBtn.addEventListener('click', () => {
-        const file = fileInput.files[0]; // pak geselecteerd bestand
-        handleFile(file); // verwerk CSV
+    uploadBtn.addEventListener('click', () => {          // klik handler upload knop
+        const file = fileInput.files[0];                 // pak geselecteerd bestand
+        handleFile(file);                                // verwerk CSV
     });
 
-}); // einde DOMContentLoaded
+});
