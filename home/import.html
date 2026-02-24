@@ -32,15 +32,6 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html') // Haal Navbar op
 
 <!-- ======================= Pagina Titel ======================= -->
 <div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const pageTitleDiv = document.getElementById('pageTitle');  // doel div
-    const title = "Import";                                      // titel tekst
-    pageTitleDiv.textContent = title
-        .replace(/[-_]/g,' ')                                    // vervang streepjes/underscores door spaties
-        .replace(/\b\w/g, c => c.toUpperCase());                 // hoofdletter per woord
-});
-</script>
 
 <!-- ======================= MAIN CONTENT ======================= -->
 <main>
@@ -49,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <input type="file" id="csvFileInput" accept=".csv"> <!-- bestand input -->
         <button id="uploadBtn">Upload & Verwerk CSV</button> <!-- upload knop, gekoppeld aan import.js -->
         <p id="importStatus" style="margin-top:10px; font-weight:bold;"></p> <!-- status / feedback element -->
-    </section
+        </section>
 
     <section>
         <p>
@@ -73,57 +64,6 @@ fetch('/MyFamTreeCollab/Layout/Footer.html')  // Haal footer HTML op
 
 <!-- ======================= IMPORT JS ======================= -->
 <script src="../js/import.js"></script> <!-- originele import logica -->
-<script>
-document.addEventListener('DOMContentLoaded', ()=>{
-    // DOM-elementen ophalen
-    const fileInput = document.getElementById('csvFileInput');  // file input element
-    const uploadBtn = document.getElementById('uploadBtn');     // upload knop
-    const status = document.getElementById('importStatus');     // element voor status feedback
-
-    // Functie om CSV bestand te verwerken
-    function handleFile(file){
-        if(!file) return;                                      // stop als er geen bestand is geselecteerd
-        const reader = new FileReader();                       // FileReader om CSV in te lezen
-        reader.onload = function(event){
-            const text = event.target.result;                  // CSV tekst ophalen
-            let lines = text.split(/\r?\n/).filter(l=>l.trim()!==""); // split in regels en verwijder lege regels
-            const importedData = [];                            // buffer voor nieuwe personen
-            const existingData = JSON.parse(sessionStorage.getItem('stamboomData') || "[]"); // huidige dataset ophalen
-            if(lines.length > 500){ lines = lines.slice(0,500); status.textContent = "⚠️ Alleen de eerste 500 rijen worden geïmporteerd."; } // max 500
-
-            // Verwerk elke CSV regel
-            lines.forEach((line,index)=>{
-                const person = schema.fromCSV(line);    // converteer CSV naar object volgens schema
-                if(!person){ console.warn(`Rij ${index+1} kon niet verwerkt worden.`); return; } // parsing check
-                if(!person.PartnerID) person.PartnerID = schema.stringifyPartners([]); // lege partner array indien nodig
-                if(!person.Geslacht) person.Geslacht = 'X';       // default geslacht
-                if(!person.ID || existingData.some(p=>p.ID===person.ID)) person.ID = window.genereerCode(person,existingData); // unieke ID
-                if(!existingData.some(p=>p.ID===person.ID)){ existingData.push(person); importedData.push(person); } // toevoegen
-            });
-
-            // Opslaan in sessionStorage
-            sessionStorage.setItem('stamboomData', JSON.stringify(existingData));
-            // Statusmelding voor gebruiker
-            status.textContent = importedData.length 
-                ? `✅ CSV geladen: ${importedData.length} personen toegevoegd.` 
-                : `⚠️ Geen nieuwe personen toegevoegd.`;
-        };
-        reader.onerror = function(){ status.textContent = "❌ Fout bij het lezen van het bestand."; }; // foutmelding
-        reader.readAsText(file);                                  // start lezen van CSV
-    }
-
-    // Event listener upload knop
-    uploadBtn.addEventListener('click', ()=>{
-        const file = fileInput.files[0];   // pak geselecteerd bestand
-        handleFile(file);                  // verwerk bestand
-    });
-});
-</script>
-    <!-- ======================= .js files load ======================= -->
-<script src="../js/storage.js"></script>      <!-- laadt StamboomStorage (sesionStorage API) -->
-<script src="../js/schema.js"></script>       <!-- CSV ↔ object conversie -->
-<script src="../js/idGenerator.js"></script>  <!-- Unieke ID generator -->
-<script src="../js/import.js"></script>       <!-- CSV import logica (gebruikt bovenstaande dependencies) -->
 
 </body>
 </html>
