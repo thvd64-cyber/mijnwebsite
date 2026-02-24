@@ -5,143 +5,180 @@
     <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
     <title>MyFamTreeCollab - Manage</title> <!-- Browser tab titel -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor styling -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Verbinden met CSS voor styling -->
 </head>
 <body>
 <!-- ======================= layout/TopBar.html ======================= -->
-<div id="topbar-placeholder"></div>  <!-- container voor TopBar content -->
-
+<div id="topbar-placeholder"></div> <!-- container voor TopBar content -->
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
-    .then(resp => resp.text())                // Converteert response naar tekst
-    .then(data => {                           // Werk met opgehaalde HTML
-        document.getElementById('topbar-placeholder').innerHTML = data;  // Injecteer TopBar
-    });
+fetch('/MyFamTreeCollab/Layout/TopBar.html')  // fetch TopBar HTML
+    .then(resp => resp.text())                // response naar tekst omzetten
+    .then(data => document.getElementById('topbar-placeholder').innerHTML = data); // injecteer in DOM
 </script>
 
 <!-- ======================= layout/Navbar.html ======================= -->
-<div id="Navbar-placeholder"></div> <!-- plek waar Navbar komt -->
-
+<div id="Navbar-placeholder"></div> <!-- container voor Navbar content -->
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // Haal Navbar bestand op
-    .then(resp => resp.text())               // Omzetten naar HTML tekst
+fetch('/MyFamTreeCollab/Layout/Navbar.html')  // fetch Navbar HTML
+    .then(resp => resp.text())                // response naar tekst
     .then(data => {
         const placeholder = document.getElementById('Navbar-placeholder'); // placeholder ophalen
-        if (placeholder) {                   // controleer of element bestaat
-            placeholder.innerHTML = data;    // Navbar injecteren
-        } else {
-            console.error('Navbar-placeholder niet gevonden'); // Debugmelding
-        }
+        if(placeholder) placeholder.innerHTML = data; // injecteer Navbar
+        else console.error('Navbar-placeholder niet gevonden'); // fallback debug
     });
 </script>
 
-<!-- ======================= Hoofd pagina ======================= -->
+<!-- ======================= Pagina Titel ======================= -->
 <div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const pageTitleDiv = document.getElementById('pageTitle');  // Doel div
-    const title = "Manage stamboom";            // Titel tekst
-    pageTitleDiv.textContent = title
-        .replace(/[-_]/g,' ')          // underscore/koppelteken → spatie
-        .replace(/\b\w/g, c => c.toUpperCase()); // eerste letter hoofdletter
+    const pageTitleDiv = document.getElementById('pageTitle'); // doel div
+    const title = "Manage Stamboom"; // titel
+    pageTitleDiv.textContent = title.replace(/[-_]/g,' ').replace(/\b\w/g, c=>c.toUpperCase()); // netjes hoofdletter
 });
 </script>
 
 <!-- ======================= MAIN CONTENT ======================= -->
 <main>
     <div class="container">
-        <input type="text" id="searchPerson" placeholder="Voer ID of naam in"> <!-- zoek input -->
-        <button id="loadBtn" class="btn">Laad Persoon</button> <!-- trigger load functie -->
-        <button id="refreshBtn" class="btn">Refresh</button> <!-- trigger refresh functie -->
-        <button id="saveBtn" class="btn">Opslaan</button> <!-- trigger save functie -->
-        <button id="addBtn" class="btn">+ Toevoegen</button> <!-- trigger add functie -->
+        <!-- Zoek en Acties -->
+        <input type="text" id="searchPerson" placeholder="Voer ID of naam in"> <!-- input search -->
+        <button id="loadBtn">Laad Persoon</button> <!-- laad specifieke persoon -->
+        <button id="refreshBtn">Refresh</button> <!-- refresh tabel -->
+        <button id="addBtn">+ Toevoegen</button> <!-- nieuwe persoon toevoegen -->
+        <button id="saveBtn">Opslaan</button> <!-- alle wijzigingen opslaan -->
 
-        <table id="manageTable">
-            <thead><tr></tr></thead> <!-- dynamisch via JS gevuld met schema velden -->
-            <tbody></tbody> <!-- rijen worden dynamisch toegevoegd in JS -->
+        <!-- Manage Tabel -->
+        <table id="manageTable" style="width:100%; border-collapse:collapse;">
+            <thead><tr></tr></thead> <!-- dynamisch gevuld via JS -->
+            <tbody></tbody> <!-- rijen worden dynamisch toegevoegd -->
         </table>
+
+        <!-- Preview / Confirm Sectie -->
+        <div id="personPreview" style="display:none; margin-top:20px; padding:10px; border:1px solid #ccc; border-radius:5px;">
+            <h3>Bevestig de persoon</h3>
+            <pre id="previewContent"></pre> <!-- JSON preview -->
+            <button id="confirmBtn">Bevestigen & Ga naar Manage</button> <!-- bevestig persoon -->
+        </div>
+
+        <!-- Warning Message -->
+        <div id="warningMessage" style="display:none; color:red; margin-top:10px;"></div> <!-- waarschuwing -->
     </div>
 </main>
 
-<!-- ======================= PAGE-SPECIFIC JS ======================= -->
-<script src="../js/schema.js"></script> <!-- Datastructuur & model -->
-<script src="../js/idGenerator.js"></script> <!-- Unieke ID’s -->
-<script src="../js/manage.js"></script> <!-- Controller: load, add, save, render -->
-
-<!-- ======================= bottom bar ======================= -->
-<div id="footer-placeholder"></div>  <!-- container voor Footer content -->
+<!-- ======================= Load JS ======================= -->
+<script src="../js/schema.js"></script> <!-- StamboomSchema structuur -->
+<script src="../js/idGenerator.js"></script> <!-- ID generator -->
+<script src="../js/storage.js"></script> <!-- StamboomStorage module -->
 
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html')  // Haal Footer HTML op
-    .then(resp => resp.text())                // Omzetten naar leesbare HTML
-    .then(data => {                           // werk met de opgehaalde HTML
-        document.getElementById('footer-placeholder').innerHTML = data; // Footer injecteren
-    });
-</script>
+document.addEventListener('DOMContentLoaded', () => { // wacht tot DOM geladen
 
-<!-- ======================= VIEW LOGICA VOOR RELATIES ======================= -->
-<script>
-/**
- * renderDirectRelations: alleen directe relaties van hoofd-ID renderen
- * Relatie wordt alleen in de view berekend, niet opgeslagen
- */
-function renderDirectRelations(hoofdID) {
-    const data = JSON.parse(localStorage.getItem('stamboomData') || '[]'); // data uit storage
-    const tableBody = document.querySelector('#manageTable tbody'); // doel tabel body
-    tableBody.innerHTML = ''; // clear oude rijen
+    // ======================= DOM ELEMENTEN =======================
+    const tableBody = document.querySelector('#manageTable tbody'); // doel tbody voor rijen
+    const addBtn = document.getElementById('addBtn'); // nieuwe persoon knop
+    const refreshBtn = document.getElementById('refreshBtn'); // refresh tabel knop
+    const saveBtn = document.getElementById('saveBtn'); // opslaan knop
+    const loadBtn = document.getElementById('loadBtn'); // laad persoon knop
+    const searchInput = document.getElementById('searchPerson'); // zoekveld
+    const previewDiv = document.getElementById('personPreview'); // preview container
+    const previewContent = document.getElementById('previewContent'); // preview JSON
+    const confirmBtn = document.getElementById('confirmBtn'); // confirm knop
+    const warningMessage = document.getElementById('warningMessage'); // waarschuwing div
 
-    // helper: bepaal relatie voor de view
-    function bepaalRelatie(p, hoofd) {
-        if(p.ID === hoofd.ID) return 'Hoofd-ID';
-        if(p.ID === hoofd.VaderID || p.ID === hoofd.MoederID) return 'Ouder';
-        if(p.ID === hoofd.PartnerID) return 'Partner';
-        if(p.VaderID === hoofd.ID || p.MoederID === hoofd.ID) return 'Kind';
-        // broer/zus
-        if(p.VaderID === hoofd.VaderID && p.MoederID === hoofd.MoederID && p.ID !== hoofd.ID) return 'Broer/Zus';
-        // partner-kind
-        if(p.PartnerID === hoofd.ID) return 'Partner-Kind';
-        return ''; // onbekend
+    // ======================= TABEL RENDEREN =======================
+    function renderTable(data){ // render dataset in tabel
+        tableBody.innerHTML = ''; // clear oude rijen
+
+        if(data.length === 0){ // geen data
+            tableBody.innerHTML = '<tr><td colspan="'+(StamboomSchema.fields.length+1)+'">Geen personen gevonden</td></tr>';
+            return;
+        }
+
+        // render elke persoon
+        data.forEach(p => {
+            const tr = document.createElement('tr'); // nieuwe rij
+            tr.dataset.id = p.ID; // row-ID
+
+            // velden uit schema
+            StamboomSchema.fields.forEach(f => {
+                const td = document.createElement('td'); // cel
+                if(f === 'ID'){ // ID readonly
+                    td.textContent = p[f] || '';
+                } else {
+                    const input = document.createElement('input'); // input voor bewerken
+                    input.value = p[f] || '';
+                    input.addEventListener('change', e => p[f] = e.target.value); // update object
+                    td.appendChild(input);
+                }
+                tr.appendChild(td); // voeg cel toe
+            });
+
+            // Relatie kolom (view-only)
+            const tdRel = document.createElement('td');
+            tdRel.textContent = p.Relatie || '';
+            tr.prepend(tdRel); // eerste kolom
+            tableBody.appendChild(tr); // voeg rij toe
+        });
     }
 
-    const hoofd = data.find(p => p.ID === hoofdID); // hoofd ophalen
-    if(!hoofd) return alert('Hoofd-ID niet gevonden');
+    // ======================= INIT =======================
+    let dataset = StamboomStorage.get(); // haal data uit storage
+    renderTable(dataset); // init render
 
-    // haal alle directe relaties
-    const subset = data.filter(p => 
-        p.ID === hoofd.ID ||
-        p.ID === hoofd.VaderID || p.ID === hoofd.MoederID ||
-        p.ID === hoofd.PartnerID ||
-        p.VaderID === hoofd.ID || p.MoederID === hoofd.ID ||
-        (p.VaderID === hoofd.VaderID && p.MoederID === hoofd.MoederID && p.ID !== hoofd.ID) ||
-        p.PartnerID === hoofd.ID
-    );
-
-    subset.forEach(p => {
-        const tr = document.createElement('tr'); // nieuwe rij
-        tr.className = bepaalRelatie(p, hoofd).toLowerCase().replace(/\s+/g,'-'); // row-class op basis van relatie
-
-        // voeg velden uit schema toe
-        window.StamboomSchema.fields.forEach(f => {
-            const td = document.createElement('td'); // cel maken
-            if(f === 'ID'){
-                td.textContent = p.ID || ''; // ID direct tonen
-            } else {
-                const input = document.createElement('input'); // input voor editable velden
-                input.value = p[f] || ''; // waarde vullen
-                input.addEventListener('change', e => p[f] = e.target.value); // update lokaal object
-                td.appendChild(input);
-            }
-            tr.appendChild(td);
-        });
-
-        // Relatie kolom view-only toevoegen
-        const tdRel = document.createElement('td');
-        tdRel.textContent = bepaalRelatie(p, hoofd); // relatie alleen voor de view
-        tr.prepend(tdRel); // eerste kolom
-        tableBody.appendChild(tr); // rij toevoegen aan tabel
+    // ======================= REFRESH KNOP =======================
+    refreshBtn.addEventListener('click', ()=>{ // klik refresh
+        dataset = StamboomStorage.get(); // opnieuw ophalen
+        renderTable(dataset); // renderen
     });
-}
+
+    // ======================= OPSLAAN =======================
+    saveBtn.addEventListener('click', ()=>{ // klik opslaan
+        StamboomStorage.set(dataset); // schrijf dataset naar storage
+        alert('Wijzigingen opgeslagen!'); // feedback
+    });
+
+    // ======================= TOEVOEGEN NIEUWE PERSOON =======================
+    addBtn.addEventListener('click', ()=>{ // klik + toevoegen
+        const newPerson = { // lege default persoon
+            ID: 'P'+Date.now(), // uniek ID
+            Doopnaam:'', Roepnaam:'', Prefix:'', Achternaam:'', Geslacht:'', Geboortedatum:'', Relatie:'Hoofd-ID', PartnerID:[]
+        };
+        previewContent.textContent = JSON.stringify(newPerson, null, 2); // JSON preview
+        previewDiv.style.display = 'block'; // toon preview
+    });
+
+    // ======================= CONFIRM NIEUWE PERSOON =======================
+    confirmBtn.addEventListener('click', ()=>{ // bevestig
+        const person = JSON.parse(previewContent.textContent); // parse JSON
+        dataset.push(person); // voeg toe aan dataset
+        StamboomStorage.set(dataset); // update storage
+        previewDiv.style.display = 'none'; // verberg preview
+        renderTable(dataset); // render tabel opnieuw
+    });
+
+    // ======================= ZOEK FUNCTIE =======================
+    loadBtn.addEventListener('click', ()=>{ // klik laad
+        const term = searchInput.value.trim().toLowerCase(); // zoekterm
+        const filtered = dataset.filter(p => 
+            p.ID.toLowerCase().includes(term) || 
+            p.Doopnaam.toLowerCase().includes(term) ||
+            p.Roepnaam.toLowerCase().includes(term) ||
+            p.Achternaam.toLowerCase().includes(term)
+        );
+        renderTable(filtered); // render filtered
+    });
+
+});
 </script>
+
+<!-- ======================= FOOTER ======================= -->
+<div id="footer-placeholder"></div>
+<script>
+fetch('/MyFamTreeCollab/Layout/Footer.html') // fetch footer
+    .then(resp => resp.text())
+    .then(data => document.getElementById('footer-placeholder').innerHTML = data);
+</script>
+
 </body>
 </html>
