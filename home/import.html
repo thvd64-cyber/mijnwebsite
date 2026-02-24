@@ -5,22 +5,21 @@
     <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief -->
     <title>MyFamTreeCollab - Import</title> <!-- Browser tab titel -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Externe CSS -->
 </head>
 <body>
-
 <!-- ======================= TopBar ======================= -->
-<div id="topbar-placeholder"></div> <!-- container voor TopBar content -->
+<div id="topbar-placeholder"></div>  <!-- container voor TopBar content -->
 <script>
 fetch('/MyFamTreeCollab/Layout/TopBar.html') // Haal TopBar HTML op
-    .then(resp => resp.text())
-    .then(data => { document.getElementById('topbar-placeholder').innerHTML = data; });
+    .then(resp => resp.text())                 // Converteer response naar tekst
+    .then(data => { document.getElementById('topbar-placeholder').innerHTML = data; }); // Injecteer TopBar
 </script>
 
 <!-- ======================= Navbar ======================= -->
 <div id="Navbar-placeholder"></div> <!-- container voor Navbar -->
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html')
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Haal Navbar op
     .then(resp => resp.text())
     .then(data => {
         const placeholder = document.getElementById('Navbar-placeholder'); // placeholder ophalen
@@ -34,28 +33,29 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const pageTitleDiv = document.getElementById('pageTitle'); // doel div
-    const title = "Import";                                     // paginatitel
-    pageTitleDiv.textContent = title.replace(/[-_]/g,' ').replace(/\b\w/g, c => c.toUpperCase()); // mooi format
+    const title = "Import";                                     // titel tekst
+    pageTitleDiv.textContent = title.replace(/[-_]/g,' ').replace(/\b\w/g, c => c.toUpperCase()); // format
 });
 </script>
 
-<!-- ======================= CSV Upload Sectie ======================= -->
-<section style="margin-top:20px; padding:20px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05); max-width:500px; margin:auto;">
-    <h2 style="margin-bottom:15px;">CSV Importeren</h2>
-    <label for="csvFileInput">Selecteer CSV-bestand:</label> <!-- label voor file input -->
-    <input type="file" id="csvFileInput" accept=".csv" style="margin-bottom:10px;"> <!-- bestand input -->
-    <button id="uploadBtn" style="padding:10px 20px; background:#1E90FF; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:15px;">Upload & Verwerk CSV</button> <!-- upload knop -->
-    <p id="importStatus" style="font-weight:bold; margin-bottom:15px;"></p> <!-- statusmelding -->
-
-    <!-- Preview van geïmporteerde CSV -->
-    <div id="csvPreview" style="display:none; padding:10px; border:1px solid #ccc; border-radius:8px; background:#f9f9f9;">
-        <h3>Preview van CSV Personen</h3>
-        <pre id="previewContent" style="white-space:pre-wrap;"></pre>
-        <button id="confirmBtn" style="padding:10px 20px; background:#28a745; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-top:10px;">Bevestigen & Voeg Toe</button>
-    </div>
-
-    <div id="warningMessage" style="display:none; padding:10px; margin-top:10px; background:#fff3cd; color:#856404; border:1px solid #ffeeba; border-radius:5px;"></div>
+<!-- ======================= CSV Import Formulier ======================= -->
+<section style="margin-top:20px; padding:20px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05); max-width:600px; margin:auto;">
+    <h2 style="margin-bottom:15px;">CSV Import</h2>
+    <p>Selecteer een CSV-bestand om personen toe te voegen aan de stamboom.</p>
+    <form id="importForm" style="display:flex; flex-direction:column; gap:10px;">
+        <input type="file" id="csvFileInput" accept=".csv"> <!-- CSV bestand -->
+        <button type="submit" style="padding:10px; background:#1E90FF; color:#fff; border:none; border-radius:5px; cursor:pointer; width:200px;">
+            Upload & Verwerk CSV
+        </button>
+        <p id="importStatus" style="font-weight:bold;"></p> <!-- status / feedback -->
+    </form>
 </section>
+
+<!-- ======================= Preview van geïmporteerde personen ======================= -->
+<div id="personPreview" style="display:none; margin-top:20px; padding:15px; border:1px solid #ccc; border-radius:8px; background:#f9f9f9; max-width:600px; margin-left:auto; margin-right:auto;">
+    <h3>Preview Geïmporteerde Personen</h3>
+    <pre id="previewContent" style="white-space:pre-wrap;"></pre>
+</div>
 
 <!-- ======================= Footer ======================= -->
 <div id="footer-placeholder"></div>
@@ -66,12 +66,12 @@ fetch('/MyFamTreeCollab/Layout/Footer.html')
 </script>
 
 <!-- ======================= Dependencies ======================= -->
-<script src="../js/schema.js"></script>       <!-- CSV ↔ object conversie -->
-<script src="../js/idGenerator.js"></script>  <!-- Unieke ID generator -->
-<script src="../js/storage.js"></script>      <!-- StamboomStorage wrapper -->
+<script src="../js/schemaGlobal.js"></script>  <!-- Globaal schema object -->
+<script src="../js/idGenerator.js"></script>   <!-- Unieke ID generator -->
+<script src="../js/storage.js"></script>       <!-- Centrale StamboomStorage -->
 
 <!-- ======================= IMPORT JS ======================= -->
-<script src="../js/import.js"></script>       <!-- CSV import logica -->
+<script src="../js/import.js"></script>        <!-- CSV import logica -->
 
 </body>
 </html>
