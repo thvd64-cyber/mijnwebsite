@@ -93,9 +93,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
             // Verwerk elke CSV regel
             lines.forEach((line,index)=>{
-                const person = StamboomSchema.fromCSV(line);    // converteer CSV naar object volgens schema
+                const person = schema.fromCSV(line);    // converteer CSV naar object volgens schema
                 if(!person){ console.warn(`Rij ${index+1} kon niet verwerkt worden.`); return; } // parsing check
-                if(!person.PartnerID) person.PartnerID = StamboomSchema.stringifyPartners([]); // lege partner array indien nodig
+                if(!person.PartnerID) person.PartnerID = schema.stringifyPartners([]); // lege partner array indien nodig
                 if(!person.Geslacht) person.Geslacht = 'X';       // default geslacht
                 if(!person.ID || existingData.some(p=>p.ID===person.ID)) person.ID = window.genereerCode(person,existingData); // unieke ID
                 if(!existingData.some(p=>p.ID===person.ID)){ existingData.push(person); importedData.push(person); } // toevoegen
