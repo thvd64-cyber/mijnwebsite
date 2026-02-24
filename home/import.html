@@ -119,16 +119,11 @@ document.addEventListener('DOMContentLoaded', ()=>{
     });
 });
 </script>
-    <!-- ======================= CORE STORAGE ======================= -->
-<script src="../js/storage.js"></script> <!-- Laadt StamboomStorage (localStorage API) -->
+    <!-- ======================= .js files load ======================= -->
+<script src="../js/storage.js"></script>      <!-- laadt StamboomStorage (sesionStorage API) -->
+<script src="../js/schema.js"></script>       <!-- CSV ↔ object conversie -->
+<script src="../js/idGenerator.js"></script>  <!-- Unieke ID generator -->
+<script src="../js/import.js"></script>       <!-- CSV import logica (gebruikt bovenstaande dependencies) -->
 
-<!-- ======================= SCHEMA ======================= -->
-<script src="../js/schema.js"></script> <!-- Laadt CSV ↔ object conversie logica -->
-
-<!-- ======================= ID GENERATOR ======================= -->
-<script src="../js/idGenerator.js"></script> <!-- Laadt unieke ID generator (window.genereerCode) -->
-
-<!-- ======================= IMPORT LOGICA ======================= -->
-<script src="../js/import.js"></script> <!-- Laadt CSV import logica (gebruikt bovenstaande dependencies) -->
 </body>
 </html>
