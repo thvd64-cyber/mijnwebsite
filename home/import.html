@@ -3,72 +3,72 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
-    <title>MyFamTreeCollab - Import</title> <!-- Browser tab titel -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor styling -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief voor mobiel/tablet/desktop -->
+    <title>MyFamTreeCollab - CSV Import</title> <!-- Browser tab titel -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Externe CSS -->
 </head>
 <body>
-<!-- ======================= layout/TopBar.html ======================= -->
-<div id="topbar-placeholder"></div> <!-- Container voor TopBar -->
+<!-- ======================= TopBar ======================= -->
+<div id="topbar-placeholder"></div> <!-- container voor TopBar content -->
 <script>
 fetch('/MyFamTreeCollab/Layout/TopBar.html') // Haal TopBar HTML op
     .then(resp => resp.text())                 // Converteer response naar tekst
-    .then(data => {                           
-        document.getElementById('topbar-placeholder').innerHTML = data; // Injecteer TopBar in DOM
-    });
+    .then(data => { document.getElementById('topbar-placeholder').innerHTML = data; }); // Injecteer TopBar
 </script>
 
-<!-- ======================= layout/Navbar.html ======================= -->
-<div id="Navbar-placeholder"></div> <!-- Container voor Navbar -->
+<!-- ======================= Navbar ======================= -->
+<div id="Navbar-placeholder"></div> <!-- container voor Navbar -->
 <script>
 fetch('/MyFamTreeCollab/Layout/Navbar.html') // Haal Navbar HTML op
-    .then(resp => resp.text())                 // Converteer response naar tekst
+    .then(resp => resp.text())                 // Converteer naar tekst
     .then(data => {
         const placeholder = document.getElementById('Navbar-placeholder'); // placeholder ophalen
-        if (placeholder) placeholder.innerHTML = data; // Injecteer Navbar
+        if(placeholder) placeholder.innerHTML = data; // injecteer Navbar
         else console.error('Navbar-placeholder niet gevonden'); // fallback debug
     });
 </script>
 
 <!-- ======================= Pagina Titel ======================= -->
-<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div> <!-- Titel container -->
-
-<!-- ======================= MAIN CONTENT ======================= -->
-<main>
-    <section>
-        <label for="csvFileInput">Selecteer CSV-bestand:</label> <!-- Label voor file input -->
-        <input type="file" id="csvFileInput" accept=".csv"> <!-- Bestand input -->
-        <button id="uploadBtn">Upload & Verwerk CSV</button> <!-- Upload knop -->
-        <p id="importStatus" style="margin-top:10px; font-weight:bold;"></p> <!-- Status / feedback element -->
-    </section>
-
-    <section>
-        <p>
-            Na het importeren kunt u de gegevens bekijken in 
-            <a href="/MyFamTreeCollab/stamboom/view.html">View</a> 
-            of bewerken in 
-            <a href="/MyFamTreeCollab/stamboom/manage.html">Manage</a>.
-        </p>
-    </section>
-</main>
-
-<!-- ======================= layout/Footer.html ======================= -->
-<div id="footer-placeholder"></div> <!-- Container voor Footer -->
+<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html') // Haal footer HTML op
-    .then(resp => resp.text())                 // Converteer response naar tekst
-    .then(data => {
-        document.getElementById('footer-placeholder').innerHTML = data; // Injecteer footer
-    });
+document.addEventListener('DOMContentLoaded', () => {
+    const pageTitleDiv = document.getElementById('pageTitle'); // doel div
+    const title = "CSV Import";                                 // titel tekst
+    pageTitleDiv.textContent = title.replace(/[-_]/g,' ').replace(/\b\w/g, c => c.toUpperCase()); // hoofdletters
+});
+</script>
+
+<!-- ======================= Introductie ======================= -->
+<section style="margin-top:20px; padding:20px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+    <h2 style="margin-bottom:15px;">CSV-bestand importeren</h2>
+    <p>Selecteer een CSV-bestand met personen om deze direct toe te voegen aan de stamboom.</p>
+</section>
+
+<!-- ======================= CSV Import Formulier ======================= -->
+<form id="importForm" style="display:flex; flex-direction:column; gap:15px; max-width:500px; margin:0 auto; align-items:center;">
+    <label for="csvFileInput">Selecteer CSV-bestand:</label> <!-- label voor file input -->
+    <input type="file" id="csvFileInput" accept=".csv"> <!-- input voor CSV-bestand -->
+    <button type="submit" style="padding:10px 20px; background:#1E90FF; color:#fff; border:none; border-radius:5px; cursor:pointer; width:200px;">
+        Upload & Verwerk CSV
+    </button>
+</form>
+<p id="importStatus" style="margin-top:10px; font-weight:bold; text-align:center;"></p> <!-- status/feedback -->
+
+<!-- ======================= Footer ======================= -->
+<div id="footer-placeholder"></div>
+<script>
+fetch('/MyFamTreeCollab/Layout/Footer.html') // Haal Footer HTML op
+    .then(resp => resp.text())                 // converteer naar tekst
+    .then(data => { document.getElementById('footer-placeholder').innerHTML = data; }); // injecteer Footer
 </script>
 
 <!-- ======================= Dependencies ======================= -->
-<script src="../js/schema.js"></script>       <!-- CSV ↔ object conversie logica, moet eerst -->
-<script src="../js/idGenerator.js"></script>  <!-- Unieke ID generator, window.genereerCode -->
-<script src="../js/storage.js"></script>      <!-- StamboomStorage (sessionStorage API) -->
+<script src="../js/schema.js"></script>       <!-- CSV ↔ object conversie logica -->
+<script src="../js/idGenerator.js"></script>  <!-- Unieke ID generator -->
+<script src="../js/storage.js"></script>      <!-- StamboomStorage API -->
 
-<!-- ======================= IMPORT LOGICA ======================= -->
-<script src="../js/import.js"></script>       <!-- CSV import logica, wacht op DOMContentLoaded -->
+<!-- ======================= IMPORT JS ======================= -->
+<script src="../js/import.js"></script>       <!-- CSV import logica -->
 
 </body>
 </html>
