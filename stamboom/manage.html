@@ -76,6 +76,7 @@ document.addEventListener('DOMContentLoaded', ()=>{ // wacht tot DOM geladen
 
     // ======================= DOM ELEMENTEN =======================
     const tableBody = document.querySelector('#manageTable tbody'); // doel tbody voor rijen
+    const theadRow = document.querySelector('#manageTable thead tr'); // doel voor headers
     const addBtn = document.getElementById('addBtn'); // nieuwe persoon knop
     const refreshBtn = document.getElementById('refreshBtn'); // refresh tabel knop
     const saveBtn = document.getElementById('saveBtn'); // opslaan knop
@@ -88,18 +89,39 @@ document.addEventListener('DOMContentLoaded', ()=>{ // wacht tot DOM geladen
 
     // ======================= INIT DATA =======================
     let dataset = StamboomStorage.get(); // haal data uit storage
-    renderTable(dataset); // initial render van tabel
+
+    // =======================
+    // BUILD HEADER FUNCTIE
+    // =======================
+    function buildHeader(){
+        theadRow.innerHTML = ''; // lege header eerst
+        const thRel = document.createElement('th'); // eerste kolom: Relatie
+        thRel.textContent = 'Relatie'; // tekst
+        theadRow.appendChild(thRel); // toevoegen aan header
+        StamboomSchema.fields.forEach(field => { // loop over alle schema velden
+            const th = document.createElement('th'); // maak th element
+            th.textContent = field; // veldnaam als kolomnaam
+            theadRow.appendChild(th); // voeg toe aan header
+        });
+    }
 
     // ======================= TABEL RENDEREN =======================
-    function renderTable(data){ // render dataset in tabel
-        tableBody.innerHTML = ''; // clear oude rijen
+    function renderTable(data){
+        buildHeader(); // header altijd eerst renderen
+        tableBody.innerHTML = ''; // tbody leegmaken
         if(data.length === 0){ // geen data aanwezig
-            tableBody.innerHTML = '<tr><td colspan="'+(StamboomSchema.fields.length+1)+'">Geen personen gevonden</td></tr>'; // fallback bericht
+            // colspan = Relatie kolom + alle schema velden
+            tableBody.innerHTML = '<tr><td colspan="'+(StamboomSchema.fields.length+1)+'">Geen personen gevonden</td></tr>'; 
             return;
         }
         data.forEach(p =>{ // voor elke persoon
             const tr = document.createElement('tr'); // nieuwe rij
             tr.dataset.id = p.ID; // rij-ID
+
+            // Relatie kolom view-only
+            const tdRel = document.createElement('td');
+            tdRel.textContent = p.Relatie || '';
+            tr.appendChild(tdRel); // eerste kolom toevoegen
 
             // velden uit schema
             StamboomSchema.fields.forEach(f =>{
@@ -114,13 +136,11 @@ document.addEventListener('DOMContentLoaded', ()=>{ // wacht tot DOM geladen
                 tr.appendChild(td); // voeg cel toe aan rij
             });
 
-            // Relatie kolom view-only
-            const tdRel = document.createElement('td');
-            tdRel.textContent = p.Relatie || '';
-            tr.prepend(tdRel); // eerste kolom
             tableBody.appendChild(tr); // voeg rij toe aan tabel
         });
     }
+
+    renderTable(dataset); // initial render van tabel
 
     // ======================= REFRESH KNOP =======================
     refreshBtn.addEventListener('click', ()=>{
