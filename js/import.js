@@ -1,86 +1,107 @@
 // =======================================
 // import.js
-// Importeer stamboomData vanuit CSV
-// CSV wordt verwerkt en toegevoegd aan de dataset
-// Wijzigingen opslaan via StamboomStorage.set(dataset)
+// CSV import met PapaParse
+// Ondersteunt automatische delimiter detectie
+// Ondersteunt lege cellen (;;)
+// Ondersteunt Excel CSV UTF-8
+// Slaat data op via StamboomStorage
 // =======================================
 
 // Voeg click event toe aan import knop
-document.getElementById("importBtn").addEventListener("click", async function () {
+document.getElementById("importBtn").addEventListener("click", function () { // start import wanneer gebruiker op knop klikt
 
-    // Status element voor berichten aan de gebruiker
-    const status = document.getElementById("importStatus");
+    const status = document.getElementById("importStatus"); // element voor statusmeldingen
 
     try {
 
-        // -------------------------------
-        // Controleer of StamboomStorage bestaat
-        // -------------------------------
-        if (typeof StamboomStorage === "undefined") { // Reference check
-            status.innerHTML = "❌ StamboomStorage is niet beschikbaar. Laad eerst storage.js!";
-            status.style.color = "red";
-            console.error("StamboomStorage is undefined. Zorg dat storage.js vóór import.js geladen wordt.");
-            return; // Stop de functie als storage niet bestaat
+        // Controleer of storage beschikbaar is
+        if (typeof StamboomStorage === "undefined") { // check of storage.js geladen is
+            status.innerHTML = "❌ storage.js niet geladen"; // toon foutmelding
+            status.style.color = "red"; // kleur rood bij fout
+            return; // stop uitvoering
         }
 
-        // -------------------------------
-        // Gebruik bestand uit file input
-        // -------------------------------
-        const fileInput = document.getElementById("importFile"); // Haal de file input op
-        const file = fileInput.files[0]; // Pak het eerste bestand in de input
-        if (!file) { // Controleer of de gebruiker daadwerkelijk een bestand heeft geselecteerd
-            status.innerHTML = "❌ Geen bestand geselecteerd."; // Toon foutmelding
-            status.style.color = "red"; // Rood voor fout
-            return; // Stop de functie
+        // Haal file input op
+        const fileInput = document.getElementById("importFile"); // file input element
+        const file = fileInput.files[0]; // eerste geselecteerde file
+
+        if (!file) { // als geen file geselecteerd
+            status.innerHTML = "❌ Selecteer eerst een CSV bestand"; // toon fout
+            status.style.color = "red"; // kleur rood
+            return; // stop uitvoering
         }
 
-        // -------------------------------
-        // CSV lezen met FileReader
-        // -------------------------------
-        const reader = new FileReader(); // Maak een nieuwe FileReader aan
-        reader.onload = function(e) {
-            const text = e.target.result; // De inhoud van het CSV-bestand als tekst
+        // Toon bezig melding
+        status.innerHTML = "⏳ Importeren..."; // toon bezig status
+        status.style.color = "blue"; // blauw tijdens verwerking
 
-// ======================= CSV verwerken met PapaParse =======================
-// Zorg dat PapaParse beschikbaar is via <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script> in je HTML
+        // Gebruik PapaParse om CSV te lezen
+        Papa.parse(file, {
 
-let newData = []; // array voor nieuwe records
+            header: true, // eerste rij bevat kolomnamen
 
-Papa.parse(file, {
-    header: true, // eerste rij = headers
-    skipEmptyLines: true, // lege regels overslaan
-    dynamicTyping: false, // alles als string houden
-    delimiter: "", // lege string => PapaParse detecteert automatisch
-    complete: function(results) {
-        // results.data bevat array van objecten
-        newData = results.data.map(row => {
-            // eventuele lege cellen als lege string forceren
-            Object.keys(row).forEach(k => {
-                if (row[k] === null || row[k] === undefined) row[k] = "";
-                else row[k] = String(row[k]).trim();
-            });
-            return row;
+            skipEmptyLines: true, // sla lege regels over
+
+            dynamicTyping: false, // alles als tekst bewaren (veilig voor ID's)
+
+            delimiter: "", // auto detect delimiter (PapaParse detecteert automatisch ; , of tab)
+
+            quoteChar: '"', // herken quotes correct
+
+            encoding: "UTF-8", // correct voor Excel UTF-8
+
+            complete: function (results) { // wordt uitgevoerd wanneer parsing klaar is
+
+                let newData = []; // array voor nieuwe records
+
+                results.data.forEach(row => { // loop door alle geïmporteerde rijen
+
+                    let obj = {}; // nieuw object per persoon
+
+                    Object.keys(row).forEach(key => { // loop door alle kolommen
+
+                        obj[key.trim()] = row[key] !== null ? String(row[key]).trim() : ""; // zet waarde of lege string
+
+                    });
+
+                    newData.push(obj); // voeg toe aan dataset
+
+                });
+
+                // haal bestaande data op
+                let existingData = StamboomStorage.get ? StamboomStorage.get() : []; // laad huidige storage
+
+                // combineer datasets
+                let combinedData = existingData.concat(newData); // voeg nieuwe data toe
+
+                // sla op in storage
+                if (StamboomStorage.set) StamboomStorage.set(combinedData); // opslaan
+
+                // succesmelding
+                status.innerHTML = "✅ " + newData.length + " records geïmporteerd"; // toon aantal geïmporteerde records
+                status.style.color = "green"; // groen bij succes
+
+                // console debug info
+                console.log("Import succesvol:", newData); // toon geïmporteerde data
+
+            },
+
+            error: function (error) { // als parsing fout geeft
+
+                status.innerHTML = "❌ CSV leesfout"; // toon foutmelding
+                status.style.color = "red"; // rood bij fout
+                console.error(error); // toon fout in console
+
+            }
+
         });
-            // -------------------------------
-            // Combineren met bestaande data
-            // -------------------------------
-            let existingData = StamboomStorage.get ? StamboomStorage.get() : []; // Haal bestaande dataset op (of lege array)
-            let combinedData = existingData.concat(newData); // Voeg nieuwe data toe aan bestaande
-            if (StamboomStorage.set) StamboomStorage.set(combinedData); // Sla gecombineerde dataset op in centrale storage
 
-            // -------------------------------
-            // Statusmelding
-            // -------------------------------
-            status.innerHTML = "✅ CSV succesvol geïmporteerd en opgeslagen."; // Toon succesmelding
-            status.style.color = "green"; // Groen voor succes
-        };
-        reader.readAsText(file); // Start het uitlezen van het CSV-bestand
+    } catch (error) { // vang onverwachte fouten
 
-    } catch (error) {
+        status.innerHTML = "❌ Import mislukt"; // toon foutmelding
+        status.style.color = "red"; // rood
+        console.error(error); // log fout
 
-        // Fallback voor onverwachte fouten
-        status.innerHTML = "❌ Import mislukt."; // Toon foutmelding
-        status.style.color = "red"; // Rood voor fout
-        console.error(error); // Log de fout in console voor debugging
     }
+
 });
