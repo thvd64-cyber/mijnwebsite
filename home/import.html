@@ -35,20 +35,8 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
         <input type="file" id="importFile" accept=".csv"> 
         <button id="importBtn">Importeer CSV</button>
 
-        <!-- Status & aantal records -->
+        <!-- Statusmelding -->
         <p id="importStatus"></p>
-        <p id="recordCount"></p> <!-- toont totaal aantal personen -->
-
-        <!-- Preview tabel (optioneel, zoals manage) -->
-        <table id="previewTable">
-            <thead>
-                <tr>
-                    <th>Relatie</th>
-                    <!-- overige headers worden dynamisch via JS -->
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
 
     </div>
 </main>
@@ -64,46 +52,5 @@ fetch('/MyFamTreeCollab/Layout/Footer.html')
     .then(data => document.getElementById('footer-placeholder').innerHTML = data);
 </script>
 
-<script>
-// ======================= Dynamische preview =======================
-document.addEventListener('DOMContentLoaded', () => {
-
-    const recordCount = document.getElementById('recordCount'); // teller
-    const previewBody = document.querySelector('#previewTable tbody');
-    const headers = window.StamboomSchema.fields || []; // gebruik schema voor kolommen
-
-    // Bouw table headers dynamisch
-    const theadRow = document.querySelector('#previewTable thead tr');
-    theadRow.innerHTML = '<th>Relatie</th>';
-    headers.forEach(h => {
-        const th = document.createElement('th');
-        th.textContent = h;
-        theadRow.appendChild(th);
-    });
-
-    // functie om preview te tonen na import
-    function renderPreview(data) {
-        previewBody.innerHTML = ''; // reset tabel
-        data.forEach(p => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = '<td>-</td>'; // Relatie leeg bij import
-            headers.forEach(h => {
-                const td = document.createElement('td');
-                td.textContent = p[h] || '';
-                tr.appendChild(td);
-            });
-            previewBody.appendChild(tr);
-        });
-        recordCount.textContent = `Aantal personen in storage: ${data.length}`;
-    }
-
-    // luister op succesvolle import via StamboomStorage
-    document.getElementById('importBtn').addEventListener('click', () => {
-        // korte delay om storage te laten updaten
-        setTimeout(() => {
-            const data = window.StamboomStorage.get() || [];
-            renderPreview(data);
-        }, 200);
-    });
-});
-</script>
+</body>
+</html>
