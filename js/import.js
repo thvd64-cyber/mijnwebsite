@@ -1,56 +1,71 @@
-// ======================= import.js – eenvoudige CSV import =======================
-document.addEventListener('DOMContentLoaded', () => { // Wacht tot het volledige DOM geladen is
+// =======================================
+// import.js
+// Importeer CSV naar stamboomData
+// Zelfde structuur als export
+// =======================================
 
-    // ======================= DOM ELEMENTEN OPHALEN =======================
-    const fileInput = document.getElementById('csvFileInput'); // input element voor CSV-bestand
-    const uploadBtn = document.getElementById('uploadBtn');    // upload knop
-    const status = document.getElementById('importStatus');    // element voor status/feedback
+const headers = [ // Kolommen exact gelijk aan export
+    "ID",
+    "Doopnaam",
+    "Roepnaam",
+    "Prefix",
+    "Achternaam",
+    "Geslacht",
+    "Geboortedatum",
+    "Geboorteplaats",
+    "Overlijdensdatum",
+    "Overlijdensplaats",
+    "Vader",
+    "Moeder ID",
+    "Partner ID",
+    "Huwelijksdatum",
+    "Huwelijksplaats",
+    "Opmerkingen",
+    "Adres",
+    "ContactInfo",
+    "URL"
+];
 
-    // ======================= FUNCTIE OM CSV TE VERWERKEN =======================
-    function handleFile(file) {
-        if (!file) return; // stop als er geen bestand geselecteerd is
+document.getElementById("importBtn").addEventListener("click", async function () { // Klik event
 
-        const reader = new FileReader(); // maak een FileReader om CSV te lezen
+    const fileInput = document.getElementById("importFile"); // Selecteer file input
+    const status = document.getElementById("importStatus"); // Selecteer status element
 
-        reader.onload = function(event) {
-            const text = event.target.result;               // haal CSV tekst op
-            let lines = text.split(/\r?\n/).filter(l => l.trim() !== ""); // split in regels en verwijder lege regels
-
-            if(lines.length < 2){                            // controleer of er minstens 2 regels zijn (header + data)
-                status.textContent = "⚠️ CSV bevat geen data rijen.";
-                return;
-            }
-
-            const data = [];                                 // buffer voor alle rijen
-
-            // start vanaf index 1 om header over te slaan
-            for(let i = 1; i < lines.length; i++){
-                const cols = lines[i].split(',');           // split elke regel op komma
-                const person = {};                           // nieuw object voor deze rij
-                for(let j=0; j<19; j++){                     // verwacht 19 kolommen
-                    person[`Kolom${j+1}`] = cols[j] || ""; // vul kolom, leeg als niet aanwezig
-                }
-                data.push(person);                            // voeg toe aan dataset
-            }
-
-            // opslaan in sessionStorage (kan vervangen door StamboomStorage.get/set als gewenst)
-            sessionStorage.setItem('stamboomData', JSON.stringify(data));
-
-            // statusmelding naar gebruiker
-            status.textContent = `✅ CSV geladen: ${data.length} rijen toegevoegd.`;
-        };
-
-        reader.onerror = function(){
-            status.textContent = "❌ Fout bij het lezen van het bestand."; // foutmelding
-        };
-
-        reader.readAsText(file); // start lezen CSV
+    if (!fileInput.files.length) { // Controle of bestand gekozen is
+        status.innerHTML = "❌ Geen bestand geselecteerd.";
+        status.style.color = "red";
+        return;
     }
 
-    // ======================= EVENT LISTENER UPLOAD KNOP =======================
-    uploadBtn.addEventListener('click', () => {
-        const file = fileInput.files[0]; // pak geselecteerd bestand
-        handleFile(file);                 // verwerk CSV
-    });
+    const file = fileInput.files[0]; // Pak eerste geselecteerde file
+    const text = await file.text(); // Lees bestand als tekst
 
-}); // einde DOMContentLoaded
+    const lines = text.split("\n").filter(line => line.trim() !== ""); // Splits op regels
+
+    if (lines.length <= 1) { // Alleen header aanwezig
+        status.innerHTML = "❌ Geen data gevonden in CSV.";
+        status.style.color = "red";
+        return;
+    }
+
+    const data = []; // Nieuwe array voor personen
+
+    for (let i = 1; i < lines.length; i++) { // Start bij 1 (sla header over)
+
+        const values = lines[i].split(","); // Splits regel op komma
+
+        const person = {}; // Nieuw persoon object
+
+        headers.forEach((header, index) => { // Loop over kolommen
+            person[header] = values[index] ? values[index].replace(/^"|"$/g,"") : ""; // Koppel waarde aan kolom
+        });
+
+        data.push(person); // Voeg persoon toe aan array
+    }
+
+    localStorage.setItem("stamboomData", JSON.stringify(data)); // Sla data op in localStorage
+    localStorage.setItem("importFileName", file.name); // Bewaar bestandsnaam voor toekomstige export
+
+    status.innerHTML = "✅ Import succesvol: " + data.length + " personen geladen.";
+    status.style.color = "green";
+});
