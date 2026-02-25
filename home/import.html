@@ -1,77 +1,109 @@
-<!-- ======================= home/import.html ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief -->
     <title>MyFamTreeCollab - Import</title> <!-- Browser tab titel -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- Externe CSS -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- CSS koppeling -->
 </head>
 <body>
+
 <!-- ======================= TopBar ======================= -->
-<div id="topbar-placeholder"></div>  <!-- container voor TopBar content -->
+<div id="topbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html') // Haal TopBar HTML op
-    .then(resp => resp.text())                 // Converteer response naar tekst
-    .then(data => { document.getElementById('topbar-placeholder').innerHTML = data; }); // Injecteer TopBar
+fetch('/MyFamTreeCollab/Layout/TopBar.html')
+    .then(resp => resp.text())
+    .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
 </script>
 
 <!-- ======================= Navbar ======================= -->
-<div id="Navbar-placeholder"></div> <!-- container voor Navbar -->
+<div id="Navbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // Haal Navbar op
+fetch('/MyFamTreeCollab/Layout/Navbar.html')
     .then(resp => resp.text())
-    .then(data => {
-        const placeholder = document.getElementById('Navbar-placeholder'); // placeholder ophalen
-        if(placeholder) placeholder.innerHTML = data; // injecteer Navbar
-        else console.error('Navbar-placeholder niet gevonden'); // fallback debug
-    });
+    .then(data => document.getElementById('Navbar-placeholder').innerHTML = data);
 </script>
 
 <!-- ======================= Pagina Titel ======================= -->
-<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const pageTitleDiv = document.getElementById('pageTitle'); // doel div
-    const title = "Import";                                     // titel tekst
-    pageTitleDiv.textContent = title.replace(/[-_]/g,' ').replace(/\b\w/g, c => c.toUpperCase()); // format
-});
-</script>
+<div id="pageTitle" style="font-size:1.5rem;font-weight:bold;margin-bottom:15px;">Import</div>
 
-<!-- ======================= CSV Import Formulier ======================= -->
-<section style="margin-top:20px; padding:20px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05); max-width:600px; margin:auto;">
-    <h2 style="margin-bottom:15px;">CSV Import</h2>
-    <p>Selecteer een CSV-bestand om personen toe te voegen aan de stamboom.</p>
-    <form id="importForm" style="display:flex; flex-direction:column; gap:10px;">
-        <input type="file" id="csvFileInput" accept=".csv"> <!-- CSV bestand -->
-        <button type="submit" style="padding:10px; background:#1E90FF; color:#fff; border:none; border-radius:5px; cursor:pointer; width:200px;">
-            Upload & Verwerk CSV
-        </button>
-        <p id="importStatus" style="font-weight:bold;"></p> <!-- status / feedback -->
-    </form>
-</section>
+<!-- ======================= MAIN ======================= -->
+<main>
+    <div class="container">
 
-<!-- ======================= Preview van geïmporteerde personen ======================= -->
-<div id="personPreview" style="display:none; margin-top:20px; padding:15px; border:1px solid #ccc; border-radius:8px; background:#f9f9f9; max-width:600px; margin-left:auto; margin-right:auto;">
-    <h3>Preview Geïmporteerde Personen</h3>
-    <pre id="previewContent" style="white-space:pre-wrap;"></pre>
-</div>
+        <!-- File select + Import knop -->
+        <input type="file" id="importFile" accept=".csv"> 
+        <button id="importBtn">Importeer CSV</button>
+
+        <!-- Status & aantal records -->
+        <p id="importStatus"></p>
+        <p id="recordCount"></p> <!-- toont totaal aantal personen -->
+
+        <!-- Preview tabel (optioneel, zoals manage) -->
+        <table id="previewTable">
+            <thead>
+                <tr>
+                    <th>Relatie</th>
+                    <!-- overige headers worden dynamisch via JS -->
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+    </div>
+</main>
+
+<!-- ======================= Import Script ======================= -->
+<script src="import.js"></script>
 
 <!-- ======================= Footer ======================= -->
 <div id="footer-placeholder"></div>
 <script>
 fetch('/MyFamTreeCollab/Layout/Footer.html')
     .then(resp => resp.text())
-    .then(data => { document.getElementById('footer-placeholder').innerHTML = data; });
+    .then(data => document.getElementById('footer-placeholder').innerHTML = data);
 </script>
 
-<!-- ======================= Dependencies ======================= -->
-<script src="../js/schemaGlobal.js"></script>  <!-- Globaal schema object -->
-<script src="../js/idGenerator.js"></script>   <!-- Unieke ID generator -->
-<script src="../js/storage.js"></script>       <!-- Centrale StamboomStorage -->
+<script>
+// ======================= Dynamische preview =======================
+document.addEventListener('DOMContentLoaded', () => {
 
-<!-- ======================= IMPORT JS ======================= -->
-<script src="../js/import.js"></script>        <!-- CSV import logica -->
+    const recordCount = document.getElementById('recordCount'); // teller
+    const previewBody = document.querySelector('#previewTable tbody');
+    const headers = window.StamboomSchema.fields || []; // gebruik schema voor kolommen
 
-</body>
-</html>
+    // Bouw table headers dynamisch
+    const theadRow = document.querySelector('#previewTable thead tr');
+    theadRow.innerHTML = '<th>Relatie</th>';
+    headers.forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        theadRow.appendChild(th);
+    });
+
+    // functie om preview te tonen na import
+    function renderPreview(data) {
+        previewBody.innerHTML = ''; // reset tabel
+        data.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td>-</td>'; // Relatie leeg bij import
+            headers.forEach(h => {
+                const td = document.createElement('td');
+                td.textContent = p[h] || '';
+                tr.appendChild(td);
+            });
+            previewBody.appendChild(tr);
+        });
+        recordCount.textContent = `Aantal personen in storage: ${data.length}`;
+    }
+
+    // luister op succesvolle import via StamboomStorage
+    document.getElementById('importBtn').addEventListener('click', () => {
+        // korte delay om storage te laten updaten
+        setTimeout(() => {
+            const data = window.StamboomStorage.get() || [];
+            renderPreview(data);
+        }, 200);
+    });
+});
+</script>
