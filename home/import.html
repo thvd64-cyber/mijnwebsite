@@ -1,55 +1,55 @@
-<!DOCTYPE html>
-<html lang="nl">
+<!DOCTYPE html> <!-- HTML5 document type -->
+<html lang="nl"> <!-- Document in het Nederlands -->
 <head>
-    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief -->
-    <title>MyFamTreeCollab - Import</title> <!-- Browser tab titel -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- CSS koppeling -->
+    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 voor speciale karakters -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Zorgt voor responsieve weergave op mobiel/tablet -->
+    <title>MyFamTreeCollab - Import</title> <!-- Titel van de pagina in de browser tab -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Koppeling naar externe CSS voor styling -->
 </head>
 <body>
 
 <!-- ======================= TopBar ======================= -->
-<div id="topbar-placeholder"></div>
+<div id="topbar-placeholder"></div> <!-- Placeholder div waar TopBar HTML wordt ingeladen -->
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')
-    .then(resp => resp.text())
-    .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
+fetch('/MyFamTreeCollab/Layout/TopBar.html') // Laad TopBar HTML via fetch
+    .then(resp => resp.text())                 // Converteer response naar tekst
+    .then(data => document.getElementById('topbar-placeholder').innerHTML = data); // Plaats TopBar in placeholder
 </script>
 
 <!-- ======================= Navbar ======================= -->
-<div id="Navbar-placeholder"></div>
+<div id="Navbar-placeholder"></div> <!-- Placeholder div voor navigatiebalk -->
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html')
-    .then(resp => resp.text())
-    .then(data => document.getElementById('Navbar-placeholder').innerHTML = data);
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Laad Navbar HTML via fetch
+    .then(resp => resp.text())                // Converteer response naar tekst
+    .then(data => document.getElementById('Navbar-placeholder').innerHTML = data); // Plaats Navbar in placeholder
 </script>
 
 <!-- ======================= Pagina Titel ======================= -->
-<div id="pageTitle" style="font-size:1.5rem;font-weight:bold;margin-bottom:15px;">Import</div>
+<div id="pageTitle" style="font-size:1.5rem;font-weight:bold;margin-bottom:15px;">Import</div> <!-- Titel sectie met inline styling -->
 
 <!-- ======================= MAIN ======================= -->
 <main>
-    <div class="container">
+    <div class="container"> <!-- Container voor content -->
 
         <!-- File select + Import knop -->
-        <input type="file" id="importFile" accept=".csv"> 
-        <button id="importBtn">Importeer CSV</button>
+        <input type="file" id="importFile" accept=".csv"> <!-- Bestandskiezer, alleen .csv bestanden toegestaan -->
+        <button id="importBtn">Importeer CSV</button> <!-- Knop om import te starten -->
 
         <!-- Statusmelding -->
-        <p id="importStatus"></p>
+        <p id="importStatus"></p> <!-- Paragraaf waar status van import getoond wordt (succes/fout) -->
 
     </div>
 </main>
 
 <!-- ======================= Import Script ======================= -->
-<script src="import.js"></script>
+<script src="import.js"></script> <!-- Laad het import.js script dat CSV uitleest en opslaat -->
 
 <!-- ======================= Footer ======================= -->
-<div id="footer-placeholder"></div>
+<div id="footer-placeholder"></div> <!-- Placeholder div voor footer -->
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html')
-    .then(resp => resp.text())
-    .then(data => document.getElementById('footer-placeholder').innerHTML = data);
+fetch('/MyFamTreeCollab/Layout/Footer.html') // Laad footer HTML via fetch
+    .then(resp => resp.text())                 // Converteer response naar tekst
+    .then(data => document.getElementById('footer-placeholder').innerHTML = data); // Plaats footer in placeholder
 </script>
 
 </body>
