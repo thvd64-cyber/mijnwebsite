@@ -3,7 +3,6 @@
 // Importeer stamboomData vanuit CSV
 // CSV wordt verwerkt en toegevoegd aan de dataset
 // Wijzigingen opslaan via StamboomStorage.set(dataset)
-// Locatie: sectie // R/U = Read & Update
 // =======================================
 
 // Voeg click event toe aan import knop
@@ -14,53 +13,57 @@ document.getElementById("importBtn").addEventListener("click", async function ()
 
     try {
 
-        // Open file picker om CSV te selecteren
-        const [fileHandle] = await window.showOpenFilePicker({
-            types: [{ description: "CSV bestand", accept: { "text/csv": [".csv"] } }],
-            multiple: false
-        });
+        // -------------------------------
+        // Gebruik bestand uit file input
+        // -------------------------------
+        const fileInput = document.getElementById("importFile"); // Haal de file input op
+        const file = fileInput.files[0]; // Pak het eerste bestand in de input
+        if (!file) { // Controleer of de gebruiker daadwerkelijk een bestand heeft geselecteerd
+            status.innerHTML = "❌ Geen bestand geselecteerd."; // Toon foutmelding
+            status.style.color = "red"; // Rood voor fout
+            return; // Stop de functie
+        }
 
-        // Bestand openen en tekst uitlezen
-        const file = await fileHandle.getFile();
-        const text = await file.text();
+        // -------------------------------
+        // CSV lezen met FileReader
+        // -------------------------------
+        const reader = new FileReader(); // Maak een nieuwe FileReader aan
+        reader.onload = function(e) {
+            const text = e.target.result; // De inhoud van het CSV-bestand als tekst
 
-        // Split CSV in rijen, eerste rij is headers
-        const lines = text.split("\n").map(line => line.trim()).filter(line => line.length > 0);
-        const headers = lines.shift().split(","); // Haal eerste rij als headers
-
-        // Nieuwe dataset array
-        let newData = [];
-
-        // Loop door elke regel van CSV en maak objecten
-        lines.forEach(line => {
-            const values = line.split(",");
-            let obj = {};
-            headers.forEach((header, index) => {
-                obj[header] = values[index] ? values[index].trim() : ""; // Map waarden op header
+            // -------------------------------
+            // CSV verwerken naar objecten
+            // -------------------------------
+            const lines = text.split("\n").map(l => l.trim()).filter(l => l.length > 0); // Splits regels en verwijder lege
+            const headers = lines.shift().split(","); // Eerste regel = headers
+            let newData = []; // Array om alle personen in op te slaan
+            lines.forEach(line => { // Loop door alle data-regels
+                const values = line.split(","); // Splits regel in cellen
+                let obj = {}; // Maak een object voor één persoon
+                headers.forEach((header, i) => obj[header] = values[i] ? values[i].trim() : ""); // Map elke waarde naar header
+                newData.push(obj); // Voeg object toe aan nieuwe dataset
             });
-            newData.push(obj); // Voeg persoon toe aan nieuwe dataset
-        });
 
-        // Voeg nieuwe data toe aan bestaande StamboomStorage dataset
-        let existingData = StamboomStorage.get() || []; // Haal bestaande data op
-        let combinedData = existingData.concat(newData); // Voeg CSV data toe
+            // -------------------------------
+            // Combineren met bestaande data
+            // -------------------------------
+            let existingData = StamboomStorage.get() || []; // Haal bestaande dataset op (of lege array)
+            let combinedData = existingData.concat(newData); // Voeg nieuwe data toe aan bestaande
+            StamboomStorage.set(combinedData); // Sla gecombineerde dataset op in centrale storage
 
-        // Opslaan van gecombineerde dataset
-        StamboomStorage.set(combinedData);
-
-        // Geef succesbericht
-        status.innerHTML = "✅ CSV succesvol geïmporteerd en opgeslagen.";
-        status.style.color = "green";
+            // -------------------------------
+            // Statusmelding
+            // -------------------------------
+            status.innerHTML = "✅ CSV succesvol geïmporteerd en opgeslagen."; // Toon succesmelding
+            status.style.color = "green"; // Groen voor succes
+        };
+        reader.readAsText(file); // Start het uitlezen van het CSV-bestand
 
     } catch (error) {
-        // Foutmelding indien import mislukt of geannuleerd
-        status.innerHTML = "❌ Import geannuleerd of mislukt.";
-        status.style.color = "red";
-        console.error(error);
+
+        // Fallback voor onverwachte fouten
+        status.innerHTML = "❌ Import mislukt."; // Toon foutmelding
+        status.style.color = "red"; // Rood voor fout
+        console.error(error); // Log de fout in console voor debugging
     }
 });
-
-// =======================
-// Functie saveDataset() kan later worden gebruikt
-// Om wijzigingen in tabel direct op te slaan via StamboomStorage.set(dataset)
-// =======================
