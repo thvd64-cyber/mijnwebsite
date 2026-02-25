@@ -48,7 +48,10 @@ document.addEventListener('DOMContentLoaded', () => { // Wacht tot DOM volledig 
         .replace(/\b\w/g, c => c.toUpperCase()); // Zet eerste letter van elk woord hoofdletter
 });
 </script>
-
+<!-- Plaats deze knop direct boven de storage-info -->
+<div style="display:flex; justify-content:flex-start; margin-bottom:10px;">
+    <button class="btn-reset" id="resetBtn">Wis alle data</button>
+</div>
 <!-- ======================= Storage overzicht pagina MyFamTreeCollab  ======================= -->
 <div class="main-container" id="mainContainer"> <!-- Hoofd container voor de content -->
     <div class="storage-info" id="storageInfo"></div> <!-- Info over storage: versie + aantal records -->
