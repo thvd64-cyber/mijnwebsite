@@ -41,48 +41,26 @@ document.getElementById("importBtn").addEventListener("click", async function ()
         reader.onload = function(e) {
             const text = e.target.result; // De inhoud van het CSV-bestand als tekst
 
-// ======================= CSV verwerken met automatische delimiter en lege cellen =======================
-function detectDelimiter(csvText) {
-    const firstLine = csvText.split("\n")[0]; // neem header
-    const delimiters = [';', ',', '\t']; // mogelijke delimiters
-    let maxCount = 0, chosen = ',';
-    delimiters.forEach(d => {
-        const count = firstLine.split(d).length;
-        if (count > maxCount) { maxCount = count; chosen = d; }
-    });
-    return chosen;
-}
+// ======================= CSV verwerken met PapaParse =======================
+// Zorg dat PapaParse beschikbaar is via <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script> in je HTML
 
-const delimiter = detectDelimiter(text); // detecteer delimiter automatisch
-let newData = [];
-const lines = text.split("\n").map(l => l.trim()).filter(l => l.length > 0);
-const headers = lines[0].split(delimiter).map(h => h.trim()); // header keys
+let newData = []; // array voor nieuwe records
 
-lines.slice(1).forEach(line => { // loop over alle regels behalve header
-    let values = [];
-    let current = '';
-    let insideQuotes = false;
-
-    for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-        if (char === '"') insideQuotes = !insideQuotes; // toggle quotes
-        else if (char === delimiter && !insideQuotes) { // delimiter buiten quotes
-            values.push(current); // voeg huidige cel toe
-            current = ''; // reset voor volgende cel
-        } else {
-            current += char; // voeg karakter toe aan huidige cel
-        }
-    }
-    values.push(current); // laatste cel toevoegen
-
-    // verwijder quotes rond waarde
-    values = values.map(v => v.replace(/^"(.*)"$/, '$1').trim());
-
-    // maak object met header keys
-    let obj = {};
-    headers.forEach((header, i) => obj[header] = values[i] !== undefined ? values[i] : "");
-    newData.push(obj);
-});
+Papa.parse(file, {
+    header: true, // eerste rij = headers
+    skipEmptyLines: true, // lege regels overslaan
+    dynamicTyping: false, // alles als string houden
+    delimiter: "", // lege string => PapaParse detecteert automatisch
+    complete: function(results) {
+        // results.data bevat array van objecten
+        newData = results.data.map(row => {
+            // eventuele lege cellen als lege string forceren
+            Object.keys(row).forEach(k => {
+                if (row[k] === null || row[k] === undefined) row[k] = "";
+                else row[k] = String(row[k]).trim();
+            });
+            return row;
+        });
             // -------------------------------
             // Combineren met bestaande data
             // -------------------------------
