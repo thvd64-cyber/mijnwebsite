@@ -28,21 +28,21 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html') // Laad Navbar HTML via fetch
 <div id="pageTitle" style="font-size:1.5rem;font-weight:bold;margin-bottom:15px;">Import</div> <!-- Titel sectie met inline styling -->
 
 <!-- ======================= MAIN ======================= -->
-<main>
-    <div class="container"> <!-- Container voor content -->
+<<main> <!-- Hoofd content van de pagina -->
+    <div class="container"> <!-- Container voor centrale content, geeft padding en layout -->
 
-        <!-- File select + Import knop -->
-        <input type="file" id="importFile" accept=".csv"> <!-- Bestandskiezer, alleen .csv bestanden toegestaan -->
-        <button id="importBtn">Importeer CSV</button> <!-- Knop om import te starten -->
+        <!-- ======================= File select + Import knop ======================= -->
+        <input type="file" id="importFile" accept=".csv"> <!-- Bestandskiezer: alleen CSV-bestanden toegestaan -->
+        <button id="importBtn">Importeer CSV</button> <!-- Knop die de import.js functie triggerd -->
 
-        <!-- Statusmelding -->
-        <p id="importStatus"></p> <!-- Paragraaf waar status van import getoond wordt (succes/fout) -->
+        <!-- ======================= Statusmelding ======================= -->
+        <p id="importStatus"></p> <!-- Hier wordt status van de import weergegeven (succes of fout) -->
 
     </div>
 </main>
 
 <!-- ======================= Import Script ======================= -->
-<script src="import.js"></script> <!-- Laad het import.js script dat CSV uitleest en opslaat -->
+<script src="../js/import.js"></script> <!-- Laad het ../js/import.js script dat CSV uitleest en opslaat -->
 
 <!-- ======================= Footer ======================= -->
 <div id="footer-placeholder"></div> <!-- Placeholder div voor footer -->
