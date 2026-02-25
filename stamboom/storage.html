@@ -128,62 +128,109 @@ document.addEventListener('DOMContentLoaded', function () { // Wacht tot DOM vol
         'Opmerkingen', 'Adres', 'ContactInfo', 'URL'
     ];
 
-    // ===============================
-    // Functie: renderTable
-    // ===============================
-    function renderTable() {
+   // ===============================
+// Functie: renderTable (met kolomfilters)
+// ===============================
+function renderTable() {
 
-        let data = []; // Variabele voor data
+    let data = []; // Variabele voor storage data
 
-        try {
-            data = StamboomStorage.get(); // Haal data op uit storage
-        } catch (e) {
-            console.error("Fout bij ophalen storage:", e); // Log fout
-            data = []; // Fallback naar lege array
-        }
-
-        container.innerHTML = ""; // Oude tabel of melding verwijderen
-
-        info.innerHTML = `Storage versie: ${StamboomStorage.version} | Aantal records: ${data.length}`; // Toon info
-
-        if (!data.length) { // Als geen data aanwezig
-            container.innerHTML = '<div class="empty">Geen data gevonden in localStorage.</div>'; // Toon melding
-            return; // Stop render functie
-        }
-
-        const table = document.createElement('table'); // Maak nieuwe tabel
-        table.classList.add('storage-table'); // Voeg class toe voor styling
-
-        const thead = document.createElement('thead'); // Maak header container
-        const headerRow = document.createElement('tr'); // Maak rij voor headers
-
-        columns.forEach(col => { // Voor elke kolom
-            const th = document.createElement('th'); // Maak header cel
-            th.textContent = col; // Plaats kolomnaam
-            headerRow.appendChild(th); // Voeg toe aan header rij
-        });
-
-        thead.appendChild(headerRow); // Voeg header rij toe aan thead
-        table.appendChild(thead);     // Voeg thead toe aan tabel
-
-        const tbody = document.createElement('tbody'); // Maak tbody container
-        const fragment = document.createDocumentFragment(); // Fragment voor performance
-
-        data.forEach(person => { // Voor elke persoon in data
-            const row = document.createElement('tr'); // Maak nieuwe rij
-            columns.forEach(col => { // Voor elke kolom
-                const td = document.createElement('td'); // Maak cel
-                td.textContent = person[col] ?? ''; // Plaats waarde, null-safe
-                row.appendChild(td); // Voeg cel toe aan rij
-            });
-            fragment.appendChild(row); // Voeg rij toe aan fragment
-        });
-
-        tbody.appendChild(fragment); // Voeg alle rijen in één keer toe aan tbody
-        table.appendChild(tbody);    // Voeg tbody toe aan tabel
-        container.appendChild(table); // Voeg tabel toe aan DOM
+    try {
+        data = StamboomStorage.get(); // Haal data op uit storage
+    } catch (e) {
+        console.error("Fout bij ophalen storage:", e); // Log fout
+        data = []; // Fallback naar lege array
     }
 
+    container.innerHTML = ""; // Wis bestaande content
+
+    info.innerHTML = `Storage versie: ${StamboomStorage.version} | Aantal records: ${data.length}`; // Toon info
+
+    if (!data.length) { // Als geen data aanwezig
+        container.innerHTML = '<div class="empty">Geen data gevonden in localStorage.</div>'; // Toon melding
+        return; // Stop functie
+    }
+
+    const table = document.createElement('table'); // Maak tabel
+    table.classList.add('storage-table'); // Voeg styling class toe
+
+    const thead = document.createElement('thead'); // Header container
+
+    // ===============================
+    // Header rij (kolomnamen)
+    // ===============================
+    const headerRow = document.createElement('tr'); // Rij voor kolomnamen
+
+    columns.forEach(col => {
+        const th = document.createElement('th'); // Maak header cel
+        th.textContent = col; // Zet kolomnaam
+        headerRow.appendChild(th); // Voeg toe
+    });
+
+    thead.appendChild(headerRow); // Voeg header rij toe
+
+    // ===============================
+    // Filter rij (inputs)
+    // ===============================
+    const filterRow = document.createElement('tr'); // Rij voor filters
+    const filters = {}; // Object om filterwaarden bij te houden
+
+    columns.forEach(col => {
+        const th = document.createElement('th'); // Cel voor input
+        const input = document.createElement('input'); // Maak input veld
+
+        input.type = "text"; // Tekst input
+        input.placeholder = "Filter..."; // Placeholder tekst
+        input.style.width = "95%"; // Volledige breedte
+
+        input.addEventListener('input', function() {
+            filters[col] = this.value.toLowerCase(); // Sla filterwaarde op
+            applyFilters(); // Herfilter tabel
+        });
+
+        th.appendChild(input); // Voeg input toe aan cel
+        filterRow.appendChild(th); // Voeg cel toe aan rij
+    });
+
+    thead.appendChild(filterRow); // Voeg filterrij toe aan thead
+    table.appendChild(thead); // Voeg thead toe aan tabel
+
+    const tbody = document.createElement('tbody'); // Maak tbody
+    table.appendChild(tbody); // Voeg toe aan tabel
+    container.appendChild(table); // Voeg tabel toe aan DOM
+
+    // ===============================
+    // Functie: filter toepassen
+    // ===============================
+    function applyFilters() {
+
+        tbody.innerHTML = ""; // Maak body leeg
+
+        const fragment = document.createDocumentFragment(); // Performance optimalisatie
+
+        const filteredData = data.filter(person => {
+            return columns.every(col => {
+                if (!filters[col]) return true; // Geen filter → altijd tonen
+                const cellValue = (person[col] ?? "").toString().toLowerCase(); // Celwaarde
+                return cellValue.includes(filters[col]); // Check of waarde overeenkomt
+            });
+        });
+
+        filteredData.forEach(person => {
+            const row = document.createElement('tr'); // Nieuwe rij
+
+            columns.forEach(col => {
+                const td = document.createElement('td'); // Cel
+                td.textContent = person[col] ?? ""; // Vul waarde
+                row.appendChild(td); // Voeg toe
+            });
+            fragment.appendChild(row); // Voeg rij toe
+        });
+        tbody.appendChild(fragment); // Plaats alle rijen tegelijk
+    }
+    applyFilters(); // Eerste render
+}
+   
     // ===============================
 // Reset knop functionaliteit
 // ===============================
