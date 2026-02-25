@@ -55,10 +55,7 @@ document.addEventListener('DOMContentLoaded', () => { // Wacht tot DOM volledig 
 <!-- ======================= Storage overzicht pagina MyFamTreeCollab  ======================= -->
 <div class="main-container" id="mainContainer"> <!-- Hoofd container voor de content -->
     <div class="storage-info" id="storageInfo"></div> <!-- Info over storage: versie + aantal records -->
-
     <div id="storageContainer"></div> <!-- Container waar de tabel of lege melding wordt weergegeven -->
-
-    <button class="btn-reset" id="resetBtn">Wis alle data</button> <!-- Knop om alle storage data te wissen -->
 </div>
 
 <!-- ======================= CSS ======================= -->
@@ -188,17 +185,26 @@ document.addEventListener('DOMContentLoaded', function () { // Wacht tot DOM vol
     }
 
     // ===============================
-    // Reset knop functionaliteit
-    // ===============================
-    resetBtn.addEventListener('click', function() {
-        const currentData = StamboomStorage.get(); // Haal huidige data
-        if (!currentData.length) return; // Stop als geen data
-        if (confirm("Weet je zeker dat je alle storage wilt wissen?")) { // Bevestiging
-            StamboomStorage.clear(); // Wis storage
-            renderTable();           // Render tabel opnieuw (nu leeg)
-            console.log("Storage succesvol gewist."); // Log bevestiging
-        }
-    });
+// Reset knop functionaliteit
+// ===============================
+resetBtn.addEventListener('click', function() {
+
+    const currentData = StamboomStorage.get(); // Haal huidige data uit storage
+    if (!currentData.length) return; // Stop direct als er geen records aanwezig zijn
+
+    const confirmMessage = // Bouw duidelijke waarschuwingstekst op
+        "⚠️ WAARSCHUWING ⚠️\n\n" + // Titel
+        "Alle opgeslagen stamboomdata wordt definitief verwijderd.\n\n" + // Consequentie
+        "Maak eerst een EXPORT van je data.\n" + // Veiligheidsadvies
+        "Als je dit niet doet, gaat alle data verloren.\n\n" + // Extra benadrukking
+        "Klik OK om te bevestigen dat je dit begrijpt en toch wilt doorgaan."; // Actie
+
+    if (!confirm(confirmMessage)) return; // Stop als gebruiker annuleert
+
+    StamboomStorage.clear(); // Verwijder alle opgeslagen data
+    renderTable();           // Render tabel opnieuw (nu leeg)
+    console.log("Storage succesvol gewist."); // Log bevestiging in console
+});
 
     // ===============================
     // Initiale render
