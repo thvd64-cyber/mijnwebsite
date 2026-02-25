@@ -41,19 +41,30 @@ document.getElementById("importBtn").addEventListener("click", async function ()
         reader.onload = function(e) {
             const text = e.target.result; // De inhoud van het CSV-bestand als tekst
 
-            // -------------------------------
-            // CSV verwerken naar objecten
-            // -------------------------------
-            const lines = text.split("\n").map(l => l.trim()).filter(l => l.length > 0); // Splits regels en verwijder lege
-            const headers = lines.shift().split(","); // Eerste regel = headers
-            let newData = []; // Array om alle personen in op te slaan
-            lines.forEach(line => { // Loop door alle data-regels
-                const values = line.split(","); // Splits regel in cellen
-                let obj = {}; // Maak een object voor één persoon
-                headers.forEach((header, i) => obj[header] = values[i] ? values[i].trim() : ""); // Map elke waarde naar header
-                newData.push(obj); // Voeg object toe aan nieuwe dataset
-            });
+            // ======================= CSV verwerken met automatische delimiter =======================
+function detectDelimiter(csvText) {
+    const firstLine = csvText.split("\n")[0]; // neem header
+    const delimiters = [';', ',', '\t']; // mogelijke delimiters
+    let maxCount = 0, chosen = ',';
+    delimiters.forEach(d => {
+        const count = firstLine.split(d).length;
+        if (count > maxCount) { maxCount = count; chosen = d; }
+    });
+    return chosen;
+}
 
+const delimiter = detectDelimiter(text); // detecteer delimiter automatisch
+
+let newData = []; // array voor nieuwe records
+text.split("\n").map(l => l.trim()).filter(l => l.length > 0).forEach((line, index) => {
+    if (index === 0) return; // skip header
+    // Regex split die alleen scheiding op delimiter buiten quotes doet
+    const values = line.match(new RegExp(`(".*?"|[^${delimiter}]+)(?=${delimiter}|$)`, "g")).map(v => v.replace(/^"(.*)"$/, '$1').trim());
+    const headers = text.split("\n")[0].split(delimiter).map(h => h.trim()); // header keys
+    let obj = {};
+    headers.forEach((header, i) => obj[header] = values[i] ? values[i].trim() : "");
+    newData.push(obj);
+});
             // -------------------------------
             // Combineren met bestaande data
             // -------------------------------
