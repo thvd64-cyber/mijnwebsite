@@ -1,6 +1,7 @@
 // =======================================
 // import.js
-// Importeer CSV naar stamboomData via StamboomStorage
+// Importeer CSV naar StamboomStorage
+// Preview verwijderd, alleen data upload
 // =======================================
 
 const headers = [ // Kolommen exact gelijk aan export
