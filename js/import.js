@@ -41,7 +41,7 @@ document.getElementById("importBtn").addEventListener("click", async function ()
         reader.onload = function(e) {
             const text = e.target.result; // De inhoud van het CSV-bestand als tekst
 
-            // ======================= CSV verwerken met automatische delimiter =======================
+// ======================= CSV verwerken met automatische delimiter en lege cellen =======================
 function detectDelimiter(csvText) {
     const firstLine = csvText.split("\n")[0]; // neem header
     const delimiters = [';', ',', '\t']; // mogelijke delimiters
@@ -54,15 +54,33 @@ function detectDelimiter(csvText) {
 }
 
 const delimiter = detectDelimiter(text); // detecteer delimiter automatisch
+let newData = [];
+const lines = text.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+const headers = lines[0].split(delimiter).map(h => h.trim()); // header keys
 
-let newData = []; // array voor nieuwe records
-text.split("\n").map(l => l.trim()).filter(l => l.length > 0).forEach((line, index) => {
-    if (index === 0) return; // skip header
-    // Regex split die alleen scheiding op delimiter buiten quotes doet
-    const values = line.match(new RegExp(`(".*?"|[^${delimiter}]+)(?=${delimiter}|$)`, "g")).map(v => v.replace(/^"(.*)"$/, '$1').trim());
-    const headers = text.split("\n")[0].split(delimiter).map(h => h.trim()); // header keys
+lines.slice(1).forEach(line => { // loop over alle regels behalve header
+    let values = [];
+    let current = '';
+    let insideQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') insideQuotes = !insideQuotes; // toggle quotes
+        else if (char === delimiter && !insideQuotes) { // delimiter buiten quotes
+            values.push(current); // voeg huidige cel toe
+            current = ''; // reset voor volgende cel
+        } else {
+            current += char; // voeg karakter toe aan huidige cel
+        }
+    }
+    values.push(current); // laatste cel toevoegen
+
+    // verwijder quotes rond waarde
+    values = values.map(v => v.replace(/^"(.*)"$/, '$1').trim());
+
+    // maak object met header keys
     let obj = {};
-    headers.forEach((header, i) => obj[header] = values[i] ? values[i].trim() : "");
+    headers.forEach((header, i) => obj[header] = values[i] !== undefined ? values[i] : "");
     newData.push(obj);
 });
             // -------------------------------
