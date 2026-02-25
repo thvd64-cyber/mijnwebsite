@@ -14,6 +14,16 @@ document.getElementById("importBtn").addEventListener("click", async function ()
     try {
 
         // -------------------------------
+        // Controleer of StamboomStorage bestaat
+        // -------------------------------
+        if (typeof StamboomStorage === "undefined") { // Reference check
+            status.innerHTML = "❌ StamboomStorage is niet beschikbaar. Laad eerst storage.js!";
+            status.style.color = "red";
+            console.error("StamboomStorage is undefined. Zorg dat storage.js vóór import.js geladen wordt.");
+            return; // Stop de functie als storage niet bestaat
+        }
+
+        // -------------------------------
         // Gebruik bestand uit file input
         // -------------------------------
         const fileInput = document.getElementById("importFile"); // Haal de file input op
@@ -47,9 +57,9 @@ document.getElementById("importBtn").addEventListener("click", async function ()
             // -------------------------------
             // Combineren met bestaande data
             // -------------------------------
-            let existingData = StamboomStorage.get() || []; // Haal bestaande dataset op (of lege array)
+            let existingData = StamboomStorage.get ? StamboomStorage.get() : []; // Haal bestaande dataset op (of lege array)
             let combinedData = existingData.concat(newData); // Voeg nieuwe data toe aan bestaande
-            StamboomStorage.set(combinedData); // Sla gecombineerde dataset op in centrale storage
+            if (StamboomStorage.set) StamboomStorage.set(combinedData); // Sla gecombineerde dataset op in centrale storage
 
             // -------------------------------
             // Statusmelding
