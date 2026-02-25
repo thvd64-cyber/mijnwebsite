@@ -1,71 +1,58 @@
 // =======================================
 // import.js
-// Importeer CSV naar stamboomData
-// Zelfde structuur als export
+// Importeer CSV naar stamboomData via StamboomStorage
 // =======================================
 
 const headers = [ // Kolommen exact gelijk aan export
-    "ID",
-    "Doopnaam",
-    "Roepnaam",
-    "Prefix",
-    "Achternaam",
-    "Geslacht",
-    "Geboortedatum",
-    "Geboorteplaats",
-    "Overlijdensdatum",
-    "Overlijdensplaats",
-    "Vader",
-    "Moeder ID",
-    "Partner ID",
-    "Huwelijksdatum",
-    "Huwelijksplaats",
-    "Opmerkingen",
-    "Adres",
-    "ContactInfo",
-    "URL"
+    "ID","Doopnaam","Roepnaam","Prefix","Achternaam","Geslacht",
+    "Geboortedatum","Geboorteplaats","Overlijdensdatum","Overlijdensplaats",
+    "Vader","Moeder ID","Partner ID","Huwelijksdatum","Huwelijksplaats",
+    "Opmerkingen","Adres","ContactInfo","URL"
 ];
 
-document.getElementById("importBtn").addEventListener("click", async function () { // Klik event
+document.getElementById("importBtn").addEventListener("click", async function () {
 
-    const fileInput = document.getElementById("importFile"); // Selecteer file input
-    const status = document.getElementById("importStatus"); // Selecteer status element
+    const fileInput = document.getElementById("importFile"); // file input
+    const status = document.getElementById("importStatus"); // status element
 
-    if (!fileInput.files.length) { // Controle of bestand gekozen is
+    if (!fileInput.files.length) { // check of bestand is gekozen
         status.innerHTML = "❌ Geen bestand geselecteerd.";
         status.style.color = "red";
         return;
     }
 
-    const file = fileInput.files[0]; // Pak eerste geselecteerde file
-    const text = await file.text(); // Lees bestand als tekst
+    const file = fileInput.files[0]; // pak bestand
+    const text = await file.text(); // lees als tekst
 
-    const lines = text.split("\n").filter(line => line.trim() !== ""); // Splits op regels
-
-    if (lines.length <= 1) { // Alleen header aanwezig
+    const lines = text.split("\n").filter(line => line.trim() !== ""); // split op nieuwe lijnen
+    if (lines.length <= 1) { // alleen header aanwezig
         status.innerHTML = "❌ Geen data gevonden in CSV.";
         status.style.color = "red";
         return;
     }
 
-    const data = []; // Nieuwe array voor personen
+    const data = []; // nieuwe dataset
 
-    for (let i = 1; i < lines.length; i++) { // Start bij 1 (sla header over)
-
-        const values = lines[i].split(","); // Splits regel op komma
-
-        const person = {}; // Nieuw persoon object
-
-        headers.forEach((header, index) => { // Loop over kolommen
-            person[header] = values[index] ? values[index].replace(/^"|"$/g,"") : ""; // Koppel waarde aan kolom
+    for (let i = 1; i < lines.length; i++) { // start bij 1 (sla header over)
+        const values = lines[i].split(","); // split op komma
+        const persoon = {}; // nieuw persoon object
+        headers.forEach((header, index) => {
+            persoon[header] = values[index] ? values[index].replace(/^"|"$/g,"") : ""; // map kolommen
         });
-
-        data.push(person); // Voeg persoon toe aan array
+        data.push(persoon); // voeg toe aan array
     }
 
-    localStorage.setItem("stamboomData", JSON.stringify(data)); // Sla data op in localStorage
-    localStorage.setItem("importFileName", file.name); // Bewaar bestandsnaam voor toekomstige export
-
-    status.innerHTML = "✅ Import succesvol: " + data.length + " personen geladen.";
-    status.style.color = "green";
+    try {
+        // ===============================
+        // Opslaan via StamboomStorage
+        // ===============================
+        window.StamboomStorage.set(data); // volledig via StamboomStorage
+        window.StamboomStorage.setImportFileName(file.name); // optioneel: bewaar naam bestand
+        status.innerHTML = `✅ Import succesvol: ${data.length} personen geladen via StamboomStorage.`;
+        status.style.color = "green";
+    } catch (error) {
+        console.error(error);
+        status.innerHTML = "❌ Import mislukt.";
+        status.style.color = "red";
+    }
 });
