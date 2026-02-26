@@ -1,8 +1,4 @@
-<!-- ======================= stamboom/manage.html v1.0.1 ======================= -->
-<!-- Laadt stamboombeheerinterface en vult tabel dynamisch uit StamboomStorage. -->
-<!--+Toevoegen toont preview met ID; opslaan schrijft dataset naar storage en rendert tabel. -->
-<!-- .01 +Toevoegen preview verwijderd
-<!-- =========================================================================== -->
+<!-- ======================= stamboom/manage.html v1.0.0 ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -158,13 +154,24 @@ document.addEventListener('DOMContentLoaded', ()=>{ // wacht tot DOM geladen
         alert('Wijzigingen opgeslagen!'); // feedback
     });
 
-    // ======================= +Toevoegen - TOEVOEGEN NIEUWE PERSOON =======================
+    // ======================= TOEVOEGEN NIEUWE PERSOON =======================
     addBtn.addEventListener('click', ()=>{
-    const emptyPerson = {}; // volledig leeg object
-    StamboomSchema.fields.forEach(f => emptyPerson[f]=''); // alle schema velden leeg
-    dataset.push(emptyPerson); // toevoegen aan dataset
-    StamboomStorage.set(dataset); // opslaan
-    renderTable(dataset); // tabel renderen
+        const newPerson = { // default nieuw persoon
+            ID: 'P'+Date.now(), // unieke ID fallback
+            Doopnaam:'', Roepnaam:'', Prefix:'', Achternaam:'', Geslacht:'', Geboortedatum:'', Relatie:'Hoofd-ID', PartnerID:[]
+        };
+        previewContent.textContent = JSON.stringify(newPerson,null,2); // toon JSON preview
+        previewDiv.style.display = 'block'; // preview zichtbaar
+    });
+
+    // ======================= CONFIRM NIEUWE PERSOON =======================
+    confirmBtn.addEventListener('click', ()=>{
+        const person = JSON.parse(previewContent.textContent); // parse JSON
+        dataset.push(person); // voeg toe aan dataset
+        StamboomStorage.set(dataset); // update storage
+        previewDiv.style.display = 'none'; // verberg preview
+        renderTable(dataset); // render tabel opnieuw
+    });
 
     // ======================= ZOEK FUNCTIE =======================
     loadBtn.addEventListener('click', ()=>{
