@@ -1,10 +1,9 @@
-// ======================= js/manage.js v1.0.4 =======================
+// ======================= js/manage.js v1.0.3 =======================
 // → Haalt DOM-elementen, schema en opgeslagen dataset op
 // → Bouwt de tabelkop en rendert de dataset met inputvelden, ID read-only
 // → Bepaalt relaties ten opzichte van een hoofdpersoon voor subset-weergave
 // → .3  C = Create – volledig lege persoon toevoegen // .2 NIEUWE ID NIET MEER GENEREREN
 // .1 Opslaan valideert en bewaart met unieke ID’s; Laad subset toont directe familie op basis van die ID    
-// .4 renderTable + addPersoon
 // ==============================================================================
 
 (function() {
@@ -59,29 +58,17 @@
     // =======================
     // Tabel renderen
     // =======================
-  function renderTable(data, hoofd=null) {
-    tableBody.innerHTML = ''; // tbody leegmaken
-    if(!data || data.length === 0) { // fallback bij lege dataset
-        const tr = document.createElement('tr');
-        const td = document.createElement('td');
-        td.colSpan = FIELDS.length + 1; // Relatie + alle velden
-        td.textContent = 'Geen personen gevonden';
-        td.style.textAlign = 'center';
-        tr.appendChild(td);
-        tableBody.appendChild(tr);
-        return;
-    }
-
-    data.forEach(p => {
-        const tr = document.createElement('tr'); // nieuwe rij
-        const relatie = hoofd ? bepaalRelatie(p, hoofd) : '';
-        if(relatie) tr.className = relatie.toLowerCase().replace(/\s+/g,'-'); // css klasse
-        const tdRel = document.createElement('td'); // Relatie kolom
-        tdRel.textContent = relatie;
-        tr.appendChild(tdRel);
-        FIELDS.forEach(f => { // overige velden
-            const td = document.createElement('td');
-            if(p.hasOwnProperty(f)) { // check veld bestaat
+    function renderTable(data, hoofd=null) {
+        tableBody.innerHTML = ''; // tbody leegmaken
+        data.forEach(p => {
+            const tr = document.createElement('tr'); // nieuwe rij
+            const relatie = hoofd ? bepaalRelatie(p, hoofd) : '';
+            if(relatie) tr.className = relatie.toLowerCase().replace(/\s+/g,'-'); // css klasse
+            const tdRel = document.createElement('td'); // Relatie kolom
+            tdRel.textContent = relatie;
+            tr.appendChild(tdRel);
+            FIELDS.forEach(f => { // overige velden
+                const td = document.createElement('td');
                 if(f === ID_FIELD) td.textContent = p[f] || '';
                 else {
                     const input = document.createElement('input'); // editable input
@@ -89,22 +76,23 @@
                     input.dataset.field = f;
                     td.appendChild(input);
                 }
-            } else {
-                // fallback bij ontbrekend veld
-                td.textContent = '';
-            }
-            tr.appendChild(td);
+                tr.appendChild(td);
+            });
+            tableBody.appendChild(tr); // rij toevoegen
         });
-        tableBody.appendChild(tr);
-    });
-}
+    }
 
 // =======================
 // C = Create – volledig lege persoon toevoegen
 // =======================
 function addPersoon() {
     const nieuw = {}; // volledig leeg object
-    FIELDS.forEach(f => nieuw[f]=''); // zet alle schema velden op lege string
+
+    // Zet alle velden uit schema op lege string
+    FIELDS.forEach(f => {
+        nieuw[f] = ''; // niks erin
+    });
+
     dataset.push(nieuw); // toevoegen aan dataset
     StamboomStorage.set(dataset); // opslaan
     renderTable(dataset); // tabel opnieuw renderen
