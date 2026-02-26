@@ -82,7 +82,7 @@
         });
     }
 
-    // =======================
+// =======================
 // C = Create – volledig lege persoon toevoegen
 // =======================
 function addPersoon() {
