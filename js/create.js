@@ -1,4 +1,4 @@
-// ======================= js/create.js v1.0.1 =======================
+// ======================= js/create.js v1.0.2 =======================
 // 1. Wacht tot de DOM volledig geladen is en haalt alle relevante HTML-elementen op (form, preview, knoppen, waarschuwing)
 // 2. ID-generator wordt gebruikt via de externe `js/idGenerator.js` (window.genereerCode), geen inline functie meer
 // 3. Luistert naar form submit:
@@ -12,6 +12,7 @@
 //    - Haalt `person` object uit preview
 //    - Voegt dit toe aan centrale storage via `StamboomStorage.add()`
 //    - Navigeert naar de Manage pagina
+// 5. Verplichte velden (Doopnaam, Roepnaam, Achternaam, Geslacht) worden nu gecontroleerd vóór het aanmaken van het person object, met een waarschuwing en blokkade van de preview als ze leeg zijn
 // ==============================================================
 
 document.addEventListener('DOMContentLoaded', () => { // Wacht tot de volledige DOM is geladen voordat je elementen ophaalt
@@ -29,26 +30,32 @@ document.addEventListener('DOMContentLoaded', () => { // Wacht tot de volledige 
 
     // ======================= FORM SUBMIT HANDLER =======================
     form.addEventListener('submit', function(e){
-        e.preventDefault(); // Voorkom dat formulier pagina reloadt
+    e.preventDefault();
 
-        const dataset = StamboomStorage.get(); // Haal huidige dataset uit centrale storage
+    const dataset = StamboomStorage.get();
 
-        // Controleer of er al data aanwezig is
-        if(dataset.length > 0){
-            warningMessage.textContent = "Er staat al een persoon in de stamboom. Nieuwe invoer kan hier niet toegevoegd worden."; // waarschuwing tonen
-            warningMessage.style.display = 'block'; // waarschuwing zichtbaar maken
-            previewDiv.style.display = 'none';       // preview verbergen
-            return; // stop verwerking
-        }
+    if(dataset.length > 0){
+        warningMessage.textContent = "Er staat al een persoon in de stamboom. Nieuwe invoer kan hier niet toegevoegd worden.";
+        warningMessage.style.display = 'block';
+        previewDiv.style.display = 'none';
+        return;
+    }
 
-        // ======================= FORMULIER WAARDEN OPHALEN =======================
+     // ======================= FORMULIER WAARDEN OPHALEN =======================
         const doopnaam = document.getElementById('doopnaam').value.trim(); // doopnaam
         const roepnaam = document.getElementById('roepnaam').value.trim(); // roepnaam
         const prefix = document.getElementById('prefix').value.trim();     // prefix
         const achternaam = document.getElementById('achternaam').value.trim(); // achternaam
         const geboorte = document.getElementById('geboortedatum').value;   // geboortedatum
         const geslacht = document.getElementById('geslacht').value;        // geslacht
-
+    // ======================= CHECK VERPLICHTE VELDEN =======================
+    if(!doopnaam || !roepnaam || !achternaam || !geslacht){
+        warningMessage.textContent = "Vul alstublieft alle verplichte velden in: Doopnaam, Roepnaam, Achternaam en Geslacht.";
+        warningMessage.style.display = 'block';
+        previewDiv.style.display = 'none';
+        return; // stop verwerking
+    }
+           
         // ======================= NIEUWE PERSOON OBJECT =======================
         const person = {
             Doopnaam: doopnaam,   // doopnaam
@@ -67,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => { // Wacht tot de volledige 
         // ======================= PREVIEW TONEN =======================
         previewContent.textContent = JSON.stringify(person, null, 2); // JSON leesbaar maken in preview
         previewDiv.style.display = 'block'; // preview zichtbaar maken
+         warningMessage.style.display = 'none'; // waarschuwing weg
     });
 
     // ======================= CONFIRM BUTTON HANDLER =======================
