@@ -21,7 +21,8 @@ document.addEventListener('DOMContentLoaded', () => { // Wacht tot de volledige 
        const letters = (doopnaam[0] || '') + (roepnaam[0] || '') + (achternaam[0] || '') + (geslacht[0] || 'X');
     const cijfers = Math.floor(100 + Math.random() * 900); // random 3-cijferig getal van 100 t/m 999
     return letters + cijfers; // combineer letters + 3 cijfers
-
+    }
+    
     // ======================= FORM SUBMIT HANDLER =======================
     form.addEventListener('submit', function(e){
         e.preventDefault(); // Voorkom dat formulier pagina reloadt
