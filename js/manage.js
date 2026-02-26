@@ -1,9 +1,9 @@
-// ======================= js/manage.js v1.0.3 =======================
+// ======================= js/manage.js v1.0.0 =======================
 // → Haalt DOM-elementen, schema en opgeslagen dataset op
 // → Bouwt de tabelkop en rendert de dataset met inputvelden, ID read-only
 // → Bepaalt relaties ten opzichte van een hoofdpersoon voor subset-weergave
-// → .3  C = Create – volledig lege persoon toevoegen // .2 NIEUWE ID NIET MEER GENEREREN
-// .1 Opslaan valideert en bewaart met unieke ID’s; Laad subset toont directe familie op basis van die ID    
+// → + Toevoegen maakt een nieuwe persoon met unieke ID en voegt deze toe
+// → Opslaan valideert en bewaart wijzigingen, Laad subset toont directe familie
 // ==============================================================================
 
 (function() {
@@ -22,9 +22,9 @@
     // =======================
     // Schema & ID
     // =======================
-    const FIELDS = window.StamboomSchema.fields; // Haalt alle veldnamen uit je stamboom-schema (zoals ID, Naam, Geboortedatum, etc.)
-    const ID_FIELD = FIELDS[0]; // Het eerste veld in het schema wordt beschouwd als het unieke ID-veld
-    let dataset = window.StamboomStorage.get() || []; // Haalt de opgeslagen dataset op uit storage, of start een lege array als er nog niets is
+    const FIELDS = window.StamboomSchema.fields; // alle velden uit schema
+    const ID_FIELD = FIELDS[0]; // "ID" veld
+    let dataset = window.StamboomStorage.get() || []; // volledige dataset ophalen via storage
 
     // =======================
     // Header opbouwen (toegevoegd)
@@ -82,93 +82,45 @@
         });
     }
 
-// =======================
-// C = Create – volledig lege persoon toevoegen
-// =======================
-function addPersoon() {
-    const nieuw = {}; // volledig leeg object
+    // =======================
+    // C = Create – nieuwe persoon toevoegen
+    // =======================
+    function addPersoon() {
+        const nieuw = window.StamboomSchema.empty(); // lege persoon
+        nieuw[ID_FIELD] = window.genereerCode(nieuw, dataset); // unieke ID
+        dataset.push(nieuw); // toevoegen
+        StamboomStorage.set(dataset); // opslaan
+        renderTable(dataset); // renderen
+    }
 
-    // Zet alle velden uit schema op lege string
-    FIELDS.forEach(f => {
-        nieuw[f] = ''; // niks erin
-    });
-
-    dataset.push(nieuw); // toevoegen aan dataset
-    StamboomStorage.set(dataset); // opslaan
-    renderTable(dataset); // tabel opnieuw renderen
-}
-   // =======================
-// R/U = Read & Update – opslaan gewijzigde tabel
-// =======================
-function saveDataset() {
-
-    const rows = tableBody.querySelectorAll('tr'); // Alle zichtbare rijen ophalen
-    const nieuweDataset = []; // Nieuwe dataset die we gaan opbouwen
-    const idSet = new Set(); // Voor duplicate controle
-
-    rows.forEach(tr => {
-
-        const persoon = window.StamboomSchema.empty(); // Leeg persoonobject
-        let origineleID = null; // ID zoals die in de bestaande dataset stond
-
-        FIELDS.forEach((field,index) => {
-
-            const cell = tr.cells[index+1]; // +1 want eerste kolom is Relatie
-
-            if(field === ID_FIELD) {
-
-                const huidigeID = cell.textContent.trim(); // ID uit tabel
-
-                // Probeer originele persoon te vinden
-                origineleID = dataset.find(p => p[ID_FIELD] === huidigeID);
-
-                persoon[field] = huidigeID; // Zet huidige ID
-
-            } else {
-
-                const input = cell.querySelector('input');
-                persoon[field] = input ? input.value.trim() : '';
-
+    // =======================
+    // R/U = Read & Update – opslaan gewijzigde tabel
+    // =======================
+    function saveDataset() {
+        const rows = tableBody.querySelectorAll('tr');
+        const nieuweDataset = [];
+        const idSet = new Set();
+        rows.forEach(tr => {
+            const persoon = window.StamboomSchema.empty();
+            FIELDS.forEach((field,index) => {
+                const cell = tr.cells[index+1]; // +1 want eerste td = Relatie
+                if(field === ID_FIELD) persoon[field] = cell.textContent.trim();
+                else {
+                    const input = cell.querySelector('input');
+                    persoon[field] = input ? input.value.trim() : '';
+                }
+            });
+            if(!window.StamboomSchema.validate(persoon)) {
+                throw new Error(`Validatie mislukt voor ID ${persoon[ID_FIELD]}`);
             }
+            if(idSet.has(persoon[ID_FIELD])) throw new Error(`Duplicate ID: ${persoon[ID_FIELD]}`);
+            idSet.add(persoon[ID_FIELD]);
+            nieuweDataset.push(persoon);
         });
-
-        // =======================
-        // ID Governance Logica
-        // =======================
-
-        if(!persoon[ID_FIELD]) {
-
-            // Controleer of deze rij vroeger een ID had
-            if(origineleID) {
-                throw new Error('Een bestaande ID mag niet verwijderd worden.');
-            }
-
-            // Nieuwe persoon zonder ID → genereer er één
-            persoon[ID_FIELD] = window.genereerCode(persoon, [...dataset, ...nieuweDataset]);
-        }
-
-        // Duplicate controle
-        if(idSet.has(persoon[ID_FIELD])) {
-            throw new Error(`Duplicate ID: ${persoon[ID_FIELD]}`);
-        }
-
-        idSet.add(persoon[ID_FIELD]);
-
-        // Validatie
-        if(!window.StamboomSchema.validate(persoon)) {
-            throw new Error(`Validatie mislukt voor ID ${persoon[ID_FIELD]}`);
-        }
-
-        nieuweDataset.push(persoon);
-
-    });
-
-    dataset = nieuweDataset; // Dataset vervangen
-    StamboomStorage.set(dataset); // Opslaan
-    renderTable(dataset); // Her-renderen zodat nieuwe ID zichtbaar wordt
-
-    alert("Dataset succesvol opgeslagen.");
-}
+        dataset = nieuweDataset;
+        StamboomStorage.set(dataset);
+        alert("Dataset succesvol opgeslagen.");
+    }
 
     // =======================
     // D = Delete – persoon verwijderen
