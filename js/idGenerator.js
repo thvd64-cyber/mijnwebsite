@@ -1,4 +1,4 @@
-<!-- js/idGenerator.js v1.0.0 -->
+<!-- js/idGenerator.js v1.0.1 -->
  <!-- Genereert unieke ID voor een persoon -->
 <!-- Neemt eerste letters van doopnaam, roepnaam, achternaam en geslacht -->
 <!-- Voegt een oplopend nummer van 3 cijfers toe voor uniciteit -->
