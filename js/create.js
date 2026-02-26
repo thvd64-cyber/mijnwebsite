@@ -1,4 +1,6 @@
-// ======================= CREATE.JS – lean integratie met storage.js =======================
+// ======================= js/create.js v1.0.1 =======================
+import { genereerCode } from './js/idGenerator.js'; // Importeer de ID-generator functie uit externe module
+
 document.addEventListener('DOMContentLoaded', () => { // Wacht tot de volledige DOM is geladen voordat je elementen ophaalt
 
     // ======================= DOM ELEMENTEN =======================
@@ -7,12 +9,6 @@ document.addEventListener('DOMContentLoaded', () => { // Wacht tot de volledige 
     const previewContent = document.getElementById('previewContent'); // <pre> element waar preview wordt getoond
     const confirmBtn = document.getElementById('confirmBtn');     // Knop om bevestiging te geven en data op te slaan
     const warningMessage = document.getElementById('warningMessage'); // Div voor waarschuwingen
-
-    // ======================= ID GENERATOR =======================
-    function genereerCode(doopnaam, roepnaam, achternaam, geslacht) {
-        // Unieke ID: eerste letters van doopnaam, roepnaam, achternaam, geslacht, + timestamp
-        return (doopnaam[0] || '') + (roepnaam[0] || '') + (achternaam[0] || '') + (geslacht[0] || 'X') + Date.now();
-    }
 
     // ======================= FORM SUBMIT HANDLER =======================
     form.addEventListener('submit', function(e){
@@ -36,21 +32,12 @@ document.addEventListener('DOMContentLoaded', () => { // Wacht tot de volledige 
         const geboorte = document.getElementById('geboortedatum').value;   // geboortedatum
         const geslacht = document.getElementById('geslacht').value;        // geslacht
 
-        // ======================= NIEUWE PERSOON OBJECT =======================
-        const person = {
-            ID: genereerCode(doopnaam, roepnaam, achternaam, geslacht), // unieke identifier
-            Doopnaam: doopnaam,   // doopnaam
-            Roepnaam: roepnaam,   // roepnaam
-            Prefix: prefix,       // prefix
-            Achternaam: achternaam, // achternaam
-            Geslacht: geslacht,   // geslacht
-            Geboortedatum: geboorte, // geboortedatum
-            Relatie: 'Hoofd-ID',  // automatisch hoofd
-            PartnerID: []         // start met lege partnerlijst
-        };
-
+           // ======================= GENEREER UNIEKE ID VIA ID GENERATOR =======================
+        const uniekeId = genereerCode(doopnaam, roepnaam, achternaam, geslacht); // ID via externe module
+        const persoonData = { id: uniekeId, doopnaam, roepnaam, prefix, achternaam, geboorte, geslacht }; // Object voor storage
+       
         // ======================= PREVIEW TONEN =======================
-        previewContent.textContent = JSON.stringify(person, null, 2); // JSON leesbaar maken in preview
+        previewContent.textContent = JSON.stringify(persoonData, null, 2); // JSON leesbaar maken in preview
         previewDiv.style.display = 'block'; // preview zichtbaar maken
     });
 
