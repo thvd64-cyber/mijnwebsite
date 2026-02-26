@@ -75,8 +75,6 @@ document.addEventListener('DOMContentLoaded', ()=>{ // wacht tot DOM geladen
     const saveBtn = document.getElementById('saveBtn'); // opslaan knop
     const loadBtn = document.getElementById('loadBtn'); // laad persoon knop
     const searchInput = document.getElementById('searchPerson'); // zoekveld
-    const previewDiv = document.getElementById('personPreview'); // preview container
-    const previewContent = document.getElementById('previewContent'); // preview JSON
     const confirmBtn = document.getElementById('confirmBtn'); // confirm knop
     const warningMessage = document.getElementById('warningMessage'); // waarschuwing div
 
@@ -162,7 +160,6 @@ document.addEventListener('DOMContentLoaded', ()=>{ // wacht tot DOM geladen
         const person = JSON.parse(previewContent.textContent); // parse JSON
         dataset.push(person); // voeg toe aan dataset
         StamboomStorage.set(dataset); // update storage
-        previewDiv.style.display = 'none'; // verberg preview
         renderTable(dataset); // render tabel opnieuw
     });
 
