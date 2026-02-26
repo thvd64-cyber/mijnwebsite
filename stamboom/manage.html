@@ -1,5 +1,6 @@
-<!-- ======================= stamboom/manage.html v1.0.1 ======================= -->
+<!-- ======================= stamboom/manage.html v1.0.2 ======================= -->
 <!-- .1 Preview  + warning message verwijderd  -->
+<!-- .2 ID: '', // leeg, gebruiker kan later invullen  -->
 
 <!DOCTYPE html>
 <html lang="nl">
@@ -147,7 +148,7 @@ document.addEventListener('DOMContentLoaded', ()=>{ // wacht tot DOM geladen
 // ======================= TOEVOEGEN NIEUWE PERSOON =======================
 addBtn.addEventListener('click', ()=>{
     const newPerson = { // default nieuw persoon
-        ID: 'P'+Date.now(), // unieke ID fallback
+        ID: '', // leeg, gebruiker kan later invullen
         Doopnaam:'', Roepnaam:'', Prefix:'', Achternaam:'', Geslacht:'', Geboortedatum:'', Relatie:'Hoofd-ID', PartnerID:[]
     };
     dataset.push(newPerson); // direct toevoegen aan dataset
