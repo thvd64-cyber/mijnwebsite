@@ -1,4 +1,19 @@
-// ======================= js/create.js v1.0.0 =======================
+// ======================= js/create.js v1.0.1 =======================
+// 1. Wacht tot de DOM volledig geladen is en haalt alle relevante HTML-elementen op (form, preview, knoppen, waarschuwing)
+// 2. ID-generator wordt gebruikt via de externe `js/idGenerator.js` (window.genereerCode), geen inline functie meer
+// 3. Luistert naar form submit:
+//    - Voorkomt page reload
+//    - Haalt formulierwaarden op
+//    - Controleert of er al een persoon in de storage staat en toont waarschuwing indien ja
+//    - Maakt een `person` object met ingevulde gegevens
+//    - Roept `window.genereerCode(person, dataset)` aan om een unieke ID toe te voegen
+//    - Toont JSON preview van het `person` object
+// 4. Luistert naar confirm button click:
+//    - Haalt `person` object uit preview
+//    - Voegt dit toe aan centrale storage via `StamboomStorage.add()`
+//    - Navigeert naar de Manage pagina
+// ==============================================================
+
 document.addEventListener('DOMContentLoaded', () => { // Wacht tot de volledige DOM is geladen voordat je elementen ophaalt
 
     // ======================= DOM ELEMENTEN =======================
@@ -9,10 +24,8 @@ document.addEventListener('DOMContentLoaded', () => { // Wacht tot de volledige 
     const warningMessage = document.getElementById('warningMessage'); // Div voor waarschuwingen
 
     // ======================= ID GENERATOR =======================
-    function genereerCode(doopnaam, roepnaam, achternaam, geslacht) {
-        // Unieke ID: eerste letters van doopnaam, roepnaam, achternaam, geslacht, + timestamp
-        return (doopnaam[0] || '') + (roepnaam[0] || '') + (achternaam[0] || '') + (geslacht[0] || 'X') + Date.now();
-    }
+    // → Externe generator wordt geladen via <script src="js/idGenerator.js"></script> in HTML
+    // → Geen inline generator nodig, ID wordt toegevoegd via window.genereerCode()
 
     // ======================= FORM SUBMIT HANDLER =======================
     form.addEventListener('submit', function(e){
@@ -38,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => { // Wacht tot de volledige 
 
         // ======================= NIEUWE PERSOON OBJECT =======================
         const person = {
-            ID: genereerCode(doopnaam, roepnaam, achternaam, geslacht), // unieke identifier
             Doopnaam: doopnaam,   // doopnaam
             Roepnaam: roepnaam,   // roepnaam
             Prefix: prefix,       // prefix
@@ -48,6 +60,9 @@ document.addEventListener('DOMContentLoaded', () => { // Wacht tot de volledige 
             Relatie: 'Hoofd-ID',  // automatisch hoofd
             PartnerID: []         // start met lege partnerlijst
         };
+
+        // ======================= UNIEKE ID TOEVOEGEN =======================
+        person.ID = window.genereerCode(person, dataset); // → ID genereren via externe js/idGenerator.js
 
         // ======================= PREVIEW TONEN =======================
         previewContent.textContent = JSON.stringify(person, null, 2); // JSON leesbaar maken in preview
