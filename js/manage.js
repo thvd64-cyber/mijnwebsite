@@ -1,4 +1,11 @@
-// ======================= manage.js – lean CRUD via StamboomStorage =======================
+// ======================= js/manage.js v1.0.0 =======================
+// → Haalt DOM-elementen, schema en opgeslagen dataset op
+// → Bouwt de tabelkop en rendert de dataset met inputvelden, ID read-only
+// → Bepaalt relaties ten opzichte van een hoofdpersoon voor subset-weergave
+// → + Toevoegen maakt een nieuwe persoon met unieke ID en voegt deze toe
+// → Opslaan valideert en bewaart wijzigingen, Laad subset toont directe familie
+// ==============================================================================
+
 (function() {
     'use strict'; // Strikte modus voor veiligere JS
 
