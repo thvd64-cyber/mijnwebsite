@@ -1,6 +1,7 @@
-<!-- ======================= stamboom/manage.html v1.0.2 ======================= -->
+<!-- ======================= stamboom/manage.html v1.0.3 ======================= -->
 <!-- .1 Preview  + warning message verwijderd  -->
 <!-- .2 ID: '' & relatie '' zijn leeg, gebruiker kan later invullen  -->
+<!-- .3 added tree layout CSS  -->
 
 <!DOCTYPE html>
 <html lang="nl">
@@ -51,19 +52,44 @@ document.addEventListener('DOMContentLoaded', () => {
         <button id="addBtn">+ Toevoegen</button> <!-- nieuwe persoon toevoegen -->
         <button id="saveBtn">Opslaan</button> <!-- alle wijzigingen opslaan -->
 
+        <!-- Hier komt de relation tree -->
+        <div id="tree"></div> <!-- container voor tree.js -->
+
         <!-- Manage Tabel -->
         <table id="manageTable" style="width:100%; border-collapse:collapse;">
             <thead><tr></tr></thead> <!-- dynamisch gevuld via JS -->
             <tbody></tbody> <!-- rijen worden dynamisch toegevoegd -->
         </table>
+    </div>
 
-       </div>
+    <!-- ======================= tree layout CSS ======================= -->
+    <style>
+    .tree-node{padding:6px 12px;margin:5px;border-radius:6px;color:white;cursor:pointer;font-family:Arial;} /* node styling */
+    .main{background:#1976D2;}      /* blauw voor hoofdpersoon */
+    .parent{background:#388E3C;}    /* groen voor ouders */
+    .partner{background:#7B1FA2;}   /* paars voor partners */
+    .child{background:#F57C00;}     /* oranje voor kinderen */
+    .sibling{background:#FBC02D;color:black;} /* geel voor siblings */
+    .tree-layer{min-height:40px;display:flex;justify-content:center;margin:20px 0;} /* horizontale rij layout */
+    </style>
 </main>
 
 <!-- ======================= Load JS ======================= -->
 <script src="../js/schema.js"></script> <!-- StamboomSchema structuur -->
 <script src="../js/idGenerator.js"></script> <!-- ID generator -->
 <script src="../js/storage.js"></script> <!-- StamboomStorage module -->
+
+<script type="module">
+import { renderTree } from "../js/tree.js"; // relation builder module
+
+document.addEventListener('DOMContentLoaded', ()=>{
+    const dataset = StamboomStorage.get(); // haal data uit storage
+    if(dataset.length){
+        const hoofdId = dataset[0].ID; // start bij eerste persoon (Hoofd-ID)
+        renderTree(dataset, hoofdId, "tree"); // render de boom in div#tree
+    }
+});
+</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', ()=>{ // wacht tot DOM geladen
@@ -145,16 +171,17 @@ document.addEventListener('DOMContentLoaded', ()=>{ // wacht tot DOM geladen
         StamboomStorage.set(dataset); // schrijf dataset naar storage
         alert('Wijzigingen opgeslagen!'); // feedback
     });
-// ======================= TOEVOEGEN NIEUWE PERSOON =======================
-addBtn.addEventListener('click', ()=>{
-    const newPerson = { // default nieuw persoon
-        ID: '', // leeg, gebruiker kan later invullen
-        Doopnaam:'', Roepnaam:'', Prefix:'', Achternaam:'', Geslacht:'', Geboortedatum:'', Relatie:'', PartnerID:[]
-    };
-    dataset.push(newPerson); // direct toevoegen aan dataset
-    StamboomStorage.set(dataset); // opslaan in storage
-    renderTable(dataset); // render tabel opnieuw
-});
+
+    // ======================= TOEVOEGEN NIEUWE PERSOON =======================
+    addBtn.addEventListener('click', ()=>{
+        const newPerson = { // default nieuw persoon
+            ID: '', // leeg, gebruiker kan later invullen
+            Doopnaam:'', Roepnaam:'', Prefix:'', Achternaam:'', Geslacht:'', Geboortedatum:'', Relatie:'', PartnerID:[]
+        };
+        dataset.push(newPerson); // direct toevoegen aan dataset
+        StamboomStorage.set(dataset); // opslaan in storage
+        renderTable(dataset); // render tabel opnieuw
+    });
 
     // ======================= CONFIRM NIEUWE PERSOON =======================
     confirmBtn.addEventListener('click', ()=>{
