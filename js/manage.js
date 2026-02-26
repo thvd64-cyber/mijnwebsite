@@ -1,9 +1,9 @@
-// ======================= js/manage.js v1.0.1 =======================
+// ======================= js/manage.js v1.0.2 =======================
 // → Haalt DOM-elementen, schema en opgeslagen dataset op
 // → Bouwt de tabelkop en rendert de dataset met inputvelden, ID read-only
 // → Bepaalt relaties ten opzichte van een hoofdpersoon voor subset-weergave
-// → + Toevoegen maakt een nieuwe persoon en voegt deze toe
-// .1Opslaan valideert en bewaart met unieke ID’s; Laad subset toont directe familie op basis van die ID
+// → + Toevoegen maakt een nieuwe persoon en voegt deze toe // .2 NIEUWE ID NIET MEER GENEREREN
+// .1 Opslaan valideert en bewaart met unieke ID’s; Laad subset toont directe familie op basis van die ID    
 // ==============================================================================
 
 (function() {
@@ -22,9 +22,9 @@
     // =======================
     // Schema & ID
     // =======================
-    const FIELDS = window.StamboomSchema.fields; // alle velden uit schema
-    const ID_FIELD = FIELDS[0]; // "ID" veld
-    let dataset = window.StamboomStorage.get() || []; // volledige dataset ophalen via storage
+    const FIELDS = window.StamboomSchema.fields; // Haalt alle veldnamen uit je stamboom-schema (zoals ID, Naam, Geboortedatum, etc.)
+    const ID_FIELD = FIELDS[0]; // Het eerste veld in het schema wordt beschouwd als het unieke ID-veld
+    let dataset = window.StamboomStorage.get() || []; // Haalt de opgeslagen dataset op uit storage, of start een lege array als er nog niets is
 
     // =======================
     // Header opbouwen (toegevoegd)
@@ -84,13 +84,14 @@
 
     // =======================
     // C = Create – nieuwe persoon toevoegen
+    // NIEUWE ID NIET MEER GENEREREN
     // =======================
-    function addPersoon() {
-        const nieuw = window.StamboomSchema.empty(); // lege persoon
-        nieuw[ID_FIELD] = window.genereerCode(nieuw, dataset); // unieke ID
-        dataset.push(nieuw); // toevoegen
-        StamboomStorage.set(dataset); // opslaan
-        renderTable(dataset); // renderen
+function addPersoon() {
+    const nieuw = window.StamboomSchema.empty(); // lege persoon maken
+    
+    dataset.push(nieuw); // toevoegen aan dataset
+    StamboomStorage.set(dataset); // direct opslaan
+    renderTable(dataset); // tabel opnieuw renderen
     }
 
    // =======================
