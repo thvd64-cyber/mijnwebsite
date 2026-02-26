@@ -1,4 +1,4 @@
-<!-- js/idGenerator.js -->
+<!-- js/idGenerator.js v1.0.1 -->
   <!-- Neemt eerste letters van naam en geslacht. -->
   <!-- Voegt oplopend nummer van 3 cijfers toe. -->
   <!-- Controleert dat ID uniek is in dataset. -->
