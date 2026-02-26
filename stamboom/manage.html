@@ -144,16 +144,16 @@ document.addEventListener('DOMContentLoaded', ()=>{ // wacht tot DOM geladen
         StamboomStorage.set(dataset); // schrijf dataset naar storage
         alert('Wijzigingen opgeslagen!'); // feedback
     });
-
-    // ======================= TOEVOEGEN NIEUWE PERSOON =======================
-    addBtn.addEventListener('click', ()=>{
-        const newPerson = { // default nieuw persoon
-            ID: 'P'+Date.now(), // unieke ID fallback
-            Doopnaam:'', Roepnaam:'', Prefix:'', Achternaam:'', Geslacht:'', Geboortedatum:'', Relatie:'Hoofd-ID', PartnerID:[]
-        };
-        previewContent.textContent = JSON.stringify(newPerson,null,2); // toon JSON preview
-        previewDiv.style.display = 'block'; // preview zichtbaar
-    });
+// ======================= TOEVOEGEN NIEUWE PERSOON =======================
+addBtn.addEventListener('click', ()=>{
+    const newPerson = { // default nieuw persoon
+        ID: 'P'+Date.now(), // unieke ID fallback
+        Doopnaam:'', Roepnaam:'', Prefix:'', Achternaam:'', Geslacht:'', Geboortedatum:'', Relatie:'Hoofd-ID', PartnerID:[]
+    };
+    dataset.push(newPerson); // direct toevoegen aan dataset
+    StamboomStorage.set(dataset); // opslaan in storage
+    renderTable(dataset); // render tabel opnieuw
+});
 
     // ======================= CONFIRM NIEUWE PERSOON =======================
     confirmBtn.addEventListener('click', ()=>{
