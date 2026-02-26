@@ -1,9 +1,24 @@
 // ======================= CREATE.JS – lean integratie met storage.js =======================
-// ======================= MODULE IMPORTS =======================
-import { genereerId } from './idGenerator.js';  // Centrale ID generator import
-import { StamboomStorage } from './storage.js'; // Centrale storage module import
-
-// ======================= CREATE.JS – lean integratie =======================
+// Referenties naar DOM elementen
+const form = document.getElementById('addPersonForm');
+const previewDiv = document.getElementById('personPreview');
+const previewContent = document.getElementById('previewContent');
+const confirmBtn = document.getElementById('confirmBtn');
+const warningMessage = document.getElementById('warningMessage');
+// ======================= ID GENERATOR =======================
+function genereerCode(doopnaam, roepnaam, achternaam, geslacht) {
+    return (doopnaam[0]||'') + (roepnaam[0]||'') + (achternaam[0]||'') + (geslacht[0]||'X') + Date.now();
+}
+// ======================= FORM SUBMIT =======================
+form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const dataset = StamboomStorage.get(); // haal dataset via storage
+    // Controleer of er al data is
+    if(dataset.length > 0){
+        warningMessage.textContent = "Er staat al een persoon in de stamboom. Nieuwe invoer kan hier niet toegevoegd worden.";
+        warningMessage.style.display = 'block';
+        previewDiv.style.display = 'none';
+        return;
 document.addEventListener('DOMContentLoaded', () => { // Wacht tot de volledige DOM is geladen voordat je elementen ophaalt
 
     // ======================= DOM ELEMENTEN =======================
@@ -13,60 +28,41 @@ document.addEventListener('DOMContentLoaded', () => { // Wacht tot de volledige 
     const confirmBtn = document.getElementById('confirmBtn');     // Knop om bevestiging te geven en data op te slaan
     const warningMessage = document.getElementById('warningMessage'); // Div voor waarschuwingen
 
-    // ======================= HELPER FUNCTIES =======================
-    /**
-     * Functie om waarden van het formulier op te halen
-     * @returns {Object} - Object met alle formuliervelden
-     */
-    function getFormValues() {
-        return {
-            doopnaam: document.getElementById('doopnaam').value.trim(), 
-            roepnaam: document.getElementById('roepnaam').value.trim(), 
-            prefix: document.getElementById('prefix').value.trim(),     
-            achternaam: document.getElementById('achternaam').value.trim(), 
-            geboorte: document.getElementById('geboortedatum').value,   
-            geslacht: document.getElementById('geslacht').value        
-        };
+    // ======================= ID GENERATOR =======================
+    function genereerCode(doopnaam, roepnaam, achternaam, geslacht) {
+        // Unieke ID: eerste letters van doopnaam, roepnaam, achternaam, geslacht, + timestamp
+        return (doopnaam[0] || '') + (roepnaam[0] || '') + (achternaam[0] || '') + (geslacht[0] || 'X') + Date.now();
     }
-
-    /**
-     * Functie om een nieuw persoon object te maken volgens schema
-     * @param {Object} values - Formulierwaarden
-     * @returns {Object} - Nieuw persoon object
-     */
-    function createPersonObject(values) {
-        const id = genereerId(values.doopnaam, values.roepnaam, values.achternaam, values.geslacht); // Unieke ID aanmaken
-        return {
-            id: id,                    // Unieke ID van persoon
-            Doopnaam: values.doopnaam, // Doopnaam veld
-            Roepnaam: values.roepnaam, // Roepnaam veld
-            Prefix: values.prefix,     // Tussenvoegsel
-            Achternaam: values.achternaam, // Achternaam veld
-            Geslacht: values.geslacht,     // Geslacht veld
-            Geboortedatum: values.geboorte, // Geboortedatum veld
-            Relatie: 'Hoofd-ID',       // Standaard hoofdrelatie
-            PartnerID: []              // Start met lege partnerlijst
-        };
-    }
-
-    /**
-     * Functie om preview te tonen in het DOM
-     * @param {Object} person - Persoon object
-     */
-    function showPreview(person) {
-        previewContent.textContent = JSON.stringify(person, null, 2); // JSON leesbaar maken
-        previewDiv.style.display = 'block'; // Preview zichtbaar maken
-    }
-
-    /**
-     * Functie om waarschuwing te tonen
-     * @param {string} message - Waarschuwingstekst
-     */
-    function showWarning(message) {
-        warningMessage.textContent = message;
-        warningMessage.style.display = 'block';
-        previewDiv.style.display = 'none'; // Preview verbergen bij waarschuwing
-    }
+    // Formulierwaarden
+    const doopnaam = document.getElementById('doopnaam').value.trim();
+    const roepnaam = document.getElementById('roepnaam').value.trim();
+    const prefix = document.getElementById('prefix').value.trim();
+    const achternaam = document.getElementById('achternaam').value.trim();
+    const geboorte = document.getElementById('geboortedatum').value;
+    const geslacht = document.getElementById('geslacht').value;
+    // Nieuwe persoon
+    const person = {
+        ID: genereerCode(doopnaam, roepnaam, achternaam, geslacht),
+        Doopnaam: doopnaam,
+        Roepnaam: roepnaam,
+        Prefix: prefix,
+        Achternaam: achternaam,
+        Geslacht: geslacht,
+        Geboortedatum: geboorte,
+        Relatie: 'Hoofd-ID',
+        PartnerID: []
+    };
+    // Preview tonen
+    previewContent.textContent = JSON.stringify(person, null, 2);
+    previewDiv.style.display = 'block';
+});
+// ======================= CONFIRM HANDLER =======================
+confirmBtn.addEventListener('click', function(){
+    const person = JSON.parse(previewContent.textContent);
+    StamboomStorage.add(person); // voeg toe via centrale storage
+    // Ga naar Manage
+    window.location.href = "https://thvd64-cyber.github.io/MyFamTreeCollab/stamboom/manage.html";
+});
 
     // ======================= FORM SUBMIT HANDLER =======================
     form.addEventListener('submit', function(e){
@@ -76,26 +72,43 @@ document.addEventListener('DOMContentLoaded', () => { // Wacht tot de volledige 
 
         // Controleer of er al data aanwezig is
         if(dataset.length > 0){
-            showWarning("Er staat al een persoon in de stamboom. Nieuwe invoer kan hier niet toegevoegd worden.");
+            warningMessage.textContent = "Er staat al een persoon in de stamboom. Nieuwe invoer kan hier niet toegevoegd worden."; // waarschuwing tonen
+            warningMessage.style.display = 'block'; // waarschuwing zichtbaar maken
+            previewDiv.style.display = 'none';       // preview verbergen
             return; // stop verwerking
         }
 
-        // Haal formulierwaarden op
-        const values = getFormValues();
+        // ======================= FORMULIER WAARDEN OPHALEN =======================
+        const doopnaam = document.getElementById('doopnaam').value.trim(); // doopnaam
+        const roepnaam = document.getElementById('roepnaam').value.trim(); // roepnaam
+        const prefix = document.getElementById('prefix').value.trim();     // prefix
+        const achternaam = document.getElementById('achternaam').value.trim(); // achternaam
+        const geboorte = document.getElementById('geboortedatum').value;   // geboortedatum
+        const geslacht = document.getElementById('geslacht').value;        // geslacht
 
-        // Maak nieuw persoon object volgens schema
-        const person = createPersonObject(values);
+        // ======================= NIEUWE PERSOON OBJECT =======================
+        const person = {
+            ID: genereerCode(doopnaam, roepnaam, achternaam, geslacht), // unieke identifier
+            Doopnaam: doopnaam,   // doopnaam
+            Roepnaam: roepnaam,   // roepnaam
+            Prefix: prefix,       // prefix
+            Achternaam: achternaam, // achternaam
+            Geslacht: geslacht,   // geslacht
+            Geboortedatum: geboorte, // geboortedatum
+            Relatie: 'Hoofd-ID',  // automatisch hoofd
+            PartnerID: []         // start met lege partnerlijst
+        };
 
-        // Toon JSON preview
-        showPreview(person);
+        // ======================= PREVIEW TONEN =======================
+        previewContent.textContent = JSON.stringify(person, null, 2); // JSON leesbaar maken in preview
+        previewDiv.style.display = 'block'; // preview zichtbaar maken
     });
 
     // ======================= CONFIRM BUTTON HANDLER =======================
     confirmBtn.addEventListener('click', function(){
-        const person = JSON.parse(previewContent.textContent); // Haal persoon uit preview
-        StamboomStorage.add(person);                            // Voeg persoon toe aan centrale storage
-        // Navigeer naar Manage pagina
-        window.location.href = "https://thvd64-cyber.github.io/MyFamTreeCollab/stamboom/manage.html";
+        const person = JSON.parse(previewContent.textContent); // haal persoon uit preview
+        StamboomStorage.add(person); // voeg persoon toe aan centrale storage
+        window.location.href = "https://thvd64-cyber.github.io/MyFamTreeCollab/stamboom/manage.html"; // ga naar Manage pagina
     });
 
 }); // einde DOMContentLoaded
