@@ -1,9 +1,9 @@
-// ======================= js/create.js v1.0.0 =======================
+// ======================= js/create.js v1.0.1 =======================
 // Haal eerste letters van doopnaam, roepnaam, achternaam en geslacht (of ‘X’ als geslacht leeg is).
 // Genereer een random 3-cijferig getal tussen 100 en 999.
 // Combineer de letters en cijfers tot één string (bijv. JRDV123).
 // Retourneer deze string als unieke ID voor de persoon.
-// Zorgt ervoor dat de ID 13-cijferige Date.now() variant en geschikt voor Triljoen unieke ID’s.
+// .1 Zorgt ervoor dat de ID 3-cijferige Date.now() variant en geschikt voor 457 miljoen unieke ID’s.
 // ==============================================================
 // ======================= CREATE.JS – lean integratie met storage.js =======================
 document.addEventListener('DOMContentLoaded', () => { // Wacht tot de volledige DOM is geladen voordat je elementen ophaalt
@@ -17,9 +17,10 @@ document.addEventListener('DOMContentLoaded', () => { // Wacht tot de volledige 
 
     // ======================= ID GENERATOR =======================
     function genereerCode(doopnaam, roepnaam, achternaam, geslacht) {
-        // Unieke ID: eerste letters van doopnaam, roepnaam, achternaam, geslacht, + timestamp
-        return (doopnaam[0] || '') + (roepnaam[0] || '') + (achternaam[0] || '') + (geslacht[0] || 'X') + Date.now();
-    }
+        // Unieke ID: eerste letters van doopnaam, roepnaam, achternaam, geslacht, + 3 cijfers
+       const letters = (doopnaam[0] || '') + (roepnaam[0] || '') + (achternaam[0] || '') + (geslacht[0] || 'X');
+    const cijfers = Math.floor(100 + Math.random() * 900); // random 3-cijferig getal van 100 t/m 999
+    return letters + cijfers; // combineer letters + 3 cijfers
 
     // ======================= FORM SUBMIT HANDLER =======================
     form.addEventListener('submit', function(e){
