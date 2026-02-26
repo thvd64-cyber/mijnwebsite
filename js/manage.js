@@ -1,8 +1,8 @@
-// ======================= js/manage.js v1.0.2 =======================
+// ======================= js/manage.js v1.0.3 =======================
 // → Haalt DOM-elementen, schema en opgeslagen dataset op
 // → Bouwt de tabelkop en rendert de dataset met inputvelden, ID read-only
 // → Bepaalt relaties ten opzichte van een hoofdpersoon voor subset-weergave
-// → + Toevoegen maakt een nieuwe persoon en voegt deze toe // .2 NIEUWE ID NIET MEER GENEREREN
+// → .3  C = Create – volledig lege persoon toevoegen // .2 NIEUWE ID NIET MEER GENEREREN
 // .1 Opslaan valideert en bewaart met unieke ID’s; Laad subset toont directe familie op basis van die ID    
 // ==============================================================================
 
@@ -83,17 +83,20 @@
     }
 
     // =======================
-    // C = Create – nieuwe persoon toevoegen
-    // NIEUWE ID NIET MEER GENEREREN
-    // =======================
+// C = Create – volledig lege persoon toevoegen
+// =======================
 function addPersoon() {
-    const nieuw = window.StamboomSchema.empty(); // lege persoon maken
-    
-    dataset.push(nieuw); // toevoegen aan dataset
-    StamboomStorage.set(dataset); // direct opslaan
-    renderTable(dataset); // tabel opnieuw renderen
-    }
+    const nieuw = {}; // volledig leeg object
 
+    // Zet alle velden uit schema op lege string
+    FIELDS.forEach(f => {
+        nieuw[f] = ''; // niks erin
+    });
+
+    dataset.push(nieuw); // toevoegen aan dataset
+    StamboomStorage.set(dataset); // opslaan
+    renderTable(dataset); // tabel opnieuw renderen
+}
    // =======================
 // R/U = Read & Update – opslaan gewijzigde tabel
 // =======================
