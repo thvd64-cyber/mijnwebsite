@@ -1,6 +1,6 @@
 <!-- ======================= stamboom/manage.html v1.0.2 ======================= -->
 <!-- .1 Preview  + warning message verwijderd  -->
-<!-- .2 ID: '', // leeg, gebruiker kan later invullen  -->
+<!-- .2 ID: '' & relatie '' zijn leeg, gebruiker kan later invullen  -->
 
 <!DOCTYPE html>
 <html lang="nl">
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', ()=>{ // wacht tot DOM geladen
 addBtn.addEventListener('click', ()=>{
     const newPerson = { // default nieuw persoon
         ID: '', // leeg, gebruiker kan later invullen
-        Doopnaam:'', Roepnaam:'', Prefix:'', Achternaam:'', Geslacht:'', Geboortedatum:'', Relatie:'Hoofd-ID', PartnerID:[]
+        Doopnaam:'', Roepnaam:'', Prefix:'', Achternaam:'', Geslacht:'', Geboortedatum:'', Relatie:'', PartnerID:[]
     };
     dataset.push(newPerson); // direct toevoegen aan dataset
     StamboomStorage.set(dataset); // opslaan in storage
