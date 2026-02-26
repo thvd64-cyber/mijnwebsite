@@ -1,114 +1,60 @@
-// ======================= CREATE.JS – lean integratie met storage.js =======================
-// Referenties naar DOM elementen
-const form = document.getElementById('addPersonForm');
-const previewDiv = document.getElementById('personPreview');
-const previewContent = document.getElementById('previewContent');
-const confirmBtn = document.getElementById('confirmBtn');
-const warningMessage = document.getElementById('warningMessage');
-// ======================= ID GENERATOR =======================
-function genereerCode(doopnaam, roepnaam, achternaam, geslacht) {
-    return (doopnaam[0]||'') + (roepnaam[0]||'') + (achternaam[0]||'') + (geslacht[0]||'X') + Date.now();
-}
-// ======================= FORM SUBMIT =======================
-form.addEventListener('submit', function(e){
-    e.preventDefault();
-    const dataset = StamboomStorage.get(); // haal dataset via storage
-    // Controleer of er al data is
-    if(dataset.length > 0){
-        warningMessage.textContent = "Er staat al een persoon in de stamboom. Nieuwe invoer kan hier niet toegevoegd worden.";
-        warningMessage.style.display = 'block';
-        previewDiv.style.display = 'none';
-        return;
-document.addEventListener('DOMContentLoaded', () => { // Wacht tot de volledige DOM is geladen voordat je elementen ophaalt
+// ======================= import.js – lean integratie met StamboomStorage =======================
 
-    // ======================= DOM ELEMENTEN =======================
-    const form = document.getElementById('persoonForm');          // Formulier waar gebruiker gegevens invult
-    const previewDiv = document.getElementById('personPreview');  // Container voor JSON preview
-    const previewContent = document.getElementById('previewContent'); // <pre> element waar preview wordt getoond
-    const confirmBtn = document.getElementById('confirmBtn');     // Knop om bevestiging te geven en data op te slaan
-    const warningMessage = document.getElementById('warningMessage'); // Div voor waarschuwingen
+// DOM-elementen ophalen
+const fileInput = document.getElementById('csvFileInput');  // input-element waar de gebruiker CSV kiest
+const status = document.getElementById('importStatus');     // element om feedback/status naar gebruiker te tonen
 
-    // ======================= ID GENERATOR =======================
-    function genereerCode(doopnaam, roepnaam, achternaam, geslacht) {
-        // Unieke ID: eerste letters van doopnaam, roepnaam, achternaam, geslacht, + timestamp
-        return (doopnaam[0] || '') + (roepnaam[0] || '') + (achternaam[0] || '') + (geslacht[0] || 'X') + Date.now();
-    }
-    // Formulierwaarden
-    const doopnaam = document.getElementById('doopnaam').value.trim();
-    const roepnaam = document.getElementById('roepnaam').value.trim();
-    const prefix = document.getElementById('prefix').value.trim();
-    const achternaam = document.getElementById('achternaam').value.trim();
-    const geboorte = document.getElementById('geboortedatum').value;
-    const geslacht = document.getElementById('geslacht').value;
-    // Nieuwe persoon
-    const person = {
-        ID: genereerCode(doopnaam, roepnaam, achternaam, geslacht),
-        Doopnaam: doopnaam,
-        Roepnaam: roepnaam,
-        Prefix: prefix,
-        Achternaam: achternaam,
-        Geslacht: geslacht,
-        Geboortedatum: geboorte,
-        Relatie: 'Hoofd-ID',
-        PartnerID: []
+// Event listener voor CSV selectie
+fileInput.addEventListener('change', function(e){           // trigger wanneer gebruiker een bestand selecteert
+    const file = e.target.files[0];                        // pak het eerste geselecteerde bestand
+    if (!file) return;                                     // stop als gebruiker niets selecteert
+
+    const reader = new FileReader();                       // maak een FileReader object om CSV in te lezen
+
+    // Callback wanneer CSV volledig ingeladen is
+    reader.onload = function(event){                       
+        const text = event.target.result;                  // haal de tekstinhoud van CSV op
+        const lines = text.split(/\r?\n/)                  // splits tekst in regels
+                          .filter(l => l.trim() !== "");   // verwijder lege regels
+
+        const importedData = [];                            // tijdelijke buffer voor succesvol verwerkte personen
+        const existingData = StamboomStorage.get() || [];   // haal huidige dataset op via storage.js
+
+        // Verwerk elke CSV regel
+        lines.forEach((line, index) => {                   
+            const person = StamboomSchema.fromCSV(line);   // converteer CSV naar object volgens schema
+            if (!person) {                                 // controleer of parsing gelukt is
+                console.warn(`Rij ${index+1} kon niet worden verwerkt.`); // log waarschuwing
+                return;                                    // sla deze rij over
+            }
+
+            // Zorg dat PartnerID altijd een lege pipe-string heeft als niet aanwezig
+            if (!person.PartnerID) person.PartnerID = StamboomSchema.stringifyPartners([]); // voorkomt format issues
+
+            // Zorg dat Geslacht altijd een waarde heeft
+            if (!person.Geslacht) person.Geslacht = 'X';   // default onbekend geslacht
+
+            // Voeg alleen toe als ID nog niet bestaat in dataset
+            if (!existingData.some(e => e.ID === person.ID)) { // check op duplicaten
+                existingData.push(person);                   // voeg toe aan centrale dataset
+                importedData.push(person);                   // voeg toe aan buffer voor statusmelding
+            }
+        });
+
+        // Sla geüpdatete dataset op in centrale storage
+        StamboomStorage.set(existingData);                  // update dataset in sessionStorage
+
+        // Toon statusmelding naar gebruiker
+        status.textContent = importedData.length            // controleer of er nieuwe personen zijn toegevoegd
+            ? `✅ CSV geladen: ${importedData.length} personen toegevoegd.` // positief
+            : `⚠️ Geen nieuwe personen toegevoegd.`;       // waarschuwing als geen nieuwe data
     };
-    // Preview tonen
-    previewContent.textContent = JSON.stringify(person, null, 2);
-    previewDiv.style.display = 'block';
+
+    // Callback bij fout tijdens lezen bestand
+    reader.onerror = function(){                           
+        status.textContent = "❌ Fout bij het lezen van het bestand."; // toon foutmelding
+    };
+
+    // Start het lezen van CSV bestand als tekst
+    reader.readAsText(file);                                
 });
-// ======================= CONFIRM HANDLER =======================
-confirmBtn.addEventListener('click', function(){
-    const person = JSON.parse(previewContent.textContent);
-    StamboomStorage.add(person); // voeg toe via centrale storage
-    // Ga naar Manage
-    window.location.href = "https://thvd64-cyber.github.io/MyFamTreeCollab/stamboom/manage.html";
-});
-
-    // ======================= FORM SUBMIT HANDLER =======================
-    form.addEventListener('submit', function(e){
-        e.preventDefault(); // Voorkom dat formulier pagina reloadt
-
-        const dataset = StamboomStorage.get(); // Haal huidige dataset uit centrale storage
-
-        // Controleer of er al data aanwezig is
-        if(dataset.length > 0){
-            warningMessage.textContent = "Er staat al een persoon in de stamboom. Nieuwe invoer kan hier niet toegevoegd worden."; // waarschuwing tonen
-            warningMessage.style.display = 'block'; // waarschuwing zichtbaar maken
-            previewDiv.style.display = 'none';       // preview verbergen
-            return; // stop verwerking
-        }
-
-        // ======================= FORMULIER WAARDEN OPHALEN =======================
-        const doopnaam = document.getElementById('doopnaam').value.trim(); // doopnaam
-        const roepnaam = document.getElementById('roepnaam').value.trim(); // roepnaam
-        const prefix = document.getElementById('prefix').value.trim();     // prefix
-        const achternaam = document.getElementById('achternaam').value.trim(); // achternaam
-        const geboorte = document.getElementById('geboortedatum').value;   // geboortedatum
-        const geslacht = document.getElementById('geslacht').value;        // geslacht
-
-        // ======================= NIEUWE PERSOON OBJECT =======================
-        const person = {
-            ID: genereerCode(doopnaam, roepnaam, achternaam, geslacht), // unieke identifier
-            Doopnaam: doopnaam,   // doopnaam
-            Roepnaam: roepnaam,   // roepnaam
-            Prefix: prefix,       // prefix
-            Achternaam: achternaam, // achternaam
-            Geslacht: geslacht,   // geslacht
-            Geboortedatum: geboorte, // geboortedatum
-            Relatie: 'Hoofd-ID',  // automatisch hoofd
-            PartnerID: []         // start met lege partnerlijst
-        };
-
-        // ======================= PREVIEW TONEN =======================
-        previewContent.textContent = JSON.stringify(person, null, 2); // JSON leesbaar maken in preview
-        previewDiv.style.display = 'block'; // preview zichtbaar maken
-    });
-
-    // ======================= CONFIRM BUTTON HANDLER =======================
-    confirmBtn.addEventListener('click', function(){
-        const person = JSON.parse(previewContent.textContent); // haal persoon uit preview
-        StamboomStorage.add(person); // voeg persoon toe aan centrale storage
-        window.location.href = "https://thvd64-cyber.github.io/MyFamTreeCollab/stamboom/manage.html"; // ga naar Manage pagina
-    });
-
-}); // einde DOMContentLoaded
