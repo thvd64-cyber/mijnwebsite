@@ -1,4 +1,9 @@
 // ======================= CREATE.JS – lean integratie met storage.js =======================
+// ======================= MODULE IMPORTS =======================
+import { genereerId } from './idGenerator.js';  // ID generator import
+import { StamboomStorage } from './storage.js'; // Storage module import
+
+// ======================= CREATE.JS – lean integratie =======================
 document.addEventListener('DOMContentLoaded', () => { // Wacht tot de volledige DOM is geladen voordat je elementen ophaalt
 
     // ======================= DOM ELEMENTEN =======================
