@@ -1,39 +1,76 @@
-<!-- js/idGenerator.js v1.0.1 -->
-  <!-- Neemt eerste letters van naam en geslacht. -->
-  <!-- Voegt oplopend nummer van 3 cijfers toe. -->
-  <!-- Controleert dat ID uniek is in dataset. -->
-  <!-- Gebruikt fallback als een veld leeg is. -->
-(function () {
-    'use strict'; // Strikte modus om fouten en slecht gebruik van variabelen te voorkomen
-    function firstLetter(value, fallback = "X") { // Haalt de eerste letter van een string, fallback indien leeg
-        if (!value || typeof value !== "string") return fallback; // Als waarde leeg of geen string → fallback
-        const trimmed = value.trim(); // Verwijdert spaties voor en na
-        return trimmed ? trimmed[0].toUpperCase() : fallback; // Geeft hoofdletter eerste teken of fallback
-    }
-    function genereerCode(persoon, bestaandeDataset) { // Genereert unieke ID voor een persoon
-        if (!persoon || typeof persoon !== "object") { // Check of het persoon-object geldig is
-            throw new Error("Ongeldig persoon-object voor ID generatie.");
+<!-- js/idGenerator.js v1.0.0 -->
+ <!-- Genereert unieke ID voor een persoon -->
+<!-- Neemt eerste letters van doopnaam, roepnaam, achternaam en geslacht -->
+<!-- Voegt een oplopend nummer van 3 cijfers toe voor uniciteit -->
+<!-- Controleert dat de ID nog niet bestaat in de huidige dataset -->
+<!-- Gebruikt fallback letters als een veld leeg is -->
+<!-- Wordt aangeroepen vanuit create.js bij het aanmaken van een persoon -->
+  
+import './js/idGenerator.js'; // Importeer de externe ID-generator (als module niet standaard, dan via <script> in HTML)
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    // ======================= DOM ELEMENTEN =======================
+    // Haal alle benodigde HTML-elementen op (formulier, preview, knoppen, waarschuwing)
+    const form = document.getElementById('persoonForm');
+    const previewDiv = document.getElementById('personPreview');
+    const previewContent = document.getElementById('previewContent');
+    const confirmBtn = document.getElementById('confirmBtn');
+    const warningMessage = document.getElementById('warningMessage');
+
+    // ======================= FORM SUBMIT HANDLER =======================
+    // Luistert naar submit-event van het formulier
+    form.addEventListener('submit', function(e){
+        e.preventDefault(); // Voorkom standaard pagina reload
+
+        const dataset = StamboomStorage.get(); // Huidige dataset ophalen
+
+        if(dataset.length > 0){
+            // Waarschuwing tonen als er al een persoon aanwezig is
+            warningMessage.textContent = "Er staat al een persoon in de stamboom. Nieuwe invoer kan hier niet toegevoegd worden.";
+            warningMessage.style.display = 'block';
+            previewDiv.style.display = 'none';
+            return;
         }
-        const fields = window.StamboomSchema.fields; // Haalt alle velden van het schema op
-        const idField = fields[0]; // ID is altijd eerste kolom in het schema
-        if (persoon[idField]) { // Als er al een ID is → niet overschrijven
-            return persoon[idField];
-        }
-        const basis =
-            firstLetter(persoon.Doopnaam) + // Eerste letter doopnaam
-            firstLetter(persoon.Roepnaam) + // Eerste letter roepnaam
-            firstLetter(persoon.Achternaam) + // Eerste letter achternaam
-            firstLetter(persoon.Geslacht, "Y"); // Eerste letter geslacht of fallback Y
-        const bestaandeIDs = (bestaandeDataset || []) // Bestaande dataset checken
-            .map(p => p[idField]) // Alleen bestaande ID's eruit halen
-            .filter(Boolean); // Geen lege waarden meenemen
-        let teller = 1; // Start teller op 1
-        let nieuweID; // Variabele voor de nieuwe ID
-        do {
-            nieuweID = basis + String(teller).padStart(3, "0"); // <-- Aantal cijfers (3) na letters
-            teller++; // Teller verhogen voor volgende poging
-        } while (bestaandeIDs.includes(nieuweID)); // Blijf controleren tot unieke ID gevonden is
-        return nieuweID; // Geef de nieuwe unieke ID terug
-    }
-    window.genereerCode = genereerCode; // Maakt functie globaal beschikbaar
-})();
+
+        // ======================= FORMULIER WAARDEN OPHALEN =======================
+        // Haal waarden van inputvelden op
+        const doopnaam = document.getElementById('doopnaam').value.trim();
+        const roepnaam = document.getElementById('roepnaam').value.trim();
+        const prefix = document.getElementById('prefix').value.trim();
+        const achternaam = document.getElementById('achternaam').value.trim();
+        const geboorte = document.getElementById('geboortedatum').value;
+        const geslacht = document.getElementById('geslacht').value;
+
+        // ======================= NIEUWE PERSOON OBJECT =======================
+        // Maak een object aan voor de nieuwe persoon zonder ID
+        const person = {
+            Doopnaam: doopnaam,
+            Roepnaam: roepnaam,
+            Prefix: prefix,
+            Achternaam: achternaam,
+            Geslacht: geslacht,
+            Geboortedatum: geboorte,
+            Relatie: 'Hoofd-ID',
+            PartnerID: []
+        };
+
+        // ======================= UNIEKE ID TOEVOEGEN =======================
+        // Gebruik externe ID-generator voor unieke ID op basis van dataset
+        person.ID = window.genereerCode(person, dataset);
+
+        // ======================= PREVIEW TONEN =======================
+        // Toon JSON-preview van de nieuwe persoon
+        previewContent.textContent = JSON.stringify(person, null, 2);
+        previewDiv.style.display = 'block';
+    });
+
+    // ======================= CONFIRM BUTTON HANDLER =======================
+    // Luistert naar klik op bevestigingsknop
+    confirmBtn.addEventListener('click', function(){
+        const person = JSON.parse(previewContent.textContent); // Haal persoon uit preview
+        StamboomStorage.add(person); // Voeg persoon toe aan centrale storage
+        window.location.href = "https://thvd64-cyber.github.io/MyFamTreeCollab/stamboom/manage.html"; // Ga naar Manage pagina
+    });
+
+}); 
