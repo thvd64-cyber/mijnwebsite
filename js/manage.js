@@ -1,4 +1,4 @@
-// ======================= js/manage.js v1.0.7 =======================
+// ======================= js/manage.js v1.0.8 =======================
 // → Haalt DOM-elementen, schema en opgeslagen dataset op
 // → Bouwt de tabelkop en rendert de dataset met inputvelden, ID read-only
 // → Bepaalt relaties ten opzichte van een hoofdpersoon voor subset-weergave
@@ -7,6 +7,7 @@
 // .5 laad table na laad activatie op basis van search
 // .6 pas table body vullen pas bij knop, headers altijd zichtbaar
 // .7 lazy-load + correcte row kleuren
+// .8 relatie filter 
 // ==============================================================================
 
 (function() {
@@ -44,20 +45,58 @@
         });
     }
 
-    // =======================
-    // Relatie bepalen voor view
-    // =======================
-    function bepaalRelatie(p, hoofd) {
-        if(!hoofd) return ''; // geen hoofd = lege relatie
-        if(p.ID === hoofd.ID) return 'Hoofd-ID'; // persoon is hoofd
-        if(p.ID === hoofd.VaderID || p.ID === hoofd.MoederID) return 'Ouder'; // ouder
-        if(p.ID === hoofd.PartnerID) return 'Partner'; // partner
-        if(p.VaderID === hoofd.ID || p.MoederID === hoofd.ID) return 'Kind'; // kind
-        if(p.VaderID === hoofd.VaderID && p.MoederID === hoofd.MoederID && p.ID !== hoofd.ID) return 'Broer/Zus'; // sibling
-        if(p.PartnerID === hoofd.ID) return 'Partner-Kind'; // partner kind
-        return ''; // anders leeg
-    }
+   // =======================
+// Relatie bepalen voor view
+// =======================
+function bepaalRelatie(p, hoofd) {
 
+    if(!hoofd) return ''; // fallback als geen hoofd
+
+    const vaderHoofd = hoofd.VaderID; // vader van hoofd
+    const moederHoofd = hoofd.MoederID; // moeder van hoofd
+    const partnerHoofd = hoofd.PartnerID; // huidige partner hoofd
+
+    // 1. Hoofd zelf
+    if(p.ID === hoofd.ID) return 'main';
+
+    // 2. Ouders hoofd
+    if(p.ID === vaderHoofd || p.ID === moederHoofd) return 'parent';
+
+    // 3. Huidige partner hoofd
+    if(p.ID === partnerHoofd) return 'partner';
+
+    // 4. Broer/Zus (zelfde ouders, maar niet hoofd)
+    const isSibling =
+        p.ID !== hoofd.ID &&
+        p.VaderID === vaderHoofd &&
+        p.MoederID === moederHoofd;
+
+    if(isSibling) return 'sibling';
+
+    // 5. Kinderen uit huidige huwelijk
+    const isChildSameMarriage =
+        (p.VaderID === hoofd.ID && p.MoederID === partnerHoofd) ||
+        (p.MoederID === hoofd.ID && p.VaderID === partnerHoofd);
+
+    if(isChildSameMarriage) return 'child';
+
+    // 6. Kinderen uit vorig huwelijk hoofd
+    const isChildPreviousMarriage =
+        (p.VaderID === hoofd.ID || p.MoederID === hoofd.ID) &&
+        !isChildSameMarriage;
+
+    if(isChildPreviousMarriage) return 'child';
+
+    // 7. Kinderen uit vorig huwelijk partner
+    const isChildPartnerPrevMarriage =
+        (p.VaderID === partnerHoofd || p.MoederID === partnerHoofd) &&
+        !isChildSameMarriage;
+
+    if(isChildPartnerPrevMarriage) return 'child';
+
+    return ''; // alles wat geen match is
+}
+        
     // =======================
     // Tabel renderen (lazy-load + correcte kleuren)
     // =======================
