@@ -1,9 +1,10 @@
-// ======================= js/manage.js v1.0.0 =======================
+// ======================= js/manage.js v1.0.5 =======================
 // → Haalt DOM-elementen, schema en opgeslagen dataset op
 // → Bouwt de tabelkop en rendert de dataset met inputvelden, ID read-only
 // → Bepaalt relaties ten opzichte van een hoofdpersoon voor subset-weergave
 // → + Toevoegen maakt een nieuwe persoon met unieke ID en voegt deze toe
 // → Opslaan valideert en bewaart wijzigingen, Laad subset toont directe familie
+// .5 laad table na laad activatie op basis van search
 // ==============================================================================
 
 (function() {
@@ -155,12 +156,16 @@
         renderTable(subset, hoofd);
     }
 
-    // =======================
-    // Init
-    // =======================
-    buildHeader(); // header opbouwen bij init
-    renderTable(dataset); // eerste render volledige dataset
-    addBtn.addEventListener('click', addPersoon);
-    saveBtn.addEventListener('click', saveDataset);
-    loadBtn.addEventListener('click', loadDirectRelations);
+   // ======================= Init =======================
+function initPlaceholder() {
+    tableBody.innerHTML = ''; // tbody leegmaken
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = FIELDS.length + 1; // +1 voor Relatie kolom
+    td.textContent = 'Klik op "Laat Person" om data te laden'; 
+    td.style.textAlign = 'center';
+    tr.appendChild(td);
+    tableBody.appendChild(tr);
+}
+initPlaceholder(); // roept dit bij init aan
 })();
