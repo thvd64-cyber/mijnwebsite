@@ -7,7 +7,7 @@
 // .5 laad table na laad activatie op basis van search
 // .6 pas table body vullen pas bij knop, headers altijd zichtbaar
 // .7 lazy-load + correcte row kleuren
-// .8 relatie filter 
+// .8 relatie filter en sortering
 // ==============================================================================
 
 (function() {
@@ -112,6 +112,38 @@ function bepaalRelatie(p, hoofd) {
             tableBody.appendChild(tr); // rij toevoegen
             return; // klaar
         }
+        // =======================
+// Sorteer op relatie + geboortedatum
+// =======================
+if(hoofd){
+
+    const volgorde = {
+        parent: 1,
+        main: 2,
+        partner: 3,
+        sibling: 4,
+        child: 5,
+        '': 6
+    };
+
+    data = [...data].sort((a,b)=>{
+
+        const relA = bepaalRelatie(a, hoofd); // relatie van A
+        const relB = bepaalRelatie(b, hoofd); // relatie van B
+
+        const orderDiff = (volgorde[relA] || 6) - (volgorde[relB] || 6);
+        if(orderDiff !== 0) return orderDiff; // eerst sorteren op relatie
+
+        // Binnen siblings en children sorteren op geboortedatum
+        if(relA === 'sibling' || relA === 'child'){
+            const dateA = new Date(a.Geboortedatum || 0);
+            const dateB = new Date(b.Geboortedatum || 0);
+            return dateA - dateB; // oudste eerst
+        }
+
+        return 0; // anders volgorde behouden
+    });
+}
         data.forEach(p => { // loop over dataset
             const tr = document.createElement('tr'); // nieuwe rij
             const relatie = hoofd ? bepaalRelatie(p, hoofd) : ''; // relatie bepalen
