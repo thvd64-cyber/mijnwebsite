@@ -1,20 +1,19 @@
-<!-- ======================= stamboom/manage.html v1.1.0  ======================= -->
-<!-- relatie in js bouwen  -->
-<!-- =========================================================================== -->
+<!-- ======================= stamboom/manage.html v1.2.0 ======================= -->
+<!-- Lazy-load, zoek, refresh, opslaan en toevoegen en relatie tabel via js -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief -->
     <title>MyFamTreeCollab - Manage</title> <!-- Browser tab titel -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- Verbinden met CSS voor styling -->
-    <style>
+    <link rel="stylesheet" href="../css/style.css"> <!-- CSS styling -->
 </head>
 <body>
+
 <!-- ======================= layout/TopBar.html ======================= -->
 <div id="topbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')
+fetch('/MyFamTreeCollab/Layout/TopBar.html') // TopBar inladen via fetch
     .then(resp => resp.text())
     .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
 </script>
@@ -22,11 +21,11 @@ fetch('/MyFamTreeCollab/Layout/TopBar.html')
 <!-- ======================= layout/Navbar.html ======================= -->
 <div id="Navbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html')
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar inladen via fetch
     .then(resp => resp.text())
     .then(data => {
         const placeholder = document.getElementById('Navbar-placeholder');
-        if(placeholder) placeholder.innerHTML = data;
+        if(placeholder) placeholder.innerHTML = data; // toevoegen aan DOM
         else console.error('Navbar-placeholder niet gevonden');
     });
 </script>
@@ -36,96 +35,40 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const pageTitleDiv = document.getElementById('pageTitle');
-    const title = "Manage Stamboom";
-    pageTitleDiv.textContent = title.replace(/[-_]/g,' ').replace(/\b\w/g, c=>c.toUpperCase());
+    pageTitleDiv.textContent = "Manage Stamboom"; // Titel tonen
 });
 </script>
 
 <!-- ======================= MAIN CONTENT ======================= -->
 <main>
 <div class="container">
+    <!-- Zoekveld en knoppen -->
     <input type="text" id="searchPerson" placeholder="Voer ID of naam in">
     <button id="loadBtn">Laad Persoon</button>
     <button id="refreshBtn">Refresh</button>
     <button id="addBtn">+ Toevoegen</button>
     <button id="saveBtn">Opslaan</button>
 
+    <!-- Manage tabel -->
     <table id="manageTable">
-        <thead>
-            <tr></tr> <!-- headers vullen via manage.js -->
-        </thead>
-        <tbody>
-            <!-- tbody wordt via manage.js gevuld -->
-        </tbody>
+        <thead><tr></tr></thead> <!-- headers vullen via manage.js -->
+        <tbody></tbody> <!-- tbody vullen via manage.js -->
     </table>
 </div>
 </main>
 
-<script src="../js/schema.js"></script>
-<script src="../js/idGenerator.js"></script>
-<script src="../js/storage.js"></script>
-<script src="../js/manage.js"></script> <!-- alles vanuit manage.js -->
+<!-- ======================= SCRIPTS ======================= -->
+<script src="../js/schema.js"></script> <!-- Schema functies -->
+<script src="../js/idGenerator.js"></script> <!-- Unieke ID generator -->
+<script src="../js/storage.js"></script> <!-- Opslag functies -->
+<script src="../js/manage.js"></script> <!-- alle logica: renderTable, relaties, CRUD -->
 
-    // ======================= + TOEVOEGEN =======================
-    addBtn.addEventListener('click', ()=>{
-        const newPerson = StamboomSchema.empty(); // lege persoon
-        newPerson.ID = window.genereerCode(newPerson, dataset); // unieke ID
-        dataset.push(newPerson); // toevoegen
-        StamboomStorage.set(dataset); // opslaan
-        initPlaceholder(); // laat placeholder zien, niet full table
-    });
-
-    // ======================= OPSLAAN =======================
-    saveBtn.addEventListener('click', ()=>{
-        const rows = tableBody.querySelectorAll('tr'); // alle rijen
-        const nieuweDataset = [];
-        const idSet = new Set();
-        rows.forEach(tr=>{
-            const persoon = StamboomSchema.empty();
-            StamboomSchema.fields.forEach((field,i)=>{
-                const cell = tr.cells[i+1]; // eerste td = Relatie
-                if(field==='ID') persoon[field] = cell.textContent.trim();
-                else{
-                    const input = cell.querySelector('input');
-                    persoon[field] = input ? input.value.trim() : '';
-                }
-            });
-            if(!StamboomSchema.validate(persoon)) throw new Error(`Validatie mislukt voor ID ${persoon.ID}`);
-            if(idSet.has(persoon.ID)) throw new Error(`Duplicate ID: ${persoon.ID}`);
-            idSet.add(persoon.ID);
-            nieuweDataset.push(persoon);
-        });
-        dataset = nieuweDataset;
-        StamboomStorage.set(dataset);
-        alert('Wijzigingen opgeslagen!');
-    });
-
-    // ======================= REFRESH =======================
-    refreshBtn.addEventListener('click', ()=>{
-        dataset = StamboomStorage.get();
-        initPlaceholder(); // pas placeholder tonen
-    });
-
-    // ======================= ZOEK / LAAD =======================
-    loadBtn.addEventListener('click', ()=>{
-        const term = searchInput.value.trim().toLowerCase();
-        const filtered = dataset.filter(p=>
-            (p.ID||'').toLowerCase().includes(term) ||
-            (p.Doopnaam||'').toLowerCase().includes(term) ||
-            (p.Roepnaam||'').toLowerCase().includes(term) ||
-            (p.Achternaam||'').toLowerCase().includes(term)
-        );
-        renderTable(filtered); // pas nu tabel renderen
-    });
-
-});
-</script>
 <!-- ======================= FOOTER ======================= -->
 <div id="footer-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html')
-    .then(resp=>resp.text())
-    .then(data=>document.getElementById('footer-placeholder').innerHTML=data);
+fetch('/MyFamTreeCollab/Layout/Footer.html') // Footer inladen via fetch
+    .then(resp => resp.text())
+    .then(data => document.getElementById('footer-placeholder').innerHTML = data);
 </script>
 
 </body>
