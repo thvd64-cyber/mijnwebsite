@@ -1,6 +1,6 @@
-// ======================= manage.js v1.1.1 =======================
+// ======================= manage.js v1.1.2 =======================
 // Beheer module: CRUD + zoek + refresh + placeholder + styling
-// .1 live search selectie 
+// .2 live search selectie update with preview search results
 // ==============================================================================
 
 (function(){
@@ -137,94 +137,55 @@
    // ======================= live search selectie =======================
 (function(){
     'use strict';
-    const tableBody = document.querySelector('#manageTable tbody');
-    const theadRow = document.querySelector('#manageTable thead tr');
-    const addBtn = document.getElementById('addBtn');
-    const saveBtn = document.getElementById('saveBtn');
-    const searchInput = document.getElementById('searchPerson');
-    const refreshBtn = document.getElementById('refreshBtn');
+    const tableBody = document.querySelector('#manageTable tbody'); // manage table body
+    const theadRow = document.querySelector('#manageTable thead tr'); // manage table head
+    const addBtn = document.getElementById('addBtn'); // +Toevoegen knop
+    const saveBtn = document.getElementById('saveBtn'); // Opslaan knop
+    const searchInput = document.getElementById('searchPerson'); // zoekveld
+    const refreshBtn = document.getElementById('refreshBtn'); // refresh knop
 
-    const FIELDS = window.StamboomSchema.fields;
-    const ID_FIELD = FIELDS[0];
-    let dataset = window.StamboomStorage.get() || [];
+    const dataset = window.StamboomStorage.get() || []; // dataset ophalen
 
-    function buildHeader(){
-        theadRow.innerHTML = '';
-        const th = document.createElement('th'); th.textContent=''; theadRow.appendChild(th);
-        FIELDS.forEach(f=>{ const th = document.createElement('th'); th.textContent=f; theadRow.appendChild(th); });
-    }
-
-    function renderTable(data){
-        tableBody.innerHTML='';
-        if(!data || data.length===0){
-            const tr = document.createElement('tr'); const td = document.createElement('td');
-            td.colSpan=FIELDS.length+1; td.textContent='Geen personen gevonden'; td.style.textAlign='center';
-            tr.appendChild(td); tableBody.appendChild(tr); return;
-        }
-        data.forEach(p=>{
-            const tr = document.createElement('tr'); if(p.Relatie) tr.className=p.Relatie;
-            FIELDS.forEach(f=>{
-                const td = document.createElement('td');
-                if(f===ID_FIELD) td.textContent=p[f]||'';
-                else { const input=document.createElement('input'); input.value=p[f]||''; input.dataset.field=f; td.appendChild(input);}
-                tr.appendChild(td);
-            });
-            tableBody.appendChild(tr);
-        });
-    }
-
-    function initPlaceholder(){
-        tableBody.innerHTML=''; const tr=document.createElement('tr'); const td=document.createElement('td');
-        td.colSpan=FIELDS.length+1; td.textContent='Begin met typen om personen te zoeken'; td.style.textAlign='center';
-        tr.appendChild(td); tableBody.appendChild(tr);
-    }
-
-    function addPersoon(){ const nieuw=window.StamboomSchema.empty(); nieuw[ID_FIELD]=window.genereerCode(nieuw,dataset); dataset.push(nieuw); window.StamboomStorage.set(dataset); initPlaceholder(); }
-
-    function saveDataset(){
-        const rows=tableBody.querySelectorAll('tr'); const nieuweDataset=[]; const idSet=new Set();
-        rows.forEach(tr=>{
-            const persoon=window.StamboomSchema.empty();
-            FIELDS.forEach((f,i)=>{
-                const cell=tr.cells[i]; if(f===ID_FIELD) persoon[f]=cell.textContent.trim();
-                else { const input=cell.querySelector('input'); persoon[f]=input?input.value.trim():''; }
-            });
-            if(!window.StamboomSchema.validate(persoon)) throw new Error(`Validatie mislukt voor ID ${persoon[ID_FIELD]}`);
-            if(idSet.has(persoon[ID_FIELD])) throw new Error(`Duplicate ID: ${persoon[ID_FIELD]}`);
-            idSet.add(persoon[ID_FIELD]); nieuweDataset.push(persoon);
-        });
-        dataset=nieuweDataset; window.StamboomStorage.set(dataset); alert('Dataset succesvol opgeslagen');
-    }
-
-    function liveSearch(){
+    // ======================= live search functie =======================
+    function searchPerson(){
         const term = searchInput.value.trim().toLowerCase();
-        if(!term){ initPlaceholder(); return; }
-        const results = dataset.filter(p=>
+        const resultFormDiv = document.getElementById('searchResultForm'); // aparte form container
+        const resultTableBody = document.querySelector('#resultTable tbody'); // tbody van zoekresultaten
+        resultTableBody.innerHTML = ''; // eerst leegmaken
+
+        if(!term){
+            resultFormDiv.style.display = 'none'; // form verbergen
+            return;
+        }
+
+        const results = dataset.filter(p =>
             (p.ID && p.ID.toLowerCase().includes(term)) ||
             (p.Roepnaam && p.Roepnaam.toLowerCase().includes(term)) ||
             (p.Achternaam && p.Achternaam.toLowerCase().includes(term))
         );
 
-        tableBody.innerHTML='';
-        if(results.length===0){ const tr=document.createElement('tr'); const td=document.createElement('td'); td.colSpan=5; td.textContent='Geen resultaten'; td.style.textAlign='center'; tr.appendChild(td); tableBody.appendChild(tr); return; }
+        if(results.length === 0){
+            resultTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center">Geen resultaten gevonden</td></tr>';
+            resultFormDiv.style.display = 'block';
+            return;
+        }
 
-        results.forEach(p=>{
-            const tr=document.createElement('tr'); tr.style.cursor='pointer';
-            ['ID','Roepnaam','Achternaam','Geboortedatum'].forEach(f=>{ const td=document.createElement('td'); td.textContent=p[f]||''; tr.appendChild(td); });
-            tr.addEventListener('click', ()=>{ renderTable([p]); });
-            tableBody.appendChild(tr);
+        results.forEach(p => {
+            const tr = document.createElement('tr');
+            ['ID','Roepnaam','Achternaam','Geboortedatum'].forEach(field=>{
+                const td = document.createElement('td');
+                td.textContent = p[field] || '';
+                tr.appendChild(td);
+            });
+            resultTableBody.appendChild(tr);
         });
+
+        resultFormDiv.style.display = 'block'; // form zichtbaar maken
     }
 
-    function refreshTable(){ dataset = window.StamboomStorage.get() || []; initPlaceholder(); }
-
-    buildHeader(); initPlaceholder();
-    addBtn.addEventListener('click', addPersoon);
-    saveBtn.addEventListener('click', saveDataset);
-    refreshBtn.addEventListener('click', refreshTable);
-    searchInput.addEventListener('input', liveSearch); // live search bij typen
+    // ======================= Event listener =======================
+    searchInput.addEventListener('input', searchPerson); // live search
 })();
-
     // =======================
     // Refresh functionaliteit
     // =======================
