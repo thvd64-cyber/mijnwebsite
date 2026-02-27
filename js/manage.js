@@ -127,11 +127,11 @@
     // =======================
     // D = Delete – persoon verwijderen
     // =======================
-    function deletePersoon(id) {
-        dataset = dataset.filter(p => p.ID !== id);
-        StamboomStorage.set(dataset);
-        renderTable(dataset); // let op: dit kan blijven, delete gaat altijd renderen
-    }
+  //  function deletePersoon(id) {
+   //     dataset = dataset.filter(p => p.ID !== id);
+   //     StamboomStorage.set(dataset);
+   //     renderTable(dataset); // let op: dit kan blijven, delete gaat altijd renderen
+    // }
 
     // =======================
     // Subset search – subset van directe relaties laden
