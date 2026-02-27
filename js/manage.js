@@ -62,72 +62,39 @@
         }
    
         // =======================
-// Relatie bepalen voor view (v2)
+        // Relatie bepalen 
+        // =======================
+// =======================
+// Relatie bepalen voor view (simpel: alleen vader/moeder boven hoofd)
 // =======================
 function bepaalRelatie(p, hoofd) {
     if(!hoofd) return ''; // fallback
-    const vaderHoofd = hoofd.VaderID || null; // fallback null
-    const moederHoofd = hoofd.MoederID || null;
-    const partnerHoofd = hoofd.PartnerID || null;
-
-    // 1. Hoofd zelf
-    if(p.ID === hoofd.ID) return 'main';
-
-    // 2. Ouders hoofd (alleen tonen als ID bekend is)
-    if((vaderHoofd && p.ID === vaderHoofd) || (moederHoofd && p.ID === moederHoofd)) return 'parent';
-
-    // 3. Huidige partner hoofd (alleen tonen als ID bekend is)
-    if(partnerHoofd && p.ID === partnerHoofd) return 'partner';
-
-    // 4. Broer/Zus (zelfde ouders, maar niet hoofd)
-    const isSibling = p.ID !== hoofd.ID &&
-        ((vaderHoofd && p.VaderID === vaderHoofd) || !vaderHoofd) &&
-        ((moederHoofd && p.MoederID === moederHoofd) || !moederHoofd);
-    if(isSibling) return 'sibling';
-
-    // 5. Kinderen uit huidige huwelijk (alleen als partner bekend)
-    const isChildSameMarriage =
-        partnerHoofd &&
-        ((p.VaderID === hoofd.ID && p.MoederID === partnerHoofd) ||
-         (p.MoederID === hoofd.ID && p.VaderID === partnerHoofd));
-    if(isChildSameMarriage) return 'child';
-
-    // 6. Kinderen uit vorig huwelijk hoofd
-    const isChildPreviousMarriage =
-        (p.VaderID === hoofd.ID || p.MoederID === hoofd.ID) &&
-        !isChildSameMarriage;
-    if(isChildPreviousMarriage) return 'child';
-
-    // 7. Kinderen uit vorig huwelijk partner
-    const isChildPartnerPrevMarriage =
-        partnerHoofd &&
-        (p.VaderID === partnerHoofd || p.MoederID === partnerHoofd) &&
-        !isChildSameMarriage;
-    if(isChildPartnerPrevMarriage) return 'child';
-
-    return ''; // alles wat geen match is of geen bekende ID
+    if(p.ID === hoofd.ID) return 'main'; // hoofd zelf
+    if(p.ID === hoofd.VaderID || p.ID === hoofd.MoederID) return 'parent'; // vader of moeder
+    return ''; // alles wat geen hoofd of ouder is
 }
-        data.forEach(p => { // loop over dataset
-            const tr = document.createElement('tr'); // nieuwe rij
-            const relatie = hoofd ? bepaalRelatie(p, hoofd) : ''; // relatie bepalen
-            if(relatie) tr.className = relatie.toLowerCase().replace(/\s+/g,'-'); // css klasse voor kleur
-            const tdRel = document.createElement('td'); // Relatie cel
-            tdRel.textContent = relatie; // tekst vullen
-            tr.appendChild(tdRel); // toevoegen aan rij
-            FIELDS.forEach(f => { // overige velden
-                const td = document.createElement('td'); // cel
-                if(f === ID_FIELD) td.textContent = p[f] || ''; // ID readonly
-                else {
-                    const input = document.createElement('input'); // editable input
-                    input.value = p[f] || ''; // waarde invullen
-                    input.dataset.field = f; // veld attribuut
-                    td.appendChild(input); // input toevoegen
-                }
-                tr.appendChild(td); // cel toevoegen aan rij
-            });
-            tableBody.appendChild(tr); // rij toevoegen aan tbody
-        });
-    }
+
+// render table
+data.forEach(p => {
+    const tr = document.createElement('tr'); // nieuwe rij
+    const relatie = hoofd ? bepaalRelatie(p, hoofd) : ''; // relatie bepalen
+    if(relatie) tr.className = relatie.toLowerCase().replace(/\s+/g,'-'); // css klasse
+    const tdRel = document.createElement('td'); // Relatie cel
+    tdRel.textContent = relatie; // tekst vullen
+    tr.appendChild(tdRel); // toevoegen aan rij
+    FIELDS.forEach(f => {
+        const td = document.createElement('td'); // cel
+        if(f === ID_FIELD) td.textContent = p[f] || ''; // ID readonly
+        else {
+            const input = document.createElement('input'); // editable input
+            input.value = p[f] || ''; // waarde invullen
+            input.dataset.field = f; // veld attribuut
+            td.appendChild(input); // toevoegen
+        }
+        tr.appendChild(td);
+    });
+    tableBody.appendChild(tr);
+});
 
     // =======================
     // C = Create – nieuwe persoon toevoegen
