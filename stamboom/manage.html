@@ -1,4 +1,4 @@
-<!-- ======================= stamboom/manage.html v1.2.0 ======================= -->
+<!-- ======================= stamboom/manage.html v1.2.1 ======================= -->
 <!-- Lazy-load, zoek, refresh, opslaan en toevoegen en relatie tabel via js -->
 <!DOCTYPE html>
 <html lang="nl">
@@ -48,6 +48,26 @@ document.addEventListener('DOMContentLoaded', () => {
     <button id="refreshBtn">Refresh</button>
     <button id="addBtn">+ Toevoegen</button>
     <button id="saveBtn">Opslaan</button>
+    
+<!-- ======================= Zoekresultaat Formulier ======================= -->
+<div id="searchResultForm" style="display:none; margin-top:15px; border:1px solid #ccc; padding:10px;">
+    <h4>Gevonden personen:</h4>
+    <form id="resultForm">
+        <table id="resultTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Roepnaam</th>
+                    <th>Achternaam</th>
+                    <th>Geboortedatum</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Zoekresultaten komen hier -->
+            </tbody>
+        </table>
+    </form>
+</div>
 
     <!-- Manage tabel -->
     <table id="manageTable">
