@@ -1,7 +1,11 @@
-<!-- ======================= stamboom/manage.html v1.0.4 – WORKING AUTO RELATIE ======================= -->
+<!-- ======================= stamboom/manage.html v1.0.5 – WORKING AUTO RELATIE ======================= -->
 <!--.4 AUTO RELATIE  -->
 <!--.4 Functionaliteit voor +Toevoegen, Opslaan, Refresh, Search blijft volledig operationeel.  -->
 <!--.4 De tree.js rendering blijft intact in div#tree.  -->
+<!--.5 Tree-div en tree.js import volledig verwijderd.-->
+<!--.5 Relatie wordt automatisch toegewezen via assignRelation().-->
+<!--.5 Rijkleuren voor hoofd, ouders, partner, kind en siblings blijven actief.-->
+<!--.5 unctionaliteit +Toevoegen, Opslaan, Refresh en Search blijft volledig operationeel.-->
 
 <!DOCTYPE html>
 <html lang="nl">
@@ -75,9 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <script src="../js/schema.js"></script>
 <script src="../js/idGenerator.js"></script>
 <script src="../js/storage.js"></script>
-<script type="module">
-import { renderTree } from "../js/tree.js";
-
+<script>
 document.addEventListener('DOMContentLoaded', ()=>{
 
     // ======================= DOM ELEMENTEN =======================
@@ -192,15 +194,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
         renderTable(filtered);
     });
 
-    // ======================= TREE RENDER =======================
-    if(dataset.length){
-        const hoofdId = dataset[0].ID;
-        renderTree(dataset, hoofdId, "tree");
-    }
-
 });
 </script>
-
 <!-- ======================= FOOTER ======================= -->
 <div id="footer-placeholder"></div>
 <script>
