@@ -1,5 +1,6 @@
-// ======================= manage.js v1.1.5 =======================
+// ======================= manage.js v1.1.6 =======================
 // Beheer module: CRUD + live search popup + refresh + placeholder + relatie-cel
+// Relatie wordt automatisch weergegeven bij laden van de tabel
 // ==============================================================================
 
 (function(){
@@ -27,11 +28,11 @@
     // =======================
     function applyRelatieLogica(selectie){
         if(!selectie || selectie.length===0) return selectie;
-        const hoofd = selectie[0];
-        const ouder1Id = hoofd[FIELDS[10]] || ''; // kolom 11 in CSV/schema
-        const ouder2Id = hoofd[FIELDS[11]] || ''; // kolom 12 in CSV/schema
+        const hoofd = selectie[0]; // eerste persoon = hoofd
+        const ouder1Id = hoofd[FIELDS[10]] || ''; // kolom 11
+        const ouder2Id = hoofd[FIELDS[11]] || ''; // kolom 12
         return selectie.map(p=>{
-            const kopie = {...p};
+            const kopie = {...p}; // shallow copy
             if(p[ID_FIELD]===hoofd[ID_FIELD]) kopie.Relatie='Hoofd';
             else if(p[ID_FIELD]===ouder1Id || p[ID_FIELD]===ouder2Id) kopie.Relatie='Ouder';
             else kopie.Relatie='';
@@ -44,7 +45,7 @@
     // =======================
     function buildHeader(){
         theadRow.innerHTML = '';
-        const th = document.createElement('th'); th.textContent=''; theadRow.appendChild(th);
+        const th = document.createElement('th'); th.textContent=''; theadRow.appendChild(th); // lege eerste kolom
         FIELDS.forEach(f=>{
             const th = document.createElement('th'); th.textContent=f; theadRow.appendChild(th);
         });
@@ -55,22 +56,26 @@
     // Tabel renderen
     // =======================
     function renderTable(data){
-        tableBody.innerHTML = '';
+        tableBody.innerHTML='';
         if(!data || data.length===0){
             const tr = document.createElement('tr');
             const td = document.createElement('td');
             td.colSpan = FIELDS.length+1;
-            td.textContent = 'Geen personen gevonden';
+            td.textContent='Geen personen gevonden';
             td.style.textAlign='center';
             tr.appendChild(td);
             tableBody.appendChild(tr);
             return;
         }
 
+        // Relatie property toevoegen voor alle rijen
+        data = applyRelatieLogica(data);
+
         data.forEach(p=>{
             const tr = document.createElement('tr');
-            if(p.Relatie) tr.className = p.Relatie;
+            if(p.Relatie) tr.className = p.Relatie; // CSS styling op Relatie
 
+            // Bestaande velden
             FIELDS.forEach(f=>{
                 const td = document.createElement('td');
                 if(f===ID_FIELD) td.textContent = p[f] || '';
@@ -83,7 +88,8 @@
                 tr.appendChild(td);
             });
 
-            const relatieTd = document.createElement('td'); // cel voor relatie
+            // Extra Relatie-cel
+            const relatieTd = document.createElement('td');
             relatieTd.textContent = p.Relatie || '';
             tr.appendChild(relatieTd);
 
@@ -113,7 +119,7 @@
         nieuw[ID_FIELD] = window.genereerCode(nieuw, dataset);
         dataset.push(nieuw);
         window.StamboomStorage.set(dataset);
-        initPlaceholder();
+        renderTable(dataset); // direct renderen met relatie
     }
 
     // =======================
@@ -145,6 +151,7 @@
         dataset = nieuweDataset;
         window.StamboomStorage.set(dataset);
         alert('Dataset succesvol opgeslagen');
+        renderTable(dataset); // her-renderen met relatie
     }
 
     // =======================
@@ -152,7 +159,7 @@
     // =======================
     function refreshTable(){
         dataset = window.StamboomStorage.get() || [];
-        initPlaceholder();
+        renderTable(dataset); // nu direct met relatie kolom
     }
 
     // =======================
