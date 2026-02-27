@@ -60,6 +60,20 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <!-- ======================= MAIN CONTENT ======================= -->
+<style>
+/* ======================= TREE NODE COLORS ======================= */
+tr.main { background-color:#1976D2; color:white; }
+tr.parent { background-color:#388E3C; color:white; }
+tr.partner { background-color:#7B1FA2; color:white; }
+tr.child { background-color:#F57C00; color:white; }
+tr.sibling { background-color:#FBC02D; color:black; }
+
+/* grijze achtergrond alleen voor rijen zonder speciale class */
+table tr:not(.main):not(.parent):not(.partner):not(.child):not(.sibling):nth-child(even) {
+    background-color: #f7f9fc; /* lichtgrijs voor “neutrale” rijen */
+}
+</style>
+    
 <main>
     <div class="container">
         <!-- Zoek en Acties -->
