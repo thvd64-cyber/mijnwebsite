@@ -1,10 +1,11 @@
-// ======================= js/manage.js v1.0.5 =======================
+// ======================= js/manage.js v1.0.6 =======================
 // → Haalt DOM-elementen, schema en opgeslagen dataset op
 // → Bouwt de tabelkop en rendert de dataset met inputvelden, ID read-only
 // → Bepaalt relaties ten opzichte van een hoofdpersoon voor subset-weergave
 // → + Toevoegen maakt een nieuwe persoon met unieke ID en voegt deze toe
 // → Opslaan valideert en bewaart wijzigingen, Laad subset toont directe familie
 // .5 laad table na laad activatie op basis van search
+// .6 pas table body vullen pas bij knop, headers altijd zichtbaar
 // ==============================================================================
 
 (function() {
@@ -25,7 +26,7 @@
     // =======================
     const FIELDS = window.StamboomSchema.fields; // alle velden uit schema
     const ID_FIELD = FIELDS[0]; // "ID" veld
-    let dataset = window.StamboomStorage.get() || []; // volledige dataset ophalen via storage
+    let dataset = window.StamboomStorage.get() || []; // volledige dataset ophalen via storage, maar NIET renderen
 
     // =======================
     // Header opbouwen (toegevoegd)
@@ -34,7 +35,7 @@
         theadRow.innerHTML = ''; // lege header eerst
         const thRel = document.createElement('th'); // eerste kolom: Relatie
         thRel.textContent = 'Relatie'; // tekst
-        theadRow.appendChild(thRel); // toevoegen aan dead
+        theadRow.appendChild(thRel); // toevoegen aan thead
         FIELDS.forEach(field => { // loop over alle schema velden
             const th = document.createElement('th'); // maak th element
             th.textContent = field; // veldnaam als kolomnaam
@@ -46,7 +47,7 @@
     // Relatie bepalen voor view
     // =======================
     function bepaalRelatie(p, hoofd) {
-        if(!hoofd) return '';
+        if(!hoofd) return ''; // geen hoofd = lege relatie
         if(p.ID === hoofd.ID) return 'Hoofd-ID';
         if(p.ID === hoofd.VaderID || p.ID === hoofd.MoederID) return 'Ouder';
         if(p.ID === hoofd.PartnerID) return 'Partner';
@@ -91,7 +92,7 @@
         nieuw[ID_FIELD] = window.genereerCode(nieuw, dataset); // unieke ID
         dataset.push(nieuw); // toevoegen
         StamboomStorage.set(dataset); // opslaan
-        renderTable(dataset); // renderen
+        initPlaceholder(); // placeholder opnieuw tonen, NIET volledige tabel renderen
     }
 
     // =======================
@@ -129,14 +130,14 @@
     function deletePersoon(id) {
         dataset = dataset.filter(p => p.ID !== id);
         StamboomStorage.set(dataset);
-        renderTable(dataset);
+        renderTable(dataset); // let op: dit kan blijven, delete gaat altijd renderen
     }
 
     // =======================
     // Subset search – subset van directe relaties laden
     // =======================
     function loadDirectRelations() {
-        dataset = StamboomStorage.get() || [];
+        dataset = StamboomStorage.get() || []; // dataset ophalen
         const term = searchInput.value.trim().toLowerCase();
         if(!term) return alert('Voer minimaal 1 ID of naam in.');
         const hoofd = dataset.find(p =>
@@ -153,19 +154,24 @@
             (p.VaderID === hoofd.VaderID && p.MoederID === hoofd.MoederID && p.ID !== hoofd.ID) ||
             p.PartnerID === hoofd.ID
         );
-        renderTable(subset, hoofd);
+        renderTable(subset, hoofd); // tabel renderen pas bij klik
     }
 
    // ======================= Init =======================
 function initPlaceholder() {
     tableBody.innerHTML = ''; // tbody leegmaken
-    const tr = document.createElement('tr');
-    const td = document.createElement('td');
-    td.colSpan = FIELDS.length + 1; // +1 voor Relatie kolom
-    td.textContent = 'Klik op "Laat Person" om data te laden'; 
-    td.style.textAlign = 'center';
-    tr.appendChild(td);
-    tableBody.appendChild(tr);
+    const tr = document.createElement('tr'); // nieuwe rij
+    const td = document.createElement('td'); // nieuwe cel
+    td.colSpan = FIELDS.length + 1; // span over alle kolommen
+    td.textContent = 'Klik op "Laat Person" om data te laden'; // boodschap
+    td.style.textAlign = 'center'; // centreren
+    tr.appendChild(td); // rij vullen
+    tableBody.appendChild(tr); // toevoegen aan tbody
 }
-initPlaceholder(); // roept dit bij init aan
+
+buildHeader(); // headers altijd zichtbaar bij init
+initPlaceholder(); // placeholder tonen tot "Laat Person" wordt geklikt
+addBtn.addEventListener('click', addPersoon); // + Toevoegen knop
+saveBtn.addEventListener('click', saveDataset); // Opslaan knop
+loadBtn.addEventListener('click', loadDirectRelations); // Laad subset pas bij klik
 })();
