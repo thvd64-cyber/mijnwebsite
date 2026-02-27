@@ -2,7 +2,6 @@
 // Beheer module: CRUD + live search popup + refresh + placeholder
 // Opgeschoonde versie, dubbele functies verwijderd, met uitleg
 // ==============================================================================
-
 (function(){
     'use strict'; // Strikte modus voor veiliger JS
 
