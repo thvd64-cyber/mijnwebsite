@@ -1,17 +1,6 @@
-<!-- ======================= stamboom/manage.html v1.0.6  ======================= -->
-<!--.4 AUTO RELATIE -->
-<!--.4 Functionaliteit voor +Toevoegen, Opslaan, Refresh en Search blijft volledig operationeel. -->
-<!--.4 De tree.js rendering is verwijderd, de relatie wordt automatisch toegewezen via assignRelation(). -->
-<!--.5 Rijkleuren voor hoofd, ouders, partner, kind en siblings blijven actief en conflictvrij met CSS. -->
-<!--.5 Tabel headers staan altijd zichtbaar, tbody toont eerst een placeholder. -->
-<!--.5 De tabel wordt pas geladen bij klik op "Laad Persoon" → lazy-load subset van dataset. -->
-<!--.5 Placeholder tekst: "Klik op 'Laad Persoon' om data te laden" wordt getoond wanneer tabel leeg is. -->
-<!--.5 +Toevoegen maakt nieuwe lege persoon met unieke ID, Opslaan valideert en bewaart wijzigingen. -->
-<!--.6 Refresh toont opnieuw placeholder zonder alle data direct te laden. -->
-<!--.6 Zoekfunctie filtert dataset op ID, Doopnaam, Roepnaam en Achternaam en rendert alleen matching personen. -->
-<!--.6 CSS klassen (.main, .parent, .partner, .child, .sibling) worden correct toegepast per rij. -->
-<!--.6 Geen conflicts meer met table tr:nth-child(even) styling → kleuren blijven zichtbaar. -->
-
+<!-- ======================= stamboom/manage.html v1.1.0  ======================= -->
+<!-- relatie in js bouwen  -->
+<!-- =========================================================================== -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -20,13 +9,6 @@
     <title>MyFamTreeCollab - Manage</title> <!-- Browser tab titel -->
     <link rel="stylesheet" href="../css/style.css"> <!-- Verbinden met CSS voor styling -->
     <style>
-    /* ======================= TREE NODE COLORS ======================= */
-    .main{background:#1976D2;color:white;}      /* blauw voor hoofdpersoon */
-    .parent{background:#388E3C;color:white;}    /* groen voor ouders */
-    .partner{background:#7B1FA2;color:white;}   /* paars voor partners */
-    .child{background:#F57C00;color:white;}     /* oranje voor kinderen */
-    .sibling{background:#FBC02D;color:black;}   /* geel voor siblings */
-    </style>
 </head>
 <body>
 <!-- ======================= layout/TopBar.html ======================= -->
@@ -60,142 +42,29 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <!-- ======================= MAIN CONTENT ======================= -->
-<style>
-/* ======================= TREE NODE COLORS ======================= */
-tr.main { background-color:#1976D2; color:white; }
-tr.parent { background-color:#388E3C; color:white; }
-tr.partner { background-color:#7B1FA2; color:white; }
-tr.child { background-color:#F57C00; color:white; }
-tr.sibling { background-color:#FBC02D; color:black; }
-
-/* grijze achtergrond alleen voor rijen zonder speciale class */
-table tr:not(.main):not(.parent):not(.partner):not(.child):not(.sibling):nth-child(even) {
-    background-color: #f7f9fc; /* lichtgrijs voor “neutrale” rijen */
-}
-</style>
-    
 <main>
-    <div class="container">
-        <!-- Zoek en Acties -->
-        <input type="text" id="searchPerson" placeholder="Voer ID of naam in">
-        <button id="loadBtn">Laad Persoon</button>
-        <button id="refreshBtn">Refresh</button>
-        <button id="addBtn">+ Toevoegen</button>
-        <button id="saveBtn">Opslaan</button>
+<div class="container">
+    <input type="text" id="searchPerson" placeholder="Voer ID of naam in">
+    <button id="loadBtn">Laad Persoon</button>
+    <button id="refreshBtn">Refresh</button>
+    <button id="addBtn">+ Toevoegen</button>
+    <button id="saveBtn">Opslaan</button>
 
-        <!-- Hier komt de relation tree -->
-        <div id="tree"></div>
-
-        <!-- Manage Tabel -->
-<table id="manageTable">
-    <thead>
-        <tr></tr> <!-- headers vullen via buildHeader() -->
-    </thead>
-    <tbody>
-        <!-- tbody wordt via JS gevuld -->
-    </tbody>
-</table>
-    </div>
+    <table id="manageTable">
+        <thead>
+            <tr></tr> <!-- headers vullen via manage.js -->
+        </thead>
+        <tbody>
+            <!-- tbody wordt via manage.js gevuld -->
+        </tbody>
+    </table>
+</div>
 </main>
 
-<!-- ======================= Load JS ======================= -->
 <script src="../js/schema.js"></script>
 <script src="../js/idGenerator.js"></script>
 <script src="../js/storage.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', ()=>{
-
-    // ======================= DOM ELEMENTEN =======================
-    const tableBody = document.querySelector('#manageTable tbody'); // tbody van manage tabel
-    const theadRow = document.querySelector('#manageTable thead tr'); // thead rij voor headers
-    const addBtn = document.getElementById('addBtn'); // + Toevoegen knop
-    const refreshBtn = document.getElementById('refreshBtn'); // Refresh knop
-    const saveBtn = document.getElementById('saveBtn'); // Opslaan knop
-    const loadBtn = document.getElementById('loadBtn'); // Laad Persoon knop
-    const searchInput = document.getElementById('searchPerson'); // zoekveld
-
-    // ======================= INIT DATA =======================
-    let dataset = StamboomStorage.get() || []; // dataset ophalen, maar NIET renderen
-
-    // ======================= BUILD HEADER =======================
-    function buildHeader(){
-        theadRow.innerHTML = ''; // eerst leegmaken
-        const thRel = document.createElement('th'); // eerste kolom: Relatie
-        thRel.textContent = 'Relatie'; // tekst
-        theadRow.appendChild(thRel); // toevoegen
-        StamboomSchema.fields.forEach(field=>{
-            const th = document.createElement('th'); // veld header
-            th.textContent = field; // tekst
-            theadRow.appendChild(th); // toevoegen
-        });
-    }
-
-    // ======================= AUTOMATISCHE RELATIE FUNCTIE =======================
-    function assignRelation(p){
-        if(!p.VaderID && !p.MoederID) return 'main'; // geen ouders → main
-        const isParent = dataset.some(x => x.VaderID===p.ID || x.MoederID===p.ID); // check parent
-        if(isParent) return 'parent';
-        const isPartner = dataset.some(x => (x.PartnerID||[]).includes(p.ID)); // check partner
-        if(isPartner) return 'partner';
-        if((p.VaderID && dataset.some(x=>x.ID===p.VaderID)) || (p.MoederID && dataset.some(x=>x.ID===p.MoederID))) return 'child'; // child
-        const siblings = dataset.filter(x=>x.ID!==p.ID && ((x.VaderID && x.VaderID===p.VaderID) || (x.MoederID && x.MoederID===p.MoederID)));
-        if(siblings.length>0) return 'sibling';
-        return '';
-    }
-
-    // ======================= INIT PLACEHOLDER =======================
-    function initPlaceholder(){
-        tableBody.innerHTML = ''; // tbody leeg
-        const tr = document.createElement('tr'); // nieuwe rij
-        const td = document.createElement('td'); // nieuwe cel
-        td.colSpan = StamboomSchema.fields.length+1; // span over alle kolommen
-        td.textContent = 'Klik op "Laad Persoon" om data te laden'; // placeholder tekst
-        td.style.textAlign = 'center'; // centreren
-        tr.appendChild(td); // rij vullen
-        tableBody.appendChild(tr); // toevoegen
-    }
-
-    // ======================= RENDER TABEL =======================
-    function renderTable(data){
-        tableBody.innerHTML = ''; // tbody eerst leegmaken
-        if(data.length === 0){ // geen data
-            const tr = document.createElement('tr'); 
-            const td = document.createElement('td');
-            td.colSpan = StamboomSchema.fields.length+1;
-            td.textContent = 'Geen personen gevonden';
-            td.style.textAlign = 'center';
-            tr.appendChild(td);
-            tableBody.appendChild(tr);
-            return;
-        }
-
-        data.forEach(p=>{
-            const tr = document.createElement('tr'); // nieuwe rij
-            const relationClass = assignRelation(p); // bepaal relatie klasse
-            if(relationClass) tr.className = relationClass; // voeg css klasse toe
-            const tdRel = document.createElement('td'); // Relatie kolom
-            tdRel.textContent = relationClass.charAt(0).toUpperCase()+relationClass.slice(1); // eerste letter hoofdletter
-            tr.appendChild(tdRel);
-
-            StamboomSchema.fields.forEach(f=>{
-                const td = document.createElement('td'); // cel
-                if(f==='ID') td.textContent = p[f] || ''; // ID readonly
-                else{
-                    const input = document.createElement('input'); // editable input
-                    input.value = p[f] || '';
-                    input.dataset.field = f;
-                    input.addEventListener('change', e=> p[f]=e.target.value); // update dataset bij change
-                    td.appendChild(input);
-                }
-                tr.appendChild(td);
-            });
-
-            tableBody.appendChild(tr); // rij toevoegen
-        });
-    }
-
-    buildHeader(); // headers altijd tonen
-    initPlaceholder(); // placeholder tonen bij load
+<script src="../js/manage.js"></script> <!-- alles vanuit manage.js -->
 
     // ======================= + TOEVOEGEN =======================
     addBtn.addEventListener('click', ()=>{
