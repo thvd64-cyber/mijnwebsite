@@ -1,4 +1,4 @@
-// ======================= js/manage.js v1.0.6 =======================
+// ======================= js/manage.js v1.0.7 =======================
 // → Haalt DOM-elementen, schema en opgeslagen dataset op
 // → Bouwt de tabelkop en rendert de dataset met inputvelden, ID read-only
 // → Bepaalt relaties ten opzichte van een hoofdpersoon voor subset-weergave
@@ -6,6 +6,7 @@
 // → Opslaan valideert en bewaart wijzigingen, Laad subset toont directe familie
 // .5 laad table na laad activatie op basis van search
 // .6 pas table body vullen pas bij knop, headers altijd zichtbaar
+// .7 lazy-load + correcte row kleuren
 // ==============================================================================
 
 (function() {
@@ -48,39 +49,49 @@
     // =======================
     function bepaalRelatie(p, hoofd) {
         if(!hoofd) return ''; // geen hoofd = lege relatie
-        if(p.ID === hoofd.ID) return 'Hoofd-ID';
-        if(p.ID === hoofd.VaderID || p.ID === hoofd.MoederID) return 'Ouder';
-        if(p.ID === hoofd.PartnerID) return 'Partner';
-        if(p.VaderID === hoofd.ID || p.MoederID === hoofd.ID) return 'Kind';
-        if(p.VaderID === hoofd.VaderID && p.MoederID === hoofd.MoederID && p.ID !== hoofd.ID) return 'Broer/Zus';
-        if(p.PartnerID === hoofd.ID) return 'Partner-Kind';
-        return '';
+        if(p.ID === hoofd.ID) return 'Hoofd-ID'; // persoon is hoofd
+        if(p.ID === hoofd.VaderID || p.ID === hoofd.MoederID) return 'Ouder'; // ouder
+        if(p.ID === hoofd.PartnerID) return 'Partner'; // partner
+        if(p.VaderID === hoofd.ID || p.MoederID === hoofd.ID) return 'Kind'; // kind
+        if(p.VaderID === hoofd.VaderID && p.MoederID === hoofd.MoederID && p.ID !== hoofd.ID) return 'Broer/Zus'; // sibling
+        if(p.PartnerID === hoofd.ID) return 'Partner-Kind'; // partner kind
+        return ''; // anders leeg
     }
 
     // =======================
-    // Tabel renderen
+    // Tabel renderen (lazy-load + correcte kleuren)
     // =======================
     function renderTable(data, hoofd=null) {
-        tableBody.innerHTML = ''; // tbody leegmaken
-        data.forEach(p => {
+        tableBody.innerHTML = ''; // tbody eerst leegmaken
+        if(!data || data.length===0) { // geen data = placeholder tonen
             const tr = document.createElement('tr'); // nieuwe rij
-            const relatie = hoofd ? bepaalRelatie(p, hoofd) : '';
-            if(relatie) tr.className = relatie.toLowerCase().replace(/\s+/g,'-'); // css klasse
-            const tdRel = document.createElement('td'); // Relatie kolom
-            tdRel.textContent = relatie;
-            tr.appendChild(tdRel);
+            const td = document.createElement('td'); // cel
+            td.colSpan = FIELDS.length + 1; // over alle kolommen
+            td.textContent = 'Geen personen gevonden'; // boodschap
+            td.style.textAlign = 'center'; // centreren
+            tr.appendChild(td); // cel toevoegen aan rij
+            tableBody.appendChild(tr); // rij toevoegen
+            return; // klaar
+        }
+        data.forEach(p => { // loop over dataset
+            const tr = document.createElement('tr'); // nieuwe rij
+            const relatie = hoofd ? bepaalRelatie(p, hoofd) : ''; // relatie bepalen
+            if(relatie) tr.className = relatie.toLowerCase().replace(/\s+/g,'-'); // css klasse voor kleur
+            const tdRel = document.createElement('td'); // Relatie cel
+            tdRel.textContent = relatie; // tekst vullen
+            tr.appendChild(tdRel); // toevoegen aan rij
             FIELDS.forEach(f => { // overige velden
-                const td = document.createElement('td');
-                if(f === ID_FIELD) td.textContent = p[f] || '';
+                const td = document.createElement('td'); // cel
+                if(f === ID_FIELD) td.textContent = p[f] || ''; // ID readonly
                 else {
                     const input = document.createElement('input'); // editable input
-                    input.value = p[f] || '';
-                    input.dataset.field = f;
-                    td.appendChild(input);
+                    input.value = p[f] || ''; // waarde invullen
+                    input.dataset.field = f; // veld attribuut
+                    td.appendChild(input); // input toevoegen
                 }
-                tr.appendChild(td);
+                tr.appendChild(td); // cel toevoegen aan rij
             });
-            tableBody.appendChild(tr); // rij toevoegen
+            tableBody.appendChild(tr); // rij toevoegen aan tbody
         });
     }
 
@@ -92,60 +103,60 @@
         nieuw[ID_FIELD] = window.genereerCode(nieuw, dataset); // unieke ID
         dataset.push(nieuw); // toevoegen
         StamboomStorage.set(dataset); // opslaan
-        initPlaceholder(); // placeholder opnieuw tonen, NIET volledige tabel renderen
+        initPlaceholder(); // placeholder tonen, NIET volledige tabel renderen
     }
 
     // =======================
     // R/U = Read & Update – opslaan gewijzigde tabel
     // =======================
     function saveDataset() {
-        const rows = tableBody.querySelectorAll('tr');
-        const nieuweDataset = [];
-        const idSet = new Set();
+        const rows = tableBody.querySelectorAll('tr'); // alle rijen
+        const nieuweDataset = []; // nieuwe dataset
+        const idSet = new Set(); // check voor duplicates
         rows.forEach(tr => {
-            const persoon = window.StamboomSchema.empty();
+            const persoon = window.StamboomSchema.empty(); // lege persoon
             FIELDS.forEach((field,index) => {
                 const cell = tr.cells[index+1]; // +1 want eerste td = Relatie
-                if(field === ID_FIELD) persoon[field] = cell.textContent.trim();
+                if(field === ID_FIELD) persoon[field] = cell.textContent.trim(); // ID
                 else {
-                    const input = cell.querySelector('input');
-                    persoon[field] = input ? input.value.trim() : '';
+                    const input = cell.querySelector('input'); // input ophalen
+                    persoon[field] = input ? input.value.trim() : ''; // waarde
                 }
             });
-            if(!window.StamboomSchema.validate(persoon)) {
-                throw new Error(`Validatie mislukt voor ID ${persoon[ID_FIELD]}`);
+            if(!window.StamboomSchema.validate(persoon)) { // validatie
+                throw new Error(`Validatie mislukt voor ID ${persoon[ID_FIELD]}`); // fout
             }
-            if(idSet.has(persoon[ID_FIELD])) throw new Error(`Duplicate ID: ${persoon[ID_FIELD]}`);
-            idSet.add(persoon[ID_FIELD]);
-            nieuweDataset.push(persoon);
+            if(idSet.has(persoon[ID_FIELD])) throw new Error(`Duplicate ID: ${persoon[ID_FIELD]}`); // duplicate check
+            idSet.add(persoon[ID_FIELD]); // toevoegen aan set
+            nieuweDataset.push(persoon); // toevoegen aan nieuwe dataset
         });
-        dataset = nieuweDataset;
-        StamboomStorage.set(dataset);
-        alert("Dataset succesvol opgeslagen.");
+        dataset = nieuweDataset; // dataset updaten
+        StamboomStorage.set(dataset); // opslaan
+        alert("Dataset succesvol opgeslagen."); // melding
     }
 
     // =======================
     // D = Delete – persoon verwijderen
     // =======================
- function deletePersoon(id) {
-    dataset = dataset.filter(p => p.ID !== id);
-    StamboomStorage.set(dataset);
-    initPlaceholder(); // niet renderTable(dataset), anders laadt alles
-}
+    function deletePersoon(id) {
+        dataset = dataset.filter(p => p.ID !== id); // filter verwijderen
+        StamboomStorage.set(dataset); // opslaan
+        initPlaceholder(); // placeholder tonen
+    }
 
     // =======================
     // Subset search – subset van directe relaties laden
     // =======================
     function loadDirectRelations() {
         dataset = StamboomStorage.get() || []; // dataset ophalen
-        const term = searchInput.value.trim().toLowerCase();
-        if(!term) return alert('Voer minimaal 1 ID of naam in.');
+        const term = searchInput.value.trim().toLowerCase(); // zoekterm
+        if(!term) return alert('Voer minimaal 1 ID of naam in.'); // validatie
         const hoofd = dataset.find(p =>
             (p.ID && p.ID.toLowerCase().includes(term)) ||
             (p.Doopnaam && p.Doopnaam.toLowerCase().includes(term)) ||
             (p.Achternaam && p.Achternaam.toLowerCase().includes(term))
-        );
-        if(!hoofd) return alert('Hoofd-ID niet gevonden');
+        ); // hoofd zoeken
+        if(!hoofd) return alert('Hoofd-ID niet gevonden'); // foutmelding
         const subset = dataset.filter(p =>
             p.ID === hoofd.ID ||
             p.ID === hoofd.VaderID || p.ID === hoofd.MoederID ||
@@ -153,26 +164,26 @@
             p.VaderID === hoofd.ID || p.MoederID === hoofd.ID ||
             (p.VaderID === hoofd.VaderID && p.MoederID === hoofd.MoederID && p.ID !== hoofd.ID) ||
             p.PartnerID === hoofd.ID
-        );
-        renderTable(subset, hoofd); // tabel renderen pas bij klik
+        ); // subset
+        renderTable(subset, hoofd); // pas renderen bij klik
     }
 
-   // ======================= Init (lazy-load) =======================
-function initPlaceholder() {
-    tableBody.innerHTML = ''; // tbody leegmaken
-    const tr = document.createElement('tr'); // nieuwe rij
-    const td = document.createElement('td'); // nieuwe cel
-    td.colSpan = FIELDS.length + 1; // span over alle kolommen
-    td.textContent = 'Klik op "Laat Person" om data te laden'; // boodschap
-    td.style.textAlign = 'center'; // centreren
-    tr.appendChild(td); // rij vullen
-    tableBody.appendChild(tr); // toevoegen aan tbody
-}
+    // ======================= Init (lazy-load) =======================
+    function initPlaceholder() {
+        tableBody.innerHTML = ''; // tbody leegmaken
+        const tr = document.createElement('tr'); // nieuwe rij
+        const td = document.createElement('td'); // nieuwe cel
+        td.colSpan = FIELDS.length + 1; // span over alle kolommen
+        td.textContent = 'Klik op "Laat Person" om data te laden'; // boodschap
+        td.style.textAlign = 'center'; // centreren
+        tr.appendChild(td); // rij vullen
+        tableBody.appendChild(tr); // toevoegen aan tbody
+    }
 
-buildHeader();      // headers renderen
-initPlaceholder();  // placeholder tonen, tbody leeg
-// renderTable(dataset) NIET aanroepen!
-addBtn.addEventListener('click', addPersoon); // + Toevoegen knop
-saveBtn.addEventListener('click', saveDataset); // Opslaan knop
-loadBtn.addEventListener('click', loadDirectRelations); // Laad subset pas bij klik
+    buildHeader();      // headers renderen
+    initPlaceholder();  // placeholder tonen, tbody leeg
+    addBtn.addEventListener('click', addPersoon); // + Toevoegen knop
+    saveBtn.addEventListener('click', saveDataset); // Opslaan knop
+    loadBtn.addEventListener('click', loadDirectRelations); // Laad subset pas bij klik
+
 })();
