@@ -127,11 +127,11 @@
     // =======================
     // D = Delete – persoon verwijderen
     // =======================
-  //  function deletePersoon(id) {
-   //     dataset = dataset.filter(p => p.ID !== id);
-   //     StamboomStorage.set(dataset);
-   //     renderTable(dataset); // let op: dit kan blijven, delete gaat altijd renderen
-    // }
+ function deletePersoon(id) {
+    dataset = dataset.filter(p => p.ID !== id);
+    StamboomStorage.set(dataset);
+    initPlaceholder(); // niet renderTable(dataset), anders laadt alles
+}
 
     // =======================
     // Subset search – subset van directe relaties laden
@@ -157,7 +157,7 @@
         renderTable(subset, hoofd); // tabel renderen pas bij klik
     }
 
-   // ======================= Init =======================
+   // ======================= Init (lazy-load) =======================
 function initPlaceholder() {
     tableBody.innerHTML = ''; // tbody leegmaken
     const tr = document.createElement('tr'); // nieuwe rij
@@ -169,8 +169,9 @@ function initPlaceholder() {
     tableBody.appendChild(tr); // toevoegen aan tbody
 }
 
-buildHeader(); // headers altijd zichtbaar bij init
-initPlaceholder(); // placeholder tonen tot "Laat Person" wordt geklikt
+buildHeader();      // headers renderen
+initPlaceholder();  // placeholder tonen, tbody leeg
+// renderTable(dataset) NIET aanroepen!
 addBtn.addEventListener('click', addPersoon); // + Toevoegen knop
 saveBtn.addEventListener('click', saveDataset); // Opslaan knop
 loadBtn.addEventListener('click', loadDirectRelations); // Laad subset pas bij klik
