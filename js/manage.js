@@ -7,7 +7,7 @@
 // .5 laad table na laad activatie op basis van search
 // .6 pas table body vullen pas bij knop, headers altijd zichtbaar
 // .7 lazy-load + correcte row kleuren
-// .8 relatie filter en sortering
+// .8 relatie filter en sortering (v2)
 // ==============================================================================
 
 (function() {
@@ -112,37 +112,52 @@ function bepaalRelatie(p, hoofd) {
             tableBody.appendChild(tr); // rij toevoegen
             return; // klaar
         }
+   
         // =======================
-// Sorteer op relatie + geboortedatum
+// Relatie bepalen voor view (v2)
 // =======================
-if(hoofd){
+function bepaalRelatie(p, hoofd) {
+    if(!hoofd) return ''; // fallback
+    const vaderHoofd = hoofd.VaderID || null; // fallback null
+    const moederHoofd = hoofd.MoederID || null;
+    const partnerHoofd = hoofd.PartnerID || null;
 
-    const volgorde = {
-        parent: 1,
-        main: 2,
-        partner: 3,
-        sibling: 4,
-        child: 5,
-        '': 6
-    };
+    // 1. Hoofd zelf
+    if(p.ID === hoofd.ID) return 'main';
 
-    data = [...data].sort((a,b)=>{
+    // 2. Ouders hoofd (alleen tonen als ID bekend is)
+    if((vaderHoofd && p.ID === vaderHoofd) || (moederHoofd && p.ID === moederHoofd)) return 'parent';
 
-        const relA = bepaalRelatie(a, hoofd); // relatie van A
-        const relB = bepaalRelatie(b, hoofd); // relatie van B
+    // 3. Huidige partner hoofd (alleen tonen als ID bekend is)
+    if(partnerHoofd && p.ID === partnerHoofd) return 'partner';
 
-        const orderDiff = (volgorde[relA] || 6) - (volgorde[relB] || 6);
-        if(orderDiff !== 0) return orderDiff; // eerst sorteren op relatie
+    // 4. Broer/Zus (zelfde ouders, maar niet hoofd)
+    const isSibling = p.ID !== hoofd.ID &&
+        ((vaderHoofd && p.VaderID === vaderHoofd) || !vaderHoofd) &&
+        ((moederHoofd && p.MoederID === moederHoofd) || !moederHoofd);
+    if(isSibling) return 'sibling';
 
-        // Binnen siblings en children sorteren op geboortedatum
-        if(relA === 'sibling' || relA === 'child'){
-            const dateA = new Date(a.Geboortedatum || 0);
-            const dateB = new Date(b.Geboortedatum || 0);
-            return dateA - dateB; // oudste eerst
-        }
+    // 5. Kinderen uit huidige huwelijk (alleen als partner bekend)
+    const isChildSameMarriage =
+        partnerHoofd &&
+        ((p.VaderID === hoofd.ID && p.MoederID === partnerHoofd) ||
+         (p.MoederID === hoofd.ID && p.VaderID === partnerHoofd));
+    if(isChildSameMarriage) return 'child';
 
-        return 0; // anders volgorde behouden
-    });
+    // 6. Kinderen uit vorig huwelijk hoofd
+    const isChildPreviousMarriage =
+        (p.VaderID === hoofd.ID || p.MoederID === hoofd.ID) &&
+        !isChildSameMarriage;
+    if(isChildPreviousMarriage) return 'child';
+
+    // 7. Kinderen uit vorig huwelijk partner
+    const isChildPartnerPrevMarriage =
+        partnerHoofd &&
+        (p.VaderID === partnerHoofd || p.MoederID === partnerHoofd) &&
+        !isChildSameMarriage;
+    if(isChildPartnerPrevMarriage) return 'child';
+
+    return ''; // alles wat geen match is of geen bekende ID
 }
         data.forEach(p => { // loop over dataset
             const tr = document.createElement('tr'); // nieuwe rij
