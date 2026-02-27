@@ -1,6 +1,5 @@
-// ======================= manage.js v1.1.3 =======================
-// Beheer module: CRUD + live search popup + refresh + placeholder
-// Opgeschoonde versie, dubbele functies verwijderd, met uitleg
+// ======================= manage.js v1.1.4 =======================
+// relatie logica voor ouders toegevoegd
 // ==============================================================================
 (function(){
     'use strict'; // Strikte modus voor veiliger JS
@@ -23,24 +22,42 @@
     let dataset = window.StamboomStorage.get() || []; // dataset ophalen
 
     // =======================
+    // RELATIE LOGICA
+    // =======================
+    function applyRelatieLogica(selectie){
+        if(!selectie || selectie.length===0) return selectie;
+        const hoofd = selectie[0]; // eerste persoon is hoofd bij live search
+        if(!hoofd) return selectie;
+        const ouder1 = hoofd[FIELDS[10]] || ''; // kolom 11
+        const ouder2 = hoofd[FIELDS[11]] || ''; // kolom 12
+        return selectie.map(p=>{
+            const kopie = {...p}; // shallow copy zodat dataset niet muteert
+            if(p[ID_FIELD]===hoofd[ID_FIELD]) kopie.Relatie='Hoofd';
+            else if(p[ID_FIELD]===ouder1 || p[ID_FIELD]===ouder2) kopie.Relatie='Ouder';
+            else kopie.Relatie='';
+            return kopie;
+        });
+    }
+
+    // =======================
     // Tabel header opbouwen
     // =======================
     function buildHeader(){
-        theadRow.innerHTML = ''; // eerst leegmaken
-        const th = document.createElement('th'); th.textContent=''; theadRow.appendChild(th); // lege eerste kolom
+        theadRow.innerHTML = '';
+        const th = document.createElement('th'); th.textContent=''; theadRow.appendChild(th);
         FIELDS.forEach(f=>{
             const th = document.createElement('th');
-            th.textContent = f; // veldnaam als kolomheader
+            th.textContent = f;
             theadRow.appendChild(th);
         });
-    } // einde buildHeader – maakt kolomkoppen dynamisch
+    }
 
     // =======================
     // Tabel renderen
     // =======================
     function renderTable(data){
-        tableBody.innerHTML = ''; // tbody leegmaken
-        if(!data || data.length === 0){ // geen data → placeholder
+        tableBody.innerHTML = '';
+        if(!data || data.length === 0){
             const tr = document.createElement('tr');
             const td = document.createElement('td');
             td.colSpan = FIELDS.length+1;
@@ -52,13 +69,13 @@
         }
         data.forEach(p=>{
             const tr = document.createElement('tr');
-            if(p.Relatie) tr.className = p.Relatie; // styling op relatie
+            if(p.Relatie) tr.className = p.Relatie;
 
             FIELDS.forEach(f=>{
                 const td = document.createElement('td');
-                if(f === ID_FIELD) td.textContent = p[f] || ''; // ID readonly
+                if(f === ID_FIELD) td.textContent = p[f] || '';
                 else{
-                    const input = document.createElement('input'); // editable input
+                    const input = document.createElement('input');
                     input.value = p[f] || '';
                     input.dataset.field = f;
                     td.appendChild(input);
@@ -68,7 +85,7 @@
 
             tableBody.appendChild(tr);
         });
-    } // einde renderTable – toont volledige dataset of selectie
+    }
 
     // =======================
     // Placeholder tonen
@@ -82,18 +99,18 @@
         td.style.textAlign = 'center';
         tr.appendChild(td);
         tableBody.appendChild(tr);
-    } // einde initPlaceholder – toont boodschap bij lege tabel
+    }
 
     // =======================
     // Nieuwe persoon toevoegen
     // =======================
     function addPersoon(){
-        const nieuw = window.StamboomSchema.empty(); // lege persoon
-        nieuw[ID_FIELD] = window.genereerCode(nieuw, dataset); // unieke ID
-        dataset.push(nieuw); // toevoegen
-        window.StamboomStorage.set(dataset); // opslaan
-        initPlaceholder(); // placeholder tonen ipv volledige tabel
-    } // einde addPersoon – CRUD Create
+        const nieuw = window.StamboomSchema.empty();
+        nieuw[ID_FIELD] = window.genereerCode(nieuw, dataset);
+        dataset.push(nieuw);
+        window.StamboomStorage.set(dataset);
+        initPlaceholder();
+    }
 
     // =======================
     // Dataset opslaan
@@ -125,7 +142,7 @@
         dataset = nieuweDataset;
         window.StamboomStorage.set(dataset);
         alert('Dataset succesvol opgeslagen');
-    } // einde saveDataset – CRUD Update
+    }
 
     // =======================
     // Dataset verversen
@@ -133,7 +150,7 @@
     function refreshTable(){
         dataset = window.StamboomStorage.get() || [];
         initPlaceholder();
-    } // einde refreshTable – haalt storage opnieuw op
+    }
 
     // =======================
     // Live search popup
@@ -154,7 +171,7 @@
             document.body.appendChild(popup);
         }
         return popup;
-    } // einde createPopup – popup element maken indien niet aanwezig
+    }
 
     function showPopup(results, rect){
         const popup = createPopup();
@@ -166,7 +183,12 @@
             row.style.borderBottom = '1px solid #eee';
             row.textContent = `${p.ID} | ${p.Roepnaam} | ${p.Achternaam} | ${p.Geboortedatum || ''}`;
             row.addEventListener('click', ()=>{
-                renderTable([p]); // geselecteerde persoon in main table
+                const selectie = [p];
+                const ouder1 = dataset.find(x=>x[ID_FIELD]===p[FIELDS[10]]);
+                const ouder2 = dataset.find(x=>x[ID_FIELD]===p[FIELDS[11]]);
+                if(ouder1) selectie.push(ouder1);
+                if(ouder2) selectie.push(ouder2);
+                renderTable(applyRelatieLogica(selectie));
                 popup.style.display = 'none';
             });
             popup.appendChild(row);
@@ -181,7 +203,7 @@
         popup.style.left = (rect.left + window.scrollX) + 'px';
         popup.style.width = rect.width + 'px';
         popup.style.display = 'block';
-    } // einde showPopup – toont zoekresultaten als popup
+    }
 
     function liveSearch(){
         const term = searchInput.value.trim().toLowerCase();
@@ -195,24 +217,18 @@
 
         const rect = searchInput.getBoundingClientRect();
         showPopup(results, rect);
-    } // einde liveSearch – zoekt en toont popup
+    }
 
-    // =======================
-    // Click outside popup sluit popup
-    // =======================
     document.addEventListener('click', e=>{
         const popup = document.getElementById('searchPopup');
         if(popup && !popup.contains(e.target) && e.target !== searchInput)
             popup.style.display = 'none';
     });
 
-    // =======================
-    // Initialisatie
-    // =======================
-    buildHeader(); // maak tabelkoppen
-    initPlaceholder(); // toon placeholder bij init
+    buildHeader();
+    initPlaceholder();
     addBtn.addEventListener('click', addPersoon);
     saveBtn.addEventListener('click', saveDataset);
     refreshBtn.addEventListener('click', refreshTable);
-    searchInput.addEventListener('input', liveSearch); // live search popup
+    searchInput.addEventListener('input', liveSearch);
 })();
