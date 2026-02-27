@@ -44,59 +44,7 @@
             theadRow.appendChild(th); // voeg toe aan header
         });
     }
-
-   // =======================
-// Relatie bepalen voor view
-// =======================
-function bepaalRelatie(p, hoofd) {
-
-    if(!hoofd) return ''; // fallback als geen hoofd
-
-    const vaderHoofd = hoofd.VaderID; // vader van hoofd
-    const moederHoofd = hoofd.MoederID; // moeder van hoofd
-    const partnerHoofd = hoofd.PartnerID; // huidige partner hoofd
-
-    // 1. Hoofd zelf
-    if(p.ID === hoofd.ID) return 'main';
-
-    // 2. Ouders hoofd
-    if(p.ID === vaderHoofd || p.ID === moederHoofd) return 'parent';
-
-    // 3. Huidige partner hoofd
-    if(p.ID === partnerHoofd) return 'partner';
-
-    // 4. Broer/Zus (zelfde ouders, maar niet hoofd)
-    const isSibling =
-        p.ID !== hoofd.ID &&
-        p.VaderID === vaderHoofd &&
-        p.MoederID === moederHoofd;
-
-    if(isSibling) return 'sibling';
-
-    // 5. Kinderen uit huidige huwelijk
-    const isChildSameMarriage =
-        (p.VaderID === hoofd.ID && p.MoederID === partnerHoofd) ||
-        (p.MoederID === hoofd.ID && p.VaderID === partnerHoofd);
-
-    if(isChildSameMarriage) return 'child';
-
-    // 6. Kinderen uit vorig huwelijk hoofd
-    const isChildPreviousMarriage =
-        (p.VaderID === hoofd.ID || p.MoederID === hoofd.ID) &&
-        !isChildSameMarriage;
-
-    if(isChildPreviousMarriage) return 'child';
-
-    // 7. Kinderen uit vorig huwelijk partner
-    const isChildPartnerPrevMarriage =
-        (p.VaderID === partnerHoofd || p.MoederID === partnerHoofd) &&
-        !isChildSameMarriage;
-
-    if(isChildPartnerPrevMarriage) return 'child';
-
-    return ''; // alles wat geen match is
-}
-        
+    
     // =======================
     // Tabel renderen (lazy-load + correcte kleuren)
     // =======================
