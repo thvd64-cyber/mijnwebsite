@@ -95,7 +95,31 @@
         tr.appendChild(td);
         tableBody.appendChild(tr);
     }
+    
+// =======================
+// Live search
+// =======================
+function liveSearch(){
+    const term = searchInput.value.trim();
+    const hoofdId = term; // de ingevoerde waarde wordt als HoofdId gebruikt
 
+    if(!term){
+        // Toon volledige dataset als niets is ingevuld
+        renderTable(dataset, hoofdId);
+        return;
+    }
+
+    // Filter op ID, Roepnaam of Achternaam
+    const results = dataset.filter(p =>
+        (p.ID?.toLowerCase().includes(term.toLowerCase())) ||
+        (p.Roepnaam?.toLowerCase().includes(term.toLowerCase())) ||
+        (p.Achternaam?.toLowerCase().includes(term.toLowerCase()))
+    );
+
+    // Render alleen gevonden resultaten, met relatielogica
+    renderTable(results, hoofdId);
+}
+    
     // =======================
     // Tabel renderen
     // =======================
