@@ -124,7 +124,8 @@ function computeRelaties(data, hoofdId){
         td.style.textAlign = 'center'; // centreren
         tr.appendChild(td); // voeg cel toe aan rij
         tableBody.appendChild(tr); // voeg rij toe aan tbody
-    }// =======================
+    }
+// =======================
 // Tabel renderen
 // =======================
 function renderTable(data, hoofdId){ 
