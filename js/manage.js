@@ -26,7 +26,6 @@
     // Tabel header opbouwen
     // =======================
     function buildHeader(){
-        theadRow.innerHTML = ''; // eerst leegmaken
         const th = document.createElement('th'); th.textContent=''; theadRow.appendChild(th); // lege eerste kolom
         FIELDS.forEach(f=>{
             const th = document.createElement('th');
