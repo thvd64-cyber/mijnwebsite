@@ -149,43 +149,34 @@ function computeRelaties(data, hoofdId){
     }
 
 // =======================
-// Tabel renderen (alle velden + scenario + kleuren)
+// Tabel renderen (alle velden + scenario + kleuren via CSS classes)
 // =======================
 function renderTable(data, hoofdId){ 
     const contextData = computeRelaties(data, hoofdId); // bereken visuele relaties
-
     tableBody.innerHTML = ''; // tbody leegmaken
 
     if(!contextData || contextData.length === 0){
-        showPlaceholder('Geen personen gevonden'); // placeholder tonen
+        showPlaceholder('Geen personen gevonden');
         return;
     }
 
-    contextData.forEach((p, idx)=>{
-        const tr = document.createElement('tr'); // nieuwe rij
+    contextData.forEach((p)=>{
+        const tr = document.createElement('tr');
 
-        // ✅ Kleurklasse instellen op basis van relatie
-        if(p.Relatie) tr.classList.add(`rel-${p.Relatie.toLowerCase()}`);
+        // ✅ Relatie-class toevoegen (bijv. rel-kind, rel-partner, rel-ouder)
+        if(p.Relatie){
+            tr.classList.add(`rel-${p.Relatie.toLowerCase()}`);
+        }
 
-        // ✅ Extra achtergrondkleur automatisch op basis van scenario
-switch(p._scenario){
-    case 1: // kind van hoofd + partner
-        tr.style.backgroundColor = '#d0ebff';
-        break;
-    case 2: // kind van hoofd alleen
-        tr.style.backgroundColor = '#edf7fd';
-        break;
-    case 3: // kind van partner alleen
-        tr.style.backgroundColor = '#f5fbfd';
-        break;
-    default: // Hoofd, Ouder, Partner
-        tr.style.backgroundColor = ''; // geen kleur
-}
-        if(p.Relatie) tr.classList.add(`rel-${p.Relatie.toLowerCase()}`);
-        
-        // Voeg alle kolommen toe (COLUMNS) – inclusief ID, vader, moeder, partner, etc.
+        // ✅ Scenario-class toevoegen (scenario-1, scenario-2, scenario-3)
+        if(p._scenario){
+            tr.classList.add(`scenario-${p._scenario}`);
+        }
+
+        // Kolommen genereren
         COLUMNS.forEach(col=>{
             const td = document.createElement('td');
+
             if(col.readonly){
                 td.textContent = p[col.key] || '';
             } else {
@@ -194,10 +185,11 @@ switch(p._scenario){
                 input.dataset.field = col.key;
                 td.appendChild(input);
             }
+
             tr.appendChild(td);
         });
 
-        tableBody.appendChild(tr); // voeg rij toe aan tbody
+        tableBody.appendChild(tr);
     });
 }
     
