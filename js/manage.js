@@ -53,36 +53,31 @@
 // =======================
 searchInput.addEventListener('input', liveSearch); // bij elk type-event → popup wordt bijgewerkt
     
-   // =======================
+ // =======================
 // Relatieberekening (Hoofd + Ouders) – robuust
 // =======================
 function computeRelaties(data, hoofdId){
-    if(!hoofdId) return [];
+    const result = [];
+    const hoofd = data.find(p => String(p.ID) === String(hoofdId));
+    if(!hoofd) return result;
 
-    // Haal het object van de hoofdpersoon
-    const hoofd = data.find(d => d.ID == hoofdId); // == zorgt voor string/nr match
-    if(!hoofd) return [];
+    // Hoofd toevoegen
+    const hoofdClone = { ...hoofd, Relatie: 'Hoofd' };
+    result.push(hoofdClone);
 
-    // Haal ID's van de ouders
-    const vaderId = hoofd.VaderID ? String(hoofd.VaderID) : null;
-    const moederId = hoofd.MoederID ? String(hoofd.MoederID) : null;
+    // Vader toevoegen als aanwezig
+    if(hoofd.VaderID){
+        const vader = data.find(p => String(p.ID) === String(hoofd.VaderID));
+        if(vader) result.push({ ...vader, Relatie: 'Ouder' });
+    }
 
-    return data
-        .filter(p => {
-            // Alleen Hoofd of ouders tonen
-            const pid = String(p.ID);
-            return pid === String(hoofdId) || pid === vaderId || pid === moederId;
-        })
-        .map(p => {
-            const clone = { ...p };
-            clone.Relatie = '';
+    // Moeder toevoegen als aanwezig
+    if(hoofd.MoederID){
+        const moeder = data.find(p => String(p.ID) === String(hoofd.MoederID));
+        if(moeder) result.push({ ...moeder, Relatie: 'Ouder' });
+    }
 
-            const pid = String(p.ID);
-            if(pid === String(hoofdId)) clone.Relatie = 'Hoofd';
-            else clone.Relatie = 'Ouder';
-
-            return clone;
-        });
+    return result;
 }
 
     // =======================
