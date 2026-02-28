@@ -167,10 +167,21 @@ function renderTable(data, hoofdId){
         // ✅ Kleurklasse instellen op basis van relatie
         if(p.Relatie) tr.classList.add(`rel-${p.Relatie.toLowerCase()}`);
 
-        // ✅ Extra achtergrondkleur op basis van scenario
-        if(p._scenario === 2) tr.style.backgroundColor = '#edf7fd'; // Kind van hoofd alleen
-        else if(p._scenario === 3) tr.style.backgroundColor = '#f5fbfd'; // Kind van partner alleen
-
+        // ✅ Extra achtergrondkleur automatisch op basis van scenario
+switch(p._scenario){
+    case 1: // kind van hoofd + partner
+        tr.style.backgroundColor = '#d0ebff';
+        break;
+    case 2: // kind van hoofd alleen
+        tr.style.backgroundColor = '#edf7fd';
+        break;
+    case 3: // kind van partner alleen
+        tr.style.backgroundColor = '#f5fbfd';
+        break;
+    default: // Hoofd, Ouder, Partner
+        tr.style.backgroundColor = ''; // geen kleur
+}
+        
         // Voeg alle kolommen toe (COLUMNS) – inclusief ID, vader, moeder, partner, etc.
         COLUMNS.forEach(col=>{
             const td = document.createElement('td');
