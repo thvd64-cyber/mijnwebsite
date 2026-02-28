@@ -57,27 +57,41 @@ searchInput.addEventListener('input', liveSearch); // bij elk type-event → pop
 // Relatieberekening (Hoofd + Ouders) – robuust
 // =======================
 function computeRelaties(data, hoofdId){
-    const result = [];
-    const hoofd = data.find(p => String(p.ID) === String(hoofdId));
-    if(!hoofd) return result;
+    if(!hoofdId) return [];
 
-    // Hoofd toevoegen
-    const hoofdClone = { ...hoofd, Relatie: 'Hoofd' };
-    result.push(hoofdClone);
+    const hoofd = data.find(d => d.ID == hoofdId);
+    if(!hoofd) return [];
 
-    // Vader toevoegen als aanwezig
-    if(hoofd.VaderID){
-        const vader = data.find(p => String(p.ID) === String(hoofd.VaderID));
-        if(vader) result.push({ ...vader, Relatie: 'Ouder' });
-    }
+    const vaderId = hoofd.VaderID ? String(hoofd.VaderID) : null;
+    const moederId = hoofd.MoederID ? String(hoofd.MoederID) : null;
 
-    // Moeder toevoegen als aanwezig
-    if(hoofd.MoederID){
-        const moeder = data.find(p => String(p.ID) === String(hoofd.MoederID));
-        if(moeder) result.push({ ...moeder, Relatie: 'Ouder' });
-    }
+    return data
+        .filter(p => {
+            const pid = String(p.ID);
 
-    return result;
+            // Standaard: hoofd of ouders
+            if(pid === String(hoofdId) || pid === vaderId || pid === moederId){
+                return true;
+            }
+
+            // ✨ Uitzondering: als iemand in dataset een vaderID of moederID heeft die gelijk is aan het hoofd
+            if(String(p.VaderID) === String(hoofdId) || String(p.MoederID) === String(hoofdId)){
+                return true;
+            }
+
+            return false; // anders niet tonen
+        })
+        .map(p => {
+            const clone = { ...p };
+            const pid = String(p.ID);
+
+            // Stel de relatietekst in
+            if(pid === String(hoofdId)) clone.Relatie = 'Hoofd';
+            else if(pid === vaderId || pid === moederId) clone.Relatie = 'Ouder';
+            else clone.Relatie = 'Kind'; // voor uitzondering, kan ook "Ander" of leeg
+
+            return clone;
+        });
 }
 
     // =======================
