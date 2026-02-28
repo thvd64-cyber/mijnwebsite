@@ -1,6 +1,6 @@
-// ======================= manage.js v1.2.0 =======================
-// Beheer module: Centrale kolomstructuur (Single Source of Truth)
-// Geen lege kolommen, geen index-hacks, volledige synchronisatie
+// ======================= manage.js v1.2.1 =======================
+// Beheer module: Centrale kolomstructuur + dynamische relatie-logica
+// Relatie = Hoofd / Ouder / Kind (contextueel)
 // =================================================================
 (function(){
     'use strict';
@@ -8,12 +8,12 @@
     // =======================
     // DOM-elementen ophalen
     // =======================
-    const tableBody  = document.querySelector('#manageTable tbody');
-    const theadRow   = document.querySelector('#manageTable thead tr');
-    const addBtn     = document.getElementById('addBtn');
-    const saveBtn    = document.getElementById('saveBtn');
-    const refreshBtn = document.getElementById('refreshBtn');
-    const searchInput= document.getElementById('searchPerson');
+    const tableBody   = document.querySelector('#manageTable tbody');
+    const theadRow    = document.querySelector('#manageTable thead tr');
+    const addBtn      = document.getElementById('addBtn');
+    const saveBtn     = document.getElementById('saveBtn');
+    const refreshBtn  = document.getElementById('refreshBtn');
+    const searchInput = document.getElementById('searchPerson');
 
     // =======================
     // Dataset
@@ -24,7 +24,7 @@
     // Centrale kolomdefinitie
     // =======================
     const COLUMNS = [
-        { key: 'Relatie', readonly: false },
+        { key: 'Relatie', readonly: true },
         { key: 'ID', readonly: true },
         { key: 'Doopnaam', readonly: false },
         { key: 'Roepnaam', readonly: false },
@@ -32,10 +32,53 @@
         { key: 'Achternaam', readonly: false },
         { key: 'Geslacht', readonly: false },
         { key: 'Geboortedatum', readonly: false },
-        { key: 'Overlijdensdatum', readonly: false }
+        { key: 'Geboorteplaats', readonly: false },
+        { key: 'Overlijdensdatum', readonly: false },
+        { key: 'Overlijdensplaats', readonly: false },
+        { key: 'VaderID', readonly: false },
+        { key: 'MoederID', readonly: false },
+        { key: 'PartnerID', readonly: false },
+        { key: 'Huwelijksdatum', readonly: false },
+        { key: 'Huwelijksplaats', readonly: false },
+        { key: 'Opmerkingen', readonly: false },
+        { key: 'Adres', readonly: false },
+        { key: 'ContactInfo', readonly: false },
+        { key: 'UR', readonly: false }
     ];
 
     const ID_COLUMN = COLUMNS.find(c => c.key === 'ID');
+
+    // =======================
+    // Helper: bereken dynamische relatie
+    // =======================
+    function computeRelaties(data, hoofdId){
+        return data.map(p => {
+            const clone = { ...p };
+            clone.Relatie = ''; // start leeg
+
+            if(!hoofdId) return clone;
+
+            // Hoofd
+            if(p.ID === hoofdId){
+                clone.Relatie = 'Hoofd';
+            } 
+            // Ouder van Hoofd
+            else if(
+                p.ID === (data.find(d => d.ID === hoofdId)?.VaderID) ||
+                p.ID === (data.find(d => d.ID === hoofdId)?.MoederID)
+            ){
+                clone.Relatie = 'Ouder';
+            } 
+            // Kind van Hoofd
+            else if(
+                p.VaderID === hoofdId || p.MoederID === hoofdId
+            ){
+                clone.Relatie = 'Kind';
+            }
+
+            return clone;
+        });
+    }
 
     // =======================
     // Header opbouwen
@@ -50,7 +93,7 @@
     }
 
     // =======================
-    // Placeholder tonen
+    // Placeholder
     // =======================
     function showPlaceholder(message){
         tableBody.innerHTML = '';
@@ -66,21 +109,17 @@
     // =======================
     // Tabel renderen
     // =======================
-    function renderTable(data){
-        tableBody.innerHTML = '';
+    function renderTable(data, hoofdId){
+        const contextData = computeRelaties(data, hoofdId);
 
-        if(!data || data.length === 0){
+        tableBody.innerHTML = '';
+        if(!contextData || contextData.length === 0){
             showPlaceholder('Geen personen gevonden');
             return;
         }
 
-        data.forEach(p=>{
+        contextData.forEach(p=>{
             const tr = document.createElement('tr');
-
-            // optionele styling via relatie
-            if(p.Relatie){
-                tr.className = p.Relatie;
-            }
 
             COLUMNS.forEach(col=>{
                 const td = document.createElement('td');
@@ -106,18 +145,16 @@
     // =======================
     function addPersoon(){
         const nieuw = {};
-
         COLUMNS.forEach(col=>{
             nieuw[col.key] = '';
         });
 
-        // unieke ID genereren
         nieuw.ID = window.genereerCode(nieuw, dataset);
-
         dataset.push(nieuw);
         window.StamboomStorage.set(dataset);
 
-        renderTable(dataset);
+        const hoofdId = searchInput.value.trim();
+        renderTable(dataset, hoofdId);
     }
 
     // =======================
@@ -131,24 +168,22 @@
         rows.forEach(tr=>{
             const persoon = {};
 
-            COLUMNS.forEach((col, index)=>{
+            COLUMNS.forEach((col,index)=>{
                 const cell = tr.cells[index];
 
                 if(col.readonly){
-                    persoon[col.key] = cell.textContent.trim();
+                    // Alleen ID opslaan, Relatie niet persistent
+                    if(col.key === 'ID') persoon.ID = cell.textContent.trim();
                 } else {
                     const input = cell.querySelector('input');
                     persoon[col.key] = input ? input.value.trim() : '';
                 }
             });
 
-            // Validatie
             if(!persoon.ID)
                 throw new Error('ID ontbreekt');
-
             if(idSet.has(persoon.ID))
                 throw new Error(`Duplicate ID: ${persoon.ID}`);
-
             idSet.add(persoon.ID);
             nieuweDataset.push(persoon);
         });
@@ -163,34 +198,37 @@
     // =======================
     function refreshTable(){
         dataset = window.StamboomStorage.get() || [];
-        renderTable(dataset);
+        const hoofdId = searchInput.value.trim();
+        renderTable(dataset, hoofdId);
     }
 
     // =======================
     // Live search
     // =======================
     function liveSearch(){
-        const term = searchInput.value.trim().toLowerCase();
+        const term = searchInput.value.trim();
+        const hoofdId = term;
 
         if(!term){
-            renderTable(dataset);
+            renderTable(dataset, hoofdId);
             return;
         }
 
-        const results = dataset.filter(p=>
-            (p.ID && p.ID.toLowerCase().includes(term)) ||
-            (p.Roepnaam && p.Roepnaam.toLowerCase().includes(term)) ||
-            (p.Achternaam && p.Achternaam.toLowerCase().includes(term))
+        const results = dataset.filter(p =>
+            (p.ID?.toLowerCase().includes(term.toLowerCase())) ||
+            (p.Roepnaam?.toLowerCase().includes(term.toLowerCase())) ||
+            (p.Achternaam?.toLowerCase().includes(term.toLowerCase()))
         );
 
-        renderTable(results);
+        renderTable(results, hoofdId);
     }
 
     // =======================
     // Initialisatie
     // =======================
     buildHeader();
-    showPlaceholder('Klik op "Laad Persoon" of zoek om data te tonen');
+    const hoofdId = searchInput.value.trim();
+    renderTable(dataset, hoofdId);
 
     addBtn.addEventListener('click', addPersoon);
     saveBtn.addEventListener('click', saveDataset);
