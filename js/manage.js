@@ -44,7 +44,6 @@
     // Header bouwen
     // =======================
     function buildHeader(){
-        theadRow.innerHTML = '';
         const th = document.createElement('th'); th.textContent=''; theadRow.appendChild(th); // lege eerste kolom
         FIELDS.forEach(f=>{
             const th = document.createElement('th'); th.textContent=f; theadRow.appendChild(th);
