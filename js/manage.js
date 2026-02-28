@@ -71,22 +71,22 @@ function computeRelaties(data, hoofdId){
     // ✅ Debug: toon hoofd, ouders, partner en dataset IDs
     console.log('Hoofd:', hoofdId, 'Vader:', vaderId, 'Moeder:', moederId, 'Partner:', partnerId, 'Alle IDs in dataset:', data.map(p=>p.ID));
 
-    return data
-        .filter(p => {
-            const pid = String(p.ID);
+   return data
+    .filter(p => {
+        const pid = String(p.ID).trim();
 
-            // Standaard: hoofd, ouders of partner
-            if(pid === String(hoofdId) || pid === vaderId || pid === moederId || pid === partnerId){
-                return true;
-            }
+        const hoofdStr   = String(hoofdId).trim();
+        const vaderStr   = vaderId   ? String(vaderId).trim()   : null;
+        const moederStr  = moederId  ? String(moederId).trim()  : null;
+        const partnerStr = partnerId ? String(partnerId).trim() : null;
 
-            // Uitzondering: iemand heeft het hoofd als vader, moeder of partner
-            if(String(p.VaderID) === String(hoofdId) || String(p.MoederID) === String(hoofdId) || String(p.PartnerID) === String(hoofdId)){
-                return true;
-            }
+        if(pid === hoofdStr) return true;
+        if(vaderStr   && pid === vaderStr) return true;
+        if(moederStr  && pid === moederStr) return true;
+        if(partnerStr && pid === partnerStr) return true;
 
-            return false; // anders niet tonen
-        })
+        return false;
+    })
         .map(p => {
             const clone = { ...p };
             const pid = String(p.ID);
