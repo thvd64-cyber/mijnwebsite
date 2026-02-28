@@ -48,11 +48,18 @@
 
     const ID_COLUMN = COLUMNS.find(c => c.key === 'ID');
 
-    // =======================
-    // Helper: bereken dynamische relatie
-    // =======================
-    function computeRelaties(data, hoofdId){
-        return data.map(p => {
+ // ======================
+// Helper: relatielogica ( Hoofd en Ouders)
+// =======================
+function computeRelaties(data, hoofdId){
+    return data
+        .filter(p => {
+            // Alleen Hoofd of Ouders tonen
+            return p.ID === hoofdId ||
+                   p.ID === (data.find(d => d.ID === hoofdId)?.VaderID) ||
+                   p.ID === (data.find(d => d.ID === hoofdId)?.MoederID);
+        })
+        .map(p => {
             const clone = { ...p };
             clone.Relatie = ''; // start leeg
 
@@ -69,17 +76,10 @@
             ){
                 clone.Relatie = 'Ouder';
             } 
-            // Kind van Hoofd
-            else if(
-                p.VaderID === hoofdId || p.MoederID === hoofdId
-            ){
-                clone.Relatie = 'Kind';
-            }
 
             return clone;
         });
-    }
-
+}
     // =======================
     // Header opbouwen
     // =======================
