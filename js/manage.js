@@ -40,18 +40,18 @@
         });
     }
 
-    // =======================
-    // Header bouwen
-    // =======================
-    function buildHeader(){
-        theadRow.innerHTML = '';
-        const th = document.createElement('th'); th.textContent=''; theadRow.appendChild(th);
-        FIELDS.forEach(f=>{
-            const th = document.createElement('th'); th.textContent=f; theadRow.appendChild(th);
-        });
-        const thRel = document.createElement('th'); thRel.textContent='Relatie'; theadRow.appendChild(thRel);
-    }
-
+   // ======================= Header bouwen =======================
+function buildHeader(){
+    theadRow.innerHTML = ''; // eerst leegmaken
+    FIELDS.forEach(f=>{
+        const th = document.createElement('th');
+        th.textContent=f;
+        theadRow.appendChild(th);
+    });
+    const thRel = document.createElement('th'); 
+    thRel.textContent='Relatie';
+    theadRow.appendChild(thRel);
+}
     // =======================
     // Tabel renderen
     // =======================
