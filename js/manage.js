@@ -181,6 +181,7 @@ switch(p._scenario){
     default: // Hoofd, Ouder, Partner
         tr.style.backgroundColor = ''; // geen kleur
 }
+        if(p.Relatie) tr.classList.add(`rel-${p.Relatie.toLowerCase()}`);
         
         // Voeg alle kolommen toe (COLUMNS) – inclusief ID, vader, moeder, partner, etc.
         COLUMNS.forEach(col=>{
