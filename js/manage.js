@@ -137,29 +137,28 @@ function renderTable(data, hoofdId){
         return;
     }
 
-    contextData.forEach((p, index)=>{
-        const tr = document.createElement('tr'); // nieuwe rij
+    contextData.forEach(p=>{
+    const tr = document.createElement('tr'); // nieuwe rij
 
-        // ✅ Even/oneven achtergrond
-        if(index % 2 === 0) tr.style.backgroundColor = '#f9f9f9'; // even rij: lichtgrijs
-        else tr.style.backgroundColor = '#ffffff'; // oneven rij: wit
+    // ✅ Stel kleurklasse in op basis van relatie
+    if(p.Relatie) tr.classList.add(`rel-${p.Relatie.toLowerCase()}`);
 
-        // Voeg cellen toe
-        COLUMNS.forEach(col=>{
-            const td = document.createElement('td');
-            if(col.readonly){
-                td.textContent = p[col.key] || '';
-            } else {
-                const input = document.createElement('input');
-                input.value = p[col.key] || '';
-                input.dataset.field = col.key;
-                td.appendChild(input);
-            }
-            tr.appendChild(td);
-        });
-
-        tableBody.appendChild(tr);
+    // Voeg cellen toe
+    COLUMNS.forEach(col=>{
+        const td = document.createElement('td'); // nieuwe cel
+        if(col.readonly){
+            td.textContent = p[col.key] || '';
+        } else {
+            const input = document.createElement('input');
+            input.value = p[col.key] || '';
+            input.dataset.field = col.key;
+            td.appendChild(input);
+        }
+        tr.appendChild(td);
     });
+
+    tableBody.appendChild(tr);
+});
 }
 // =======================
 // Live search popup (alleen bij zoek/Laad, niet bij Refresh)
