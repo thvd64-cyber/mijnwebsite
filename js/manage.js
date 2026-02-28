@@ -126,39 +126,40 @@ function computeRelaties(data, hoofdId){
         tableBody.appendChild(tr); // voeg rij toe aan tbody
     }
 // =======================
-// Tabel renderen
+// Tabel renderen (Hoofd + Ouders + Partner)
 // =======================
 function renderTable(data, hoofdId){ 
-    const contextData = computeRelaties(data, hoofdId); // visuele relaties
+    const contextData = computeRelaties(data, hoofdId); // bereken visuele relaties
 
     tableBody.innerHTML = ''; // tbody leegmaken
+
     if(!contextData || contextData.length === 0){
-        showPlaceholder('Geen personen gevonden');
+        showPlaceholder('Geen personen gevonden'); // placeholder tonen
         return;
     }
 
-    contextData.forEach(p=>{
-    const tr = document.createElement('tr'); // nieuwe rij
+    contextData.forEach((p, idx)=>{
+        const tr = document.createElement('tr'); // nieuwe rij
 
-    // ✅ Stel kleurklasse in op basis van relatie
-    if(p.Relatie) tr.classList.add(`rel-${p.Relatie.toLowerCase()}`);
+        // ✅ Kleurklasse instellen op basis van relatie
+        if(p.Relatie) tr.classList.add(`rel-${p.Relatie.toLowerCase()}`);
 
-    // Voeg cellen toe
-    COLUMNS.forEach(col=>{
-        const td = document.createElement('td'); // nieuwe cel
-        if(col.readonly){
-            td.textContent = p[col.key] || '';
-        } else {
-            const input = document.createElement('input');
-            input.value = p[col.key] || '';
-            input.dataset.field = col.key;
-            td.appendChild(input);
-        }
-        tr.appendChild(td);
+        // Voeg cellen toe
+        COLUMNS.forEach(col=>{
+            const td = document.createElement('td'); // nieuwe cel
+            if(col.readonly){
+                td.textContent = p[col.key] || ''; // readonly veld vullen
+            } else {
+                const input = document.createElement('input'); // maak input aan
+                input.value = p[col.key] || ''; // waarde zetten
+                input.dataset.field = col.key; // dataset veldname
+                td.appendChild(input); // voeg toe
+            }
+            tr.appendChild(td); // voeg cel toe aan rij
+        });
+
+        tableBody.appendChild(tr); // voeg rij toe aan tbody
     });
-
-    tableBody.appendChild(tr);
-});
 }
 // =======================
 // Live search popup (alleen bij zoek/Laad, niet bij Refresh)
