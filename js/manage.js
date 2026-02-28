@@ -124,40 +124,40 @@ function computeRelaties(data, hoofdId){
         td.style.textAlign = 'center'; // centreren
         tr.appendChild(td); // voeg cel toe aan rij
         tableBody.appendChild(tr); // voeg rij toe aan tbody
-    }
-// =======================
+    }// =======================
 // Tabel renderen
 // =======================
-function renderTable(data, hoofdId){ // toon data in tabel + relatielogica
-    const contextData = computeRelaties(data, hoofdId); // bereken visuele relaties
+function renderTable(data, hoofdId){ 
+    const contextData = computeRelaties(data, hoofdId); // visuele relaties
 
     tableBody.innerHTML = ''; // tbody leegmaken
     if(!contextData || contextData.length === 0){
-        showPlaceholder('Geen personen gevonden'); // placeholder tonen
+        showPlaceholder('Geen personen gevonden');
         return;
     }
 
-    contextData.forEach(p=>{
+    contextData.forEach((p, index)=>{
         const tr = document.createElement('tr'); // nieuwe rij
 
-        // ✅ Stel kleurklasse in op basis van relatie
-        if (p.Relatie) tr.classList.add(`rel-${p.Relatie.toLowerCase()}`);
+        // ✅ Even/oneven achtergrond
+        if(index % 2 === 0) tr.style.backgroundColor = '#f9f9f9'; // even rij: lichtgrijs
+        else tr.style.backgroundColor = '#ffffff'; // oneven rij: wit
 
         // Voeg cellen toe
         COLUMNS.forEach(col=>{
-            const td = document.createElement('td'); // nieuwe cel
+            const td = document.createElement('td');
             if(col.readonly){
-                td.textContent = p[col.key] || ''; // readonly veld vullen
+                td.textContent = p[col.key] || '';
             } else {
-                const input = document.createElement('input'); // maak input aan
-                input.value = p[col.key] || ''; // zet waarde
-                input.dataset.field = col.key; // dataset veldname
-                td.appendChild(input); // voeg input toe
+                const input = document.createElement('input');
+                input.value = p[col.key] || '';
+                input.dataset.field = col.key;
+                td.appendChild(input);
             }
-            tr.appendChild(td); // voeg cel toe aan rij
+            tr.appendChild(td);
         });
 
-        tableBody.appendChild(tr); // voeg rij toe aan tbody
+        tableBody.appendChild(tr);
     });
 }
 // =======================
