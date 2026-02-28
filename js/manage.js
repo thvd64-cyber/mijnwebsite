@@ -1,12 +1,12 @@
-// ======================= manage.js v1.2.1 =======================
-// Beheer module: Centrale kolomstructuur + dynamische relatie-logica
-// Relatie = Hoofd / Ouder / Kind (contextueel)
+// ======================= manage.js v1.2.3 =======================
+// Beheer module: directe relaties (Hoofd + Ouders)
+// Relatie = visueel (Hoofd / Ouder), geen andere personen tonen
 // =================================================================
 (function(){
     'use strict';
 
     // =======================
-    // DOM-elementen ophalen
+    // DOM-elementen
     // =======================
     const tableBody   = document.querySelector('#manageTable tbody');
     const theadRow    = document.querySelector('#manageTable thead tr');
@@ -21,7 +21,7 @@
     let dataset = window.StamboomStorage.get() || [];
 
     // =======================
-    // Centrale kolomdefinitie
+    // Kolomdefinitie
     // =======================
     const COLUMNS = [
         { key: 'Relatie', readonly: true },
@@ -46,42 +46,32 @@
         { key: 'UR', readonly: false }
     ];
 
-    const ID_COLUMN = COLUMNS.find(c => c.key === 'ID');
-
- // ======================
-// Helper: relatielogica ( Hoofd en Ouders)
-// =======================
-function computeRelaties(data, hoofdId){
-    return data
-        .filter(p => {
-            // Alleen Hoofd of Ouders tonen
-            return p.ID === hoofdId ||
-                   p.ID === (data.find(d => d.ID === hoofdId)?.VaderID) ||
-                   p.ID === (data.find(d => d.ID === hoofdId)?.MoederID);
-        })
-        .map(p => {
-            const clone = { ...p };
-            clone.Relatie = ''; // start leeg
-
-            if(!hoofdId) return clone;
-
-            // Hoofd
-            if(p.ID === hoofdId){
-                clone.Relatie = 'Hoofd';
-            } 
-            // Ouder van Hoofd
-            else if(
-                p.ID === (data.find(d => d.ID === hoofdId)?.VaderID) ||
-                p.ID === (data.find(d => d.ID === hoofdId)?.MoederID)
-            ){
-                clone.Relatie = 'Ouder';
-            } 
-
-            return clone;
-        });
-}
     // =======================
-    // Header opbouwen
+    // Relatieberekening (Hoofd + Ouders)
+    // =======================
+    function computeRelaties(data, hoofdId){
+        return data
+            .filter(p => {
+                // Alleen Hoofd of Ouders tonen
+                return p.ID === hoofdId ||
+                       p.ID === (data.find(d => d.ID === hoofdId)?.VaderID) ||
+                       p.ID === (data.find(d => d.ID === hoofdId)?.MoederID);
+            })
+            .map(p => {
+                const clone = { ...p };
+                clone.Relatie = '';
+
+                if(!hoofdId) return clone;
+
+                if(p.ID === hoofdId) clone.Relatie = 'Hoofd';
+                else clone.Relatie = 'Ouder';
+
+                return clone;
+            });
+    }
+
+    // =======================
+    // Header
     // =======================
     function buildHeader(){
         theadRow.innerHTML = '';
@@ -120,10 +110,8 @@ function computeRelaties(data, hoofdId){
 
         contextData.forEach(p=>{
             const tr = document.createElement('tr');
-
             COLUMNS.forEach(col=>{
                 const td = document.createElement('td');
-
                 if(col.readonly){
                     td.textContent = p[col.key] || '';
                 } else {
@@ -132,10 +120,8 @@ function computeRelaties(data, hoofdId){
                     input.dataset.field = col.key;
                     td.appendChild(input);
                 }
-
                 tr.appendChild(td);
             });
-
             tableBody.appendChild(tr);
         });
     }
@@ -145,16 +131,11 @@ function computeRelaties(data, hoofdId){
     // =======================
     function addPersoon(){
         const nieuw = {};
-        COLUMNS.forEach(col=>{
-            nieuw[col.key] = '';
-        });
-
+        COLUMNS.forEach(col=> nieuw[col.key] = '');
         nieuw.ID = window.genereerCode(nieuw, dataset);
         dataset.push(nieuw);
         window.StamboomStorage.set(dataset);
-
-        const hoofdId = searchInput.value.trim();
-        renderTable(dataset, hoofdId);
+        renderTable(dataset, searchInput.value.trim());
     }
 
     // =======================
@@ -167,12 +148,9 @@ function computeRelaties(data, hoofdId){
 
         rows.forEach(tr=>{
             const persoon = {};
-
             COLUMNS.forEach((col,index)=>{
                 const cell = tr.cells[index];
-
                 if(col.readonly){
-                    // Alleen ID opslaan, Relatie niet persistent
                     if(col.key === 'ID') persoon.ID = cell.textContent.trim();
                 } else {
                     const input = cell.querySelector('input');
@@ -180,10 +158,8 @@ function computeRelaties(data, hoofdId){
                 }
             });
 
-            if(!persoon.ID)
-                throw new Error('ID ontbreekt');
-            if(idSet.has(persoon.ID))
-                throw new Error(`Duplicate ID: ${persoon.ID}`);
+            if(!persoon.ID) throw new Error('ID ontbreekt');
+            if(idSet.has(persoon.ID)) throw new Error(`Duplicate ID: ${persoon.ID}`);
             idSet.add(persoon.ID);
             nieuweDataset.push(persoon);
         });
@@ -194,23 +170,20 @@ function computeRelaties(data, hoofdId){
     }
 
     // =======================
-    // Dataset verversen
+    // Laad / Refresh
     // =======================
     function refreshTable(){
         dataset = window.StamboomStorage.get() || [];
-        const hoofdId = searchInput.value.trim();
-        renderTable(dataset, hoofdId);
+        renderTable(dataset, searchInput.value.trim());
     }
 
     // =======================
-    // Live search
+    // Search
     // =======================
     function liveSearch(){
         const term = searchInput.value.trim();
-        const hoofdId = term;
-
         if(!term){
-            renderTable(dataset, hoofdId);
+            renderTable(dataset, searchInput.value.trim());
             return;
         }
 
@@ -220,15 +193,14 @@ function computeRelaties(data, hoofdId){
             (p.Achternaam?.toLowerCase().includes(term.toLowerCase()))
         );
 
-        renderTable(results, hoofdId);
+        renderTable(results, searchInput.value.trim());
     }
 
     // =======================
     // Initialisatie
     // =======================
     buildHeader();
-    const hoofdId = searchInput.value.trim();
-    renderTable(dataset, hoofdId);
+    renderTable(dataset, searchInput.value.trim());
 
     addBtn.addEventListener('click', addPersoon);
     saveBtn.addEventListener('click', saveDataset);
