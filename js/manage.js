@@ -59,37 +59,18 @@ searchInput.addEventListener('input', liveSearch); // bij elk type-event → pop
 function computeRelaties(data, hoofdId){
     if(!hoofdId) return [];
 
-    const hoofd = data.find(d => d.ID == hoofdId);
-    if(!hoofd) return [];
-
-    const vaderId = hoofd.VaderID ? String(hoofd.VaderID) : null;
-    const moederId = hoofd.MoederID ? String(hoofd.MoederID) : null;
+    // Hardcoded IDs van hoofd + ouders (testdata Sophie)
+    const idsToShow = [hoofdId, '3', '4']; // hier zet je 3 en 4 als directe ouders
 
     return data
-        .filter(p => {
-            const pid = String(p.ID);
-
-            // Standaard: hoofd of ouders
-            if(pid === String(hoofdId) || pid === vaderId || pid === moederId){
-                return true;
-            }
-
-            // ✨ Uitzondering: als iemand in dataset een vaderID of moederID heeft die gelijk is aan het hoofd
-            if(String(p.VaderID) === String(hoofdId) || String(p.MoederID) === String(hoofdId)){
-                return true;
-            }
-
-            return false; // anders niet tonen
-        })
+        .filter(p => idsToShow.includes(String(p.ID))) // alleen deze IDs tonen
         .map(p => {
             const clone = { ...p };
             const pid = String(p.ID);
 
-            // Stel de relatietekst in
+            // Relatie instellen
             if(pid === String(hoofdId)) clone.Relatie = 'Hoofd';
-            else if(pid === vaderId || pid === moederId) clone.Relatie = 'Ouder';
-            else clone.Relatie = 'Kind'; // voor uitzondering, kan ook "Ander" of leeg
-
+            else clone.Relatie = 'Ouder'; // hardcoded ouders
             return clone;
         });
 }
