@@ -1,7 +1,7 @@
-// ======================= manage.js v1.2.3 =======================
+// ======================= manage.js v1.2.5 =======================
 // Beheer module: directe relaties (Hoofd + Ouders)
 // search, laad, refresh, +Toeveogen, opslaan
-// Relatie = visueel Hoofd / Ouder), .4 partner, geen andere personen tonen
+// Relatie = visueel Hoofd / Ouder), .4 partner, .5 kinderen, geen andere personen tonen
 // =================================================================
 (function(){ // start IIFE – module scope
     'use strict'; // strikte modus aan
@@ -53,52 +53,158 @@
 // =======================
 searchInput.addEventListener('input', liveSearch); // bij elk type-event → popup wordt bijgewerkt
     
- // =======================
-// Relatieberekening (Hoofd + Ouders) – robuust
+// =======================
+// Relatieberekening (Hoofd + Ouders + Partner + Kinderen)
 // =======================
 function computeRelaties(data, hoofdId){
     if(!hoofdId) return [];
 
     // Haal het object van de hoofdpersoon
-    const hoofd = data.find(d => d.ID == hoofdId);
+    const hoofd = data.find(d => String(d.ID).trim() === String(hoofdId).trim());
     if(!hoofd) return [];
 
     // ID's van vader, moeder en partner
-    const vaderId   = hoofd.VaderID   ? String(hoofd.VaderID)   : null;
-    const moederId  = hoofd.MoederID  ? String(hoofd.MoederID)  : null;
-    const partnerId = hoofd.PartnerID ? String(hoofd.PartnerID) : null;
+    const vaderId   = hoofd.VaderID   ? String(hoofd.VaderID).trim()   : null;
+    const moederId  = hoofd.MoederID  ? String(hoofd.MoederID).trim()  : null;
+    const partnerId = hoofd.PartnerID ? String(hoofd.PartnerID).trim() : null;
 
-    // ✅ Debug: toon hoofd, ouders, partner en dataset IDs
-    console.log('Hoofd:', hoofdId, 'Vader:', vaderId, 'Moeder:', moederId, 'Partner:', partnerId, 'Alle IDs in dataset:', data.map(p=>p.ID));
+    // Debug: check
+    console.log('Hoofd:', hoofdId, 'Vader:', vaderId, 'Moeder:', moederId, 'Partner:', partnerId);
 
-   return data
-    .filter(p => {
+    // Filter: Hoofd + ouders + partner + kinderen (kind van hoofd of partner)
+    const contextData = data.filter(p => {
         const pid = String(p.ID).trim();
+        if(pid === String(hoofdId)) return true;
+        if(vaderId   && pid === vaderId)   return true;
+        if(moederId  && pid === moederId)  return true;
+        if(partnerId && pid === partnerId) return true;
 
-        const hoofdStr   = String(hoofdId).trim();
-        const vaderStr   = vaderId   ? String(vaderId).trim()   : null;
-        const moederStr  = moederId  ? String(moederId).trim()  : null;
-        const partnerStr = partnerId ? String(partnerId).trim() : null;
-
-        if(pid === hoofdStr) return true;
-        if(vaderStr   && pid === vaderStr) return true;
-        if(moederStr  && pid === moederStr) return true;
-        if(partnerStr && pid === partnerStr) return true;
+        // Kinderen
+        if(String(p.VaderID).trim() === String(hoofdId) || String(p.MoederID).trim() === String(hoofdId)) return true;
+        if(partnerId && (String(p.VaderID).trim() === partnerId || String(p.MoederID).trim() === partnerId)) return true;
 
         return false;
-    })
-        .map(p => {
-            const clone = { ...p };
-            const pid = String(p.ID);
+    });
 
-            // Relatie tekst instellen
-            if(pid === String(hoofdId)) clone.Relatie = 'Hoofd';
-            else if(pid === vaderId || pid === moederId) clone.Relatie = 'Ouder';
-            else if(pid === partnerId) clone.Relatie = 'Partner';
-            else clone.Relatie = 'Kind'; // uitzondering of overige
+    // Map: Relatie en scenario instellen
+    const mapped = contextData.map(p => {
+        const clone = { ...p };
+        const pid = String(p.ID).trim();
 
-            return clone;
-        });
+        // Scenario bepalen
+        if(pid === String(hoofdId)) {
+            clone.Relatie = 'Hoofd';
+            clone._scenario = 0; // geen kleur
+        } else if(pid === vaderId || pid === moederId) {
+            clone.Relatie = 'Ouder';
+            clone._scenario = 0;
+        } else if(pid === partnerId) {
+            clone.Relatie = 'Partner';
+            clone._scenario = 0;
+        } else {
+            // Kinderen
+            const isKindHoofd    = String(p.VaderID).trim() === String(hoofdId) || String(p.MoederID).trim() === String(hoofdId);
+            const isKindPartner  = partnerId && (String(p.VaderID).trim() === partnerId || String(p.MoederID).trim() === partnerId);
+
+            if(isKindHoofd && isKindPartner) clone._scenario = 1; // Scenario 1
+            else if(isKindHoofd)             clone._scenario = 2; // Scenario 2
+            else if(isKindPartner)           clone._scenario = 3; // Scenario 3
+            else                             clone._scenario = 0; // fallback
+
+            clone.Relatie = 'Kind';
+        }
+
+        return clone;
+    });
+
+    // Filter 1: sorteer scenario 1 → 2 → 3
+    mapped.sort((a,b) => (a._scenario || 0) - (b._scenario || 0));
+
+    // Filter 2: binnen scenario sorteer op geboortedatum oudste eerst
+    mapped.sort((a,b) => {
+        if(a._scenario !== b._scenario) return 0; // scenario volgorde blijft
+        const da = a.Geboortedatum ? new Date(a.Geboortedatum.split('-').reverse().join('-')) : new Date(0);
+        const db = b.Geboortedatum ? new Date(b.Geboortedatum.split('-').reverse().join('-')) : new Date(0);
+        return da - db;
+    });
+
+    return mapped;
+}// =======================
+// Relatieberekening (Hoofd + Ouders + Partner + Kinderen)
+// =======================
+function computeRelaties(data, hoofdId){
+    if(!hoofdId) return [];
+
+    // Haal het object van de hoofdpersoon
+    const hoofd = data.find(d => String(d.ID).trim() === String(hoofdId).trim());
+    if(!hoofd) return [];
+
+    // ID's van vader, moeder en partner
+    const vaderId   = hoofd.VaderID   ? String(hoofd.VaderID).trim()   : null;
+    const moederId  = hoofd.MoederID  ? String(hoofd.MoederID).trim()  : null;
+    const partnerId = hoofd.PartnerID ? String(hoofd.PartnerID).trim() : null;
+
+    // Debug: check
+    console.log('Hoofd:', hoofdId, 'Vader:', vaderId, 'Moeder:', moederId, 'Partner:', partnerId);
+
+    // Filter: Hoofd + ouders + partner + kinderen (kind van hoofd of partner)
+    const contextData = data.filter(p => {
+        const pid = String(p.ID).trim();
+        if(pid === String(hoofdId)) return true;
+        if(vaderId   && pid === vaderId)   return true;
+        if(moederId  && pid === moederId)  return true;
+        if(partnerId && pid === partnerId) return true;
+
+        // Kinderen
+        if(String(p.VaderID).trim() === String(hoofdId) || String(p.MoederID).trim() === String(hoofdId)) return true;
+        if(partnerId && (String(p.VaderID).trim() === partnerId || String(p.MoederID).trim() === partnerId)) return true;
+
+        return false;
+    });
+
+    // Map: Relatie en scenario instellen
+    const mapped = contextData.map(p => {
+        const clone = { ...p };
+        const pid = String(p.ID).trim();
+
+        // Scenario bepalen
+        if(pid === String(hoofdId)) {
+            clone.Relatie = 'Hoofd';
+            clone._scenario = 0; // geen kleur
+        } else if(pid === vaderId || pid === moederId) {
+            clone.Relatie = 'Ouder';
+            clone._scenario = 0;
+        } else if(pid === partnerId) {
+            clone.Relatie = 'Partner';
+            clone._scenario = 0;
+        } else {
+            // Kinderen
+            const isKindHoofd    = String(p.VaderID).trim() === String(hoofdId) || String(p.MoederID).trim() === String(hoofdId);
+            const isKindPartner  = partnerId && (String(p.VaderID).trim() === partnerId || String(p.MoederID).trim() === partnerId);
+
+            if(isKindHoofd && isKindPartner) clone._scenario = 1; // Scenario 1
+            else if(isKindHoofd)             clone._scenario = 2; // Scenario 2
+            else if(isKindPartner)           clone._scenario = 3; // Scenario 3
+            else                             clone._scenario = 0; // fallback
+
+            clone.Relatie = 'Kind';
+        }
+
+        return clone;
+    });
+
+    // Filter 1: sorteer scenario 1 → 2 → 3
+    mapped.sort((a,b) => (a._scenario || 0) - (b._scenario || 0));
+
+    // Filter 2: binnen scenario sorteer op geboortedatum oudste eerst
+    mapped.sort((a,b) => {
+        if(a._scenario !== b._scenario) return 0; // scenario volgorde blijft
+        const da = a.Geboortedatum ? new Date(a.Geboortedatum.split('-').reverse().join('-')) : new Date(0);
+        const db = b.Geboortedatum ? new Date(b.Geboortedatum.split('-').reverse().join('-')) : new Date(0);
+        return da - db;
+    });
+
+    return mapped;
 }
     // =======================
     // Header
