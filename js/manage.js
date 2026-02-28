@@ -1,8 +1,7 @@
-// ======================= manage.js v1.2.6. 
-=======================
+// ======================= manage.js v1.2.6 =======================
 // Beheer module: directe relaties (Hoofd + Ouders)
 // search, laad, refresh, +Toeveogen, opslaan
-// Relatie = visueel Hoofd / Ouder), .4 partner, .5 kinderen, broer/zus,  geen andere personen tonen
+// Relatie = visueel Hoofd / Ouder), .4 partner, .5 kinderen, broer/zus, geen andere personen tonen
 // =================================================================
 (function(){ // start IIFE – module scope
     'use strict'; // strikte modus aan
