@@ -125,37 +125,41 @@ function computeRelaties(data, hoofdId){
         tr.appendChild(td); // voeg cel toe aan rij
         tableBody.appendChild(tr); // voeg rij toe aan tbody
     }
-    
-    
-    // =======================
-    // Tabel renderen
-    // =======================
-    function renderTable(data, hoofdId){ // toon data in tabel + relatielogica
-        const contextData = computeRelaties(data, hoofdId); // bereken visuele relaties
-      
-        tableBody.innerHTML = ''; // tbody leegmaken
-        if(!contextData || contextData.length === 0){
-            showPlaceholder('Geen personen gevonden'); // placeholder tonen
-            return;
-        }
+// =======================
+// Tabel renderen
+// =======================
+function renderTable(data, hoofdId){ // toon data in tabel + relatielogica
+    const contextData = computeRelaties(data, hoofdId); // bereken visuele relaties
 
-        contextData.forEach(p=>{
-            const tr = document.createElement('tr'); // nieuwe rij
-            COLUMNS.forEach(col=>{
-                const td = document.createElement('td'); // nieuwe cel
-                if(col.readonly){
-                    td.textContent = p[col.key] || ''; // readonly veld vullen
-                } else {
-                    const input = document.createElement('input'); // maak input aan
-                    input.value = p[col.key] || ''; // zet waarde
-                    input.dataset.field = col.key; // dataset veldname
-                    td.appendChild(input); // voeg input toe
-                }
-                tr.appendChild(td); // voeg cel toe aan rij
-            });
-            tableBody.appendChild(tr); // voeg rij toe aan tbody
-        });
+    tableBody.innerHTML = ''; // tbody leegmaken
+    if(!contextData || contextData.length === 0){
+        showPlaceholder('Geen personen gevonden'); // placeholder tonen
+        return;
     }
+
+    contextData.forEach(p=>{
+        const tr = document.createElement('tr'); // nieuwe rij
+
+        // ✅ Stel kleurklasse in op basis van relatie
+        if (p.Relatie) tr.classList.add(`rel-${p.Relatie.toLowerCase()}`);
+
+        // Voeg cellen toe
+        COLUMNS.forEach(col=>{
+            const td = document.createElement('td'); // nieuwe cel
+            if(col.readonly){
+                td.textContent = p[col.key] || ''; // readonly veld vullen
+            } else {
+                const input = document.createElement('input'); // maak input aan
+                input.value = p[col.key] || ''; // zet waarde
+                input.dataset.field = col.key; // dataset veldname
+                td.appendChild(input); // voeg input toe
+            }
+            tr.appendChild(td); // voeg cel toe aan rij
+        });
+
+        tableBody.appendChild(tr); // voeg rij toe aan tbody
+    });
+}
 // =======================
 // Live search popup (alleen bij zoek/Laad, niet bij Refresh)
 // =======================
