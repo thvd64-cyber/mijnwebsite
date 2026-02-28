@@ -53,28 +53,37 @@
 // =======================
 searchInput.addEventListener('input', liveSearch); // bij elk type-event → popup wordt bijgewerkt
     
-    // =======================
-    // Relatieberekening (Hoofd + Ouders)
-    // =======================
-    function computeRelaties(data, hoofdId){ // berekent visuele relaties
-        return data
-            .filter(p => { // filter alleen Hoofd en directe ouders
-                return p.ID === hoofdId || // is hoofd
-                       p.ID === (data.find(d => d.ID === hoofdId)?.VaderID) || // vader van hoofd
-                       p.ID === (data.find(d => d.ID === hoofdId)?.MoederID); // moeder van hoofd
-            })
-            .map(p => {
-                const clone = { ...p }; // clone persoon object
-                clone.Relatie = ''; // start leeg
+   // =======================
+// Relatieberekening (Hoofd + Ouders) – robuust
+// =======================
+function computeRelaties(data, hoofdId){
+    if(!hoofdId) return [];
 
-                if(!hoofdId) return clone; // geen hoofdID → niets toewijzen
+    // Haal het object van de hoofdpersoon
+    const hoofd = data.find(d => d.ID == hoofdId); // == zorgt voor string/nr match
+    if(!hoofd) return [];
 
-                if(p.ID === hoofdId) clone.Relatie = 'Hoofd'; // markeer als hoofd
-                else clone.Relatie = 'Ouder'; // anders markeer als ouder
+    // Haal ID's van de ouders
+    const vaderId = hoofd.VaderID ? String(hoofd.VaderID) : null;
+    const moederId = hoofd.MoederID ? String(hoofd.MoederID) : null;
 
-                return clone; // retourneer clone
-            });
-    }
+    return data
+        .filter(p => {
+            // Alleen Hoofd of ouders tonen
+            const pid = String(p.ID);
+            return pid === String(hoofdId) || pid === vaderId || pid === moederId;
+        })
+        .map(p => {
+            const clone = { ...p };
+            clone.Relatie = '';
+
+            const pid = String(p.ID);
+            if(pid === String(hoofdId)) clone.Relatie = 'Hoofd';
+            else clone.Relatie = 'Ouder';
+
+            return clone;
+        });
+}
 
     // =======================
     // Header
