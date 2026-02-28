@@ -1,7 +1,7 @@
 // ======================= manage.js v1.2.3 =======================
 // Beheer module: directe relaties (Hoofd + Ouders)
 // search, laad, refresh, +Toeveogen, opslaan
-// Relatie = visueel (Hoofd / Ouder), geen andere personen tonen
+// Relatie = visueel Hoofd / Ouder), .4 partner, geen andere personen tonen
 // =================================================================
 (function(){ // start IIFE – module scope
     'use strict'; // strikte modus aan
@@ -59,26 +59,29 @@ searchInput.addEventListener('input', liveSearch); // bij elk type-event → pop
 function computeRelaties(data, hoofdId){
     if(!hoofdId) return [];
 
+    // Haal het object van de hoofdpersoon
     const hoofd = data.find(d => d.ID == hoofdId);
     if(!hoofd) return [];
 
-    const vaderId = hoofd.VaderID ? String(hoofd.VaderID) : null;
-    const moederId = hoofd.MoederID ? String(hoofd.MoederID) : null;
- 
-    // ✅ Debug: toon hoofd en ouders
-    console.log('Hoofd:', hoofdId, 'Vader:', vaderId, 'Moeder:', moederId, 'Alle IDs in dataset:', data.map(p=>p.ID));
+    // ID's van vader, moeder en partner
+    const vaderId   = hoofd.VaderID   ? String(hoofd.VaderID)   : null;
+    const moederId  = hoofd.MoederID  ? String(hoofd.MoederID)  : null;
+    const partnerId = hoofd.PartnerID ? String(hoofd.PartnerID) : null;
+
+    // ✅ Debug: toon hoofd, ouders, partner en dataset IDs
+    console.log('Hoofd:', hoofdId, 'Vader:', vaderId, 'Moeder:', moederId, 'Partner:', partnerId, 'Alle IDs in dataset:', data.map(p=>p.ID));
 
     return data
         .filter(p => {
             const pid = String(p.ID);
 
-            // Standaard: hoofd of ouders
-            if(pid === String(hoofdId) || pid === vaderId || pid === moederId){
+            // Standaard: hoofd, ouders of partner
+            if(pid === String(hoofdId) || pid === vaderId || pid === moederId || pid === partnerId){
                 return true;
             }
 
-            // ✨ Uitzondering: als iemand in dataset een vaderID of moederID heeft die gelijk is aan het hoofd
-            if(String(p.VaderID) === String(hoofdId) || String(p.MoederID) === String(hoofdId)){
+            // Uitzondering: iemand heeft het hoofd als vader, moeder of partner
+            if(String(p.VaderID) === String(hoofdId) || String(p.MoederID) === String(hoofdId) || String(p.PartnerID) === String(hoofdId)){
                 return true;
             }
 
@@ -88,10 +91,11 @@ function computeRelaties(data, hoofdId){
             const clone = { ...p };
             const pid = String(p.ID);
 
-            // Stel de relatietekst in
+            // Relatie tekst instellen
             if(pid === String(hoofdId)) clone.Relatie = 'Hoofd';
             else if(pid === vaderId || pid === moederId) clone.Relatie = 'Ouder';
-            else clone.Relatie = 'Kind'; // voor uitzondering, kan ook "Ander" of leeg
+            else if(pid === partnerId) clone.Relatie = 'Partner';
+            else clone.Relatie = 'Kind'; // uitzondering of overige
 
             return clone;
         });
