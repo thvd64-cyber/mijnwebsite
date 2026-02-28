@@ -59,22 +59,43 @@ searchInput.addEventListener('input', liveSearch); // bij elk type-event → pop
 function computeRelaties(data, hoofdId){
     if(!hoofdId) return [];
 
-    // Hardcoded IDs van hoofd + ouders (testdata Sophie)
-    const idsToShow = [hoofdId, '3', '4']; // hier zet je 3 en 4 als directe ouders
+    const hoofd = data.find(d => d.ID == hoofdId);
+    if(!hoofd) return [];
+
+    const vaderId = hoofd.VaderID ? String(hoofd.VaderID) : null;
+    const moederId = hoofd.MoederID ? String(hoofd.MoederID) : null;
+ 
+    // ✅ Debug: toon hoofd en ouders
+    console.log('Hoofd:', hoofdId, 'Vader:', vaderId, 'Moeder:', moederId, 'Alle IDs in dataset:', data.map(p=>p.ID));
 
     return data
-        .filter(p => idsToShow.includes(String(p.ID))) // alleen deze IDs tonen
+        .filter(p => {
+            const pid = String(p.ID);
+
+            // Standaard: hoofd of ouders
+            if(pid === String(hoofdId) || pid === vaderId || pid === moederId){
+                return true;
+            }
+
+            // ✨ Uitzondering: als iemand in dataset een vaderID of moederID heeft die gelijk is aan het hoofd
+            if(String(p.VaderID) === String(hoofdId) || String(p.MoederID) === String(hoofdId)){
+                return true;
+            }
+
+            return false; // anders niet tonen
+        })
         .map(p => {
             const clone = { ...p };
             const pid = String(p.ID);
 
-            // Relatie instellen
+            // Stel de relatietekst in
             if(pid === String(hoofdId)) clone.Relatie = 'Hoofd';
-            else clone.Relatie = 'Ouder'; // hardcoded ouders
+            else if(pid === vaderId || pid === moederId) clone.Relatie = 'Ouder';
+            else clone.Relatie = 'Kind'; // voor uitzondering, kan ook "Ander" of leeg
+
             return clone;
         });
 }
-
     // =======================
     // Header
     // =======================
@@ -107,7 +128,7 @@ function computeRelaties(data, hoofdId){
     // =======================
     function renderTable(data, hoofdId){ // toon data in tabel + relatielogica
         const contextData = computeRelaties(data, hoofdId); // bereken visuele relaties
-
+      
         tableBody.innerHTML = ''; // tbody leegmaken
         if(!contextData || contextData.length === 0){
             showPlaceholder('Geen personen gevonden'); // placeholder tonen
@@ -168,8 +189,8 @@ function showPopup(results, rect){ // render resultaten in popup
 
         // Klik: render alleen geselecteerde persoon + relatielogica
         row.addEventListener('click', ()=>{
-            renderTable([p], p.ID); // p.ID als hoofdId → toont Hoofd + Ouders
-            popup.style.display = 'none'; // sluit popup na klik
+    renderTable(dataset, p.ID); // ✅ gebruik volledige dataset, niet alleen [p]
+    popup.style.display = 'none'; // sluit popup na klik
         });
 
         popup.appendChild(row); // voeg rij toe aan popup
