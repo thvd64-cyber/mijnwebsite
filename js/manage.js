@@ -46,6 +46,12 @@
         { key: 'UR', readonly: false }
     ];
 
+
+// =======================
+// Event listener koppelen (alleen voor zoek/Laad)
+// =======================
+searchInput.addEventListener('input', liveSearch); // bij elk type-event → popup wordt bijgewerkt
+    
     // =======================
     // Relatieberekening (Hoofd + Ouders)
     // =======================
@@ -96,29 +102,6 @@
         tableBody.appendChild(tr);
     }
     
-// =======================
-// Live search
-// =======================
-function liveSearch(){
-    const term = searchInput.value.trim();
-    const hoofdId = term; // de ingevoerde waarde wordt als HoofdId gebruikt
-
-    if(!term){
-        // Toon volledige dataset als niets is ingevuld
-        renderTable(dataset, hoofdId);
-        return;
-    }
-
-    // Filter op ID, Roepnaam of Achternaam
-    const results = dataset.filter(p =>
-        (p.ID?.toLowerCase().includes(term.toLowerCase())) ||
-        (p.Roepnaam?.toLowerCase().includes(term.toLowerCase())) ||
-        (p.Achternaam?.toLowerCase().includes(term.toLowerCase()))
-    );
-
-    // Render alleen gevonden resultaten, met relatielogica
-    renderTable(results, hoofdId);
-}
     
     // =======================
     // Tabel renderen
@@ -149,6 +132,82 @@ function liveSearch(){
             tableBody.appendChild(tr);
         });
     }
+// =======================
+// Live search popup (alleen bij zoek/Laad, niet bij Refresh)
+// =======================
+
+// Functie: maakt het popup-element aan indien niet aanwezig
+function createPopup(){
+    let popup = document.getElementById('searchPopup');
+    if(!popup){
+        popup = document.createElement('div');
+        popup.id = 'searchPopup';
+        popup.style.position = 'absolute';
+        popup.style.border = '1px solid #999';
+        popup.style.background = '#fff';
+        popup.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)';
+        popup.style.zIndex = 1000;
+        popup.style.maxHeight = '200px';
+        popup.style.overflowY = 'auto';
+        popup.style.display = 'none';
+        document.body.appendChild(popup);
+    }
+    return popup;
+} // einde createPopup – popup element maken indien niet aanwezig
+
+// Functie: toont zoekresultaten in popup onder het inputveld
+function showPopup(results, rect){
+    const popup = createPopup();
+    popup.innerHTML = ''; // leeg de inhoud
+
+    results.forEach(p=>{
+        const row = document.createElement('div');
+        row.style.padding = '5px 10px';
+        row.style.cursor = 'pointer';
+        row.style.borderBottom = '1px solid #eee';
+        row.textContent = `${p.ID} | ${p.Roepnaam} | ${p.Achternaam} | ${p.Geboortedatum || ''}`;
+
+        // Klik: render alleen geselecteerde persoon + relatielogica
+        row.addEventListener('click', ()=>{
+            renderTable([p], p.ID); // p.ID als hoofdId → toont Hoofd + Ouders
+            popup.style.display = 'none'; // sluit popup na klik
+        });
+
+        popup.appendChild(row);
+    });
+
+    if(results.length===0){
+        const row = document.createElement('div');
+        row.style.padding = '5px 10px';
+        row.textContent = 'Geen resultaten';
+        popup.appendChild(row);
+    }
+
+    // Positioneer popup onder het inputveld
+    popup.style.top = (rect.bottom + window.scrollY) + 'px';
+    popup.style.left = (rect.left + window.scrollX) + 'px';
+    popup.style.width = rect.width + 'px';
+    popup.style.display = 'block';
+} // einde showPopup – toont zoekresultaten als popup
+
+// Functie: live search voor de popup
+function liveSearch(){
+    const term = searchInput.value.trim().toLowerCase();
+    if(!term){
+        createPopup().style.display='none'; // verberg popup als niets is ingevuld
+        return;
+    }
+
+    // Filter op ID, Roepnaam of Achternaam
+    const results = dataset.filter(p =>
+        (p.ID && p.ID.toLowerCase().includes(term)) ||
+        (p.Roepnaam && p.Roepnaam.toLowerCase().includes(term)) ||
+        (p.Achternaam && p.Achternaam.toLowerCase().includes(term))
+    );
+
+    const rect = searchInput.getBoundingClientRect();
+    showPopup(results, rect); // toon resultaten in popup
+}
 
     // =======================
     // Nieuwe persoon toevoegen
@@ -201,26 +260,7 @@ function liveSearch(){
         renderTable(dataset, searchInput.value.trim());
     }
 
-    // =======================
-    // Search
-    // =======================
-    function liveSearch(){
-        const term = searchInput.value.trim();
-        if(!term){
-            renderTable(dataset, searchInput.value.trim());
-            return;
-        }
-
-        const results = dataset.filter(p =>
-            (p.ID?.toLowerCase().includes(term.toLowerCase())) ||
-            (p.Roepnaam?.toLowerCase().includes(term.toLowerCase())) ||
-            (p.Achternaam?.toLowerCase().includes(term.toLowerCase()))
-        );
-
-        renderTable(results, searchInput.value.trim());
-    }
-
-    // =======================
+       // =======================
     // Initialisatie
     // =======================
     buildHeader();
@@ -230,5 +270,15 @@ function liveSearch(){
     saveBtn.addEventListener('click', saveDataset);
     refreshBtn.addEventListener('click', refreshTable);
     searchInput.addEventListener('input', liveSearch);
+    
+// =======================
+// Popup sluiten bij klik buiten
+// =======================
+document.addEventListener('click', e => {
+    const popup = document.getElementById('searchPopup');
+    if (popup && !popup.contains(e.target) && e.target !== searchInput) {
+        popup.style.display = 'none';
+    }
+});
 
 })();
