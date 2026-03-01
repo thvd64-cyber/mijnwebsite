@@ -148,24 +148,24 @@ function computeRelaties(data, hoofdId){
             return; // nfo: sibling toegevoegd
         }
 
-        // ===== Kind (3 scenario's) + partner check =====
-        const isKindHoofd = safe(p.VaderID)===hoofdIdStr || safe(p.MoederID)===hoofdIdStr; // nfo: kind van hoofd
-        const isKindPartner = partnerId && (safe(p.VaderID)===partnerId || safe(p.MoederID)===partnerId); // nfo: kind van partner
-        if(isKindHoofd || isKindPartner){
-            clone.Relatie='Kind'; 
-            clone._priority=3; 
-            clone._scenario = isKindHoofd && isKindPartner ? 1 : isKindHoofd ? 2 : 3; // nfo: scenario 1,2,3
+        // ===== Partner van kind =====
+const kindLinked = contextData.find(k => 
+    (safe(k.VaderID)===hoofdIdStr || safe(k.MoederID)===hoofdIdStr || 
+     (partnerId && (safe(k.VaderID)===partnerId || safe(k.MoederID)===partnerId))) 
+    && safe(k.ID)===pid
+); // nfo: check of deze persoon een kind is
 
-            // ===== Partner van kind toepassen =====
-            const childPartner = data.find(k => safe(k.PartnerID)===pid); // nfo: zoek persoon die dit kind als partner heeft
-            if(childPartner){
-                clone._linkedTo = safe(childPartner.ID); // nfo: link naar partner voor kleur/lay-out
-            }
-
-            mapped.push(clone); // nfo: voeg kind toe
-            return; // nfo: stop verdere checks
-        }
-
+if(kindLinked && safe(p.PartnerID)){ 
+    const partner = data.find(x => safe(x.ID) === safe(p.PartnerID)); // nfo: vind de partner van het kind
+    if(partner){
+        const clonePartner = { ...partner }; // nfo: clone partner object
+        clonePartner.Relatie = 'kind-partner'; // nfo: markeer als partner van kind
+        clonePartner._priority = 3; // nfo: zelfde prioriteit als kind
+        clonePartner._scenario = clone._scenario; // nfo: zelfde scenario als kind
+        clonePartner._linkedTo = pid; // nfo: link naar het kind
+        mapped.push(clonePartner); // nfo: voeg partner van kind toe
+    }
+}
         // ===== Partner van broer/zus =====
         const siblingLinked = data.find(s => s.ID!==hoofdIdStr && ((vaderId && safe(s.VaderID)===vaderId) || (moederId && safe(s.MoederID)===moederId)) && safe(s.PartnerID)===pid); // nfo: partner van sibling zoeken
         if(siblingLinked){
