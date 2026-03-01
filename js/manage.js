@@ -1,6 +1,6 @@
 // ======================= manage.js v1.2.7 =======================
 // Beheer module: Hoofd + Ouders + Partner + Kinderen + Broer/Zus
-// Production hardened: null-safe + selectedHoofdId state
+// Production hardened: null-safe + selectedHoofdId state + header fix
 // Visualisatie: Ouders → Hoofd+Partner → Kinderen → Broer/Zus
 // =================================================================
 (function(){ // IIFE start → voorkomt globale vervuiling
@@ -25,14 +25,11 @@ let selectedHoofdId = null; // actieve geselecteerde persoon
 // =======================
 // Helpers (null-safe)
 // =======================
-function safe(val){ // null-safe string helper
-    return val ? String(val).trim() : '';
-}
-
-function parseDate(d){ // converteert dd-mm-yyyy naar Date object
+function safe(val){ return val ? String(val).trim() : ''; } // null-safe string
+function parseDate(d){ 
     if(!d) return new Date(0);
     const parts = d.split('-');
-    if(parts.length !== 3) return new Date(0);
+    if(parts.length !==3) return new Date(0);
     return new Date(parts.reverse().join('-'));
 }
 
@@ -63,13 +60,23 @@ const COLUMNS = [
 ];
 
 // =======================
+// Build Table Header
+// =======================
+function buildHeader(){ 
+    theadRow.innerHTML = ''; // leegmaken
+    COLUMNS.forEach(col=>{
+        const th = document.createElement('th');
+        th.textContent = col.key;
+        theadRow.appendChild(th);
+    });
+}
+
+// =======================
 // Relatie-engine
 // =======================
 function computeRelaties(data, hoofdId){
-
     const hoofdIdStr = safe(hoofdId);
     if(!hoofdIdStr) return [];
-
     const hoofd = data.find(d => safe(d.ID) === hoofdIdStr);
     if(!hoofd) return [];
 
@@ -77,140 +84,87 @@ function computeRelaties(data, hoofdId){
     const moederId  = safe(hoofd.MoederID);
     const partnerId = safe(hoofd.PartnerID);
 
-    // =======================
-    // Context selectie: alle directe relaties, kinderen, broers/zussen
-    // =======================
     const contextData = data.filter(p=>{
         const pid = safe(p.ID);
+        if(pid === hoofdIdStr) return true;
+        if(pid === vaderId || pid === moederId) return true;
+        if(pid === partnerId) return true;
+        if(safe(p.VaderID) === hoofdIdStr || safe(p.MoederID) === hoofdIdStr) return true;
+        if(partnerId && (safe(p.VaderID) === partnerId || safe(p.MoederID) === partnerId)) return true;
 
-        if(pid === hoofdIdStr) return true; // hoofd altijd tonen
-        if(pid === vaderId || pid === moederId) return true; // ouders
-        if(pid === partnerId) return true; // partner
-        if(safe(p.VaderID) === hoofdIdStr || safe(p.MoederID) === hoofdIdStr) return true; // kinderen van hoofd
-        if(partnerId && (safe(p.VaderID) === partnerId || safe(p.MoederID) === partnerId)) return true; // kinderen van partner
-
-        // broers/zussen
         const zelfdeVader  = vaderId  && safe(p.VaderID)  === vaderId;
         const zelfdeMoeder = moederId && safe(p.MoederID) === moederId;
-
         if(pid !== hoofdIdStr && (zelfdeVader || zelfdeMoeder)) return true;
 
         return false;
     });
 
-    // =======================
-    // Mapping relaties + scenario + priority
-    // =======================
-    const mapped = contextData.map(p=>{
+    return contextData.map(p=>{
         const clone = { ...p };
         const pid = safe(p.ID);
+        clone._priority = 99; clone._scenario = 0;
 
-        clone._priority = 99; // default
-        clone._scenario = 0;
+        // Ouders → Hoofd → Partner → Kind → Broer/Zus
+        if(pid === vaderId || pid === moederId){ clone.Relatie='Ouder'; clone._priority=0; return clone; }
+        if(pid === hoofdIdStr){ clone.Relatie='Hoofd'; clone._priority=1; return clone; }
+        if(pid === partnerId){ clone.Relatie='Partner'; clone._priority=2; return clone; }
 
-        // 1️⃣ Ouders (priority 0)
-        if(pid === vaderId || pid === moederId){
-            clone.Relatie = 'Ouder';
-            clone._priority = 0;
-            return clone;
-        }
-
-        // 2️⃣ Hoofd (priority 1)
-        if(pid === hoofdIdStr){
-            clone.Relatie = 'Hoofd';
-            clone._priority = 1;
-            return clone;
-        }
-
-        // 3️⃣ Partner (priority 2)
-        if(pid === partnerId){
-            clone.Relatie = 'Partner';
-            clone._priority = 2;
-            return clone;
-        }
-
-        // 4️⃣ Kinderen (priority 3) + scenario
         const isKindHoofd = safe(p.VaderID) === hoofdIdStr || safe(p.MoederID) === hoofdIdStr;
-        const isKindPartner = partnerId &&
-                              (safe(p.VaderID) === partnerId || safe(p.MoederID) === partnerId);
+        const isKindPartner = partnerId && (safe(p.VaderID) === partnerId || safe(p.MoederID) === partnerId);
         if(isKindHoofd || isKindPartner){
-            clone.Relatie = 'Kind';
-            clone._priority = 3;
-
-            if(isKindHoofd && isKindPartner) clone._scenario = 1;
-            else if(isKindHoofd) clone._scenario = 2;
-            else if(isKindPartner) clone._scenario = 3;
-
+            clone.Relatie='Kind'; clone._priority=3;
+            clone._scenario = isKindHoofd && isKindPartner ? 1 : isKindHoofd ? 2 : 3;
             return clone;
         }
 
-        // 5️⃣ Broer/Zus (priority 4) + scenario
         const zelfdeVader  = vaderId  && safe(p.VaderID)  === vaderId;
         const zelfdeMoeder = moederId && safe(p.MoederID) === moederId;
         if(zelfdeVader || zelfdeMoeder){
-            clone.Relatie = 'Broer/Zus';
-            clone._priority = 4;
-
-            if(zelfdeVader && zelfdeMoeder) clone._scenario = 1;
-            else if(zelfdeVader) clone._scenario = 2;
-            else if(zelfdeMoeder) clone._scenario = 3;
-
+            clone.Relatie='Broer/Zus'; clone._priority=4;
+            clone._scenario = zelfdeVader && zelfdeMoeder ? 1 : zelfdeVader ? 2 : 3;
             return clone;
         }
 
         return clone;
+    }).sort((a,b)=>{
+        if(a._priority!==b._priority) return a._priority-b._priority;
+        if(a._scenario!==b._scenario) return a._scenario-b._scenario;
+        return parseDate(a.Geboortedatum)-parseDate(b.Geboortedatum);
     });
-
-    // =======================
-    // Sortering: priority → scenario → geboortedatum
-    // =======================
-    mapped.sort((a,b)=>{
-        if(a._priority !== b._priority) return a._priority - b._priority;
-        if(a._scenario !== b._scenario) return a._scenario - b._scenario;
-        return parseDate(a.Geboortedatum) - parseDate(b.Geboortedatum);
-    });
-
-    return mapped;
 }
 
 // =======================
 // Render Table
 // =======================
 function renderTable(data){
-    if(!selectedHoofdId){
-        showPlaceholder('Selecteer een persoon');
-        return;
-    }
-
+    if(!selectedHoofdId){ showPlaceholder('Selecteer een persoon'); return; }
     const contextData = computeRelaties(data, selectedHoofdId);
-    tableBody.innerHTML = '';
-
-    if(!contextData.length){
-        showPlaceholder('Geen personen gevonden');
-        return;
-    }
+    tableBody.innerHTML='';
+    if(!contextData.length){ showPlaceholder('Geen personen gevonden'); return; }
 
     contextData.forEach(p=>{
         const tr = document.createElement('tr');
-
         if(p.Relatie) tr.classList.add(`rel-${p.Relatie.toLowerCase()}`);
         if(p._scenario) tr.classList.add(`scenario-${p._scenario}`);
-
         COLUMNS.forEach(col=>{
-            const td = document.createElement('td');
-            if(col.readonly){
-                td.textContent = p[col.key] || '';
-            } else {
-                const input = document.createElement('input');
-                input.value = p[col.key] || '';
-                input.dataset.field = col.key;
-                td.appendChild(input);
-            }
+            const td=document.createElement('td');
+            if(col.readonly){ td.textContent=p[col.key]||''; }
+            else { const input=document.createElement('input'); input.value=p[col.key]||''; input.dataset.field=col.key; td.appendChild(input); }
             tr.appendChild(td);
         });
-
         tableBody.appendChild(tr);
     });
+}
+
+// =======================
+// Placeholder
+// =======================
+function showPlaceholder(msg){
+    tableBody.innerHTML='';
+    const tr=document.createElement('tr');
+    const td=document.createElement('td');
+    td.colSpan=COLUMNS.length; td.textContent=msg; td.style.textAlign='center';
+    tr.appendChild(td); tableBody.appendChild(tr);
 }
 
 // =======================
@@ -218,75 +172,36 @@ function renderTable(data){
 // =======================
 function liveSearch(){
     const term = safe(searchInput.value).toLowerCase();
-    if(!term){
-        document.getElementById('searchPopup')?.remove();
-        return;
-    }
+    document.getElementById('searchPopup')?.remove();
+    if(!term) return;
 
-    const results = dataset.filter(p =>
-        safe(p.ID).toLowerCase().includes(term) ||
-        safe(p.Roepnaam).toLowerCase().includes(term) ||
-        safe(p.Achternaam).toLowerCase().includes(term)
-    );
-
+    const results = dataset.filter(p=>safe(p.ID).toLowerCase().includes(term) || safe(p.Roepnaam).toLowerCase().includes(term) || safe(p.Achternaam).toLowerCase().includes(term));
     const rect = searchInput.getBoundingClientRect();
-    const popup = document.createElement('div');
-    popup.id = 'searchPopup';
-    popup.style.position = 'absolute';
-    popup.style.background = '#fff';
-    popup.style.border = '1px solid #999';
-    popup.style.zIndex = 1000;
-    popup.style.top = rect.bottom + window.scrollY + 'px';
-    popup.style.left = rect.left + window.scrollX + 'px';
-    popup.style.width = rect.width + 'px';
-    popup.style.maxHeight = '200px';
-    popup.style.overflowY = 'auto';
+    const popup=document.createElement('div');
+    popup.id='searchPopup'; popup.style.position='absolute'; popup.style.background='#fff';
+    popup.style.border='1px solid #999'; popup.style.zIndex=1000;
+    popup.style.top=rect.bottom+window.scrollY+'px'; popup.style.left=rect.left+window.scrollX+'px';
+    popup.style.width=rect.width+'px'; popup.style.maxHeight='200px'; popup.style.overflowY='auto';
 
     results.forEach(p=>{
-        const row = document.createElement('div');
-        row.textContent = `${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`;
-        row.style.padding = '5px';
-        row.style.cursor = 'pointer';
-
+        const row=document.createElement('div'); row.textContent=`${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`;
+        row.style.padding='5px'; row.style.cursor='pointer';
         row.addEventListener('click', ()=>{
-            selectedHoofdId = safe(p.ID); // centrale state
-            popup.remove();
-            renderTable(dataset);
+            selectedHoofdId = safe(p.ID); popup.remove(); renderTable(dataset);
         });
-
         popup.appendChild(row);
     });
 
-    if(results.length === 0){
-        const row = document.createElement('div');
-        row.textContent = 'Geen resultaten';
-        row.style.padding = '5px';
-        popup.appendChild(row);
-    }
+    if(results.length===0){ const row=document.createElement('div'); row.textContent='Geen resultaten'; row.style.padding='5px'; popup.appendChild(row); }
 
     document.body.appendChild(popup);
 }
 
 // =======================
-// Placeholder
-// =======================
-function showPlaceholder(msg){
-    tableBody.innerHTML = '';
-    const tr = document.createElement('tr');
-    const td = document.createElement('td');
-    td.colSpan = COLUMNS.length;
-    td.textContent = msg;
-    td.style.textAlign = 'center';
-    tr.appendChild(td);
-    tableBody.appendChild(tr);
-}
-
-// =======================
 // Add / Save / Refresh
 // =======================
-function addPersoon(){
-    const nieuw = {};
-    COLUMNS.forEach(col=> nieuw[col.key]='');
+function addPersoon(){ 
+    const nieuw={}; COLUMNS.forEach(col=>nieuw[col.key]='');
     nieuw.ID = window.genereerCode(nieuw,dataset);
     dataset.push(nieuw);
     selectedHoofdId = nieuw.ID;
@@ -294,43 +209,31 @@ function addPersoon(){
     renderTable(dataset);
 }
 
-function refreshTable(){
-    dataset = window.StamboomStorage.get() || [];
-    renderTable(dataset);
-}
-
 function saveDataset(){
-    const rows = tableBody.querySelectorAll('tr');
-    const nieuweDataset = [];
-    const idSet = new Set();
-
+    const rows=tableBody.querySelectorAll('tr'); const nieuweDataset=[]; const idSet=new Set();
     rows.forEach(tr=>{
-        const persoon = {};
+        const persoon={};
         COLUMNS.forEach((col,index)=>{
-            const cell = tr.cells[index];
-            if(col.readonly){
-                if(col.key === 'ID') persoon.ID = safe(cell.textContent);
-            } else {
-                const input = cell.querySelector('input');
-                persoon[col.key] = input ? input.value.trim() : '';
-            }
+            const cell=tr.cells[index];
+            if(col.readonly){ if(col.key==='ID') persoon.ID = safe(cell.textContent); }
+            else { const input=cell.querySelector('input'); persoon[col.key]=input?input.value.trim():''; }
         });
-
-        if(!persoon.ID) throw new Error('ID ontbreekt');
+        if(!persoon.ID) throw new Error('ID ontbreekt'); 
         if(idSet.has(persoon.ID)) throw new Error(`Duplicate ID: ${persoon.ID}`);
         idSet.add(persoon.ID);
         nieuweDataset.push(persoon);
     });
-
-    dataset = nieuweDataset;
-    window.StamboomStorage.set(dataset);
+    dataset=nieuweDataset; window.StamboomStorage.set(dataset);
     alert('Dataset succesvol opgeslagen');
 }
+
+function refreshTable(){ dataset=window.StamboomStorage.get()||[]; renderTable(dataset); }
 
 // =======================
 // Init
 // =======================
-renderTable(dataset);
+buildHeader();                   // ✅ header fix toegevoegd
+renderTable(dataset);            // render tabel
 searchInput.addEventListener('input', liveSearch);
 addBtn.addEventListener('click', addPersoon);
 saveBtn.addEventListener('click', saveDataset);
@@ -340,10 +243,8 @@ refreshBtn.addEventListener('click', refreshTable);
 // Sluit popup bij klik buiten
 // =======================
 document.addEventListener('click', e=>{
-    const popup = document.getElementById('searchPopup');
-    if(popup && !popup.contains(e.target) && e.target !== searchInput){
-        popup.remove();
-    }
+    const popup=document.getElementById('searchPopup');
+    if(popup && !popup.contains(e.target) && e.target!==searchInput) popup.remove();
 });
 
 })();
