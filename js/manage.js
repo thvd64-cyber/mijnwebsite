@@ -1,7 +1,7 @@
-// ======================= manage.js v1.2.7 =======================
+// ======================= manage.js v1.2.8 =======================
 // Beheer module: Hoofd + Ouders + Partner + Kinderen + Broer/Zus
 // Production hardened: null-safe + selectedHoofdId state + header fix
-// Visualisatie: Ouders → Hoofd+Partner → Kinderen → Broer/Zus
+// Visualisatie: Ouders → Hoofd+Partner → Kinderen +partner → Broer/Zus →
 // =================================================================
 (function(){ // IIFE start → voorkomt globale vervuiling
 'use strict'; // strikte modus
@@ -72,67 +72,176 @@ function buildHeader(){
 }
 
 // =======================
-// Relatie-engine
+// Relatie-engine v1.4 (Production Ready)
 // =======================
 function computeRelaties(data, hoofdId){
-    const hoofdIdStr = safe(hoofdId);
-    if(!hoofdIdStr) return [];
-    const hoofd = data.find(d => safe(d.ID) === hoofdIdStr);
-    if(!hoofd) return [];
 
-    const vaderId   = safe(hoofd.VaderID);
-    const moederId  = safe(hoofd.MoederID);
-    const partnerId = safe(hoofd.PartnerID);
+    const hoofdIdStr = safe(hoofdId);                     // Null-safe hoofd ID
+    if(!hoofdIdStr) return [];                            // Stop als geen selectie
 
+    const hoofd = data.find(d => safe(d.ID) === hoofdIdStr);  // Zoek hoofd persoon
+    if(!hoofd) return [];                                 // Stop als niet gevonden
+
+    const vaderId   = safe(hoofd.VaderID);                // Vader ID null-safe
+    const moederId  = safe(hoofd.MoederID);               // Moeder ID null-safe
+    const partnerId = safe(hoofd.PartnerID);              // Partner ID null-safe
+
+    // =======================
+    // Context filtering
+    // =======================
     const contextData = data.filter(p=>{
-        const pid = safe(p.ID);
-        if(pid === hoofdIdStr) return true;
-        if(pid === vaderId || pid === moederId) return true;
-        if(pid === partnerId) return true;
-        if(safe(p.VaderID) === hoofdIdStr || safe(p.MoederID) === hoofdIdStr) return true;
-        if(partnerId && (safe(p.VaderID) === partnerId || safe(p.MoederID) === partnerId)) return true;
+        const pid = safe(p.ID);                           // Huidige persoon ID
 
+        if(pid === hoofdIdStr) return true;               // Hoofd zelf
+        if(pid === vaderId || pid === moederId) return true;  // Ouders
+        if(pid === partnerId) return true;                // Partner
+
+        // Kinderen van hoofd
+        if(safe(p.VaderID) === hoofdIdStr || safe(p.MoederID) === hoofdIdStr) 
+            return true;
+
+        // Kinderen van partner (gezamenlijk)
+        if(partnerId && (
+            safe(p.VaderID) === partnerId ||
+            safe(p.MoederID) === partnerId
+        )) return true;
+
+        // Broer/Zus
         const zelfdeVader  = vaderId  && safe(p.VaderID)  === vaderId;
         const zelfdeMoeder = moederId && safe(p.MoederID) === moederId;
-        if(pid !== hoofdIdStr && (zelfdeVader || zelfdeMoeder)) return true;
+        if(pid !== hoofdIdStr && (zelfdeVader || zelfdeMoeder)) 
+            return true;
 
-        return false;
+        // Partner van kind
+        const isPartnerVanKind = data.some(k =>
+            (safe(k.VaderID) === hoofdIdStr ||
+             safe(k.MoederID) === hoofdIdStr) &&
+            safe(k.PartnerID) === pid
+        );
+        if(isPartnerVanKind) return true;
+
+        return false;                                     // Anders niet tonen
     });
 
+    // =======================
+    // Relatie mapping
+    // =======================
     return contextData.map(p=>{
-        const clone = { ...p };
-        const pid = safe(p.ID);
-        clone._priority = 99; clone._scenario = 0;
+        const clone = { ...p };                           // Clone object
+        const pid = safe(p.ID);                           // ID null-safe
 
-        // Ouders → Hoofd → Partner → Kind → Broer/Zus
-        if(pid === vaderId || pid === moederId){ clone.Relatie='Ouder'; clone._priority=0; return clone; }
-        if(pid === hoofdIdStr){ clone.Relatie='Hoofd'; clone._priority=1; return clone; }
-        if(pid === partnerId){ clone.Relatie='Partner'; clone._priority=2; return clone; }
+        clone._priority = 99;                             // Default prioriteit
+        clone._scenario = 0;                              // Default scenario
+        clone._childOf  = '';                             // Link naar kind
 
-        const isKindHoofd = safe(p.VaderID) === hoofdIdStr || safe(p.MoederID) === hoofdIdStr;
-        const isKindPartner = partnerId && (safe(p.VaderID) === partnerId || safe(p.MoederID) === partnerId);
-        if(isKindHoofd || isKindPartner){
-            clone.Relatie='Kind'; clone._priority=3;
-            clone._scenario = isKindHoofd && isKindPartner ? 1 : isKindHoofd ? 2 : 3;
+        // ===== Ouders =====
+        if(pid === vaderId || pid === moederId){
+            clone.Relatie = 'Ouder';
+            clone._priority = 0;
             return clone;
         }
 
+        // ===== Hoofd =====
+        if(pid === hoofdIdStr){
+            clone.Relatie = 'Hoofd';
+            clone._priority = 1;
+            return clone;
+        }
+
+        // ===== Partner =====
+        if(pid === partnerId){
+            clone.Relatie = 'Partner';
+            clone._priority = 2;
+            return clone;
+        }
+
+        // ===== Kind =====
+        const isKindHoofd = 
+            safe(p.VaderID) === hoofdIdStr || 
+            safe(p.MoederID) === hoofdIdStr;
+
+        const isKindPartner = partnerId && (
+            safe(p.VaderID) === partnerId || 
+            safe(p.MoederID) === partnerId
+        );
+
+        if(isKindHoofd || isKindPartner){
+            clone.Relatie = 'Kind';
+            clone._priority = 3;
+
+            // Scenario:
+            // 1 = beide ouders
+            // 2 = alleen hoofd
+            // 3 = alleen partner
+            clone._scenario = 
+                isKindHoofd && isKindPartner ? 1 :
+                isKindHoofd ? 2 : 3;
+
+            return clone;
+        }
+
+        // ===== Partner van Kind =====
+        const childLinked = data.find(k =>
+            (safe(k.VaderID) === hoofdIdStr ||
+             safe(k.MoederID) === hoofdIdStr) &&
+            safe(k.PartnerID) === pid
+        );
+
+        if(childLinked){
+            clone.Relatie = 'kind-partner';
+            clone._priority = 3;                          // Zelfde blok als kind
+            clone._scenario = 4;                          // Na scenario 1-3
+            clone._childOf  = safe(childLinked.ID);       // Link voor sortering
+            return clone;
+        }
+
+        // ===== Broer/Zus =====
         const zelfdeVader  = vaderId  && safe(p.VaderID)  === vaderId;
         const zelfdeMoeder = moederId && safe(p.MoederID) === moederId;
+
         if(zelfdeVader || zelfdeMoeder){
-           clone.Relatie='broer-zus'; clone._priority=4;
-            clone._scenario = zelfdeVader && zelfdeMoeder ? 1 : zelfdeVader ? 2 : 3;
+            clone.Relatie = 'broer-zus';
+            clone._priority = 4;
+
+            // Scenario:
+            // 1 = zelfde vader + moeder
+            // 2 = alleen vader
+            // 3 = alleen moeder
+            clone._scenario =
+                zelfdeVader && zelfdeMoeder ? 1 :
+                zelfdeVader ? 2 : 3;
+
             return clone;
         }
 
-        return clone;
-    }).sort((a,b)=>{
-        if(a._priority!==b._priority) return a._priority-b._priority;
-        if(a._scenario!==b._scenario) return a._scenario-b._scenario;
-        return parseDate(a.Geboortedatum)-parseDate(b.Geboortedatum);
+        return clone;                                     // Fallback
+    })
+
+    // =======================
+    // Sortering
+    // =======================
+    .sort((a,b)=>{
+
+        // 1. Prioriteit (structuur)
+        if(a._priority !== b._priority) 
+            return a._priority - b._priority;
+
+        // 2. Partner van kind direct onder kind
+        if(a.Relatie === 'kind-partner' && a._childOf === b.ID) 
+            return 1;
+
+        if(b.Relatie === 'kind-partner' && b._childOf === a.ID) 
+            return -1;
+
+        // 3. Scenario volgorde
+        if(a._scenario !== b._scenario) 
+            return a._scenario - b._scenario;
+
+        // 4. Leeftijd (oudste eerst)
+        return parseDate(a.Geboortedatum) - 
+               parseDate(b.Geboortedatum);
     });
 }
-
 // =======================
 // Render Table
 // =======================
