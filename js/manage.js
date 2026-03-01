@@ -179,25 +179,45 @@ function computeRelaties(data, hoofdId){
             return;
         }
 
-        // ===== Broer/Zus van HoofdID (G1) =====
-        if(pid!==hoofdIdStr && (zelfdeVader || zelfdeMoeder)){
-            clone.Relatie='broer-zus';
-            clone._priority=4;                // Na kinderen
-            clone._scenario = zelfdeVader && zelfdeMoeder ? 1 : zelfdeVader ? 2 : 3;
-            mapped.push(clone);
-            return;
-        }
+       // ===== Broer/Zus van HoofdID (G1) =====
+const isSibling =
+    pid !== hoofdIdStr &&
+    (
+        (vaderId  && safe(p.VaderID)  === vaderId) ||
+        (moederId && safe(p.MoederID) === moederId)
+    );
 
-        // ===== Partner van Broer/Zus (G1) =====
-        const siblingLinked = data.find(k => ((zelfdeVader || zelfdeMoeder) && safe(k.ID)!==hoofdIdStr && safe(k.PartnerID)===pid));
-        if(siblingLinked){
-            clone.Relatie='sibling-partner';
-            clone._priority=4;                // Zelfde blok als broer/zus
-            clone._scenario=4;                // Na alle broer/zus
-            clone._linkedTo=safe(siblingLinked.ID); // Direct onder gekoppelde broer/zus
-            mapped.push(clone);
-            return;
-        }
+if(isSibling){
+    clone.Relatie='broer-zus';
+    clone._priority=4;                // Na kinderen
+    clone._scenario =
+        (vaderId && moederId &&
+         safe(p.VaderID)===vaderId &&
+         safe(p.MoederID)===moederId) ? 1 :
+        (vaderId && safe(p.VaderID)===vaderId) ? 2 : 3;
+    mapped.push(clone);
+    return;
+}
+
+// ===== Partner van Broer/Zus (G1) =====
+const siblingLinked = data.find(s =>
+    s.ID !== hoofdIdStr &&
+    (
+        (vaderId  && safe(s.VaderID)  === vaderId) ||
+        (moederId && safe(s.MoederID) === moederId)
+    ) &&
+    safe(s.PartnerID) === pid
+);
+
+if(siblingLinked){
+    clone.Relatie='sibling-partner';
+    clone._priority=4;                // Zelfde blok als broer/zus
+    clone._scenario=4;                // Na alle broer/zus
+    clone._linkedTo=safe(siblingLinked.ID); // Direct onder gekoppelde broer/zus
+    mapped.push(clone);
+    return;
+}
+        
     });
 
     // =======================
