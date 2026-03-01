@@ -120,7 +120,7 @@ function computeRelaties(data, hoofdId){
         const zelfdeVader  = vaderId  && safe(p.VaderID)  === vaderId;
         const zelfdeMoeder = moederId && safe(p.MoederID) === moederId;
         if(zelfdeVader || zelfdeMoeder){
-            clone.Relatie='Broer/Zus'; clone._priority=4;
+           clone.Relatie='broer-zus'; clone._priority=4;
             clone._scenario = zelfdeVader && zelfdeMoeder ? 1 : zelfdeVader ? 2 : 3;
             return clone;
         }
