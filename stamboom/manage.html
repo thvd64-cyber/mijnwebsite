@@ -1,115 +1,295 @@
-<!-- ======================= stamboom/manage.html v1.2.1 ======================= -->
-<!-- Lazy-load, zoek, refresh, opslaan en toevoegen en relatie tabel via js -->
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief -->
-    <title>MyFamTreeCollab - Manage</title> <!-- Browser tab titel -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- CSS styling -->
+// ======================= manage.js v1.1.2 =======================
+// Beheer module: CRUD + zoek + refresh + placeholder + styling
+// .2 live search selectie update with preview search results
+// ==============================================================================
 
- <style>
-.rel-hoofd   { background-color: #fffde7 !important; font-weight: 600; }
-.rel-ouder   { background-color: #e8f5e9 !important; }
-.rel-partner { background-color: #f3e5f5 !important; }
-.rel-kind    { background-color: #e3f2fd !important; }
+(function(){
+    'use strict'; // Strikte modus voor veiliger JS
 
-/* Scenario overrides */
-.rel-kind.scenario-1 { background-color: #e3f2fd !important; }
-.rel-kind.scenario-2 { background-color: #eef7fe !important; }
-.rel-kind.scenario-3 { background-color: #f7fbff !important; }
+    // =======================
+    // DOM elementen ophalen
+    // =======================
+    const tableBody = document.querySelector('#manageTable tbody'); // tbody van tabel
+    const theadRow = document.querySelector('#manageTable thead tr'); // header rij
+    const addBtn = document.getElementById('addBtn'); // + Toevoegen
+    const saveBtn = document.getElementById('saveBtn'); // Opslaan
+    const loadBtn = document.getElementById('loadBtn'); // Zoeken / Laad
+    const refreshBtn = document.getElementById('refreshBtn'); // Refresh
+    const searchInput = document.getElementById('searchPerson'); // zoekveld
 
-#manageTable td input {
-    background-color: transparent;
-    border: none;
-    width: 100%;
-    box-sizing: border-box;
-}
-</style>
-    
-</head>
-<body>
+    // =======================
+    // Dataset & schema
+    // =======================
+    const FIELDS = window.StamboomSchema.fields; // velden uit schema
+    const ID_FIELD = FIELDS[0]; // ID veld is eerste
+    let dataset = window.StamboomStorage.get() || []; // dataset ophalen
 
-<!-- ======================= layout/TopBar.html ======================= -->
-<div id="topbar-placeholder"></div>
-<script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html') // TopBar inladen via fetch
-    .then(resp => resp.text())
-    .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
-</script>
+    // =======================
+    // Header opbouwen
+    // =======================
+    function buildHeader(){
+        theadRow.innerHTML = ''; // eerst leegmaken
+        const th = document.createElement('th'); // eerste kolom leeg (relatie)
+        th.textContent = '';
+        theadRow.appendChild(th); // toevoegen
+        FIELDS.forEach(f=>{
+            const th = document.createElement('th'); // kolom per veld
+            th.textContent = f; // header naam
+            theadRow.appendChild(th);
+        });
+    }
 
-<!-- ======================= layout/Navbar.html ======================= -->
-<div id="Navbar-placeholder"></div>
-<script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar inladen via fetch
-    .then(resp => resp.text())
-    .then(data => {
-        const placeholder = document.getElementById('Navbar-placeholder');
-        if(placeholder) placeholder.innerHTML = data; // toevoegen aan DOM
-        else console.error('Navbar-placeholder niet gevonden');
+    // =======================
+    // Tabel renderen
+    // =======================
+    function renderTable(data){
+        tableBody.innerHTML = ''; // tbody leegmaken
+        if(!data || data.length === 0){ // geen data → placeholder
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = FIELDS.length+1;
+            td.textContent = 'Geen personen gevonden';
+            td.style.textAlign = 'center';
+            tr.appendChild(td);
+            tableBody.appendChild(tr);
+            return;
+        }
+
+        data.forEach(p=>{
+            const tr = document.createElement('tr'); // rij maken
+            // =======================
+            // Achtergrond kleur op basis van relatie
+            // =======================
+            if(p.Relatie) tr.className = p.Relatie; // verwacht: 'main','parent','partner','child','sibling'
+
+            FIELDS.forEach(f=>{
+                const td = document.createElement('td');
+                if(f === ID_FIELD) td.textContent = p[f] || ''; // ID readonly
+                else{
+                    const input = document.createElement('input'); // editable input
+                    input.value = p[f] || '';
+                    input.dataset.field = f;
+                    td.appendChild(input);
+                }
+                tr.appendChild(td);
+            });
+
+            tableBody.appendChild(tr); // rij toevoegen
+        });
+    }
+
+    // =======================
+    // Placeholder tonen
+    // =======================
+    function initPlaceholder(){
+        tableBody.innerHTML = ''; // tbody leegmaken
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = FIELDS.length+1; // overspant alle kolommen
+        td.textContent = 'Klik op "Laad Persoon" of zoek om data te tonen';
+        td.style.textAlign = 'center';
+        tr.appendChild(td);
+        tableBody.appendChild(tr);
+    }
+
+    // =======================
+    // Nieuwe persoon toevoegen
+    // =======================
+    function addPersoon(){
+        const nieuw = window.StamboomSchema.empty(); // lege persoon
+        nieuw[ID_FIELD] = window.genereerCode(nieuw,dataset); // unieke ID
+        dataset.push(nieuw); // toevoegen
+        window.StamboomStorage.set(dataset); // opslaan
+        initPlaceholder(); // placeholder tonen ipv volledige tabel
+    }
+
+    // =======================
+    // Dataset opslaan
+    // =======================
+    function saveDataset(){
+        const rows = tableBody.querySelectorAll('tr');
+        const nieuweDataset = [];
+        const idSet = new Set();
+
+        rows.forEach(tr=>{
+            const persoon = window.StamboomSchema.empty();
+            FIELDS.forEach((f,i)=>{
+                const cell = tr.cells[i];
+                if(f===ID_FIELD) persoon[f] = cell.textContent.trim();
+                else{
+                    const input = cell.querySelector('input');
+                    persoon[f] = input ? input.value.trim() : '';
+                }
+            });
+            if(!window.StamboomSchema.validate(persoon))
+                throw new Error(`Validatie mislukt voor ID ${persoon[ID_FIELD]}`);
+            if(idSet.has(persoon[ID_FIELD]))
+                throw new Error(`Duplicate ID: ${persoon[ID_FIELD]}`);
+            idSet.add(persoon[ID_FIELD]);
+            nieuweDataset.push(persoon);
+        });
+
+        dataset = nieuweDataset;
+        window.StamboomStorage.set(dataset);
+        alert('Dataset succesvol opgeslagen');
+    }
+
+// ======================= manage.js – live search popup =======================
+(function(){
+    'use strict';
+    const tableBody = document.querySelector('#manageTable tbody');
+    const theadRow = document.querySelector('#manageTable thead tr');
+    const addBtn = document.getElementById('addBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const searchInput = document.getElementById('searchPerson');
+
+    const FIELDS = window.StamboomSchema.fields;
+    const ID_FIELD = FIELDS[0];
+    let dataset = window.StamboomStorage.get() || [];
+
+    // ======================= HEADER & TABEL =======================
+    function buildHeader(){
+        theadRow.innerHTML = '';
+        const th = document.createElement('th'); th.textContent=''; theadRow.appendChild(th);
+        FIELDS.forEach(f=>{ const th = document.createElement('th'); th.textContent=f; theadRow.appendChild(th); });
+    }
+
+    function renderTable(data){
+        tableBody.innerHTML='';
+        if(!data || data.length===0){
+            const tr = document.createElement('tr'); const td = document.createElement('td');
+            td.colSpan=FIELDS.length+1; td.textContent='Geen personen gevonden'; td.style.textAlign='center';
+            tr.appendChild(td); tableBody.appendChild(tr); return;
+        }
+        data.forEach(p=>{
+            const tr = document.createElement('tr'); if(p.Relatie) tr.className=p.Relatie;
+            FIELDS.forEach(f=>{
+                const td = document.createElement('td');
+                if(f===ID_FIELD) td.textContent=p[f]||'';
+                else { const input=document.createElement('input'); input.value=p[f]||''; input.dataset.field=f; td.appendChild(input);}
+                tr.appendChild(td);
+            });
+            tableBody.appendChild(tr);
+        });
+    }
+
+    function initPlaceholder(){
+        tableBody.innerHTML=''; const tr=document.createElement('tr'); const td=document.createElement('td');
+        td.colSpan=FIELDS.length+1; td.textContent='Begin met typen om personen te zoeken'; td.style.textAlign='center';
+        tr.appendChild(td); tableBody.appendChild(tr);
+    }
+
+    // ======================= CRUD =======================
+    function addPersoon(){ const nieuw=window.StamboomSchema.empty(); nieuw[ID_FIELD]=window.genereerCode(nieuw,dataset); dataset.push(nieuw); window.StamboomStorage.set(dataset); initPlaceholder(); }
+
+    function saveDataset(){
+        const rows=tableBody.querySelectorAll('tr'); const nieuweDataset=[]; const idSet=new Set();
+        rows.forEach(tr=>{
+            const persoon=window.StamboomSchema.empty();
+            FIELDS.forEach((f,i)=>{
+                const cell=tr.cells[i]; if(f===ID_FIELD) persoon[f]=cell.textContent.trim();
+                else { const input=cell.querySelector('input'); persoon[f]=input?input.value.trim():''; }
+            });
+            if(!window.StamboomSchema.validate(persoon)) throw new Error(`Validatie mislukt voor ID ${persoon[ID_FIELD]}`);
+            if(idSet.has(persoon[ID_FIELD])) throw new Error(`Duplicate ID: ${persoon[ID_FIELD]}`);
+            idSet.add(persoon[ID_FIELD]); nieuweDataset.push(persoon);
+        });
+        dataset=nieuweDataset; window.StamboomStorage.set(dataset); alert('Dataset succesvol opgeslagen');
+    }
+
+    function refreshTable(){ dataset = window.StamboomStorage.get() || []; initPlaceholder(); }
+
+    // ======================= LIVE SEARCH POPUP =======================
+    function createPopup(){
+        let popup = document.getElementById('searchPopup');
+        if(!popup){
+            popup = document.createElement('div');
+            popup.id = 'searchPopup';
+            popup.style.position='absolute';
+            popup.style.border='1px solid #999';
+            popup.style.background='#fff';
+            popup.style.boxShadow='0 2px 10px rgba(0,0,0,0.3)';
+            popup.style.zIndex=1000;
+            popup.style.maxHeight='200px';
+            popup.style.overflowY='auto';
+            popup.style.display='none';
+            document.body.appendChild(popup);
+        }
+        return popup;
+    }
+
+    function showPopup(results, rect){
+        const popup = createPopup();
+        popup.innerHTML=''; // lege popup
+        results.forEach(p=>{
+            const row = document.createElement('div');
+            row.style.padding='5px 10px';
+            row.style.cursor='pointer';
+            row.style.borderBottom='1px solid #eee';
+            row.textContent = `${p.ID} | ${p.Roepnaam} | ${p.Achternaam} | ${p.Geboortedatum || ''}`;
+            row.addEventListener('click', ()=>{
+                renderTable([p]); // geselecteerde persoon in main table
+                popup.style.display='none';
+            });
+            popup.appendChild(row);
+        });
+        if(results.length===0){
+            const row = document.createElement('div');
+            row.style.padding='5px 10px';
+            row.textContent='Geen resultaten';
+            popup.appendChild(row);
+        }
+        popup.style.top=(rect.bottom+window.scrollY)+'px';
+        popup.style.left=(rect.left+window.scrollX)+'px';
+        popup.style.width=rect.width+'px';
+        popup.style.display='block';
+    }
+
+    function liveSearch(){
+        const term = searchInput.value.trim().toLowerCase();
+        if(!term){ createPopup().style.display='none'; return; }
+        const results = dataset.filter(p=>
+            (p.ID && p.ID.toLowerCase().includes(term)) ||
+            (p.Roepnaam && p.Roepnaam.toLowerCase().includes(term)) ||
+            (p.Achternaam && p.Achternaam.toLowerCase().includes(term))
+        );
+        const rect = searchInput.getBoundingClientRect();
+        showPopup(results, rect);
+    }
+
+    // ======================= CLICK OUTSIDE = CLOSE POPUP =======================
+    document.addEventListener('click', e=>{
+        const popup = document.getElementById('searchPopup');
+        if(popup && !popup.contains(e.target) && e.target!==searchInput) popup.style.display='none';
     });
-</script>
 
-<!-- ======================= Pagina Titel ======================= -->
-<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const pageTitleDiv = document.getElementById('pageTitle');
-    pageTitleDiv.textContent = "Manage Stamboom"; // Titel tonen
-});
-</script>
+    // ======================= INIT =======================
+    buildHeader(); initPlaceholder();
+    addBtn.addEventListener('click', addPersoon);
+    saveBtn.addEventListener('click', saveDataset);
+    refreshBtn.addEventListener('click', refreshTable);
+    searchInput.addEventListener('input', liveSearch);
+})();
+    // ======================= Event listener =======================
+    searchInput.addEventListener('input', searchPerson); // live search
+})();
+    // =======================
+    // Refresh functionaliteit
+    // =======================
+    function refreshTable(){
+        dataset = window.StamboomStorage.get() || []; // dataset opnieuw ophalen
+        initPlaceholder(); // placeholder tonen ipv direct alle data
+    }
 
-<!-- ======================= MAIN CONTENT ======================= -->
-<main>
-<div class="container">
-    <!-- Zoekveld en knoppen -->
-    <input type="text" id="searchPerson" placeholder="Voer ID of naam in">
-    <button id="loadBtn">Laad Persoon</button>
-    <button id="refreshBtn">Refresh</button>
-    <button id="addBtn">+ Toevoegen</button>
-    <button id="saveBtn">Opslaan</button>
-    
-<!-- ======================= Zoekresultaat Formulier ======================= -->
-<div id="searchResultForm" style="display:none; margin-top:15px; border:1px solid #ccc; padding:10px;">
-    <h4>Gevonden personen:</h4>
-    <form id="resultForm">
-        <table id="resultTable">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Roepnaam</th>
-                    <th>Achternaam</th>
-                    <th>Geboortedatum</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Zoekresultaten komen hier -->
-            </tbody>
-        </table>
-    </form>
-</div>
+    // =======================
+    // Initialisatie
+    // =======================
+    buildHeader(); // headers maken
+    initPlaceholder(); // placeholder tonen
+    addBtn.addEventListener('click', addPersoon); // + Toevoegen
+    saveBtn.addEventListener('click', saveDataset); // Opslaan
+    searchInput.addEventListener('input', liveSearch); // live search
+    refreshBtn.addEventListener('click', refreshTable); // Refresh
 
-    <!-- Manage tabel -->
-    <table id="manageTable">
-        <thead><tr></tr></thead> <!-- headers vullen via manage.js -->
-        <tbody></tbody> <!-- tbody vullen via manage.js -->
-    </table>
-</div>
-</main>
-
-<!-- ======================= SCRIPTS ======================= -->
-<script src="../js/schema.js"></script> <!-- Schema functies -->
-<script src="../js/idGenerator.js"></script> <!-- Unieke ID generator -->
-<script src="../js/storage.js"></script> <!-- Opslag functies -->
-<script src="../js/manage.js"></script> <!-- alle logica: renderTable, relaties, CRUD -->
-
-<!-- ======================= FOOTER ======================= -->
-<div id="footer-placeholder"></div>
-<script>
-fetch('/MyFamTreeCollab/Layout/Footer.html') // Footer inladen via fetch
-    .then(resp => resp.text())
-    .then(data => document.getElementById('footer-placeholder').innerHTML = data);
-</script>
-
-</body>
-</html>
+})();
