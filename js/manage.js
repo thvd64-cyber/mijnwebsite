@@ -134,55 +134,61 @@ function computeRelaties(data, hoofdId){
 // =======================
 // Render Table v1.3.3 (boomstructuur)
 // =======================
-function renderTable(dataset){
-    if(!selectedHoofdId){ showPlaceholder('Selecteer een persoon'); return; }
+function computeRelaties(data, hoofdId){
+    const hoofdIdStr = safe(hoofdId);                          // Null-safe hoofdID
+    if(!hoofdIdStr) return [];
 
-    const contextData = computeRelaties(dataset, selectedHoofdId);
-    if(!contextData.length){ showPlaceholder('Geen personen gevonden'); return; }
+    const hoofd = data.find(d => safe(d.ID) === hoofdIdStr);   // Vind hoofd persoon
+    if(!hoofd) return [];
 
-    tableBody.innerHTML = '';
-    const lookupByID = {};
-    contextData.forEach(p => { lookupByID[p.ID] = p; }); // snelle lookup
+    const vaderId   = safe(hoofd.VaderID);
+    const moederId  = safe(hoofd.MoederID);
+    const partnerId = safe(hoofd.PartnerID);
 
-    const renderQueue = [];
+    return data.map(p=>{
+        const clone = {...p};
+        const pid = safe(p.ID);
+        clone.Relatie = ''; // default leeg
 
-    // ===== Ouders boven het hoofd =====
-    contextData.filter(p => p.Relatie==='VHoofdID'||p.Relatie==='MHoofdID').forEach(p=>renderQueue.push(p));
+        // ===== Ouders =====
+        if(pid === vaderId) clone.Relatie = 'VHoofdID';
+        if(pid === moederId) clone.Relatie = 'MHoofdID';
 
-    // Hoofd
-    const hoofd = contextData.find(p => p.Relatie==='HoofdID');
-    if(hoofd) renderQueue.push(hoofd);
+        // ===== Hoofd =====
+        if(pid === hoofdIdStr) clone.Relatie = 'HoofdID';
 
-    // Partner hoofd
-    contextData.filter(p => p.Relatie==='PHoofdID').forEach(p=>renderQueue.push(p));
+        // ===== Partner hoofd =====
+        if(pid === partnerId) clone.Relatie = 'PHoofdID';
 
-    // Kinderen + PartnerKind
-    contextData.filter(p => p.Relatie==='KindID').forEach(kind=>{
-        renderQueue.push(kind);
-        const pk = contextData.find(p => p.Relatie==='PKPartnerID' &&
-                                         (p.VaderID===kind.ID||p.MoederID===kind.ID||safe(p.PartnerID)===kind.ID));
-        if(pk) renderQueue.push(pk);
-    });
+        // ===== Kinderen =====
+        if(safe(p.VaderID) === hoofdIdStr || safe(p.MoederID) === hoofdIdStr ||
+           (partnerId && (safe(p.VaderID) === partnerId || safe(p.MoederID) === partnerId))){
+            clone.Relatie = 'KindID';
+        }
 
-    // Broers/Zussen + PartnerBroerZus
-    contextData.filter(p => p.Relatie==='BZID').forEach(sib=>{
-        renderQueue.push(sib);
-        const bzPartner = contextData.find(p => p.Relatie==='BZPartnerID' &&
-                                                (p.VaderID===sib.ID||p.MoederID===sib.ID||safe(p.PartnerID)===sib.ID));
-        if(bzPartner) renderQueue.push(bzPartner);
-    });
+        // ===== Partner van Kind =====
+        const isPK = data.some(k =>
+            (safe(k.VaderID) === hoofdIdStr || safe(k.MoederID) === hoofdIdStr) &&
+            safe(k.PartnerID) === pid
+        );
+        if(isPK) clone.Relatie = 'PKPartnerID';
 
-    // render elke rij
-    renderQueue.forEach(p=>{
-        const tr = document.createElement('tr');
-        if(p.Relatie) tr.classList.add(`rel-${p.Relatie.toLowerCase()}`);
-        COLUMNS.forEach(col=>{
-            const td = document.createElement('td');
-            if(col.readonly){ td.textContent=p[col.key]||''; }
-            else{ const input=document.createElement('input'); input.value=p[col.key]||''; input.dataset.field=col.key; td.appendChild(input); }
-            tr.appendChild(td);
-        });
-        tableBody.appendChild(tr);
+        // ===== Broers/Zussen =====
+        const zelfdeVader  = vaderId && safe(p.VaderID) === vaderId;
+        const zelfdeMoeder = moederId && safe(p.MoederID) === moederId;
+        if(pid!==hoofdIdStr && (zelfdeVader || zelfdeMoeder)){
+            clone.Relatie = 'BZID';
+        }
+
+        // ===== Partner Broer/Zus =====
+        const isBZPartner = data.some(k =>
+            (vaderId && safe(k.VaderID)===vaderId || moederId && safe(k.MoederID)===moederId) &&
+            pid!==hoofdIdStr &&
+            safe(k.PartnerID)===pid
+        );
+        if(isBZPartner) clone.Relatie = 'BZPartnerID';
+
+        return clone;
     });
 }
 
