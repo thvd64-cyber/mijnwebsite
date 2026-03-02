@@ -1,4 +1,4 @@
-// ======================= js/manage.js v1.3.3 =======================
+// ======================= js/manage.js v1.3.4 =======================
 // Beheer module: Hoofd + Ouders + Partner + Kinderen + Broer/Zus
 // Production hardened: null-safe + selectedHoofdId state + header fix
 // Visualisatie: HoofdID → VHoofdID / MHoofdID / PHoofdID → KindID → PKPartnerID → BZID → BZPartnerID
@@ -263,27 +263,46 @@ function addPersoon(){
     renderTable(dataset);
 }
 
+// --------- OPSLAAN VERSIE MET FEEDBACK ---------
 function saveDataset(){
-    const rows = tableBody.querySelectorAll('tr');
-    const nieuweDataset = [];
-    const idSet = new Set();
+    const rows = tableBody.querySelectorAll('tr'); // alle rijen
+    let wijzigingen = 0; // teller voor wijzigingen
+    const idSet = new Set(); // check op duplicate ID's
 
     rows.forEach(tr=>{
         const persoon = {};
         COLUMNS.forEach((col,index)=>{
             const cell = tr.cells[index];
-            if(col.readonly){ if(col.key==='ID') persoon.ID = safe(cell.textContent); }
-            else{ const input=cell.querySelector('input'); persoon[col.key]=input?input.value.trim():''; }
+            if(col.readonly){ 
+                persoon[col.key] = safe(cell.textContent); // readonly waarden kopiëren
+            } else { 
+                const input = cell.querySelector('input');
+                persoon[col.key] = input ? input.value.trim() : ''; // editable waarde
+            }
         });
+        // valideer ID uniek
         if(!persoon.ID) throw new Error('ID ontbreekt');
         if(idSet.has(persoon.ID)) throw new Error(`Duplicate ID: ${persoon.ID}`);
         idSet.add(persoon.ID);
-        nieuweDataset.push(persoon);
+
+        // check voor wijzigingen t.o.v. dataset
+        const orig = dataset.find(p => p.ID===persoon.ID);
+        if(!orig || JSON.stringify(orig)!==JSON.stringify(persoon)) wijzigingen++;
     });
 
-    dataset = nieuweDataset;
-    window.StamboomStorage.set(dataset);
-    alert('Dataset succesvol opgeslagen');
+    // update dataset en opslag
+    dataset = Array.from(idSet).map(id=>rows.forEach(tr=>{
+        const p = {};
+        COLUMNS.forEach((col,index)=>{
+            const cell = tr.cells[index];
+            if(col.readonly){ p[col.key] = safe(cell.textContent); }
+            else { const input = cell.querySelector('input'); p[col.key] = input ? input.value.trim() : ''; }
+        });
+        return p;
+    })).flat();
+
+    window.StamboomStorage.set(dataset); // opslaan in storage
+    alert(`${wijzigingen} wijziging(en) opgeslagen`); // feedback
 }
 
 function refreshTable(){
