@@ -259,55 +259,51 @@ function addPersoon(){
     nieuw.ID = window.genereerCode(nieuw,dataset); // genereer unieke ID
     dataset.push(nieuw);
     selectedHoofdId = nieuw.ID;
-    window.StamboomStorage.set(dataset);
+    window.StamboomStorage.set(dataset); // opslaan in storage
     renderTable(dataset);
 }
 
-// --------- OPSLAAN VERSIE MET FEEDBACK ---------
+// =======================
+// SaveDataset Correct Merge v1.0
+// =======================
 function saveDataset(){
-    const rows = tableBody.querySelectorAll('tr'); // alle rijen
+    const rows = tableBody.querySelectorAll('tr'); // alle rijen in de tabel
+    const updatedDataset = [...dataset]; // start met bestaande dataset
+    const idSet = new Set(); // check op duplicaten
     let wijzigingen = 0; // teller voor wijzigingen
-    const idSet = new Set(); // check op duplicate ID's
 
     rows.forEach(tr=>{
         const persoon = {};
         COLUMNS.forEach((col,index)=>{
             const cell = tr.cells[index];
-            if(col.readonly){ 
-                persoon[col.key] = safe(cell.textContent); // readonly waarden kopiëren
-            } else { 
-                const input = cell.querySelector('input');
-                persoon[col.key] = input ? input.value.trim() : ''; // editable waarde
-            }
+            if(col.readonly){ persoon[col.key] = safe(cell.textContent); } // readonly waarden
+            else { const input = cell.querySelector('input'); persoon[col.key] = input ? input.value.trim() : ''; } // editable waarden
         });
-        // valideer ID uniek
-        if(!persoon.ID) throw new Error('ID ontbreekt');
+
+        // validatie ID
+        if(!persoon.ID) throw new Error('ID ontbreekt'); 
         if(idSet.has(persoon.ID)) throw new Error(`Duplicate ID: ${persoon.ID}`);
         idSet.add(persoon.ID);
 
-        // check voor wijzigingen t.o.v. dataset
-        const orig = dataset.find(p => p.ID===persoon.ID);
-        if(!orig || JSON.stringify(orig)!==JSON.stringify(persoon)) wijzigingen++;
+        // check op wijzigingen
+        const idx = updatedDataset.findIndex(p=>p.ID === persoon.ID);
+        if(idx!==-1){
+            if(JSON.stringify(updatedDataset[idx]) !== JSON.stringify(persoon)) wijzigingen++; // teller verhogen
+            updatedDataset[idx] = {...updatedDataset[idx], ...persoon}; // merge wijzigingen
+        } else { 
+            updatedDataset.push(persoon); // nieuwe persoon toevoegen
+            wijzigingen++;
+        }
     });
 
-    // update dataset en opslag
-    dataset = Array.from(idSet).map(id=>rows.forEach(tr=>{
-        const p = {};
-        COLUMNS.forEach((col,index)=>{
-            const cell = tr.cells[index];
-            if(col.readonly){ p[col.key] = safe(cell.textContent); }
-            else { const input = cell.querySelector('input'); p[col.key] = input ? input.value.trim() : ''; }
-        });
-        return p;
-    })).flat();
-
+    dataset = updatedDataset; // merge resultaat
     window.StamboomStorage.set(dataset); // opslaan in storage
-    alert(`${wijzigingen} wijziging(en) opgeslagen`); // feedback
+    alert(`${wijzigingen} wijziging(en) opgeslagen`); // korte feedback
 }
 
 function refreshTable(){
-    dataset = window.StamboomStorage.get() || [];
-    renderTable(dataset);
+    dataset = window.StamboomStorage.get() || []; // opnieuw laden
+    renderTable(dataset); // render tabel
 }
 
 // =======================
@@ -315,10 +311,10 @@ function refreshTable(){
 // =======================
 buildHeader(); // bouw header
 renderTable(dataset); // render tabel
-searchInput.addEventListener('input', liveSearch);
-addBtn.addEventListener('click', addPersoon);
-saveBtn.addEventListener('click', saveDataset);
-refreshBtn.addEventListener('click', refreshTable);
+searchInput.addEventListener('input', liveSearch); // live search listener
+addBtn.addEventListener('click', addPersoon); // add listener
+saveBtn.addEventListener('click', saveDataset); // save listener
+refreshBtn.addEventListener('click', refreshTable); // refresh listener
 
 // =======================
 // Sluit popup bij klik buiten
@@ -328,4 +324,4 @@ document.addEventListener('click', e=>{
     if(popup && !popup.contains(e.target) && e.target!==searchInput) popup.remove();
 });
 
-})();
+})(); // IIFE einde
