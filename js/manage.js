@@ -1,35 +1,33 @@
-// ======================= manage.js v1.3.2 =======================
-// Beheer module: Hoofd + Ouders + Partner + Kinderen + Broer/Zus
-// Production hardened: null-safe + selectedHoofdId state + header fix
-// Visualisatie: Ouders → Hoofd+Partner → Kinderen → Broer/Zus
-// =================================================================
-(function(){ // IIFE start → voorkomt globale vervuiling
-'use strict'; // strikte modus
+// ======================= manage.js v1.3.0 =======================
+// Alle relaties zichtbaar: ouders, hoofd+partner, kind+partner, broer/zus+partner
+
+(function(){
+'use strict';
 
 // =======================
 // DOM-elementen
 // =======================
-const tableBody   = document.querySelector('#manageTable tbody'); // tbody referentie
-const theadRow    = document.querySelector('#manageTable thead tr'); // header rij
-const addBtn      = document.getElementById('addBtn'); // toevoegen knop
-const saveBtn     = document.getElementById('saveBtn'); // opslaan knop
-const refreshBtn  = document.getElementById('refreshBtn'); // refresh knop
-const searchInput = document.getElementById('searchPerson'); // zoekveld
+const tableBody   = document.querySelector('#manageTable tbody');
+const theadRow    = document.querySelector('#manageTable thead tr');
+const addBtn      = document.getElementById('addBtn');
+const saveBtn     = document.getElementById('saveBtn');
+const refreshBtn  = document.getElementById('refreshBtn');
+const searchInput = document.getElementById('searchPerson');
 
 // =======================
 // State
 // =======================
-let dataset = window.StamboomStorage.get() || []; // dataset laden
-let selectedHoofdId = null; // actieve geselecteerde persoon
+let dataset = window.StamboomStorage.get() || [];
+let selectedHoofdId = null;
 
 // =======================
-// Helpers (null-safe)
+// Helpers
 // =======================
-function safe(val){ return val ? String(val).trim() : ''; } // null-safe string
-function parseDate(d){ 
+function safe(val){ return val ? String(val).trim() : ''; }
+function parseDate(d){
     if(!d) return new Date(0);
     const parts = d.split('-');
-    if(parts.length !==3) return new Date(0);
+    if(parts.length!==3) return new Date(0);
     return new Date(parts.reverse().join('-'));
 }
 
@@ -60,10 +58,10 @@ const COLUMNS = [
 ];
 
 // =======================
-// Build Table Header
+// Build header
 // =======================
-function buildHeader(){ 
-    theadRow.innerHTML = ''; // leegmaken
+function buildHeader(){
+    theadRow.innerHTML='';
     COLUMNS.forEach(col=>{
         const th = document.createElement('th');
         th.textContent = col.key;
@@ -72,200 +70,117 @@ function buildHeader(){
 }
 
 // =======================
-// Relatie-engine v1.5
-// Inclusief:
-// - Partner van kind
-// - Partner van broer/zus
-// - Directe positionering onder gekoppelde persoon
-// - Null-safe
+// Relatie-engine
 // =======================
-function computeRelaties(data, hoofdId){
+function computeRelaties(data, hoofdId){ 
+    const hoofdIdStr = safe(hoofdId); // nfo: hoofd ID veilig maken
+    if(!hoofdIdStr) return []; // nfo: geen hoofd geselecteerd → lege lijst
+    const hoofd = data.find(d=>safe(d.ID)===hoofdIdStr); // nfo: hoofd persoon vinden
+    if(!hoofd) return []; // nfo: hoofd niet gevonden → lege lijst
+    const vaderId = safe(hoofd.VaderID); // nfo: vader ID hoofd
+    const moederId = safe(hoofd.MoederID); // nfo: moeder ID hoofd
+    const partnerId = safe(hoofd.PartnerID); // nfo: partner ID hoofd
 
-    const hoofdIdStr = safe(hoofdId);                          // Hoofd ID null-safe
-    if(!hoofdIdStr) return [];                                 // Stop indien leeg
-
-    const hoofd = data.find(d => safe(d.ID) === hoofdIdStr);   // Zoek hoofd persoon
-    if(!hoofd) return [];                                      // Stop indien niet gevonden
-
-    const vaderId   = safe(hoofd.VaderID);                     // Vader ID
-    const moederId  = safe(hoofd.MoederID);                    // Moeder ID
-    const partnerId = safe(hoofd.PartnerID);                   // Partner ID
-
-    // =======================
-    // Context filtering
-    // =======================
+    // Context: filter alle relevante personen
     const contextData = data.filter(p=>{
-        const pid = safe(p.ID);                                // Huidige ID
+        const pid = safe(p.ID); // nfo: persoon ID veilig maken
 
-        if(pid === hoofdIdStr) return true;                    // Hoofd
-        if(pid === vaderId || pid === moederId) return true;   // Ouders
-        if(pid === partnerId) return true;                     // Partner
+        // Hoofd, ouders, partner
+        if(pid===hoofdIdStr || pid===vaderId || pid===moederId || pid===partnerId) return true; // nfo: altijd opnemen
 
-        // Kinderen van hoofd
-        if(safe(p.VaderID) === hoofdIdStr ||
-           safe(p.MoederID) === hoofdIdStr)
-            return true;
-
-        // Kinderen van partner
-        if(partnerId && (
-            safe(p.VaderID) === partnerId ||
-            safe(p.MoederID) === partnerId))
-            return true;
+        // Kinderen van hoofd of partner
+        if(safe(p.VaderID)===hoofdIdStr || safe(p.MoederID)===hoofdIdStr) return true; // nfo: kind van hoofd
+        if(partnerId && (safe(p.VaderID)===partnerId || safe(p.MoederID)===partnerId)) return true; // nfo: kind van partner
 
         // Broer/Zus
-        const zelfdeVader  = vaderId  && safe(p.VaderID)  === vaderId;
-        const zelfdeMoeder = moederId && safe(p.MoederID) === moederId;
-        if(pid !== hoofdIdStr && (zelfdeVader || zelfdeMoeder))
-            return true;
+        const zelfdeVader = vaderId && safe(p.VaderID)===vaderId; // nfo: check zelfde vader
+        const zelfdeMoeder = moederId && safe(p.MoederID)===moederId; // nfo: check zelfde moeder
+        if(pid!==hoofdIdStr && (zelfdeVader || zelfdeMoeder)) return true; // nfo: sibling opnemen
 
-        // Partner van kind
-        const isPartnerVanKind = data.some(k =>
-            (safe(k.VaderID) === hoofdIdStr ||
-             safe(k.MoederID) === hoofdIdStr) &&
-            safe(k.PartnerID) === pid
-        );
-        if(isPartnerVanKind) return true;
+        // Partner van siblings
+        if(data.some(k => ((zelfdeVader || zelfdeMoeder) && safe(k.ID)!==hoofdIdStr && safe(k.PartnerID)===pid))) return true; // nfo: partner van broer/zus
 
-        // Partner van broer/zus
-        const isPartnerVanSibling = data.some(k =>
-            (
-                (vaderId  && safe(k.VaderID)  === vaderId) ||
-                (moederId && safe(k.MoederID) === moederId)
-            ) &&
-            safe(k.ID) !== hoofdIdStr &&
-            safe(k.PartnerID) === pid
-        );
-        if(isPartnerVanSibling) return true;
-
-        return false;                                          // Anders uitsluiten
+        return false; // nfo: overige personen niet opnemen
     });
 
-    // =======================
-    // Relatie mapping
-    // =======================
-    return contextData.map(p=>{
-        const clone = { ...p };                                // Clone
-        const pid = safe(p.ID);
+    // Mapping relaties
+    const mapped = []; // nfo: array om relaties in op te slaan
 
-        clone._priority = 99;                                  // Default
-        clone._scenario = 0;
-        clone._linkedTo = '';                                   // Voor sortering
+    contextData.forEach(p=>{
+        const clone = { ...p }; // nfo: clone object maken
+        const pid = safe(p.ID); // nfo: persoon ID veilig maken
+        clone._priority = 99; // nfo: default prioriteit
+        clone._scenario = 0; // nfo: default scenario
+        clone._linkedTo = ''; // nfo: default linkedTo
 
         // ===== Ouders =====
-        if(pid === vaderId || pid === moederId){
-            clone.Relatie = 'Ouder';
-            clone._priority = 0;
-            return clone;
+        if(pid === vaderId || pid === moederId){ 
+            clone.Relatie='Ouder'; 
+            clone._priority=0; 
+            mapped.push(clone); 
+            return; // nfo: ouder toevoegen en stoppen
         }
 
         // ===== Hoofd =====
-        if(pid === hoofdIdStr){
-            clone.Relatie = 'Hoofd';
-            clone._priority = 1;
-            return clone;
+        if(pid === hoofdIdStr){ 
+            clone.Relatie='Hoofd'; 
+            clone._priority=1; 
+            mapped.push(clone); 
+            return; // nfo: hoofd toevoegen en stoppen
         }
 
-        // ===== Partner =====
-        if(pid === partnerId){
-            clone.Relatie = 'Partner';
-            clone._priority = 2;
-            return clone;
+        // ===== Partner van hoofd =====
+        if(pid === partnerId){ 
+            clone.Relatie='Partner'; 
+            clone._priority=2; 
+            clone._linkedTo=hoofdIdStr; 
+            mapped.push(clone); 
+            return; // nfo: partner toevoegen en stoppen
         }
 
-        // ===== Kind =====
-        const isKindHoofd =
-            safe(p.VaderID) === hoofdIdStr ||
-            safe(p.MoederID) === hoofdIdStr;
+        // ===== Broer/Zus eerst =====
+        const isSibling = pid!==hoofdIdStr && ((vaderId && safe(p.VaderID)===vaderId) || (moederId && safe(p.MoederID)===moederId)); // nfo: sibling check
+        if(isSibling){
+            clone.Relatie='broer-zus'; 
+            clone._priority=4; 
+            clone._scenario=(safe(p.VaderID)===vaderId && safe(p.MoederID)===moederId)?1:(safe(p.VaderID)===vaderId)?2:3; // nfo: 1=volle, 2=via vader, 3=via moeder
+            mapped.push(clone); 
+            return; // nfo: sibling toegevoegd
+        }
 
-        const isKindPartner = partnerId && (
-            safe(p.VaderID) === partnerId ||
-            safe(p.MoederID) === partnerId
-        );
-
+        // ===== Kind (3 scenario's) =====
+        const isKindHoofd = safe(p.VaderID)===hoofdIdStr || safe(p.MoederID)===hoofdIdStr; // nfo: kind van hoofd
+        const isKindPartner = partnerId && (safe(p.VaderID)===partnerId || safe(p.MoederID)===partnerId); // nfo: kind van partner
         if(isKindHoofd || isKindPartner){
-            clone.Relatie = 'Kind';
-            clone._priority = 3;
-
-            clone._scenario =
-                isKindHoofd && isKindPartner ? 1 :
-                isKindHoofd ? 2 : 3;
-
-            return clone;
+            clone.Relatie='Kind'; 
+            clone._priority=3; 
+            clone._scenario = isKindHoofd && isKindPartner ? 1 : isKindHoofd ? 2 : 3; // nfo: scenario 1,2,3
+            mapped.push(clone); 
+            return; // nfo: kind toegevoegd
         }
 
-        // ===== Partner van Kind =====
-        const childLinked = data.find(k =>
-            (safe(k.VaderID) === hoofdIdStr ||
-             safe(k.MoederID) === hoofdIdStr) &&
-            safe(k.PartnerID) === pid
-        );
-
-        if(childLinked){
-            clone.Relatie = 'kind-partner';
-            clone._priority = 3;
-            clone._scenario = 4;
-            clone._linkedTo = safe(childLinked.ID);
-            return clone;
-        }
-
-        // ===== Broer/Zus =====
-        const zelfdeVader  = vaderId  && safe(p.VaderID)  === vaderId;
-        const zelfdeMoeder = moederId && safe(p.MoederID) === moederId;
-
-        if(zelfdeVader || zelfdeMoeder){
-            clone.Relatie = 'broer-zus';
-            clone._priority = 4;
-
-            clone._scenario =
-                zelfdeVader && zelfdeMoeder ? 1 :
-                zelfdeVader ? 2 : 3;
-
-            return clone;
-        }
-
-        // ===== Partner van Broer/Zus =====
-        const siblingLinked = data.find(k =>
-            (
-                (vaderId  && safe(k.VaderID)  === vaderId) ||
-                (moederId && safe(k.MoederID) === moederId)
-            ) &&
-            safe(k.ID) !== hoofdIdStr &&
-            safe(k.PartnerID) === pid
-        );
-
+        // ===== Partner van broer/zus =====
+        const siblingLinked = data.find(s => s.ID!==hoofdIdStr && ((vaderId && safe(s.VaderID)===vaderId) || (moederId && safe(s.MoederID)===moederId)) && safe(s.PartnerID)===pid); // nfo: partner van sibling zoeken
         if(siblingLinked){
-            clone.Relatie = 'sibling-partner';
-            clone._priority = 4;
-            clone._scenario = 4;
-            clone._linkedTo = safe(siblingLinked.ID);
-            return clone;
+            clone.Relatie='sibling-partner'; 
+            clone._priority=4; 
+            clone._scenario=4; 
+            clone._linkedTo=safe(siblingLinked.ID); 
+            mapped.push(clone); 
+            return; // nfo: partner sibling toegevoegd
         }
+    });
 
-        return clone;
-    })
-
-    // =======================
-    // Sortering
-    // =======================
-    .sort((a,b)=>{
-
-        // 1️⃣ Prioriteit
-        if(a._priority !== b._priority)
-            return a._priority - b._priority;
-
-        // 2️⃣ Partner direct onder gekoppelde persoon
-        if(a._linkedTo === b.ID) return 1;
-        if(b._linkedTo === a.ID) return -1;
-
-        // 3️⃣ Scenario volgorde
-        if(a._scenario !== b._scenario)
-            return a._scenario - b._scenario;
-
-        // 4️⃣ Leeftijd (oudste eerst)
-        return parseDate(a.Geboortedatum) -
-               parseDate(b.Geboortedatum);
+    // Sortering: prioriteit -> linkedTo -> scenario -> leeftijd
+    return mapped.sort((a,b)=>{
+        if(a._priority!==b._priority) return a._priority-b._priority; // nfo: eerst prioriteit
+        if(a._linkedTo===b.ID) return 1; // nfo: linkedTo check
+        if(b._linkedTo===a.ID) return -1; // nfo: linkedTo check
+        if(a._scenario!==b._scenario) return a._scenario-b._scenario; // nfo: scenario sortering
+        return parseDate(a.Geboortedatum)-parseDate(b.Geboortedatum); // nfo: laatste sortering op leeftijd
     });
 }
+
 // =======================
 // Render Table
 // =======================
@@ -274,7 +189,6 @@ function renderTable(data){
     const contextData = computeRelaties(data, selectedHoofdId);
     tableBody.innerHTML='';
     if(!contextData.length){ showPlaceholder('Geen personen gevonden'); return; }
-
     contextData.forEach(p=>{
         const tr = document.createElement('tr');
         if(p.Relatie) tr.classList.add(`rel-${p.Relatie.toLowerCase()}`);
@@ -301,13 +215,12 @@ function showPlaceholder(msg){
 }
 
 // =======================
-// Live Search
+// Live search
 // =======================
 function liveSearch(){
     const term = safe(searchInput.value).toLowerCase();
     document.getElementById('searchPopup')?.remove();
     if(!term) return;
-
     const results = dataset.filter(p=>safe(p.ID).toLowerCase().includes(term) || safe(p.Roepnaam).toLowerCase().includes(term) || safe(p.Achternaam).toLowerCase().includes(term));
     const rect = searchInput.getBoundingClientRect();
     const popup=document.createElement('div');
@@ -315,7 +228,6 @@ function liveSearch(){
     popup.style.border='1px solid #999'; popup.style.zIndex=1000;
     popup.style.top=rect.bottom+window.scrollY+'px'; popup.style.left=rect.left+window.scrollX+'px';
     popup.style.width=rect.width+'px'; popup.style.maxHeight='200px'; popup.style.overflowY='auto';
-
     results.forEach(p=>{
         const row=document.createElement('div'); row.textContent=`${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`;
         row.style.padding='5px'; row.style.cursor='pointer';
@@ -324,16 +236,14 @@ function liveSearch(){
         });
         popup.appendChild(row);
     });
-
     if(results.length===0){ const row=document.createElement('div'); row.textContent='Geen resultaten'; row.style.padding='5px'; popup.appendChild(row); }
-
     document.body.appendChild(popup);
 }
 
 // =======================
 // Add / Save / Refresh
 // =======================
-function addPersoon(){ 
+function addPersoon(){
     const nieuw={}; COLUMNS.forEach(col=>nieuw[col.key]='');
     nieuw.ID = window.genereerCode(nieuw,dataset);
     dataset.push(nieuw);
@@ -343,12 +253,14 @@ function addPersoon(){
 }
 
 function saveDataset(){
-    const rows=tableBody.querySelectorAll('tr'); const nieuweDataset=[]; const idSet=new Set();
+    const rows=tableBody.querySelectorAll('tr'); 
+    const nieuweDataset=[]; 
+    const idSet=new Set();
     rows.forEach(tr=>{
         const persoon={};
         COLUMNS.forEach((col,index)=>{
             const cell=tr.cells[index];
-            if(col.readonly){ if(col.key==='ID') persoon.ID = safe(cell.textContent); }
+            if(col.readonly){ if(col.key==='ID') persoon.ID=safe(cell.textContent); }
             else { const input=cell.querySelector('input'); persoon[col.key]=input?input.value.trim():''; }
         });
         if(!persoon.ID) throw new Error('ID ontbreekt'); 
@@ -356,7 +268,8 @@ function saveDataset(){
         idSet.add(persoon.ID);
         nieuweDataset.push(persoon);
     });
-    dataset=nieuweDataset; window.StamboomStorage.set(dataset);
+    dataset=nieuweDataset;
+    window.StamboomStorage.set(dataset);
     alert('Dataset succesvol opgeslagen');
 }
 
@@ -365,19 +278,14 @@ function refreshTable(){ dataset=window.StamboomStorage.get()||[]; renderTable(d
 // =======================
 // Init
 // =======================
-buildHeader();                   // ✅ header fix toegevoegd
-renderTable(dataset);            // render tabel
+buildHeader();
+renderTable(dataset);
 searchInput.addEventListener('input', liveSearch);
 addBtn.addEventListener('click', addPersoon);
 saveBtn.addEventListener('click', saveDataset);
 refreshBtn.addEventListener('click', refreshTable);
-
-// =======================
-// Sluit popup bij klik buiten
-// =======================
 document.addEventListener('click', e=>{
     const popup=document.getElementById('searchPopup');
     if(popup && !popup.contains(e.target) && e.target!==searchInput) popup.remove();
 });
-
 })();
