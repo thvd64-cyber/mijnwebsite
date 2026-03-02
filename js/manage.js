@@ -233,84 +233,107 @@ function showPlaceholder(msg){
     tr.appendChild(td); tableBody.appendChild(tr);
 }
 
+// ======================= Flatten helper voor computeRelaties output
 // =======================
-// Live Search
+function flattenContext(context){ // Converteer object van computeRelaties naar array geschikt voor renderTable
+    const arr = []; // Maak lege array voor resultaten
+    if(context.HoofdID) arr.push({ID: context.HoofdID, Relatie:'Hoofd'}); // Voeg hoofd toe als object
+    context.Kinderen.forEach(k => arr.push({ID: k.KindID, Relatie:'Kind', ...k})); // Voeg elk kind toe met Relatie 'Kind'
+    context.BroersZussen.forEach(bz => arr.push({ID: bz.BZID, Relatie:'BroerZus', ...bz})); // Voeg elke broer/zus toe met Relatie 'BroerZus'
+    return arr; // Geef platte array terug
+}
+
+// ======================= Render Table (aangepast voor flattenContext)
 // =======================
-function liveSearch(){
-    const term = safe(searchInput.value).toLowerCase();
-    document.getElementById('searchPopup')?.remove();
-    if(!term) return;
+function renderTable(data){
+    if(!selectedHoofdId){ showPlaceholder('Selecteer een persoon'); return; } // Stop en toon placeholder als geen hoofd geselecteerd
+    const contextData = flattenContext(computeRelaties(data, selectedHoofdId)); // Haal hiërarchie op en flatten naar array
+    tableBody.innerHTML=''; // Maak tbody leeg
+    if(!contextData.length){ showPlaceholder('Geen personen gevonden'); return; } // Stop en toon placeholder als geen data
 
-    const results = dataset.filter(p=>safe(p.ID).toLowerCase().includes(term) || safe(p.Roepnaam).toLowerCase().includes(term) || safe(p.Achternaam).toLowerCase().includes(term));
-    const rect = searchInput.getBoundingClientRect();
-    const popup=document.createElement('div');
-    popup.id='searchPopup'; popup.style.position='absolute'; popup.style.background='#fff';
-    popup.style.border='1px solid #999'; popup.style.zIndex=1000;
-    popup.style.top=rect.bottom+window.scrollY+'px'; popup.style.left=rect.left+window.scrollX+'px';
-    popup.style.width=rect.width+'px'; popup.style.maxHeight='200px'; popup.style.overflowY='auto';
-
-    results.forEach(p=>{
-        const row=document.createElement('div'); row.textContent=`${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`;
-        row.style.padding='5px'; row.style.cursor='pointer';
-        row.addEventListener('click', ()=>{
-            selectedHoofdId = safe(p.ID); popup.remove(); renderTable(dataset);
+    contextData.forEach(p=>{ // Loop door elk object in de platte array
+        const tr = document.createElement('tr'); // Maak een nieuwe tabelrij
+        if(p.Relatie) tr.classList.add(`rel-${p.Relatie.toLowerCase()}`); // Voeg relatie-klasse toe (hoofd/kind/broerZus)
+        if(p._scenario) tr.classList.add(`scenario-${p._scenario}`); // Voeg scenario-klasse toe als aanwezig
+        COLUMNS.forEach(col=>{ // Loop door kolommen
+            const td=document.createElement('td'); // Maak tabelcel
+            if(col.readonly){ td.textContent=p[col.key]||''; } // Vul readonly velden
+            else { 
+                const input=document.createElement('input'); // Maak input voor bewerkbare velden
+                input.value=p[col.key]||''; // Vul value
+                input.dataset.field=col.key; // Zet field attribuut
+                td.appendChild(input); // Voeg input toe aan cel
+            }
+            tr.appendChild(td); // Voeg cel toe aan rij
         });
-        popup.appendChild(row);
+        tableBody.appendChild(tr); // Voeg rij toe aan tbody
+    });
+}
+
+// ======================= Live Search – herwerkt, hiërarchie compatible
+// =======================
+function liveSearch() {
+    const term = safe(searchInput.value).toLowerCase(); // Haal input op, maak null-safe en lowercase voor case-insensitive zoek
+    document.getElementById('searchPopup')?.remove();  // Verwijder eventueel bestaande popup om duplicaten te voorkomen
+    if (!term) return;                                  // Stop als er niets is ingevuld
+
+    // =======================
+    // Filter dataset
+    // =======================
+    const results = dataset.filter(p =>
+        safe(p.ID).toLowerCase().includes(term) ||       // Zoek op ID
+        safe(p.Roepnaam).toLowerCase().includes(term) ||// Zoek op Roepnaam
+        safe(p.Achternaam).toLowerCase().includes(term) // Zoek op Achternaam
+    );
+
+    // =======================
+    // Bepaal positie van de zoekinput
+    // =======================
+    const rect = searchInput.getBoundingClientRect();   // Verkrijg afmetingen en positie van input veld
+    const popup = document.createElement('div');        // Maak een div voor popup
+    popup.id = 'searchPopup';                           // Zet ID zodat we het later kunnen verwijderen
+    popup.style.position = 'absolute';                  // Absolute positionering tov viewport
+    popup.style.background = '#fff';                    // Achtergrond wit
+    popup.style.border = '1px solid #999';             // Lichte rand
+    popup.style.zIndex = 1000;                          // Zorg dat popup boven andere elementen ligt
+    popup.style.top = rect.bottom + window.scrollY + 'px'; // Plaats net onder input veld
+    popup.style.left = rect.left + window.scrollX + 'px';  // Horizontaal alignen met input
+    popup.style.width = rect.width + 'px';             // Zelfde breedte als input
+    popup.style.maxHeight = '200px';                   // Max hoogte met scroll
+    popup.style.overflowY = 'auto';                    // Scroll bij overflow
+
+    // =======================
+    // Voeg resultaten toe
+    // =======================
+    results.forEach(p => {
+        const row = document.createElement('div');             // Maak een div per resultaat
+        row.textContent = `${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`; // Toon basis info
+        row.style.padding = '5px';                             // Padding voor leesbaarheid
+        row.style.cursor = 'pointer';                          // Cursor pointer bij hover
+        row.addEventListener('click', () => {                 // Klik-event
+            selectedHoofdId = safe(p.ID);                     // Stel geselecteerd hoofd in
+            popup.remove();                                   // Sluit popup
+            renderTable(dataset);                              // Render tabel met nieuwe hoofd
+        });
+        popup.appendChild(row);                                // Voeg resultaat toe aan popup
     });
 
-    if(results.length===0){ const row=document.createElement('div'); row.textContent='Geen resultaten'; row.style.padding='5px'; popup.appendChild(row); }
+    // =======================
+    // Toon "geen resultaten" als leeg
+    // =======================
+    if (results.length === 0) {
+        const row = document.createElement('div');             // Maak een div
+        row.textContent = 'Geen resultaten';                  // Bericht voor lege resultaten
+        row.style.padding = '5px';                             // Padding
+        popup.appendChild(row);                                 // Voeg toe aan popup
+    }
 
-    document.body.appendChild(popup);
+    // =======================
+    // Voeg popup toe aan document
+    // =======================
+    document.body.appendChild(popup);                         // Voeg popup toe aan DOM zodat zichtbaar
 }
 
+// ======================= Event listener toevoegen
 // =======================
-// Add / Save / Refresh
-// =======================
-function addPersoon(){ 
-    const nieuw={}; COLUMNS.forEach(col=>nieuw[col.key]='');
-    nieuw.ID = window.genereerCode(nieuw,dataset);
-    dataset.push(nieuw);
-    selectedHoofdId = nieuw.ID;
-    window.StamboomStorage.set(dataset);
-    renderTable(dataset);
-}
-
-function saveDataset(){
-    const rows=tableBody.querySelectorAll('tr'); const nieuweDataset=[]; const idSet=new Set();
-    rows.forEach(tr=>{
-        const persoon={};
-        COLUMNS.forEach((col,index)=>{
-            const cell=tr.cells[index];
-            if(col.readonly){ if(col.key==='ID') persoon.ID = safe(cell.textContent); }
-            else { const input=cell.querySelector('input'); persoon[col.key]=input?input.value.trim():''; }
-        });
-        if(!persoon.ID) throw new Error('ID ontbreekt'); 
-        if(idSet.has(persoon.ID)) throw new Error(`Duplicate ID: ${persoon.ID}`);
-        idSet.add(persoon.ID);
-        nieuweDataset.push(persoon);
-    });
-    dataset=nieuweDataset; window.StamboomStorage.set(dataset);
-    alert('Dataset succesvol opgeslagen');
-}
-
-function refreshTable(){ dataset=window.StamboomStorage.get()||[]; renderTable(dataset); }
-
-// =======================
-// Init
-// =======================
-buildHeader();                   // ✅ header fix toegevoegd
-renderTable(dataset);            // render tabel
-searchInput.addEventListener('input', liveSearch);
-addBtn.addEventListener('click', addPersoon);
-saveBtn.addEventListener('click', saveDataset);
-refreshBtn.addEventListener('click', refreshTable);
-
-// =======================
-// Sluit popup bij klik buiten
-// =======================
-document.addEventListener('click', e=>{
-    const popup=document.getElementById('searchPopup');
-    if(popup && !popup.contains(e.target) && e.target!==searchInput) popup.remove();
-});
-
-})();
+searchInput.addEventListener('input', liveSearch); // Zorg dat liveSearch wordt aangeroepen bij elke input verandering
