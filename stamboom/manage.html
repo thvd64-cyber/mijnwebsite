@@ -1,4 +1,4 @@
-<!-- ======================= stamboom/manage.html v1.2.3 ======================= -->
+<!-- ======================= stamboom/manage.html v1.2.4 ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <div class="container">
     <!-- Zoekveld en knoppen -->
     <input type="text" id="searchPerson" placeholder="Voer ID of naam in"> <!-- Live search veld -->
-    <button id="loadBtn">Laad Persoon</button> <!-- Handmatige load knop -->
+    <!-- <button id="loadBtn">Laad Persoon</button> --> <!-- verwijderd: Laad Persoon knop is overbodig door live search -->
     <button id="refreshBtn">Refresh</button> <!-- Refresh tabel -->
     <button id="addBtn">+ Toevoegen</button> <!-- Nieuwe persoon toevoegen -->
     <button id="saveBtn">Opslaan</button> <!-- Dataset opslaan -->
@@ -163,4 +163,3 @@ fetch('/MyFamTreeCollab/Layout/Footer.html')
   .then(resp => resp.text())
   .then(data => document.getElementById('footer-placeholder').innerHTML = data); // Footer in DOM plaatsen
 </script>
-
