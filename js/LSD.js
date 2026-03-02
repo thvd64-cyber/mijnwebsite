@@ -1,7 +1,4 @@
-// ================================
-// Admin Menu Visibility – lines 1-15
-// ================================
-
+// ======================= js/LSD.js v0.0.0
 // Functie check of admin modus aan staat
 // Controleert localStorage of de admin modus actief is
 function isAdmin() {
