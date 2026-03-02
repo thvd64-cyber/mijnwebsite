@@ -1,170 +1,334 @@
 <!-- ======================= stamboom/manage.html v1.2.3 ======================= -->
-<!-- Lazy-load, zoek, refresh, opslaan en toevoegen en relatie tabel via js -->
-
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief -->
-    <title>MyFamTreeCollab - Manage</title> <!-- Browser tab titel -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- CSS styling -->
-<style>
- /* ======================= RELATIE STYLING MANAGE TABLE ======================= */
+    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 zodat alle tekens correct weergegeven worden -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief ontwerp voor mobiel/desktop -->
+    <title>MyFamTreeCollab - Manage</title> <!-- Titel die in de browser tab verschijnt -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Algemene CSS van de applicatie -->
 
-/* ====== Hoofd ====== */
-.rel-hoofd { 
-    background-color: #fffde7 !important; /* Licht geel zodat Hoofd direct opvalt */
-    font-weight: 600;                     /* Bold font voor herkenbaarheid */
-}
+    <!-- ======================= RELATIE STYLING MANAGE TABLE ======================= -->
+    <style>
+    /* ====== Hoofd ====== */
+    .rel-hoofd { 
+        background-color: #fffde7 !important; /* Licht geel zodat het hoofd van de stamboom direct opvalt */
+        font-weight: 600;                     /* Bold font voor snelle herkenning van hoofdID */
+    }
 
-/* ====== Ouders ====== */
-.rel-vhoofdid, .rel-mhoofdid { 
-    background-color: #e8f5e9 !important; /* Licht groen voor ouders */
-    font-weight: 500;                     /* Semi-bold */
-}
+    /* ====== Ouders ====== */
+    .rel-vhoofdid, .rel-mhoofdid { 
+        background-color: #e8f5e9 !important; /* Licht groen voor ouders (vader/moeder) zodat ze duidelijk verschillen van hoofd) */
+        font-weight: 500;                     /* Semi-bold voor visueel verschil */
+    }
 
-/* ====== Partner van Hoofd ====== */
-.rel-phoofdid { 
-    background-color: #f3e5f5 !important; /* Licht paars/lavendel voor partner */
-    font-style: italic;                   /* Italic om visueel verschil te maken */
-}
+    /* ====== Partner van Hoofd ====== */
+    .rel-phoofdid { 
+        background-color: #f3e5f5 !important; /* Licht paars/lavendel voor partner van hoofd, visueel apart van hoofd en ouders */
+        font-style: italic;                   /* Italic zodat partner makkelijker te onderscheiden is */
+    }
 
-/* ====== Kinderen ====== */
-.rel-kindid { 
-    background-color: #e3f2fd !important; /* Licht blauw voor kinderen */
-    font-weight: 400;                     /* Normaal gewicht */
-}
+    /* ====== Kinderen ====== */
+    .rel-kindid { 
+        background-color: #e3f2fd !important; /* Licht blauw voor kinderen, neutraal en rustgevend */
+        font-weight: 400;                     /* Normaal font gewicht */
+    }
 
-/* Scenario overrides Kind */
-.rel-kindid.scenario-1 { background-color: #e3f2fd !important; } /* Scenario 1 blauw */
-.rel-kindid.scenario-2 { background-color: #eef7fe !important; } /* Scenario 2 iets lichter blauw */
-.rel-kindid.scenario-3 { background-color: #f7fbff !important; } /* Scenario 3 nog lichter blauw */
+    /* Scenario overrides Kind */
+    .rel-kindid.scenario-1 { background-color: #e3f2fd !important; } /* Scenario 1 = standaard blauw */
+    .rel-kindid.scenario-2 { background-color: #eef7fe !important; } /* Scenario 2 = iets lichter blauw, subtiel verschil */
+    .rel-kindid.scenario-3 { background-color: #f7fbff !important; } /* Scenario 3 = zeer licht blauw, differentiatie voor scenario’s */
 
-/* ====== Partner van Kind ====== */
-.rel-pkpartnerid { 
-    background-color: #d0ebff !important; /* Iets donkerder blauw voor partner kind */
-    font-style: italic;                   /* Italic om verschil te maken */
-}
+    /* ====== Partner van Kind ====== */
+    .rel-pkpartnerid { 
+        background-color: #d0ebff !important; /* Iets donkerder blauw voor partner van kind om verschil te maken met kind zelf */
+        font-style: italic;                   /* Italic voor visueel onderscheid */
+    }
 
-/* Scenario overrides Partner van Kind */
-.rel-pkpartnerid.scenario-1 { background-color: #d0ebff !important; } 
-.rel-pkpartnerid.scenario-2 { background-color: #daf4ff !important; } 
-.rel-pkpartnerid.scenario-3 { background-color: #e4f9ff !important; } 
+    /* Scenario overrides Partner van Kind */
+    .rel-pkpartnerid.scenario-1 { background-color: #d0ebff !important; } /* Scenario 1 */
+    .rel-pkpartnerid.scenario-2 { background-color: #daf4ff !important; } /* Scenario 2 */
+    .rel-pkpartnerid.scenario-3 { background-color: #e4f9ff !important; } /* Scenario 3 */
 
-/* ====== Broers/Zussen ====== */
-.rel-bzid { 
-    background-color: #fff3e0 !important; /* Licht oranje voor broer/zus */
-    font-weight: 500;                     /* Semi-bold */
-}
+    /* ====== Broers/Zussen ====== */
+    .rel-bzid { 
+        background-color: #fff3e0 !important; /* Licht oranje voor broer/zus, opvallend maar niet te fel */
+        font-weight: 500;                     /* Semi-bold */
+    }
 
-/* Scenario overrides Broer/Zus */
-.rel-bzid.scenario-1 { background-color: #fff3e0 !important; } 
-.rel-bzid.scenario-2 { background-color: #fff7ed !important; } 
-.rel-bzid.scenario-3 { background-color: #fffaf1 !important; } 
+    /* Scenario overrides Broer/Zus */
+    .rel-bzid.scenario-1 { background-color: #fff3e0 !important; } /* Scenario 1 */
+    .rel-bzid.scenario-2 { background-color: #fff7ed !important; } /* Scenario 2 = iets lichter */
+    .rel-bzid.scenario-3 { background-color: #fffaf1 !important; } /* Scenario 3 = nog lichter */
 
-/* ====== Partner van Broer/Zus ====== */
-.rel-bzpartnerid { 
-    background-color: #fbe9e7 !important; /* Iets donkerder oranje */
-    font-style: italic;                   /* Italic font */
-}
+    /* ====== Partner van Broer/Zus ====== */
+    .rel-bzpartnerid { 
+        background-color: #fbe9e7 !important; /* Iets donkerder oranje voor partner van broer/zus */
+        font-style: italic;                   /* Italic font voor onderscheid */
+    }
 
-/* Scenario overrides Partner Broer/Zus */
-.rel-bzpartnerid.scenario-1 { background-color: #fbe9e7 !important; } 
-.rel-bzpartnerid.scenario-2 { background-color: #fcebe9 !important; } 
-.rel-bzpartnerid.scenario-3 { background-color: #fdecea !important; } 
+    /* Scenario overrides Partner Broer/Zus */
+    .rel-bzpartnerid.scenario-1 { background-color: #fbe9e7 !important; } /* Scenario 1 */
+    .rel-bzpartnerid.scenario-2 { background-color: #fcebe9 !important; } /* Scenario 2 */
+    .rel-bzpartnerid.scenario-3 { background-color: #fdecea !important; } /* Scenario 3 */
 
-/* ====== Algemene input cel styling ====== */
-#manageTable td input { 
-    background-color: transparent; /* Transparant zodat celkleur zichtbaar blijft */
-    border: none;                  /* Geen border voor cleaner look */
-    width: 100%;                   /* Input vult gehele celbreedte */
-    box-sizing: border-box;        /* Padding en border vallen binnen breedte */
-    cursor: text;                  /* Cursor wordt text bij hover */
-}
+    /* ====== Algemene input cel styling ====== */
+    #manageTable td input { 
+        background-color: transparent; /* Input achtergrond transparant zodat celkleur zichtbaar blijft */
+        border: none;                  /* Geen borders voor cleaner look */
+        width: 100%;                   /* Input vult volledige celbreedte */
+        box-sizing: border-box;        /* Padding valt binnen breedte */
+        cursor: text;                  /* Cursor verandert naar tekst bij hover */
+    }
 
-/* ====== Hover effect voor rijen ====== */
-#manageTable tr:hover { 
-    background-color: rgba(0,0,0,0.05); /* Lichte grijze overlay bij hover */
-}
- /*  ======================= layout/TopBar.html ======================= */
-<div id="topbar-placeholder"></div>
+    /* ====== Hover effect voor rijen ====== */
+    #manageTable tr:hover { 
+        background-color: rgba(0,0,0,0.05); /* Lichte grijze overlay bij hover om focus te tonen */
+    }
+    </style>
+</head>
+<body>
+
+<!-- ======================= TopBar & Navbar ======================= -->
+<div id="topbar-placeholder"></div> <!-- Placeholder voor topbar -->
 <script>
 fetch('/MyFamTreeCollab/Layout/TopBar.html') // TopBar inladen via fetch
-    .then(resp => resp.text())
-    .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
+  .then(resp => resp.text())
+  .then(data => document.getElementById('topbar-placeholder').innerHTML = data); // Toevoegen aan DOM
 </script>
 
- /* ======================= layout/Navbar.html ======================= */
-<div id="Navbar-placeholder"></div>
+<div id="Navbar-placeholder"></div> <!-- Placeholder voor Navbar -->
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar inladen via fetch
-    .then(resp => resp.text())
-    .then(data => {
-        const placeholder = document.getElementById('Navbar-placeholder');
-        if(placeholder) placeholder.innerHTML = data; // toevoegen aan DOM
-        else console.error('Navbar-placeholder niet gevonden');
-    });
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar inladen
+  .then(resp => resp.text())
+  .then(data => {
+      const placeholder = document.getElementById('Navbar-placeholder');
+      if(placeholder) placeholder.innerHTML = data; // Voeg toe aan DOM
+      else console.error('Navbar-placeholder niet gevonden'); // Fallback error
+  });
 </script>
 
 <!-- ======================= Pagina Titel ======================= -->
 <div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const pageTitleDiv = document.getElementById('pageTitle');
-    pageTitleDiv.textContent = "Manage Stamboom"; // Titel tonen
+    document.getElementById('pageTitle').textContent = "Manage Stamboom"; // Zet titel bij DOM ready
 });
 </script>
 
-<!-- ======================= MAIN CONTENT ======================= -->
 <main>
 <div class="container">
     <!-- Zoekveld en knoppen -->
-    <input type="text" id="searchPerson" placeholder="Voer ID of naam in">
-    <button id="loadBtn">Laad Persoon</button>
-    <button id="refreshBtn">Refresh</button>
-    <button id="addBtn">+ Toevoegen</button>
-    <button id="saveBtn">Opslaan</button>
-    
-<!-- ======================= Zoekresultaat Formulier ======================= -->
-<div id="searchResultForm" style="display:none; margin-top:15px; border:1px solid #ccc; padding:10px;">
-    <h4>Gevonden personen:</h4>
-    <form id="resultForm">
-        <table id="resultTable">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Roepnaam</th>
-                    <th>Achternaam</th>
-                    <th>Geboortedatum</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Zoekresultaten komen hier -->
-            </tbody>
-        </table>
-    </form>
-</div>
+    <input type="text" id="searchPerson" placeholder="Voer ID of naam in"> <!-- Live search veld -->
+    <button id="loadBtn">Laad Persoon</button> <!-- Handmatige load knop -->
+    <button id="refreshBtn">Refresh</button> <!-- Refresh tabel -->
+    <button id="addBtn">+ Toevoegen</button> <!-- Nieuwe persoon toevoegen -->
+    <button id="saveBtn">Opslaan</button> <!-- Dataset opslaan -->
+
+    <!-- Zoekresultaat Formulier -->
+    <div id="searchResultForm" style="display:none; margin-top:15px; border:1px solid #ccc; padding:10px;">
+        <h4>Gevonden personen:</h4>
+        <form id="resultForm">
+            <table id="resultTable">
+                <thead>
+                    <tr>
+                        <th>ID</th> <!-- ID kolom -->
+                        <th>Roepnaam</th> <!-- Roepnaam kolom -->
+                        <th>Achternaam</th> <!-- Achternaam kolom -->
+                        <th>Geboortedatum</th> <!-- Geboortedatum kolom -->
+                    </tr>
+                </thead>
+                <tbody></tbody> <!-- Hier komen de resultaten via JS -->
+            </table>
+        </form>
+    </div>
 
     <!-- Manage tabel -->
     <table id="manageTable">
-        <thead><tr></tr></thead> <!-- headers vullen via manage.js -->
-        <tbody></tbody> <!-- tbody vullen via manage.js -->
+        <thead><tr></tr></thead> <!-- Headers worden dynamisch door JS ingevuld -->
+        <tbody></tbody> <!-- Rijen worden dynamisch door JS ingevuld -->
     </table>
 </div>
 </main>
 
-<!-- ======================= SCRIPTS ======================= -->
+<!-- ======================= Scripts ======================= -->
 <script src="../js/schema.js"></script> <!-- Schema functies -->
 <script src="../js/idGenerator.js"></script> <!-- Unieke ID generator -->
 <script src="../js/storage.js"></script> <!-- Opslag functies -->
-<script src="../js/manage.js"></script> <!-- alle logica: renderTable, relaties, CRUD -->
+<script src="../js/manage.js"></script> <!-- Logica: renderTable, relaties, CRUD -->
 
-<!-- ======================= FOOTER ======================= -->
+<!-- ======================= Footer ======================= -->
 <div id="footer-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html') // Footer inladen via fetch
-    .then(resp => resp.text())
-    .then(data => document.getElementById('footer-placeholder').innerHTML = data);
+fetch('/MyFamTreeCollab/Layout/Footer.html')
+  .then(resp => resp.text())
+  .then(data => document.getElementById('footer-placeholder').innerHTML = data); // Footer in DOM plaatsen
+</script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 zodat alle tekens correct weergegeven worden -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief ontwerp voor mobiel/desktop -->
+    <title>MyFamTreeCollab - Manage</title> <!-- Titel die in de browser tab verschijnt -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Algemene CSS van de applicatie -->
+
+    <!-- ======================= RELATIE STYLING MANAGE TABLE ======================= -->
+    <style>
+    /* ====== Hoofd ====== */
+    .rel-hoofd { 
+        background-color: #fffde7 !important; /* Licht geel zodat het hoofd van de stamboom direct opvalt */
+        font-weight: 600;                     /* Bold font voor snelle herkenning van hoofdID */
+    }
+
+    /* ====== Ouders ====== */
+    .rel-vhoofdid, .rel-mhoofdid { 
+        background-color: #e8f5e9 !important; /* Licht groen voor ouders (vader/moeder) zodat ze duidelijk verschillen van hoofd) */
+        font-weight: 500;                     /* Semi-bold voor visueel verschil */
+    }
+
+    /* ====== Partner van Hoofd ====== */
+    .rel-phoofdid { 
+        background-color: #f3e5f5 !important; /* Licht paars/lavendel voor partner van hoofd, visueel apart van hoofd en ouders */
+        font-style: italic;                   /* Italic zodat partner makkelijker te onderscheiden is */
+    }
+
+    /* ====== Kinderen ====== */
+    .rel-kindid { 
+        background-color: #e3f2fd !important; /* Licht blauw voor kinderen, neutraal en rustgevend */
+        font-weight: 400;                     /* Normaal font gewicht */
+    }
+
+    /* Scenario overrides Kind */
+    .rel-kindid.scenario-1 { background-color: #e3f2fd !important; } /* Scenario 1 = standaard blauw */
+    .rel-kindid.scenario-2 { background-color: #eef7fe !important; } /* Scenario 2 = iets lichter blauw, subtiel verschil */
+    .rel-kindid.scenario-3 { background-color: #f7fbff !important; } /* Scenario 3 = zeer licht blauw, differentiatie voor scenario’s */
+
+    /* ====== Partner van Kind ====== */
+    .rel-pkpartnerid { 
+        background-color: #d0ebff !important; /* Iets donkerder blauw voor partner van kind om verschil te maken met kind zelf */
+        font-style: italic;                   /* Italic voor visueel onderscheid */
+    }
+
+    /* Scenario overrides Partner van Kind */
+    .rel-pkpartnerid.scenario-1 { background-color: #d0ebff !important; } /* Scenario 1 */
+    .rel-pkpartnerid.scenario-2 { background-color: #daf4ff !important; } /* Scenario 2 */
+    .rel-pkpartnerid.scenario-3 { background-color: #e4f9ff !important; } /* Scenario 3 */
+
+    /* ====== Broers/Zussen ====== */
+    .rel-bzid { 
+        background-color: #fff3e0 !important; /* Licht oranje voor broer/zus, opvallend maar niet te fel */
+        font-weight: 500;                     /* Semi-bold */
+    }
+
+    /* Scenario overrides Broer/Zus */
+    .rel-bzid.scenario-1 { background-color: #fff3e0 !important; } /* Scenario 1 */
+    .rel-bzid.scenario-2 { background-color: #fff7ed !important; } /* Scenario 2 = iets lichter */
+    .rel-bzid.scenario-3 { background-color: #fffaf1 !important; } /* Scenario 3 = nog lichter */
+
+    /* ====== Partner van Broer/Zus ====== */
+    .rel-bzpartnerid { 
+        background-color: #fbe9e7 !important; /* Iets donkerder oranje voor partner van broer/zus */
+        font-style: italic;                   /* Italic font voor onderscheid */
+    }
+
+    /* Scenario overrides Partner Broer/Zus */
+    .rel-bzpartnerid.scenario-1 { background-color: #fbe9e7 !important; } /* Scenario 1 */
+    .rel-bzpartnerid.scenario-2 { background-color: #fcebe9 !important; } /* Scenario 2 */
+    .rel-bzpartnerid.scenario-3 { background-color: #fdecea !important; } /* Scenario 3 */
+
+    /* ====== Algemene input cel styling ====== */
+    #manageTable td input { 
+        background-color: transparent; /* Input achtergrond transparant zodat celkleur zichtbaar blijft */
+        border: none;                  /* Geen borders voor cleaner look */
+        width: 100%;                   /* Input vult volledige celbreedte */
+        box-sizing: border-box;        /* Padding valt binnen breedte */
+        cursor: text;                  /* Cursor verandert naar tekst bij hover */
+    }
+
+    /* ====== Hover effect voor rijen ====== */
+    #manageTable tr:hover { 
+        background-color: rgba(0,0,0,0.05); /* Lichte grijze overlay bij hover om focus te tonen */
+    }
+    </style>
+</head>
+<body>
+
+<!-- ======================= TopBar & Navbar ======================= -->
+<div id="topbar-placeholder"></div> <!-- Placeholder voor topbar -->
+<script>
+fetch('/MyFamTreeCollab/Layout/TopBar.html') // TopBar inladen via fetch
+  .then(resp => resp.text())
+  .then(data => document.getElementById('topbar-placeholder').innerHTML = data); // Toevoegen aan DOM
+</script>
+
+<div id="Navbar-placeholder"></div> <!-- Placeholder voor Navbar -->
+<script>
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar inladen
+  .then(resp => resp.text())
+  .then(data => {
+      const placeholder = document.getElementById('Navbar-placeholder');
+      if(placeholder) placeholder.innerHTML = data; // Voeg toe aan DOM
+      else console.error('Navbar-placeholder niet gevonden'); // Fallback error
+  });
+</script>
+
+<!-- ======================= Pagina Titel ======================= -->
+<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('pageTitle').textContent = "Manage Stamboom"; // Zet titel bij DOM ready
+});
+</script>
+
+<main>
+<div class="container">
+    <!-- Zoekveld en knoppen -->
+    <input type="text" id="searchPerson" placeholder="Voer ID of naam in"> <!-- Live search veld -->
+    <button id="loadBtn">Laad Persoon</button> <!-- Handmatige load knop -->
+    <button id="refreshBtn">Refresh</button> <!-- Refresh tabel -->
+    <button id="addBtn">+ Toevoegen</button> <!-- Nieuwe persoon toevoegen -->
+    <button id="saveBtn">Opslaan</button> <!-- Dataset opslaan -->
+
+    <!-- Zoekresultaat Formulier -->
+    <div id="searchResultForm" style="display:none; margin-top:15px; border:1px solid #ccc; padding:10px;">
+        <h4>Gevonden personen:</h4>
+        <form id="resultForm">
+            <table id="resultTable">
+                <thead>
+                    <tr>
+                        <th>ID</th> <!-- ID kolom -->
+                        <th>Roepnaam</th> <!-- Roepnaam kolom -->
+                        <th>Achternaam</th> <!-- Achternaam kolom -->
+                        <th>Geboortedatum</th> <!-- Geboortedatum kolom -->
+                    </tr>
+                </thead>
+                <tbody></tbody> <!-- Hier komen de resultaten via JS -->
+            </table>
+        </form>
+    </div>
+
+    <!-- Manage tabel -->
+    <table id="manageTable">
+        <thead><tr></tr></thead> <!-- Headers worden dynamisch door JS ingevuld -->
+        <tbody></tbody> <!-- Rijen worden dynamisch door JS ingevuld -->
+    </table>
+</div>
+</main>
+
+<!-- ======================= Scripts ======================= -->
+<script src="../js/schema.js"></script> <!-- Schema functies -->
+<script src="../js/idGenerator.js"></script> <!-- Unieke ID generator -->
+<script src="../js/storage.js"></script> <!-- Opslag functies -->
+<script src="../js/manage.js"></script> <!-- Logica: renderTable, relaties, CRUD -->
+
+<!-- ======================= Footer ======================= -->
+<div id="footer-placeholder"></div>
+<script>
+fetch('/MyFamTreeCollab/Layout/Footer.html')
+  .then(resp => resp.text())
+  .then(data => document.getElementById('footer-placeholder').innerHTML = data); // Footer in DOM plaatsen
 </script>
 
 </body>
