@@ -1,4 +1,4 @@
-// ======================= schemaGlobal.js =======================
+// ======================= js/schemaGlobal.js v0.0.0 
 // Globaal schema object voor CSV ↔ object conversie, beschikbaar voor alle modules
 
 window.schema = {
