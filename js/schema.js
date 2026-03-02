@@ -1,4 +1,5 @@
-// schema.js - next-level lean, future-proof
+// ======================= js/schema.js v0.0.0
+// next-level lean, future-proof
 (function () {
     'use strict';
 
