@@ -1,9 +1,9 @@
-// ======================= manage.js v1.3.7 =======================
+// ======================= manage.js v1.3.8 =======================
 // Beheer module: Hoofd + Ouders + Partner + Kinderen + Broer/Zus
-// Features v1.3.7:
-// - addRow: voeg lege rij toe, max 10 rijen, daarna alert opslaan
-// - SaveDatasetMerged: lege rijen krijgen ID via generateCode, bestaande behouden
-// - Refresh: relaod + relaties herberekenen, behoud centrale persoon
+// Features v1.3.8:
+// - addRow: max 10 rijen
+// - SaveDatasetMerged: lege rijen krijgen unieke ID via letters+3 cijfers, bestaande behouden
+// - Refresh: relaod + relaties herberekenen
 // - Live Search: filter + selecteer centrale persoon, relaties intact
 // =================================================================
 (function(){
@@ -12,29 +12,29 @@
 // =======================
 // DOM-elementen
 // =======================
-const tableBody   = document.querySelector('#manageTable tbody'); // referentie tbody
-const theadRow    = document.querySelector('#manageTable thead tr'); // header rij
-const addBtn      = document.getElementById('addBtn'); // knop nieuwe lege rij
-const saveBtn     = document.getElementById('saveBtn'); // opslaan knop
-const refreshBtn  = document.getElementById('refreshBtn'); // refresh knop
-const searchInput = document.getElementById('searchPerson'); // zoekveld
+const tableBody   = document.querySelector('#manageTable tbody'); 
+const theadRow    = document.querySelector('#manageTable thead tr'); 
+const addBtn      = document.getElementById('addBtn'); 
+const saveBtn     = document.getElementById('saveBtn'); 
+const refreshBtn  = document.getElementById('refreshBtn'); 
+const searchInput = document.getElementById('searchPerson'); 
 
 // =======================
 // State
 // =======================
-let dataset = window.StamboomStorage.get() || []; // laad dataset uit localStorage
-let selectedHoofdId = null; // centrale geselecteerde persoon (Hoofd)
-let tempRowCount = 0; // telt tijdelijk toegevoegde rijen met addRow
+let dataset = window.StamboomStorage.get() || []; 
+let selectedHoofdId = null; 
+let tempRowCount = 0; 
 
 // =======================
-// Helpers (null-safe)
+// Helpers
 // =======================
-function safe(val){ return val ? String(val).trim() : ''; } // converteer naar string of lege string
+function safe(val){ return val ? String(val).trim() : ''; }
 function parseDate(d){ 
-    if(!d) return new Date(0); // fallback datum
+    if(!d) return new Date(0); 
     const parts = d.split('-'); 
     if(parts.length !==3) return new Date(0); 
-    return new Date(parts.reverse().join('-')); // dd-mm-jjjj -> Date object
+    return new Date(parts.reverse().join('-')); 
 }
 
 // =======================
@@ -64,14 +64,28 @@ const COLUMNS = [
 ];
 
 // =======================
+// ID GENERATOR (letters + 3 cijfers)
+// =======================
+function genereerCode(persoon, bestaande){
+    const letters = (persoon.Doopnaam[0]||'') + (persoon.Roepnaam[0]||'') + (persoon.Achternaam[0]||'') + (persoon.Geslacht[0]||'X');
+    let code;
+    const bestaandeIDs = new Set(bestaande.map(p=>p.ID));
+    do {
+        const cijfers = Math.floor(100 + Math.random()*900);
+        code = letters + cijfers;
+    } while(bestaandeIDs.has(code)); // voorkom duplicaten
+    return code;
+}
+
+// =======================
 // Build Table Header
 // =======================
 function buildHeader(){ 
-    theadRow.innerHTML = ''; // leeg bestaande header
+    theadRow.innerHTML = ''; 
     COLUMNS.forEach(col=>{
-        const th = document.createElement('th'); // nieuwe <th>
-        th.textContent = col.key; // kolomnaam
-        theadRow.appendChild(th); // voeg toe aan header rij
+        const th = document.createElement('th'); 
+        th.textContent = col.key; 
+        theadRow.appendChild(th); 
     });
 }
 
@@ -137,7 +151,7 @@ function renderTable(dataset){
     const contextData = computeRelaties(dataset, selectedHoofdId);
     if(!contextData.length){ showPlaceholder('Geen personen gevonden'); return; }
 
-    tableBody.innerHTML = ''; // oude rijen verwijderen
+    tableBody.innerHTML = ''; 
     const renderQueue = [];
 
     const hoofd = contextData.find(p => p.Relatie==='HoofdID');
@@ -165,8 +179,9 @@ function renderTable(dataset){
         if(p.Relatie) tr.classList.add(`rel-${p.Relatie.toLowerCase()}`);
         COLUMNS.forEach(col=>{
             const td = document.createElement('td');
-            if(col.readonly){ td.textContent=p[col.key]||''; }
-            else{ 
+            if(col.readonly){ 
+                td.textContent = p[col.key]||''; 
+            } else { 
                 const input=document.createElement('input'); 
                 input.value=p[col.key]||''; 
                 input.dataset.field=col.key; 
@@ -193,34 +208,31 @@ function showPlaceholder(msg){
 }
 
 // =======================
-// Voeg lege rij toe onder tabel (max 10 rijen)
+// Voeg lege rij toe (max 10)
 // =======================
 function addRow(){
     if(tempRowCount >= 10){ 
         alert('Maximaal 10 rijen toegevoegd. Klik Opslaan om verder te gaan.');
         return;
     }
-
-    const tr = document.createElement('tr'); // nieuwe rij
+    const tr = document.createElement('tr'); 
     COLUMNS.forEach(col=>{
         const td = document.createElement('td');
-        if(col.readonly){
-            td.textContent = ''; // lege cel voor readonly kolommen
-        } else {
+        if(col.readonly){ td.textContent = ''; } 
+        else { 
             const input = document.createElement('input');
-            input.value = ''; // lege input
+            input.value = ''; 
             input.dataset.field = col.key;
             td.appendChild(input);
         }
         tr.appendChild(td);
     });
-
-    tableBody.appendChild(tr); // voeg toe
-    tempRowCount++; // teller verhogen
+    tableBody.appendChild(tr); 
+    tempRowCount++; 
 }
 
 // =======================
-// Save (merged) dataset met automatische ID generatie
+// Save (merged) dataset + ID generator
 // =======================
 function saveDatasetMerged(){
     try {
@@ -240,18 +252,17 @@ function saveDatasetMerged(){
                 }
             });
 
-            // Als er nog geen ID is, genereer er één
+            // genereer unieke ID indien leeg
             if(!persoon.ID){
-                persoon.ID = window.genereerCode(persoon, Array.from(idMap.values()));
+                persoon.ID = genereerCode(persoon, Array.from(idMap.values()));
             }
 
-            idMap.set(persoon.ID, {...idMap.get(persoon.ID), ...persoon}); // merge
+            idMap.set(persoon.ID, {...idMap.get(persoon.ID), ...persoon});
         });
 
-        const mergedDataset = Array.from(idMap.values());
-        dataset = mergedDataset;
+        dataset = Array.from(idMap.values());
         window.StamboomStorage.set(dataset);
-        tempRowCount = 0; // reset teller
+        tempRowCount = 0;
         alert('Dataset succesvol opgeslagen (merged met bestaande data)');
     } catch(e){
         alert(`Opslaan mislukt: ${e.message}`);
@@ -265,7 +276,7 @@ function saveDatasetMerged(){
 function refreshTable(){
     dataset = window.StamboomStorage.get() || [];
     if(!selectedHoofdId && dataset.length>0){
-        selectedHoofdId = dataset[0].ID; // fallback centrale persoon
+        selectedHoofdId = dataset[0].ID; 
     }
     renderTable(dataset);
 }
@@ -302,7 +313,7 @@ function liveSearch(){
         row.textContent = `${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`;
         row.style.padding='5px'; row.style.cursor='pointer';
         row.addEventListener('click', ()=>{
-            selectedHoofdId = safe(p.ID); // update centrale persoon
+            selectedHoofdId = safe(p.ID); 
             popup.remove();
             renderTable(dataset);
         });
@@ -325,7 +336,7 @@ function liveSearch(){
 buildHeader(); 
 renderTable(dataset); 
 searchInput.addEventListener('input', liveSearch);
-addBtn.addEventListener('click', addRow); // + Toevoegen knop
+addBtn.addEventListener('click', addRow); 
 saveBtn.addEventListener('click', saveDatasetMerged);
 refreshBtn.addEventListener('click', refreshTable);
 
