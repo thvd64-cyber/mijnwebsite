@@ -1,19 +1,20 @@
-// ======================= manage.js v1.3.6 =======================
+// ======================= manage.js v1.3.7 =======================
 // Beheer module: Hoofd + Ouders + Partner + Kinderen + Broer/Zus
-// Features:
-// - Opslaan: merge met bestaande localStorage
-// - Refresh: reload dataset & relaties herberekenen, behoud centrale persoon
-// - Live Search: filteren, selecteer centrale persoon, relaties intact
+// Features v1.3.7:
+// - addRow: voeg lege rij toe, max 10 rijen, daarna opslaan forceren
+// - Opslaan: merged met bestaande localStorage
+// - Refresh: reload + relaties herberekenen, behoud centrale persoon
+// - Live Search: filter + selecteer centrale persoon, relaties intact
 // =================================================================
 (function(){
-'use strict';
+'use strict'; // activeer strict mode voor veiligere JS
 
 // =======================
 // DOM-elementen
 // =======================
 const tableBody   = document.querySelector('#manageTable tbody'); // referentie tbody
 const theadRow    = document.querySelector('#manageTable thead tr'); // header rij
-const addBtn      = document.getElementById('addBtn'); // knop nieuwe persoon
+const addBtn      = document.getElementById('addBtn'); // knop nieuwe lege rij
 const saveBtn     = document.getElementById('saveBtn'); // opslaan knop
 const refreshBtn  = document.getElementById('refreshBtn'); // refresh knop
 const searchInput = document.getElementById('searchPerson'); // zoekveld
@@ -23,16 +24,17 @@ const searchInput = document.getElementById('searchPerson'); // zoekveld
 // =======================
 let dataset = window.StamboomStorage.get() || []; // laad dataset uit localStorage
 let selectedHoofdId = null; // centrale geselecteerde persoon (Hoofd)
+let tempRowCount = 0; // telt tijdelijke rijen toegevoegd met addRow
 
 // =======================
 // Helpers (null-safe)
 // =======================
 function safe(val){ return val ? String(val).trim() : ''; } // converteer naar string of lege string
 function parseDate(d){ 
-    if(!d) return new Date(0); // fallback
+    if(!d) return new Date(0); // fallback datum
     const parts = d.split('-'); 
     if(parts.length !==3) return new Date(0); 
-    return new Date(parts.reverse().join('-')); // dd-mm-jjjj -> Date
+    return new Date(parts.reverse().join('-')); // dd-mm-jjjj -> Date object
 }
 
 // =======================
@@ -65,11 +67,11 @@ const COLUMNS = [
 // Build Table Header
 // =======================
 function buildHeader(){ 
-    theadRow.innerHTML = ''; // leegmaken
+    theadRow.innerHTML = ''; // leegmaken van bestaande header
     COLUMNS.forEach(col=>{
-        const th = document.createElement('th'); 
-        th.textContent = col.key; 
-        theadRow.appendChild(th); 
+        const th = document.createElement('th'); // nieuwe <th> voor kolom
+        th.textContent = col.key; // zet kolomnaam
+        theadRow.appendChild(th); // voeg toe aan header rij
     });
 }
 
@@ -135,7 +137,7 @@ function renderTable(dataset){
     const contextData = computeRelaties(dataset, selectedHoofdId);
     if(!contextData.length){ showPlaceholder('Geen personen gevonden'); return; }
 
-    tableBody.innerHTML = '';
+    tableBody.innerHTML = ''; // oude rijen verwijderen
     const renderQueue = [];
 
     const hoofd = contextData.find(p => p.Relatie==='HoofdID');
@@ -191,16 +193,30 @@ function showPlaceholder(msg){
 }
 
 // =======================
-// Add persoon
+// Voeg lege rij toe onder tabel (max 10 rijen)
 // =======================
-function addPersoon(){ 
-    const nieuw={}; 
-    COLUMNS.forEach(col=>nieuw[col.key]=''); 
-    nieuw.ID = window.genereerCode(nieuw,dataset); 
-    dataset.push(nieuw);
-    selectedHoofdId = nieuw.ID; 
-    window.StamboomStorage.set(dataset); 
-    renderTable(dataset);
+function addRow(){
+    if(tempRowCount >= 10){ 
+        alert('Maximaal 10 rijen toegevoegd. Klik Opslaan om verder te gaan.');
+        return;
+    }
+
+    const tr = document.createElement('tr'); // nieuwe rij
+    COLUMNS.forEach(col=>{
+        const td = document.createElement('td');
+        if(col.readonly){
+            td.textContent = ''; // lege cel voor readonly kolommen
+        } else {
+            const input = document.createElement('input');
+            input.value = ''; // lege input
+            input.dataset.field = col.key;
+            td.appendChild(input);
+        }
+        tr.appendChild(td);
+    });
+
+    tableBody.appendChild(tr); // rij onder tabel toevoegen
+    tempRowCount++; // teller verhogen
 }
 
 // =======================
@@ -225,13 +241,13 @@ function saveDatasetMerged(){
             });
 
             if(!persoon.ID) throw new Error('ID ontbreekt');
-
             idMap.set(persoon.ID, {...idMap.get(persoon.ID), ...persoon}); // merge
         });
 
         const mergedDataset = Array.from(idMap.values());
         dataset = mergedDataset;
         window.StamboomStorage.set(dataset);
+        tempRowCount = 0; // reset tijdelijke rijen teller
         alert('Dataset succesvol opgeslagen (merged met bestaande data)');
     } catch(e){
         alert(`Opslaan mislukt: ${e.message}`);
@@ -305,7 +321,7 @@ function liveSearch(){
 buildHeader(); 
 renderTable(dataset); 
 searchInput.addEventListener('input', liveSearch);
-addBtn.addEventListener('click', addPersoon);
+addBtn.addEventListener('click', addRow); // + Toevoegen knop nu addRow
 saveBtn.addEventListener('click', saveDatasetMerged);
 refreshBtn.addEventListener('click', refreshTable);
 
