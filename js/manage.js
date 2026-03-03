@@ -1,13 +1,14 @@
-// ======================= manage.js v1.3.8 =======================
+// ======================= manage.js v1.3.9 =======================
 // Beheer module: Hoofd + Ouders + Partner + Kinderen + Broer/Zus
-// Features v1.3.8:
+// Features v1.3.9:
 // - addRow: max 10 rijen
 // - SaveDatasetMerged: lege rijen krijgen unieke ID via letters+3 cijfers, bestaande behouden
 // - Refresh: relaod + relaties herberekenen
 // - Live Search: filter + selecteer centrale persoon, relaties intact
+// - PKPartnerID logica aangepast: partner direct onder KindID
 // =================================================================
 (function(){
-'use strict'; // activeer strict mode voor veiliger JS
+'use strict'; 
 
 // =======================
 // DOM-elementen
@@ -73,7 +74,7 @@ function genereerCode(persoon, bestaande){
     do {
         const cijfers = Math.floor(100 + Math.random()*900);
         code = letters + cijfers;
-    } while(bestaandeIDs.has(code)); // voorkom duplicaten
+    } while(bestaandeIDs.has(code)); 
     return code;
 }
 
@@ -103,16 +104,20 @@ function computeRelaties(data, hoofdId){
     const MHoofdID = safe(hoofd.MoederID);
     const PHoofdID = safe(hoofd.PartnerID);
 
+    // Kinderen van hoofd of partner
     const KindID = data.filter(p =>
         safe(p.VaderID) === hoofdID ||
         safe(p.MoederID) === hoofdID ||
         (PHoofdID && (safe(p.VaderID) === PHoofdID || safe(p.MoederID) === PHoofdID))
     ).map(p => p.ID);
 
-    const PKPartnerID = data.filter(p =>
-        KindID.includes(safe(p.VaderID)) || KindID.includes(safe(p.MoederID))
-    ).filter(p => p.PartnerID).map(p => safe(p.PartnerID));
+    // PKPartnerID: **alleen partner van het kind zelf**
+    const PKPartnerID = data
+        .filter(p => KindID.includes(safe(p.ID)))
+        .map(p => safe(p.PartnerID))
+        .filter(pid => pid);
 
+    // Broers/Zussen van hoofd
     const BZID = data.filter(p =>
         (safe(p.VaderID) === VHoofdID || safe(p.MoederID) === MHoofdID) &&
         safe(p.ID) !== hoofdID &&
@@ -160,11 +165,13 @@ function renderTable(dataset){
     contextData.filter(p => p.Relatie==='VHoofdID'||p.Relatie==='MHoofdID').forEach(p=>renderQueue.push(p));
     contextData.filter(p => p.Relatie==='PHoofdID').forEach(p=>renderQueue.push(p));
 
+    // Kind + partner direct onder kind
     contextData.filter(p => p.Relatie==='KindID').forEach(kind=>{
-        renderQueue.push(kind);
-        const pk = contextData.find(p => p.Relatie==='PKPartnerID' &&
-                                         (p.VaderID===kind.ID||p.MoederID===kind.ID||safe(p.PartnerID)===kind.ID));
-        if(pk) renderQueue.push(pk);
+        renderQueue.push(kind); 
+        if(kind.PartnerID){
+            const pk = contextData.find(p => safe(p.ID) === safe(kind.PartnerID));
+            if(pk) renderQueue.push(pk); // direct onder het kind
+        }
     });
 
     contextData.filter(p => p.Relatie==='BZID').forEach(sib=>{
@@ -252,7 +259,6 @@ function saveDatasetMerged(){
                 }
             });
 
-            // genereer unieke ID indien leeg
             if(!persoon.ID){
                 persoon.ID = genereerCode(persoon, Array.from(idMap.values()));
             }
