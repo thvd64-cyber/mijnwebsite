@@ -1,35 +1,38 @@
-// ======================= js/manage.js v1.3.5 =======================
+// ======================= manage.js v1.3.6 =======================
 // Beheer module: Hoofd + Ouders + Partner + Kinderen + Broer/Zus
-// Opslaan knop: merged opslaan met bestaande localStorage data
+// Features:
+// - Opslaan: merge met bestaande localStorage
+// - Refresh: reload dataset & relaties herberekenen, behoud centrale persoon
+// - Live Search: filteren, selecteer centrale persoon, relaties intact
 // =================================================================
-(function(){ 
+(function(){
 'use strict';
 
 // =======================
 // DOM-elementen
 // =======================
-const tableBody   = document.querySelector('#manageTable tbody'); 
-const theadRow    = document.querySelector('#manageTable thead tr'); 
-const addBtn      = document.getElementById('addBtn'); 
-const saveBtn     = document.getElementById('saveBtn'); 
-const refreshBtn  = document.getElementById('refreshBtn'); 
-const searchInput = document.getElementById('searchPerson'); 
+const tableBody   = document.querySelector('#manageTable tbody'); // referentie tbody
+const theadRow    = document.querySelector('#manageTable thead tr'); // header rij
+const addBtn      = document.getElementById('addBtn'); // knop nieuwe persoon
+const saveBtn     = document.getElementById('saveBtn'); // opslaan knop
+const refreshBtn  = document.getElementById('refreshBtn'); // refresh knop
+const searchInput = document.getElementById('searchPerson'); // zoekveld
 
 // =======================
 // State
 // =======================
-let dataset = window.StamboomStorage.get() || []; 
-let selectedHoofdId = null; 
+let dataset = window.StamboomStorage.get() || []; // laad dataset uit localStorage
+let selectedHoofdId = null; // centrale geselecteerde persoon (Hoofd)
 
 // =======================
 // Helpers (null-safe)
 // =======================
-function safe(val){ return val ? String(val).trim() : ''; } 
+function safe(val){ return val ? String(val).trim() : ''; } // converteer naar string of lege string
 function parseDate(d){ 
-    if(!d) return new Date(0); 
+    if(!d) return new Date(0); // fallback
     const parts = d.split('-'); 
     if(parts.length !==3) return new Date(0); 
-    return new Date(parts.reverse().join('-')); 
+    return new Date(parts.reverse().join('-')); // dd-mm-jjjj -> Date
 }
 
 // =======================
@@ -62,7 +65,7 @@ const COLUMNS = [
 // Build Table Header
 // =======================
 function buildHeader(){ 
-    theadRow.innerHTML = ''; 
+    theadRow.innerHTML = ''; // leegmaken
     COLUMNS.forEach(col=>{
         const th = document.createElement('th'); 
         th.textContent = col.key; 
@@ -133,9 +136,6 @@ function renderTable(dataset){
     if(!contextData.length){ showPlaceholder('Geen personen gevonden'); return; }
 
     tableBody.innerHTML = '';
-    const lookupByID = {};
-    contextData.forEach(p => { lookupByID[p.ID] = p; });
-
     const renderQueue = [];
 
     const hoofd = contextData.find(p => p.Relatie==='HoofdID');
@@ -198,8 +198,8 @@ function addPersoon(){
     COLUMNS.forEach(col=>nieuw[col.key]=''); 
     nieuw.ID = window.genereerCode(nieuw,dataset); 
     dataset.push(nieuw);
-    selectedHoofdId = nieuw.ID;
-    window.StamboomStorage.set(dataset);
+    selectedHoofdId = nieuw.ID; 
+    window.StamboomStorage.set(dataset); 
     renderTable(dataset);
 }
 
@@ -226,8 +226,7 @@ function saveDatasetMerged(){
 
             if(!persoon.ID) throw new Error('ID ontbreekt');
 
-            // Merge: update bestaande of voeg toe
-            idMap.set(persoon.ID, {...idMap.get(persoon.ID), ...persoon});
+            idMap.set(persoon.ID, {...idMap.get(persoon.ID), ...persoon}); // merge
         });
 
         const mergedDataset = Array.from(idMap.values());
@@ -241,10 +240,13 @@ function saveDatasetMerged(){
 }
 
 // =======================
-// Refresh
+// Refresh Table
 // =======================
 function refreshTable(){
     dataset = window.StamboomStorage.get() || [];
+    if(!selectedHoofdId && dataset.length>0){
+        selectedHoofdId = dataset[0].ID; // fallback centrale persoon
+    }
     renderTable(dataset);
 }
 
@@ -280,7 +282,7 @@ function liveSearch(){
         row.textContent = `${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`;
         row.style.padding='5px'; row.style.cursor='pointer';
         row.addEventListener('click', ()=>{
-            selectedHoofdId = safe(p.ID);
+            selectedHoofdId = safe(p.ID); // update centrale persoon
             popup.remove();
             renderTable(dataset);
         });
