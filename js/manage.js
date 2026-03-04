@@ -1,11 +1,5 @@
-// ======================= manage.js v1.3.11 =======================
-// Beheer module: Hoofd + Ouders + Partner + Kinderen + Broer/Zus
-// Features v1.3.10:
-// - addRow: max 10 rijen
-// - SaveDatasetMerged: lege rijen krijgen unieke ID via letters+3 cijfers, bestaande behouden
-// - Refresh: relaod + relaties herberekenen
-// - Live Search: filter + selecteer centrale persoon, relaties intact
-// - Correcte weergave: BZID + partner, PKPartnerID direct onder KindID
+// ======================= manage.js v1.3.12 =======================
+// Visuele aanpas ouders boven hoofd
 // =================================================================
 (function(){
 'use strict'; // activeer strict mode
@@ -189,20 +183,20 @@ function renderTable(dataset){
     // Maak tbody leeg om opnieuw te vullen
     tableBody.innerHTML = ''; 
     const renderQueue = []; // queue waarin we rijen in volgorde van weergave zetten
-
-    // ======================
-    // Eerst hoofd
-    // ======================
-    const hoofd = contextData.find(p => p.Relatie==='HoofdID'); // zoek hoofdpersoon
-    if(hoofd) renderQueue.push(hoofd); // voeg hoofd toe aan renderQueue
-
-    // ======================
-    // Vader en moeder
+ // ======================
+    // Vader en moeder eerste
     // ======================
     contextData
         .filter(p => p.Relatie==='VHoofdID'||p.Relatie==='MHoofdID') // filter ouders
         .forEach(p => renderQueue.push(p)); // voeg ouders toe aan queue
 
+    // ======================
+    // Darna hoofd
+    // ======================
+    const hoofd = contextData.find(p => p.Relatie==='HoofdID'); // zoek hoofdpersoon
+    if(hoofd) renderQueue.push(hoofd); // voeg hoofd toe aan renderQueue
+
+   
     // ======================
     // Partner hoofd
     // ======================
