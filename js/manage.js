@@ -1,4 +1,4 @@
-// ======================= manage.js v1.3.10 =======================
+// ======================= manage.js v1.3.11 =======================
 // Beheer module: Hoofd + Ouders + Partner + Kinderen + Broer/Zus
 // Features v1.3.10:
 // - addRow: max 10 rijen
@@ -91,52 +91,88 @@ function buildHeader(){
 }
 
 // =======================
-// Relatie-engine
+// Relatie-engine (aangepast)
 // =======================
 function computeRelaties(data, hoofdId){
-    const hoofdID = safe(hoofdId); 
-    if(!hoofdID) return [];
+    const hoofdID = safe(hoofdId); // Veilige versie van het hoofd ID
+    if(!hoofdID) return []; // Als er geen hoofdID is, stop
 
-    const hoofd = data.find(p => safe(p.ID) === hoofdID);
-    if(!hoofd) return [];
+    const hoofd = data.find(p => safe(p.ID) === hoofdID); // Zoek het hoofd in de dataset
+    if(!hoofd) return []; // Stop als hoofd niet gevonden
 
-    const VHoofdID = safe(hoofd.VaderID);
-    const MHoofdID = safe(hoofd.MoederID);
-    const PHoofdID = safe(hoofd.PartnerID);
+    const VHoofdID = safe(hoofd.VaderID); // Vader ID van hoofd
+    const MHoofdID = safe(hoofd.MoederID); // Moeder ID van hoofd
+    const PHoofdID = safe(hoofd.PartnerID); // Partner ID van hoofd
 
     // Alle kinderen van hoofd of partner
     const KindID = data.filter(p =>
-        safe(p.VaderID) === hoofdID ||
-        safe(p.MoederID) === hoofdID ||
-        (PHoofdID && (safe(p.VaderID) === PHoofdID || safe(p.MoederID) === PHoofdID))
+        safe(p.VaderID) === hoofdID ||           // Vader is hoofd
+        safe(p.MoederID) === hoofdID ||          // Moeder is hoofd
+        (PHoofdID && (safe(p.VaderID) === PHoofdID || safe(p.MoederID) === PHoofdID)) // Vader of moeder is partner van hoofd
     ).map(p => p.ID);
 
-    // Broers/Zussen (zelfde ouders als hoofd)
+    // Broers/Zussen (zelfde ouders als hoofd, exclusief hoofd en kinderen)
     const BZID = data.filter(p =>
         (safe(p.VaderID) === VHoofdID || safe(p.MoederID) === MHoofdID) &&
         safe(p.ID) !== hoofdID &&
         !KindID.includes(safe(p.ID))
     ).map(p => p.ID);
 
+    // Partners van kinderen
+    const KindPartnerID = KindID
+        .map(id => {
+            const k = data.find(p => safe(p.ID) === id);
+            return k && k.PartnerID ? safe(k.PartnerID) : null;
+        })
+        .filter(Boolean); // Filter nulls
+
+    // Partners van broers/zussen (toegevoegd)
+    const BZPartnerID = BZID
+        .map(id => {
+            const s = data.find(p => safe(p.ID) === id); // Zoek de broer/zus
+            return s && s.PartnerID ? safe(s.PartnerID) : null; // Voeg partner toe als die bestaat
+        })
+        .filter(Boolean);
+
+    // Maak een nieuwe dataset met Relatie en prioriteit
     return data.map(p=>{
         const pid = safe(p.ID);
         const clone = {...p};
-        clone.Relatie = '';
-        clone._priority = 99;
+        clone.Relatie = '';      // Init lege relatie
+        clone._priority = 99;    // Init lage prioriteit
 
-        if(pid === hoofdID){ clone.Relatie='HoofdID'; clone._priority=1; }
-        else if(pid === VHoofdID){ clone.Relatie='VHoofdID'; clone._priority=0; }
-        else if(pid === MHoofdID){ clone.Relatie='MHoofdID'; clone._priority=0; }
-        else if(pid === PHoofdID){ clone.Relatie='PHoofdID'; clone._priority=2; }
-        else if(KindID.includes(pid)){ clone.Relatie='KindID'; clone._priority=3; }
-        else if(BZID.includes(pid)){ clone.Relatie='BZID'; clone._priority=4; }
+        // Relaties toewijzen
+        if(pid === hoofdID){ 
+            clone.Relatie='HoofdID'; clone._priority=1; // Hoofd zelf
+        }
+        else if(pid === VHoofdID){ 
+            clone.Relatie='VHoofdID'; clone._priority=0; // Vader
+        }
+        else if(pid === MHoofdID){ 
+            clone.Relatie='MHoofdID'; clone._priority=0; // Moeder
+        }
+        else if(pid === PHoofdID){ 
+            clone.Relatie='PHoofdID'; clone._priority=2; // Partner van hoofd
+        }
+        else if(KindID.includes(pid)){ 
+            clone.Relatie='KindID'; clone._priority=3; // Kind
+        }
+        else if(KindPartnerID.includes(pid)){ 
+            clone.Relatie='KindPartnerID'; clone._priority=3.5; // Partner van kind
+        }
+        else if(BZID.includes(pid)){ 
+            clone.Relatie='BZID'; clone._priority=4; // Broer/zus
+        }
+        else if(BZPartnerID.includes(pid)){ 
+            clone.Relatie='BZPartnerID'; clone._priority=4.5; // Partner van broer/zus
+        }
 
         return clone;
-    }).sort((a,b)=>a._priority - b._priority);
+    }).sort((a,b)=>a._priority - b._priority); // Sorteer op prioriteit
 }
 
 // =======================
-// Render Table
+// Render Table (aangepast)
 // =======================
 function renderTable(dataset){
     if(!selectedHoofdId){ showPlaceholder('Selecteer een persoon'); return; }
@@ -147,38 +183,38 @@ function renderTable(dataset){
     tableBody.innerHTML = ''; 
     const renderQueue = [];
 
+    // Eerst hoofd
     const hoofd = contextData.find(p => p.Relatie==='HoofdID');
     if(hoofd) renderQueue.push(hoofd);
 
+    // Vader en moeder
     contextData.filter(p => p.Relatie==='VHoofdID'||p.Relatie==='MHoofdID').forEach(p=>renderQueue.push(p));
+
+    // Partner hoofd
     contextData.filter(p => p.Relatie==='PHoofdID').forEach(p=>renderQueue.push(p));
 
-    // Kinderen + partner direct eronder
+    // Kinderen + partner van kind
     contextData.filter(p => p.Relatie==='KindID').forEach(kind=>{
         renderQueue.push(kind);
-        if(kind.PartnerID){
-            const pk = contextData.find(p => safe(p.ID) === safe(kind.PartnerID));
-            if(pk) renderQueue.push(pk);
-        }
+        const kp = contextData.find(p => p.Relatie==='KindPartnerID' && safe(p.ID)===safe(kind.PartnerID));
+        if(kp) renderQueue.push(kp);
     });
 
-    // Broer/Zus + partner direct eronder
+    // Broer/Zus + partner van broer/zus
     contextData.filter(p => p.Relatie==='BZID').forEach(sib=>{
         renderQueue.push(sib);
-        if(sib.PartnerID){
-            const bzPartner = contextData.find(p => safe(p.ID) === safe(sib.PartnerID));
-            if(bzPartner) renderQueue.push(bzPartner);
-        }
+        const bzP = contextData.find(p => p.Relatie==='BZPartnerID' && safe(p.ID)===safe(sib.PartnerID));
+        if(bzP) renderQueue.push(bzP);
     });
 
-    // Render de rijen
+    // Render rijen
     renderQueue.forEach(p=>{
         const tr = document.createElement('tr');
-        if(p.Relatie) tr.classList.add(`rel-${p.Relatie.toLowerCase()}`);
+        if(p.Relatie) tr.classList.add(`rel-${p.Relatie.toLowerCase()}`); // CSS class op basis van relatie
         COLUMNS.forEach(col=>{
             const td = document.createElement('td');
             if(col.readonly){ 
-                td.textContent = p[col.key]||''; 
+                td.textContent = p[col.key]||''; // Alleen lezen
             } else { 
                 const input=document.createElement('input'); 
                 input.value=p[col.key]||''; 
