@@ -55,7 +55,7 @@ const COLUMNS = [
     { key: 'Huwelijksplaats', readonly: false },
     { key: 'Opmerkingen', readonly: false },
     { key: 'Huisadressen', readonly: false },
-    { key: 'ContactInformatie', readonly: false },
+    { key: 'ContactInfo', readonly: false },
     { key: 'UR', readonly: false }
 ];
 
