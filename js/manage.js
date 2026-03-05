@@ -1,6 +1,7 @@
-// ======================= manage.js v1.3.13 =======================
-// Wrap text in bewerkbare cellen met <textarea>
+// ======================= manage.js v1.3.14 =======================
+// Wrap text in bewerkbare cellen met <textarea> + dynamische hoogte + scroll
 // =================================================================
+
 (function(){
 'use strict'; // activeer strict mode
 
@@ -148,6 +149,24 @@ function computeRelaties(data, hoofdId){
 }
 
 // =======================
+// Dynamische textarea hoogte functie
+// =======================
+function adjustTextareas() {
+    const textareas = tableBody.querySelectorAll('textarea'); // alle textareas in table
+    textareas.forEach(ta => {
+        ta.style.height = 'auto'; // reset height eerst
+        const maxHeight = 120; // maximale hoogte per cel
+        if(ta.scrollHeight > maxHeight){ // als inhoud te groot
+            ta.style.height = maxHeight + 'px'; // zet max hoogte
+            ta.style.overflowY = 'auto'; // scroll zichtbaar
+        } else {
+            ta.style.height = ta.scrollHeight + 'px'; // pas hoogte aan inhoud
+            ta.style.overflowY = 'hidden'; // geen scroll nodig
+        }
+    });
+}
+
+// =======================
 // Render Table (ouders boven hoofd, leesbare labels)
 // =======================
 function renderTable(dataset){
@@ -226,6 +245,8 @@ function renderTable(dataset){
 
         tableBody.appendChild(tr); 
     });
+
+    adjustTextareas(); // pas dynamische hoogte en scroll toe na render
 }
 
 // =======================
@@ -267,6 +288,7 @@ function addRow(){
     });
     tableBody.appendChild(tr); 
     tempRowCount++; 
+    adjustTextareas(); // dynamische hoogte toepassen voor nieuwe rij
 }
 
 // =======================
