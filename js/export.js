@@ -21,7 +21,7 @@ const headers = [
     "Huwelijksdatum",
     "Huwelijksplaats",
     "Opmerkingen",
-    "Adres",
+    "Huisadressen",
     "ContactInfo",
     "URL"
 ];
