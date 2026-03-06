@@ -1,61 +1,49 @@
-// ======================= view.js v1.0.0 =======================
-// Visualisatie van stamboom (hark structuur)
-// Gebruikt dezelfde dataset als manage.js
-// Visualisatie van stamboom met live search
+// ======================= view.js v1.0.1 =======================
+// Live Search + Familie Boom (Hark structuur)
 // =============================================================
-
 (function(){
 'use strict';
 
 // =======================
 // DOM
 // =======================
-const treeContainer = document.getElementById('treeView'); // container voor boom
-const searchInput   = document.getElementById('searchPerson'); // zoekveld
+const treeContainer = document.getElementById('treeContainer'); // hoofdcontainer voor boom
+const searchInput   = document.getElementById('searchHoofdID'); // zoekveld
 
 // =======================
 // STATE
 // =======================
 let dataset = window.StamboomStorage.get() || []; // dataset laden
-let selectedHoofdId = null; // huidige focus
+let selectedHoofdId = null; // huidige geselecteerde persoon
 
 // =======================
 // HELPERS
 // =======================
-const safe = val => val ? String(val).trim() : ''; // veilige string
-const geboorteJaar = datum => datum ? datum.split('-')[0] : ''; // extract jaar
+function safe(val){ return val ? String(val).trim() : ''; }
+function geboorteJaar(datum){ if(!datum) return ''; const parts=datum.split('-'); return parts.length===3?parts[0]:''; }
 
 // =======================
 // RELATIE ENGINE
 // =======================
 function computeRelaties(data, hoofdId){
-    const hoofdID = safe(hoofdId);
-    if(!hoofdID) return [];
-    const hoofd = data.find(p=>safe(p.ID)===hoofdID);
-    if(!hoofd) return [];
-
-    const VHoofdID = safe(hoofd.VaderID);
-    const MHoofdID = safe(hoofd.MoederID);
-    const PHoofdID = safe(hoofd.PartnerID);
+    const hoofdID = safe(hoofdId); if(!hoofdID) return [];
+    const hoofd = data.find(p=>safe(p.ID)===hoofdID); if(!hoofd) return [];
+    const VHoofdID = safe(hoofd.VaderID), MHoofdID = safe(hoofd.MoederID), PHoofdID = safe(hoofd.PartnerID);
 
     const KindID = data.filter(p=>
-        safe(p.VaderID)===hoofdID || safe(p.MoederID)===hoofdID ||
-        (PHoofdID && (safe(p.VaderID)===PHoofdID || safe(p.MoederID)===PHoofdID))
+        safe(p.VaderID)===hoofdID || safe(p.MoederID)===hoofdID || (PHoofdID && (safe(p.VaderID)===PHoofdID || safe(p.MoederID)===PHoofdID))
     ).map(p=>p.ID);
 
     const BZID = data.filter(p=>{
-        const pid=safe(p.ID);
-        if(pid===hoofdID || KindID.includes(pid) || pid===PHoofdID) return false;
+        const pid=safe(p.ID); if(pid===hoofdID||KindID.includes(pid)||pid===PHoofdID) return false;
         return (VHoofdID && safe(p.VaderID)===VHoofdID) || (MHoofdID && safe(p.MoederID)===MHoofdID);
     }).map(p=>p.ID);
 
-    const KindPartnerID = KindID.map(id=>{ const k=data.find(p=>safe(p.ID)===id); return k?.PartnerID? safe(k.PartnerID) : null; }).filter(Boolean);
-    const BZPartnerID = BZID.map(id=>{ const s=data.find(p=>safe(p.ID)===id); return s?.PartnerID? safe(s.PartnerID) : null; }).filter(Boolean);
+    const KindPartnerID = KindID.map(id=>{ const k=data.find(p=>safe(p.ID)===id); return k&&k.PartnerID?safe(k.PartnerID):null; }).filter(Boolean);
+    const BZPartnerID   = BZID.map(id=>{ const s=data.find(p=>safe(p.ID)===id); return s&&s.PartnerID?safe(s.PartnerID):null; }).filter(Boolean);
 
     return data.map(p=>{
-        const pid = safe(p.ID);
-        const clone = {...p};
-        clone.Relatie='';
+        const pid=safe(p.ID), clone={...p, Relatie:''};
         if(pid===hoofdID) clone.Relatie='HoofdID';
         else if(pid===VHoofdID) clone.Relatie='VHoofdID';
         else if(pid===MHoofdID) clone.Relatie='MHoofdID';
@@ -72,7 +60,7 @@ function computeRelaties(data, hoofdId){
 // VIEW MODEL
 // =======================
 function buildViewModel(context){
-    const model={vader:null,moeder:null,siblings:[],siblingPartners:[],hoofd:null,partner:null,children:[],childPartners:[]};
+    const model={vader:null,moeder:null, siblings:[],siblingPartners:[], hoofd:null, partner:null, children:[],childPartners:[]};
     context.forEach(p=>{
         switch(p.Relatie){
             case 'VHoofdID': model.vader=p; break;
@@ -97,15 +85,14 @@ function createPersonCard(p){
     const name=document.createElement('div'); name.className='name';
     name.textContent=`${safe(p.Roepnaam)} ${safe(p.Prefix)} ${safe(p.Achternaam)}`;
     const year=document.createElement('div'); year.className='year';
-    const geboortejaar = geboorteJaar(p.Geboortedatum);
-    if(geboortejaar) year.textContent=`(${geboortejaar})`;
+    const geboortejaar=geboorteJaar(p.Geboortedatum); if(geboortejaar) year.textContent=`(${geboortejaar})`;
     card.appendChild(name); card.appendChild(year);
     card.addEventListener('click',()=>{ selectedHoofdId=p.ID; renderTree(); });
     return card;
 }
 
 // =======================
-// RENDER FAMILY PAIR
+// RENDER PAIR
 // =======================
 function renderPair(p1,p2){
     const container=document.createElement('div'); container.className='family';
@@ -124,21 +111,24 @@ function renderTree(){
     const model=buildViewModel(context);
     const tree=document.createElement('div'); tree.className='tree';
 
+    // parents
     const parentRow=document.createElement('div'); parentRow.className='row';
     parentRow.appendChild(renderPair(model.vader,model.moeder));
     model.siblings.forEach(sib=>{
-        const partner = model.siblingPartners.find(p=>safe(p.ID)===safe(sib.PartnerID));
+        const partner=model.siblingPartners.find(p=>safe(p.ID)===safe(sib.PartnerID));
         parentRow.appendChild(renderPair(sib,partner));
     });
     tree.appendChild(parentRow);
 
+    // hoofd
     const hoofdRow=document.createElement('div'); hoofdRow.className='row';
     hoofdRow.appendChild(renderPair(model.hoofd,model.partner));
     tree.appendChild(hoofdRow);
 
+    // children
     const childRow=document.createElement('div'); childRow.className='row';
     model.children.forEach(child=>{
-        const partner = model.childPartners.find(p=>safe(p.ID)===safe(child.PartnerID));
+        const partner=model.childPartners.find(p=>safe(p.ID)===safe(child.PartnerID));
         childRow.appendChild(renderPair(child,partner));
     });
     tree.appendChild(childRow);
@@ -147,15 +137,14 @@ function renderTree(){
 }
 
 // =======================
-// LIVE SEARCH
+// LIVE SEARCH (popup)
 // =======================
-searchInput.addEventListener('input',()=>{
-
-    const term = safe(searchInput.value).toLowerCase();
-    document.getElementById('searchPopup')?.remove();
+function liveSearch(){
+    document.getElementById('searchPopup')?.remove(); // verwijder oude popup
+    const term=safe(searchInput.value).toLowerCase();
     if(!term) return;
 
-    const results = dataset.filter(p=>
+    const results=dataset.filter(p=>
         safe(p.ID).toLowerCase().includes(term) ||
         safe(p.Roepnaam).toLowerCase().includes(term) ||
         safe(p.Achternaam).toLowerCase().includes(term)
@@ -163,36 +152,31 @@ searchInput.addEventListener('input',()=>{
 
     const rect=searchInput.getBoundingClientRect();
     const popup=document.createElement('div'); popup.id='searchPopup';
-    popup.style.position='absolute'; popup.style.background='#fff';
-    popup.style.border='1px solid #999'; popup.style.zIndex=1000;
-    popup.style.top=rect.bottom+window.scrollY+'px'; popup.style.left=rect.left+window.scrollX+'px';
-    popup.style.width=rect.width+'px'; popup.style.maxHeight='200px';
-    popup.style.overflowY='auto'; popup.style.borderRadius='6px';
-    popup.style.boxShadow='0 2px 6px rgba(0,0,0,0.1)';
-
-    if(results.length===0){ const row=document.createElement('div'); row.textContent='Geen resultaten'; row.style.padding='8px'; popup.appendChild(row); }
+    Object.assign(popup.style,{
+        position:'absolute',background:'#fff',border:'1px solid #999',zIndex:1000,
+        top:rect.bottom+window.scrollY+'px', left:rect.left+window.scrollX+'px', width:rect.width+'px',
+        maxHeight:'200px',overflowY:'auto'
+    });
 
     results.forEach(p=>{
         const row=document.createElement('div'); row.textContent=`${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`;
-        row.style.padding='8px'; row.style.cursor='pointer';
+        Object.assign(row.style,{padding:'5px',cursor:'pointer'});
         row.addEventListener('click',()=>{
-            selectedHoofdId = safe(p.ID); searchInput.value=safe(p.ID); popup.remove(); renderTree();
+            selectedHoofdId=safe(p.ID); popup.remove(); renderTree();
         });
         popup.appendChild(row);
     });
 
-    document.body.appendChild(popup);
-});
+    if(results.length===0){ const row=document.createElement('div'); row.textContent='Geen resultaten'; row.style.padding='5px'; popup.appendChild(row); }
 
-document.addEventListener('click',e=>{
-    const popup=document.getElementById('searchPopup');
-    if(popup && !popup.contains(e.target) && e.target!==searchInput) popup.remove();
-});
+    document.body.appendChild(popup);
+}
 
 // =======================
 // INIT
 // =======================
-if(dataset.length) selectedHoofdId=dataset[0].ID; // default focus
-renderTree();
+if(dataset.length) selectedHoofdId=dataset[0].ID; // default selectie
+renderTree(); // eerste render
+searchInput.addEventListener('input',liveSearch); // live search event
 
 })();
