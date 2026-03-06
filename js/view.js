@@ -7,8 +7,8 @@
 // =======================
 // DOM-elementen
 // =======================
-const tableBody   = document.querySelector('#manageTable tbody'); // tbody van de tabel
-const theadRow    = document.querySelector('#manageTable thead tr'); // header rij
+const tableBody   = document.querySelector('#viewTable tbody'); // tbody van de tabel
+const theadRow    = document.querySelector('#viewTable thead tr'); // header rij
 const addBtn      = document.getElementById('addBtn'); // knop om rij toe te voegen
 const saveBtn     = document.getElementById('saveBtn'); // knop om dataset op te slaan
 const refreshBtn  = document.getElementById('refreshBtn'); // knop om tabel te verversen
