@@ -1,14 +1,15 @@
 <!-- ======================= stamboom/view.html v1.2.0 ======================= -->
-<!-- manage code to adapt  -->
+<!-- view code to adapt  -->
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8"> <!-- Tekencodering UTF-8 zodat alle tekens correct weergegeven worden -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Zorgt dat layout schaalbaar is voor mobiel/desktop -->
-    <title>MyFamTreeCollab - Manage</title> <!-- Titel in browser tab -->
+    <title>MyFamTreeCollab - View</title> <!-- Titel in browser tab -->
     <link rel="stylesheet" href="../css/style.css"> <!-- Algemene applicatie CSS -->
         
-    <!-- ======================= RELATIE STYLING MANAGE TABLE ======================= -->
+    <!-- ======================= RELATIE STYLING VIEW TABLE ======================= -->
     <style>
         /* ====== HoofdID ====== */
     .rel-hoofd { 
@@ -69,16 +70,16 @@
     .rel-bzpartnerid.scenario-3 { background-color: #fdecea !important; }
 
    /* ====== Transparante tabel en cel achtergrond ====== */
-#manageTable {
+#viewTable {
     background-color: transparent; /* Tabel zelf doorzichtig */
     border-collapse: collapse;     /* Celranden netjes samenvallen */
 }
 
-#manageTable td {
+#viewTable td {
     background-color: transparent; /* Alle cellen doorzichtig */
 }
 
-#manageTable td input {
+#viewTable td input {
     background-color: transparent; /* Input velden doorzichtig */
     border: none;                  /* Geen borders voor cleaner look */
     width: 100%;                   /* Vul volledige celbreedte */
@@ -87,7 +88,7 @@
 }
 
     /* ====== Hover effect rijen ====== */
-    #manageTable tr:hover { 
+    #viewTable tr:hover { 
         background-color: rgba(0,0,0,0.05); /* Lichte overlay bij hover om focus te tonen */
     }
     </style>
@@ -146,8 +147,8 @@ document.addEventListener('DOMContentLoaded', () => {
         </form>
     </div>
 
-    <!-- Manage tabel -->
-    <table id="manageTable">
+    <!-- View tabel -->
+    <table id="viewTable">
         <thead><tr></tr></thead> <!-- Headers worden dynamisch door JS ingevuld -->
         <tbody></tbody> <!-- Rijen worden dynamisch door JS ingevuld -->
     </table>
@@ -178,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <script src="../js/schema.js"></script> <!-- Schema functies -->
 <script src="../js/idGenerator.js"></script> <!-- ID generator -->
 <script src="../js/storage.js"></script> <!-- Opslag functies -->
-<script src="../js/manage.js"></script> <!-- Logica renderTable, relaties, CRUD -->
+<script src="../js/view.js"></script> <!-- Logica renderTable, relaties, CRUD -->
 
 <!-- ======================= Footer ======================= -->
 <div id="footer-placeholder"></div>
