@@ -1,4 +1,4 @@
-======================= view.js v1.4.3 =======================
+// ======================= view.js v1.4.4 =======================
 // Boom rendering + Live search + Kind/Partner + BZID + kleur/shading + geboortedatum zichtbaar
 // Nodes zijn klikbaar zodat je door de stamboom kan navigeren
 
@@ -24,10 +24,20 @@ let selectedHoofdId = null;                       // huidige hoofd persoon in de
 function safe(val){ return val ? String(val).trim() : ''; } // voorkomt null/undefined problemen
 
 // formatteer geboortedatum naar dd-mmm-jjjj
+// v1.4.4 robuuste genealogische datumparser
 function formatDate(d){
     if(!d) return '';
-    const date = new Date(d);
-    if(isNaN(date)) return d; // fallback als datum ongeldig
+    d = String(d).trim();
+
+    let date =
+        /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(d) : // yyyy-mm-dd
+        /^\d{2}[-/]\d{2}[-/]\d{4}$/.test(d) ? new Date(d.replace(/(\d{2})[-/](\d{2})[-/](\d{4})/,'$3-$2-$1')) : // dd-mm-yyyy of dd/mm/yyyy
+        /^\d{4}-\d{2}$/.test(d) ? new Date(d+'-01') : // yyyy-mm
+        /^\d{4}$/.test(d) ? new Date(d+'-01-01') : // yyyy
+        new Date(d); // fallback (bv 12 mrt 1874)
+
+    if(isNaN(date.getTime())) return d; // fallback als datum ongeldig
+
     const options = { day:'2-digit', month:'short', year:'numeric' };
     return date.toLocaleDateString('nl-NL', options).replace(/\./g,''); // dd-mmm-jjjj
 }
@@ -99,17 +109,15 @@ function computeRelaties(data, hoofdId){
     const MHoofdID = safe(hoofd.MoederID);
     const PHoofdID = safe(hoofd.PartnerID);
 
-    // Kinderen scenario: bepaal welke parent aanwezig is voor shading
     const KindID = data.filter(p => 
         (safe(p.VaderID) === hoofdID || safe(p.MoederID) === hoofdID)
     ).map(p => p.ID);
 
-    // BZID scenario: alleen letterkleur, bepaal welke ouder(s) overeenkomen
     const BZID = data.filter(p=>{
         const pid = safe(p.ID);
-        if(pid === hoofdID) return false; // hoofd zelf niet
-        if(KindID.includes(pid)) return false; // kinderen niet
-        if(pid === PHoofdID) return false; // partner niet
+        if(pid === hoofdID) return false;
+        if(KindID.includes(pid)) return false;
+        if(pid === PHoofdID) return false;
         const sameVader = VHoofdID && safe(p.VaderID) === VHoofdID;
         const sameMoeder = MHoofdID && safe(p.MoederID) === MHoofdID;
         return sameVader || sameMoeder;
@@ -120,16 +128,14 @@ function computeRelaties(data, hoofdId){
         const clone = {...p};
         clone.Relatie = ''; 
         clone._priority = 99; 
-        clone._textColor = null; // optionele tekstkleur voor BZID
-        clone._shade = null;     // shading voor kind/partner
+        clone._textColor = null;
+        clone._shade = null;
 
-        // ===== Hoofd & ouders =====
         if(pid === hoofdID){ clone.Relatie='HoofdID'; clone._priority=1; }
         else if(pid === VHoofdID){ clone.Relatie='VHoofdID'; clone._priority=0; }
         else if(pid === MHoofdID){ clone.Relatie='MHoofdID'; clone._priority=0; }
         else if(pid === PHoofdID){ clone.Relatie='PHoofdID'; clone._priority=2; }
 
-        // ===== Kinderen + partner shading =====
         else if(KindID.includes(pid)){ 
             clone.Relatie='KindID'; clone._priority=3;
             const kind = findPerson(pid);
@@ -140,7 +146,6 @@ function computeRelaties(data, hoofdId){
             else if(hasPartner) clone._shade = 'halfPartner';      
         }
 
-        // ===== BZID =====
         else if(BZID.includes(pid)){
             clone.Relatie='BZID'; clone._priority=4;
             const bz = findPerson(pid);
@@ -152,63 +157,60 @@ function computeRelaties(data, hoofdId){
         }
 
         return clone;
-    }).sort((a,b)=>a._priority - b._priority); // sorteer op prioriteit
+    }).sort((a,b)=>a._priority - b._priority);
 }
 
 // =======================
 // BOOM BUILDER
 // =======================
 function buildTree(rootID){
-    treeBox.innerHTML = '';                                    // container leeg maken
-    BZBox.innerHTML = '';                                      // BZID box leeg maken
+    treeBox.innerHTML = '';
+    BZBox.innerHTML = '';
 
-    if(!rootID){                                               // geen hoofd persoon
+    if(!rootID){
         treeBox.textContent = 'Selecteer een persoon';
         return;
     }
 
-    const root = findPerson(rootID);                           // hoofd persoon ophalen
+    const root = findPerson(rootID);
     if(!root){
         treeBox.textContent = 'Persoon niet gevonden';
         return;
     }
 
-    const dataRel = computeRelaties(dataset, rootID);         // alle relaties + shading
+    const dataRel = computeRelaties(dataset, rootID);
 
-    // ===== ROOT =====
-    const rootNode = createTreeNode(root,'rel-hoofd');        // hoofd node
-    const rootWrapper = document.createElement('div');        // wrapper root + partner
+    const rootNode = createTreeNode(root,'rel-hoofd');
+    const rootWrapper = document.createElement('div');
     rootWrapper.className = 'tree-root';
     rootWrapper.appendChild(rootNode);
     treeBox.appendChild(rootWrapper);
 
-    // ===== OUDERS =====
     const parents = document.createElement('div');
     parents.className = 'tree-parents';
+
     if(root.VaderID){
         const v = findPerson(root.VaderID);
         if(v) parents.appendChild(createTreeNode(v,'rel-vhoofdid'));
     }
+
     if(root.MoederID){
         const m = findPerson(root.MoederID);
         if(m) parents.appendChild(createTreeNode(m,'rel-mhoofdid'));
     }
+
     if(parents.children.length > 0){
         treeBox.prepend(parents);
     }
 
-    // ===== PARTNER =====
     if(root.PartnerID){
         const partner = findPerson(root.PartnerID);
         if(partner){
-            rootWrapper.appendChild(
-                createTreeNode(partner,'rel-phoofdid')
-            );
+            rootWrapper.appendChild(createTreeNode(partner,'rel-phoofdid'));
         }
     }
 
-    // ===== KINDEREN =====
-    const children = dataRel.filter(d => d.Relatie === 'KindID'); 
+    const children = dataRel.filter(d => d.Relatie === 'KindID');
     if(children.length > 0){
         const kidsWrap = document.createElement('div');
         kidsWrap.className = 'tree-children';
@@ -221,7 +223,6 @@ function buildTree(rootID){
         treeBox.appendChild(kidsWrap);
     }
 
-    // ===== BZID =====
     const bzNodes = dataRel.filter(d => d.Relatie === 'BZID');   
     bzNodes.forEach(b=>{
         BZBox.appendChild(createTreeNode(b,null,b._textColor));   
