@@ -1,4 +1,5 @@
-/* ======================= css/style.css v0.0.0 ======================= */
+/* ======================= css/style.css v1.0.1 ======================= */
+/* TREE VIEW STYLING toegevoeg */
 /* ======================= BASIS LAYOUT ======================= */
 body {
     font-family: Arial, sans-serif;
@@ -281,4 +282,44 @@ button.danger:hover {
     .modal {
         width: 95%;
     }
+}
+/* =======================
+   TREE VIEW STYLING
+   ======================= */
+#treeContainer { 
+    margin: 20px 0; /* ruimte boven en onder de boom */
+    padding: 10px; /* interne padding voor visuele luchtigheid */
+    border: 1px solid #ccc; /* lichte rand rondom de boom */
+    border-radius: 6px; /* afgeronde hoeken voor zachtere look */
+    background-color: #fdfdfd; /* lichte achtergrond zodat nodes opvallen */
+    text-align: center; /* centraallijn voor ouders en kinderen */
+}
+
+.tree-parents, .tree-children { 
+    text-align: center; /* horizontaal gecentreerde nodes binnen ouder/kind containers */
+    margin: 10px 0; /* verticale ruimte tussen rijen */
+}
+
+.tree-node { 
+    display: inline-block; /* nodes naast elkaar plaatsen */
+    padding: 6px 10px; /* interne padding voor leesbaarheid */
+    margin: 6px; /* ruimte tussen nodes */
+    border: 1px solid #444; /* donkere rand rondom iedere node */
+    border-radius: 6px; /* afgeronde hoeken voor nodes */
+    background: #f5f5f5; /* lichte grijze achtergrondkleur voor nodes */
+    font-size: 13px; /* compacte maar leesbare tekst */
+    cursor: default; /* standaard cursor bij hover over node */
+}
+
+.tree-node:hover { 
+    background-color: #e0f0ff; /* lichte hover highlight om focus te tonen */
+    border-color: #004080; /* donkerdere rand bij hover */
+}
+
+.tree-connector { 
+    display: block; /* maakt verticale of horizontale lijnen zichtbaar */
+    height: 1px; /* hoogte lijn voor horizontale connector */
+    border-top: 1px solid #ccc; /* lichte grijze lijn */
+    margin: 6px auto; /* centreren met marge boven en onder */
+    width: 50%; /* lijn half de breedte van container voor nette vertakking */
 }
