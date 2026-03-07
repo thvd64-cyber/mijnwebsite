@@ -1,4 +1,4 @@
-// ======================= view.js v1.4.4 =======================
+// ======================= view.js v1.4.5 =======================
 // Boom rendering + Live search + Kind/Partner + BZID + kleur/shading + geboortedatum zichtbaar
 // Nodes zijn klikbaar zodat je door de stamboom kan navigeren
 
@@ -24,46 +24,38 @@ let selectedHoofdId = null;                       // huidige hoofd persoon in de
 function safe(val){ return val ? String(val).trim() : ''; } // voorkomt null/undefined problemen
 
 // formatteer geboortedatum naar dd-mmm-jjjj
-// v1.4.4 robuuste genealogische datumparser
 function formatDate(d){
     if(!d) return '';
     d = String(d).trim();
 
     let date =
-        /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(d) : // yyyy-mm-dd
-        /^\d{2}[-/]\d{2}[-/]\d{4}$/.test(d) ? new Date(d.replace(/(\d{2})[-/](\d{2})[-/](\d{4})/,'$3-$2-$1')) : // dd-mm-yyyy of dd/mm/yyyy
-        /^\d{4}-\d{2}$/.test(d) ? new Date(d+'-01') : // yyyy-mm
-        /^\d{4}$/.test(d) ? new Date(d+'-01-01') : // yyyy
-        new Date(d); // fallback (bv 12 mrt 1874)
+        /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(d) :
+        /^\d{2}[-/]\d{2}[-/]\d{4}$/.test(d) ? new Date(d.replace(/(\d{2})[-/](\d{2})[-/](\d{4})/,'$3-$2-$1')) :
+        /^\d{4}-\d{2}$/.test(d) ? new Date(d+'-01') :
+        /^\d{4}$/.test(d) ? new Date(d+'-01-01') :
+        new Date(d);
 
-    if(isNaN(date.getTime())) return d; // fallback als datum ongeldig
-
+    if(isNaN(date.getTime())) return d;
     const options = { day:'2-digit', month:'short', year:'numeric' };
-    return date.toLocaleDateString('nl-NL', options).replace(/\./g,''); // dd-mmm-jjjj
+    return date.toLocaleDateString('nl-NL', options).replace(/\./g,'');
 }
 
 // =======================
-// NODE CREATOR (Boom-nodes) v1.4.2
+// NODE CREATOR (Boom-nodes)
 // =======================
-function createTreeNode(p, rel, color){                        // node maken met relatie type en optionele tekstkleur
-    const div = document.createElement('div');                // nieuwe div voor node
-    div.className = 'tree-node';                              // basis CSS class
-    if(rel) div.classList.add(rel);                           // voeg relatieklasse toe (kleur/shading)
+function createTreeNode(p, rel, color){
+    const div = document.createElement('div');
+    div.className = 'tree-node';
+    if(rel) div.classList.add(rel);
 
-    // ====================== Node tekst =======================
-    // Tekst in drie regels:
-    // [ID]
-    // [Roepnaam, Prefix, Achternaam]
-    // [Geboortedatum dd-mmm-jjjj]
     const fullName = [safe(p.Roepnaam), safe(p.Prefix), safe(p.Achternaam)]
-                     .filter(Boolean).join(' ').trim();      // combineer naamdelen
-    const birth = formatDate(p.GeboorteDatum);              // formatteer geboortedatum
+                     .filter(Boolean).join(' ').trim();
+    const birth = formatDate(p.GeboorteDatum);
 
-    // flexbox zodat de drie regels altijd goed weergegeven worden
     div.style.display = 'flex';
-    div.style.flexDirection = 'column';                     // verticale stapeling
-    div.style.alignItems = 'center';                        // horizontaal centreren
-    div.style.justifyContent = 'center';                    // verticaal centreren
+    div.style.flexDirection = 'column';
+    div.style.alignItems = 'center';
+    div.style.justifyContent = 'center';
 
     div.innerHTML = `
         <span style="font-size:0.85rem;">${safe(p.ID)}</span>
@@ -71,32 +63,26 @@ function createTreeNode(p, rel, color){                        // node maken met
         <span style="font-size:0.8rem; color:#555;">${birth}</span>
     `;
 
-    if(color) div.style.color = color;                      // tekstkleur toepassen voor BZID
-    div.dataset.id = p.ID;                                   // ID opslaan in dataset attribuut
+    if(color) div.style.color = color;
+    div.dataset.id = p.ID;
 
-    div.addEventListener('click', () => {                   // klik event voor node
-        selectedHoofdId = p.ID;                              // zet clicked persoon als hoofd
-        renderTree();                                        // render boom opnieuw
+    div.addEventListener('click', () => {
+        selectedHoofdId = p.ID;
+        renderTree();
     });
 
-    return div;                                             // node teruggeven
+    return div;
 }
 
 // =======================
 // DATA HELPERS
 // =======================
-function findPerson(id){                                   // persoon zoeken op ID
+function findPerson(id){
     return dataset.find(p => safe(p.ID) === safe(id));
-}
-function findChildren(id){                                 // kinderen zoeken
-    return dataset.filter(p =>
-        safe(p.VaderID) === safe(id) || 
-        safe(p.MoederID) === safe(id)
-    );
 }
 
 // =======================
-// RELATIE ENGINE (voor shading + BZID kleur)
+// RELATIE ENGINE
 // =======================
 function computeRelaties(data, hoofdId){
     const hoofdID = safe(hoofdId); 
@@ -140,7 +126,7 @@ function computeRelaties(data, hoofdId){
             clone.Relatie='KindID'; clone._priority=3;
             const kind = findPerson(pid);
             const hasHoofd = kind && (safe(kind.VaderID) === hoofdID || safe(kind.MoederID) === hoofdID);
-            const hasPartner = kind && (PHoofdID && (safe(kind.VaderID) === PHoofdID || safe(kind.MoederID) === PHoofdID));
+            const hasPartner = kind && safe(kind.PartnerID) !== '';
             if(hasHoofd && hasPartner) clone._shade = 'full';      
             else if(hasHoofd) clone._shade = 'halfHoofd';          
             else if(hasPartner) clone._shade = 'halfPartner';      
@@ -210,16 +196,36 @@ function buildTree(rootID){
         }
     }
 
+    // ======================= Kinderen + partners =======================
     const children = dataRel.filter(d => d.Relatie === 'KindID');
     if(children.length > 0){
         const kidsWrap = document.createElement('div');
         kidsWrap.className = 'tree-children';
+
         children.forEach(k=>{
+            // maak groep voor kind + partner
+            const kidGroup = document.createElement('div');
+            kidGroup.style.display = 'flex';
+            kidGroup.style.alignItems = 'center';
+            kidGroup.style.gap = '5px'; // kleine ruimte tussen kind en partner
+
+            // kind node
             const shadeClass = k._shade === 'full' ? 'rel-kindid' :
                                k._shade === 'halfHoofd' ? 'rel-kindid-halfHoofd' :
                                'rel-kindid-halfPartner';
-            kidsWrap.appendChild(createTreeNode(k,shadeClass));
+            kidGroup.appendChild(createTreeNode(k, shadeClass));
+
+            // partner van kind node
+            if(k.PartnerID){
+                const kPartner = findPerson(k.PartnerID);
+                if(kPartner){
+                    kidGroup.appendChild(createTreeNode(kPartner,'rel-pkpartnerid')); // grijs, italic
+                }
+            }
+
+            kidsWrap.appendChild(kidGroup); // voeg groep toe aan wrapper
         });
+
         treeBox.appendChild(kidsWrap);
     }
 
@@ -230,7 +236,7 @@ function buildTree(rootID){
 }
 
 // =======================
-// LIVE SEARCH (onveranderd)
+// LIVE SEARCH
 // =======================
 function liveSearch(){
     const term = safe(searchInput.value).toLowerCase();
