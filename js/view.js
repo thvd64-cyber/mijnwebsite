@@ -195,24 +195,31 @@ function renderSiblings(rootID){
 // =======================
 // LIVE SEARCH
 // =======================
-
 function liveSearch(){
 
-    const term = safe(searchInput.value).toLowerCase();      // zoekterm ophalen
+    const term = safe(searchInput.value).toLowerCase();        // zoekterm ophalen
 
-    document.getElementById('searchPopup')?.remove();        // oude popup verwijderen
+    document.getElementById('searchPopup')?.remove();          // bestaande popup verwijderen
 
-    if(!term) return;
+    if(!term){                                                 // leeg zoekveld
+        return;
+    }
 
-    const results = dataset.filter(p =>                      // zoekresultaten
+    const results = dataset.filter(p =>                        // zoeken in dataset
         safe(p.ID).toLowerCase().includes(term) ||
         safe(p.Roepnaam).toLowerCase().includes(term) ||
         safe(p.Achternaam).toLowerCase().includes(term)
     );
 
-    const rect = searchInput.getBoundingClientRect();        // positie zoekveld
+    // ===== eerste match automatisch selecteren =====
+    if(results.length > 0 && !selectedHoofdId){
+        selectedHoofdId = safe(results[0].ID);                 // eerste match hoofd maken
+        renderTree();                                          // boom opnieuw tekenen
+    }
 
-    const popup = document.createElement('div');             // popup container
+    const rect = searchInput.getBoundingClientRect();          // positie zoekveld
+
+    const popup = document.createElement('div');               // popup container maken
     popup.id = 'searchPopup';
 
     popup.style.position = 'absolute';
@@ -229,30 +236,34 @@ function liveSearch(){
 
     results.forEach(p => {
 
-        const row = document.createElement('div');
+        const row = document.createElement('div');             // resultaat rij
 
         row.textContent = `${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`;
 
         row.style.padding = '5px';
         row.style.cursor = 'pointer';
 
-        row.addEventListener('click', () => {                // klik resultaat
-            selectedHoofdId = safe(p.ID);                    // nieuwe hoofd persoon
-            popup.remove();                                  // popup sluiten
-            renderTree();                                    // boom opnieuw tekenen
+        row.addEventListener('click', () => {                  // klik resultaat
+
+            selectedHoofdId = safe(p.ID);                      // nieuwe hoofd persoon
+            popup.remove();                                    // popup sluiten
+            renderTree();                                      // boom opnieuw tekenen
         });
 
-        popup.appendChild(row);
+        popup.appendChild(row);                                // rij toevoegen
+
     });
 
-    if(results.length === 0){
+    if(results.length === 0){                                  // geen resultaten
+
         const row = document.createElement('div');
         row.textContent = 'Geen resultaten';
         row.style.padding = '5px';
+
         popup.appendChild(row);
     }
 
-    document.body.appendChild(popup);                        // popup tonen
+    document.body.appendChild(popup);                          // popup tonen
 }
 
 // =======================
