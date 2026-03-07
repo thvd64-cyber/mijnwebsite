@@ -1,200 +1,113 @@
+<!-- ======================= stamboom/view.html v1.2.4  ======================= -->
+<!--  Tabel verwijderd → geen #viewTable meer, focus op boom + broers/zussen.-->
+<!-- Container flex → #treeContainer + #siblingsContainer naast elkaar.-->
+<!-- Broers/zussen lijst → klikbaar, update selectedHoofdId en her-render de boom.-->
+<!-- Code regel uitleg → inline commentaar achter belangrijke regels toegevoegd.-->
+<!-- Styling → consistent met scenario kleuren en boom nodes-->
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Mobiel responsive -->
+<title>MyFamTreeCollab - View</title>
+<link rel="stylesheet" href="../css/style.css"> <!-- Algemene CSS -->
+
+<style>
+/* ======================= RELATIE STYLING ======================= */
+.rel-hoofd { background-color: #fffde7 !important; font-weight: 600; } /* Hoofd persoon */
+.rel-vhoofdid, .rel-mhoofdid { background-color: #e8f5e9 !important; font-weight: 500; } /* Ouders */
+.rel-phoofdid { background-color: #f3e5f5 !important; font-style: italic; } /* Partner hoofd */
+.rel-kindid { background-color: #e3f2fd !important; font-weight: 400; } /* Kinderen */
+.rel-kindid.scenario-2 { background-color: #eef7fe !important; } 
+.rel-kindid.scenario-3 { background-color: #f7fbff !important; } 
+.rel-pkpartnerid { background-color: #d0ebff !important; font-style: italic; } /* Partner kind */
+.rel-pkpartnerid.scenario-2 { background-color: #daf4ff !important; } 
+.rel-pkpartnerid.scenario-3 { background-color: #e4f9ff !important; } 
+.rel-bzid { background-color: #fff3e0 !important; font-weight: 500; } /* Broer/Zus */
+.rel-bzid.scenario-2 { background-color: #fff7ed !important; } 
+.rel-bzid.scenario-3 { background-color: #fffaf1 !important; } 
+.rel-bzpartnerid { background-color: #fbe9e7 !important; font-style: italic; } /* Partner B/Z */
+.rel-bzpartnerid.scenario-2 { background-color: #fcebe9 !important; }
+.rel-bzpartnerid.scenario-3 { background-color: #fdecea !important; } 
+
+/* ======================= Layout ======================= */
+.container { display: flex; gap: 20px; align-items: flex-start; } /* Flex container voor boom + B/Z lijst */
+#treeContainer { flex: 1; margin-top: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; background-color: #fafafa; } /* Boom container */
+#siblingsContainer { width: 220px; flex-shrink: 0; padding: 10px; border: 1px solid #ccc; border-radius: 6px; background: #fafafa; } /* Broers/Zussen lijst */
+#siblingsContainer h4 { margin-top:0; } 
+#siblingsList { list-style:none; padding-left:0; margin:0; } /* ul reset */
+#siblingsList li { padding:4px 0; cursor:pointer; } /* individuele B/Z */
+#siblingsList li:hover { background-color: rgba(0,0,0,0.05); } /* hover effect B/Z */
+.tree-node { display: inline-block; padding: 5px 10px; margin: 5px; border-radius: 4px; background-color: #fff; border: 1px solid #999; cursor: default; } /* node styling */
+.tree-root { text-align: center; margin-bottom: 10px; } 
+.tree-parents, .tree-children { display: flex; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<!-- ======================= TopBar & Navbar ======================= -->
+<div id="topbar-placeholder"></div>
 <script>
-// ======================= view.js v1.2.5 =======================
-// vis-network voor stamboom
-// live search + Broers/Zussen lijst
-(function(){
-'use strict'; // activeer strict mode zodat JS veiliger werkt
-
-// =======================
-// DOM-elementen
-// =======================
-const treeBox       = document.getElementById('treeContainer'); // container voor genealogische boom
-const siblingsList  = document.getElementById('siblingsList');  // container voor broer/zus lijst
-const searchInput   = document.getElementById('searchPerson');  // zoekveld
-const refreshBtn    = document.getElementById('refreshBtn');    // knop refresh
-
-// =======================
-// State
-// =======================
-let dataset = window.StamboomStorage.get() || []; // laad dataset uit storage
-let selectedHoofdId = null; // geselecteerde persoon
-
-// =======================
-// Helpers
-// =======================
-function safe(val){ return val ? String(val).trim() : ''; } // voorkomt undefined errors
-
-// =======================
-// BOOM ENGINE
-// =======================
-function nodeLabel(p){ 
-    return `${safe(p.Roepnaam)} ${safe(p.Achternaam)} (${safe(p.ID)})`; 
-}
-
-function createNode(p){ 
-    const div = document.createElement('div'); 
-    div.className = 'tree-node'; 
-    div.textContent = nodeLabel(p); 
-    div.dataset.id = p.ID; 
-    return div; 
-}
-
-function findPerson(id){ 
-    return dataset.find(p=>safe(p.ID)===safe(id)); 
-}
-
-function findChildren(id){ 
-    return dataset.filter(p=>safe(p.VaderID)===safe(id) || safe(p.MoederID)===safe(id)); 
-}
-
-function buildTree(rootID){ 
-    treeBox.innerHTML=''; 
-    if(!rootID){ 
-        treeBox.textContent='Selecteer een persoon'; 
-        return; 
-    } 
-    const root = findPerson(rootID); 
-    if(!root){ 
-        treeBox.textContent='Persoon niet gevonden'; 
-        return; 
-    } 
-
-    // root node
-    const rootNode = createNode(root); 
-    const rootWrapper = document.createElement('div'); 
-    rootWrapper.className='tree-root'; 
-    rootWrapper.appendChild(rootNode); 
-    treeBox.appendChild(rootWrapper); 
-
-    // ouders
-    const parents = document.createElement('div'); 
-    parents.className='tree-parents';
-    if(root.VaderID){ 
-        const v = findPerson(root.VaderID); 
-        if(v) parents.appendChild(createNode(v)); 
-    }
-    if(root.MoederID){ 
-        const m = findPerson(root.MoederID); 
-        if(m) parents.appendChild(createNode(m)); 
-    }
-    if(parents.children.length>0){ treeBox.prepend(parents); }
-
-    // partner
-    if(root.PartnerID){ 
-        const partner = findPerson(root.PartnerID); 
-        if(partner){ rootWrapper.appendChild(createNode(partner)); } 
-    }
-
-    // kinderen
-    const kids = findChildren(rootID);
-    if(kids.length>0){
-        const kidsWrap = document.createElement('div'); 
-        kidsWrap.className='tree-children';
-        kids.forEach(k=>kidsWrap.appendChild(createNode(k)));
-        treeBox.appendChild(kidsWrap);
-    }
-
-    renderSiblings(rootID); // update broer/zus lijst
-}
-
-function renderTree(){ buildTree(selectedHoofdId); } 
-
-// =======================
-// Broers/Zussen lijst
-// =======================
-function renderSiblings(rootID){ 
-    siblingsList.innerHTML=''; 
-    if(!rootID) return; 
-    const persoon = findPerson(rootID); 
-    if(!persoon) return; 
-
-    const siblings = dataset.filter(p=>
-        (safe(p.VaderID)===safe(persoon.VaderID) && safe(p.MoederID)===safe(persoon.MoederID)) &&
-        safe(p.ID)!==safe(rootID)
-    );
-
-    if(siblings.length===0){ 
-        const li = document.createElement('li'); 
-        li.textContent='Geen broers/zussen'; 
-        siblingsList.appendChild(li); 
-        return;
-    }
-
-    siblings.forEach(s=>{
-        const li = document.createElement('li'); 
-        li.textContent=`${safe(s.Roepnaam)} ${safe(s.Achternaam)} (${safe(s.ID)})`; 
-        li.addEventListener('click',()=>{
-            selectedHoofdId=s.ID; 
-            renderTree(); 
-        }); 
-        siblingsList.appendChild(li); 
-    });
-}
-
-// =======================
-// Live Search
-// =======================
-function liveSearch(){
-    const term = safe(searchInput.value).toLowerCase(); 
-    document.getElementById('searchPopup')?.remove(); 
-    if(!term) return; 
-
-    const results = dataset.filter(p=> 
-        safe(p.ID).toLowerCase().includes(term) || 
-        safe(p.Roepnaam).toLowerCase().includes(term) || 
-        safe(p.Achternaam).toLowerCase().includes(term)
-    );
-
-    const rect = searchInput.getBoundingClientRect(); 
-    const popup = document.createElement('div'); 
-    popup.id='searchPopup'; 
-    popup.style.position='absolute';
-    popup.style.background='#fff'; 
-    popup.style.border='1px solid #999'; 
-    popup.style.zIndex=1000;
-    popup.style.top=rect.bottom+window.scrollY+'px'; 
-    popup.style.left=rect.left+window.scrollX+'px'; 
-    popup.style.width=rect.width+'px'; 
-    popup.style.maxHeight='200px'; 
-    popup.style.overflowY='auto';
-
-    results.forEach(p=>{ 
-        const row=document.createElement('div'); 
-        row.textContent=`${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`; 
-        row.style.padding='5px'; 
-        row.style.cursor='pointer';
-        row.addEventListener('click',()=>{
-            selectedHoofdId = safe(p.ID); 
-            popup.remove(); 
-            renderTree(); // update boom + B/Z lijst
-        }); 
-        popup.appendChild(row);
-    });
-
-    if(results.length===0){ 
-        const row=document.createElement('div'); 
-        row.textContent='Geen resultaten'; 
-        row.style.padding='5px'; 
-        popup.appendChild(row); 
-    }
-
-    document.body.appendChild(popup); 
-}
-
-// =======================
-// Init
-// =======================
-function refreshView(){ 
-    dataset = window.StamboomStorage.get()||[]; 
-    if(!selectedHoofdId && dataset.length>0){ 
-        selectedHoofdId = dataset[0].ID; // default persoon bij load
-    }
-    renderTree(); 
-}
-
-refreshView(); 
-searchInput.addEventListener('input',liveSearch); 
-refreshBtn.addEventListener('click',refreshView); 
-
-})();
+fetch('/MyFamTreeCollab/Layout/TopBar.html')
+  .then(resp => resp.text())
+  .then(data => document.getElementById('topbar-placeholder').innerHTML = data); // TopBar toevoegen
 </script>
+
+<div id="Navbar-placeholder"></div>
+<script>
+fetch('/MyFamTreeCollab/Layout/Navbar.html')
+  .then(resp => resp.text())
+  .then(data => { const ph=document.getElementById('Navbar-placeholder'); if(ph) ph.innerHTML=data; });
+</script>
+
+<!-- ======================= Pagina Titel ======================= -->
+<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;">View Stamboom</div>
+
+<!-- ======================= Intro ======================= -->
+<section style="margin-top:20px; padding:20px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+<h2 style="margin-bottom:15px;">Welkom bij MyFamTreeCollab</h2>
+<p style="margin-bottom:15px; line-height:1.6;">
+Deze omgeving is ontworpen om familiegeschiedenis centraal, overzichtelijk en veilig te beheren.
+Hier kan je personen bekijken, relaties analyseren en generaties structureren binnen één gedeeld platform.
+</p>
+<p style="margin-bottom:15px; line-height:1.6;">De view-pagina zal binnenkort uitgebreide functionaliteiten bevatten zoals:</p>
+<ul style="margin-left:20px; line-height:1.6;">
+<li>Overzicht van alle personen</li>
+<li>Relaties en familieverbanden visualiseren</li>
+<li>Filter- en zoekmogelijkheden</li>
+<li>Detailweergave per familielid</li>
+</ul>
+</section>
+
+<!-- ======================= Search + Actions ======================= -->
+<div style="margin-top:15px; margin-bottom:15px;">
+<input type="text" id="searchPerson" placeholder="Voer ID of naam in"> <!-- Live search input -->
+<button id="refreshBtn">Refresh</button> <!-- Refresh dataset -->
+<button id="addBtn">+ Toevoegen</button> <!-- Voeg persoon toe -->
+<button id="saveBtn">Opslaan</button> <!-- Opslaan dataset -->
+</div>
+
+<!-- ======================= Boom + Broers/Zussen ======================= -->
+<div class="container">
+    <div id="treeContainer"></div> <!-- Boom container -->
+    <div id="siblingsContainer"> <!-- Broers/Zussen container -->
+        <h4>Broers/Zussen</h4>
+        <ul id="siblingsList"></ul>
+    </div>
+</div>
+
+<!-- ======================= Scripts ======================= -->
+<script src="../js/schema.js"></script>
+<script src="../js/idGenerator.js"></script>
+<script src="../js/storage.js"></script>
+<script src="../js/view.js"></script> <!-- Hierin renderTable + renderSiblings + liveSearch -->
+
+<!-- ======================= Footer ======================= -->
+<div id="footer-placeholder"></div>
+<script>
+fetch('/MyFamTreeCollab/Layout/Footer.html')
+  .then(resp => resp.text())
+  .then(data => document.getElementById('footer-placeholder').innerHTML = data); // Footer plaatsen
+</script>
+</body>
+</html>
