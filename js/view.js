@@ -1,5 +1,5 @@
-// ======================= view.js v1.4.0 =======================
-// Boom rendering + Live search + Kind/Partner + BZID + kleur/shading
+// ======================= view.js v1.4.1 =======================
+// Boom rendering + Live search + Kind/Partner naast kind + BZID + kleur/shading
 // Nodes zijn klikbaar zodat je door de stamboom kan navigeren
 
 (function(){
@@ -72,17 +72,15 @@ function computeRelaties(data, hoofdId){
     const MHoofdID = safe(hoofd.MoederID);
     const PHoofdID = safe(hoofd.PartnerID);
 
-    // Kinderen scenario: bepaal welke parent aanwezig is voor shading
     const KindID = data.filter(p => 
         (safe(p.VaderID) === hoofdID || safe(p.MoederID) === hoofdID)
     ).map(p => p.ID);
 
-    // BZID scenario: alleen letterkleur, bepaal welke ouder(s) overeenkomen
     const BZID = data.filter(p=>{
         const pid = safe(p.ID);
-        if(pid === hoofdID) return false; // hoofd zelf niet
-        if(KindID.includes(pid)) return false; // kinderen niet
-        if(pid === PHoofdID) return false; // partner niet
+        if(pid === hoofdID) return false;
+        if(KindID.includes(pid)) return false;
+        if(pid === PHoofdID) return false;
         const sameVader = VHoofdID && safe(p.VaderID) === VHoofdID;
         const sameMoeder = MHoofdID && safe(p.MoederID) === MHoofdID;
         return sameVader || sameMoeder;
@@ -93,54 +91,50 @@ function computeRelaties(data, hoofdId){
         const clone = {...p};
         clone.Relatie = ''; 
         clone._priority = 99; 
-        clone._textColor = null; // optionele tekstkleur voor BZID
+        clone._textColor = null;
 
-        // ===== Hoofd & ouders =====
         if(pid === hoofdID){ clone.Relatie='HoofdID'; clone._priority=1; }
         else if(pid === VHoofdID){ clone.Relatie='VHoofdID'; clone._priority=0; }
         else if(pid === MHoofdID){ clone.Relatie='MHoofdID'; clone._priority=0; }
         else if(pid === PHoofdID){ clone.Relatie='PHoofdID'; clone._priority=2; }
 
-        // ===== Kinderen + partner shading =====
         else if(KindID.includes(pid)){ 
             clone.Relatie='KindID'; clone._priority=3;
-            // bepaal shading
             const kind = findPerson(pid);
             const hasHoofd = kind && (safe(kind.VaderID) === hoofdID || safe(kind.MoederID) === hoofdID);
             const hasPartner = kind && (PHoofdID && (safe(kind.VaderID) === PHoofdID || safe(kind.MoederID) === PHoofdID));
-            if(hasHoofd && hasPartner) clone._shade = 'full';      // scenario 1: beide aanwezig
-            else if(hasHoofd) clone._shade = 'halfHoofd';          // scenario 2: alleen hoofd
-            else if(hasPartner) clone._shade = 'halfPartner';      // scenario 3: alleen partner
+            if(hasHoofd && hasPartner) clone._shade = 'full';
+            else if(hasHoofd) clone._shade = 'halfHoofd';
+            else if(hasPartner) clone._shade = 'halfPartner';
         }
 
-        // ===== BZID =====
         else if(BZID.includes(pid)){
             clone.Relatie='BZID'; clone._priority=4;
             const bz = findPerson(pid);
             const sameVader = bz && VHoofdID && safe(bz.VaderID) === VHoofdID;
             const sameMoeder = bz && MHoofdID && safe(bz.MoederID) === MHoofdID;
-            if(sameVader && sameMoeder) clone._textColor = 'black';          // scenario 1: beide ouders
-            else if(sameVader) clone._textColor = 'darkgrey';                // scenario 2: alleen vader
-            else if(sameMoeder) clone._textColor = 'grey';                    // scenario 3: alleen moeder
+            if(sameVader && sameMoeder) clone._textColor = 'black';
+            else if(sameVader) clone._textColor = 'darkgrey';
+            else if(sameMoeder) clone._textColor = 'grey';
         }
 
         return clone;
-    }).sort((a,b)=>a._priority - b._priority); // sorteer op prioriteit
+    }).sort((a,b)=>a._priority - b._priority);
 }
 
 // =======================
-// BOOM BUILDER
+// BOOM BUILDER (met kind-partner naast kind)
 // =======================
 function buildTree(rootID){
     treeBox.innerHTML = '';                                    // container leeg maken
     BZBox.innerHTML = '';                                      // BZID box leeg maken
 
-    if(!rootID){                                               // geen hoofd persoon
+    if(!rootID){
         treeBox.textContent = 'Selecteer een persoon';
         return;
     }
 
-    const root = findPerson(rootID);                           // hoofd persoon ophalen
+    const root = findPerson(rootID);
     if(!root){
         treeBox.textContent = 'Persoon niet gevonden';
         return;
@@ -149,8 +143,8 @@ function buildTree(rootID){
     const dataRel = computeRelaties(dataset, rootID);         // alle relaties + shading
 
     // ===== ROOT =====
-    const rootNode = createNode(root,'rel-hoofd');             // hoofd node
-    const rootWrapper = document.createElement('div');         // wrapper root + partner
+    const rootNode = createNode(root,'rel-hoofd');
+    const rootWrapper = document.createElement('div');
     rootWrapper.className = 'tree-root';
     rootWrapper.appendChild(rootNode);
     treeBox.appendChild(rootWrapper);
@@ -174,14 +168,12 @@ function buildTree(rootID){
     if(root.PartnerID){
         const partner = findPerson(root.PartnerID);
         if(partner){
-            rootWrapper.appendChild(
-                createNode(partner,'rel-phoofdid')
-            );
+            rootWrapper.appendChild(createNode(partner,'rel-phoofdid'));
         }
     }
 
-    // ===== KINDEREN =====
-    const children = dataRel.filter(d => d.Relatie === 'KindID'); // alle kinderen
+    // ===== KINDEREN + KIND-PARTNER =====
+    const children = dataRel.filter(d => d.Relatie === 'KindID');
     if(children.length > 0){
         const kidsWrap = document.createElement('div');
         kidsWrap.className = 'tree-children';
@@ -189,20 +181,30 @@ function buildTree(rootID){
             const shadeClass = k._shade === 'full' ? 'rel-kindid' :
                                k._shade === 'halfHoofd' ? 'rel-kindid-halfHoofd' :
                                'rel-kindid-halfPartner';
+
+            // ===== kind node =====
             kidsWrap.appendChild(createNode(k,shadeClass));
+
+            // ===== kind-partner node naast kind =====
+            if(k._shade === 'full'){ // alleen als partner aanwezig is
+                const kp = dataset.find(p=>p.ID === k.PartnerID);
+                if(kp){
+                    kidsWrap.appendChild(createNode(kp,'rel-pkpartnerid')); // partner naast kind
+                }
+            }
         });
         treeBox.appendChild(kidsWrap);
     }
 
     // ===== BZID =====
-    const bzNodes = dataRel.filter(d => d.Relatie === 'BZID');   // BZID
+    const bzNodes = dataRel.filter(d => d.Relatie === 'BZID');
     bzNodes.forEach(b=>{
-        BZBox.appendChild(createNode(b,null,b._textColor));    // letterkleur toepassen
+        BZBox.appendChild(createNode(b,null,b._textColor));
     });
 }
 
 // =======================
-// LIVE SEARCH
+// LIVE SEARCH (exact onveranderd)
 // =======================
 function liveSearch(){
     const term = safe(searchInput.value).toLowerCase();
@@ -216,7 +218,7 @@ function liveSearch(){
     );
 
     if(results.length > 0 && !selectedHoofdId){
-        selectedHoofdId = safe(results[0].ID);                 // eerste match hoofd
+        selectedHoofdId = safe(results[0].ID);
         renderTree();
     }
 
@@ -259,14 +261,14 @@ function liveSearch(){
 // =======================
 // INIT
 // =======================
-function renderTree(){ buildTree(selectedHoofdId); }          // wrapper voor boom render
+function renderTree(){ buildTree(selectedHoofdId); } // wrapper voor boom render
 function refreshView(){
     dataset = window.StamboomStorage.get() || [];
-    selectedHoofdId = null;                                   // start zonder default
+    selectedHoofdId = null;                              // start zonder default
     renderTree();
 }
 
-refreshView();                                               // eerste render
-searchInput.addEventListener('input', liveSearch);          // live search activeren
+refreshView();                                          // eerste render
+searchInput.addEventListener('input', liveSearch);     // live search activeren
 
 })();
