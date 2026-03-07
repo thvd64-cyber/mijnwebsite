@@ -1,4 +1,5 @@
-// ======================= view.js v1.2.0 =======================
+// ======================= view.js v1.2.1 =======================
+// table alleen, ID, doopnaam, Roepnaam, Prefix, geboortedatum, geboorteplaats
 // =================================================================
 
 (function(){
@@ -45,17 +46,6 @@ const COLUMNS = [
     { key: 'Geslacht', readonly: false },
     { key: 'Geboortedatum', readonly: false },
     { key: 'Geboorteplaats', readonly: false },
-    { key: 'Overlijdensdatum', readonly: false },
-    { key: 'Overlijdensplaats', readonly: false },
-    { key: 'VaderID', readonly: false },
-    { key: 'MoederID', readonly: false },
-    { key: 'PartnerID', readonly: false },
-    { key: 'Huwelijksdatum', readonly: false },
-    { key: 'Huwelijksplaats', readonly: false },
-    { key: 'Opmerkingen', readonly: false },
-    { key: 'Huisadressen', readonly: false },
-    { key: 'ContactInfo', readonly: false },
-    { key: 'UR', readonly: false }
 ];
 
 // =======================
