@@ -1,26 +1,18 @@
-```html
-<!-- ======================= stamboom/view.html v1.2.4 ======================= -->
-<!-- Tabel verwijderd → focus op boom + broers/zussen -->
-<!-- Container flex → #treeContainer + #siblingsContainer naast elkaar -->
-<!-- Broers/zussen lijst → klikbaar, update selectedHoofdId en her-render boom -->
-<!-- Styling → consistent met scenario kleuren en boom nodes -->
+<!-- ======================= stamboom/view.html v1.2.5 ======================= -->
+<!-- action buttons verwijderd: refresh, + Toevoegen, opslaan -->
 
 <!DOCTYPE html>
 <html lang="nl">
 
 <head>
-
 <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Mobiel responsive -->
 <title>MyFamTreeCollab - View</title>
-
 <link rel="stylesheet" href="../css/style.css"> <!-- Algemene CSS -->
-
 <style>
 
 /* ======================= TREE NODE RELATIE BOXEN ======================= */
 /* Kleurcodering voor de boom nodes */
-
 /* ===== Basis node ===== */
 .tree-node{
     display:inline-block;            /* persoon wordt als box weergegeven */
@@ -32,36 +24,30 @@
     font-size:0.9rem;                /* tekst iets compacter */
     cursor:default;                  /* normale cursor */
 }
-
 /* ===== Hoofd persoon ===== */
 .tree-node.rel-hoofd{
     background-color:#fffde7;        /* licht geel */
     font-weight:600;                 /* vetter */
 }
-
 /* ===== Vader ===== */
 .tree-node.rel-vhoofdid{
     background-color:#e8f5e9;        /* licht groen */
     font-weight:500;
 }
-
 /* ===== Moeder ===== */
 .tree-node.rel-mhoofdid{
     background-color:#e8f5e9;        /* zelfde groen als vader */
     font-weight:500;
 }
-
 /* ===== Partner van hoofd ===== */
 .tree-node.rel-phoofdid{
     background-color:#f3e5f5;        /* licht paars */
     font-style:italic;
 }
-
 /* ===== Kind ===== */
 .tree-node.rel-kindid{
     background-color:#e3f2fd;        /* licht blauw */
 }
-
 /* ===== Partner van kind ===== */
 .tree-node.rel-pkpartnerid{
     background-color:#d0ebff;        /* donkerder blauw */
@@ -69,7 +55,6 @@
 }
 
 /* ======================= Layout ======================= */
-
 .container{
     display:flex;                    /* boom + siblings naast elkaar */
     gap:20px;                        /* ruimte tussen kolommen */
@@ -100,29 +85,24 @@
 }
 
 /* siblings lijst */
-
 #siblingsList{
     list-style:none;
     padding-left:0;
     margin:0;
 }
-
 #siblingsList li{
     padding:4px 0;
     cursor:pointer;
 }
-
 #siblingsList li:hover{
     background-color:rgba(0,0,0,0.05);
 }
 
 /* boom structuur */
-
 .tree-root{
     text-align:center;
     margin-bottom:10px;
 }
-
 .tree-parents,
 .tree-children{
     display:flex;
@@ -130,28 +110,20 @@
     flex-wrap:wrap;
     margin-bottom:10px;
 }
-
 </style>
-
 </head>
-
 <body>
 
 <!-- ======================= TopBar ======================= -->
-
 <div id="topbar-placeholder"></div>
-
 <script>
 fetch('/MyFamTreeCollab/Layout/TopBar.html')
 .then(resp => resp.text())
 .then(data => document.getElementById('topbar-placeholder').innerHTML = data); 
 </script>
 
-
 <!-- ======================= Navbar ======================= -->
-
 <div id="Navbar-placeholder"></div>
-
 <script>
 fetch('/MyFamTreeCollab/Layout/Navbar.html')
 .then(resp => resp.text())
@@ -161,19 +133,14 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
 });
 </script>
 
-
 <!-- ======================= Pagina Titel ======================= -->
-
 <div id="pageTitle"
 style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;">
 View Stamboom
 </div>
 
-
 <!-- ======================= Intro ======================= -->
-
 <section style="margin-top:10px; padding:10px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
-
 <h2 style="margin-bottom:10px;">Welkom bij MyFamTreeCollab</h2>
 
 <p style="margin-bottom:10px; line-height:1.6;">
@@ -190,62 +157,37 @@ De view-pagina zal binnenkort uitgebreide functionaliteiten bevatten zoals:
 <ul style="margin-left:5px; line-height:1.6;">
 <li>Hoofd persoon zoeken en visualisatie van familieverbanden</li>
 </ul>
-
 </section>
 
-
-<!-- ======================= Search + Acties ======================= -->
-
+<!-- ======================= Search ======================= -->
 <div style="margin-top:15px; margin-bottom:15px;">
-
 <input
 type="text"
 id="searchPerson"
 placeholder="Voer ID of naam in"> <!-- Live search -->
-
-<button id="refreshBtn">Refresh</button> <!-- dataset refresh -->
-<button id="addBtn">+ Toevoegen</button> <!-- persoon toevoegen -->
-<button id="saveBtn">Opslaan</button> <!-- dataset opslaan -->
-
 </div>
-
 
 <!-- ======================= Boom + Broers/Zussen ======================= -->
-
 <div class="container">
-
 <div id="treeContainer"></div> <!-- hier wordt boom gerenderd -->
-
 <div id="siblingsContainer">
-
 <h4>Broers/Zussen</h4>
-
 <ul id="siblingsList"></ul> <!-- lijst broers/zussen -->
-
 </div>
-
 </div>
-
 
 <!-- ======================= Scripts ======================= -->
-
 <script src="../js/schema.js"></script> <!-- schema definities -->
 <script src="../js/idGenerator.js"></script> <!-- ID generator -->
 <script src="../js/storage.js"></script> <!-- local storage functies -->
 <script src="../js/view.js"></script> <!-- render boom + siblings -->
 
-
 <!-- ======================= Footer ======================= -->
-
 <div id="footer-placeholder"></div>
-
 <script>
 fetch('/MyFamTreeCollab/Layout/Footer.html')
 .then(resp => resp.text())
 .then(data => document.getElementById('footer-placeholder').innerHTML = data);
 </script>
-
 </body>
-
 </html>
-```
