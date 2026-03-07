@@ -20,7 +20,7 @@
         "Huwelijksdatum",
         "Huwelijksplaats",
         "Opmerkingen",
-        "Adres",
+        "Huisadressen",
         "ContactInfo",
         "URL"
     ];
