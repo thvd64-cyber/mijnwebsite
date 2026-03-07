@@ -1,7 +1,7 @@
+<script>
 // ======================= view.js v1.2.5 =======================
 // vis-network voor stamboom
-// live search manage geplaatst + Broers/Zussen lijst
-
+// live search + Broers/Zussen lijst
 (function(){
 'use strict'; // activeer strict mode zodat JS veiliger werkt
 
@@ -44,14 +44,22 @@ function findPerson(id){
 }
 
 function findChildren(id){ 
-    return dataset.filter(p=>safe(p.VaderID)===safe(id)||safe(p.MoederID)===safe(id)); 
+    return dataset.filter(p=>safe(p.VaderID)===safe(id) || safe(p.MoederID)===safe(id)); 
 }
 
 function buildTree(rootID){ 
     treeBox.innerHTML=''; 
-    if(!rootID){ treeBox.textContent='Selecteer een persoon'; return; } 
-    const root = findPerson(rootID); if(!root){ treeBox.textContent='Persoon niet gevonden'; return; } 
+    if(!rootID){ 
+        treeBox.textContent='Selecteer een persoon'; 
+        return; 
+    } 
+    const root = findPerson(rootID); 
+    if(!root){ 
+        treeBox.textContent='Persoon niet gevonden'; 
+        return; 
+    } 
 
+    // root node
     const rootNode = createNode(root); 
     const rootWrapper = document.createElement('div'); 
     rootWrapper.className='tree-root'; 
@@ -61,17 +69,27 @@ function buildTree(rootID){
     // ouders
     const parents = document.createElement('div'); 
     parents.className='tree-parents';
-    if(root.VaderID){ const v = findPerson(root.VaderID); if(v) parents.appendChild(createNode(v)); }
-    if(root.MoederID){ const m = findPerson(root.MoederID); if(m) parents.appendChild(createNode(m)); }
+    if(root.VaderID){ 
+        const v = findPerson(root.VaderID); 
+        if(v) parents.appendChild(createNode(v)); 
+    }
+    if(root.MoederID){ 
+        const m = findPerson(root.MoederID); 
+        if(m) parents.appendChild(createNode(m)); 
+    }
     if(parents.children.length>0){ treeBox.prepend(parents); }
 
     // partner
-    if(root.PartnerID){ const partner = findPerson(root.PartnerID); if(partner){ rootWrapper.appendChild(createNode(partner)); } }
+    if(root.PartnerID){ 
+        const partner = findPerson(root.PartnerID); 
+        if(partner){ rootWrapper.appendChild(createNode(partner)); } 
+    }
 
     // kinderen
     const kids = findChildren(rootID);
     if(kids.length>0){
-        const kidsWrap = document.createElement('div'); kidsWrap.className='tree-children';
+        const kidsWrap = document.createElement('div'); 
+        kidsWrap.className='tree-children';
         kids.forEach(k=>kidsWrap.appendChild(createNode(k)));
         treeBox.appendChild(kidsWrap);
     }
@@ -96,13 +114,19 @@ function renderSiblings(rootID){
     );
 
     if(siblings.length===0){ 
-        const li = document.createElement('li'); li.textContent='Geen broers/zussen'; siblingsList.appendChild(li); return;
+        const li = document.createElement('li'); 
+        li.textContent='Geen broers/zussen'; 
+        siblingsList.appendChild(li); 
+        return;
     }
 
     siblings.forEach(s=>{
         const li = document.createElement('li'); 
         li.textContent=`${safe(s.Roepnaam)} ${safe(s.Achternaam)} (${safe(s.ID)})`; 
-        li.addEventListener('click',()=>{ selectedHoofdId=s.ID; renderTree(); }); 
+        li.addEventListener('click',()=>{
+            selectedHoofdId=s.ID; 
+            renderTree(); 
+        }); 
         siblingsList.appendChild(li); 
     });
 }
@@ -122,10 +146,17 @@ function liveSearch(){
     );
 
     const rect = searchInput.getBoundingClientRect(); 
-    const popup = document.createElement('div'); popup.id='searchPopup'; popup.style.position='absolute';
-    popup.style.background='#fff'; popup.style.border='1px solid #999'; popup.style.zIndex=1000;
-    popup.style.top=rect.bottom+window.scrollY+'px'; popup.style.left=rect.left+window.scrollX+'px';
-    popup.style.width=rect.width+'px'; popup.style.maxHeight='200px'; popup.style.overflowY='auto';
+    const popup = document.createElement('div'); 
+    popup.id='searchPopup'; 
+    popup.style.position='absolute';
+    popup.style.background='#fff'; 
+    popup.style.border='1px solid #999'; 
+    popup.style.zIndex=1000;
+    popup.style.top=rect.bottom+window.scrollY+'px'; 
+    popup.style.left=rect.left+window.scrollX+'px'; 
+    popup.style.width=rect.width+'px'; 
+    popup.style.maxHeight='200px'; 
+    popup.style.overflowY='auto';
 
     results.forEach(p=>{ 
         const row=document.createElement('div'); 
@@ -166,3 +197,4 @@ searchInput.addEventListener('input',liveSearch);
 refreshBtn.addEventListener('click',refreshView); 
 
 })();
+</script>
