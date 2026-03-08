@@ -1,0 +1,67 @@
+<!-- ======================= docs/privacy.html v1.0.0 ======================= -->
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacybeleid | MyFamTreeCollab</title>
+
+<style>
+body{
+    font-family:Arial, sans-serif;
+    max-width:900px;
+    margin:40px auto;
+    padding:0 20px;
+    line-height:1.6;
+}
+h1{
+    border-bottom:2px solid #ccc;
+    padding-bottom:10px;
+}
+h2{
+    margin-top:30px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Privacybeleid</h1>
+
+<p>
+MyFamTreeCollab respecteert de privacy van bezoekers en gebruikers van deze website.
+</p>
+
+<h2>Welke gegevens worden verzameld</h2>
+<p>
+Deze website kan genealogische gegevens bevatten zoals namen, geboortedata en familierelaties.
+</p>
+
+<h2>Levende personen</h2>
+<p>
+Gegevens van levende personen worden zoveel mogelijk beperkt weergegeven om de privacy te beschermen.
+</p>
+
+<h2>Doel van de gegevens</h2>
+<p>
+De gegevens worden uitsluitend gebruikt voor genealogisch onderzoek en visualisatie van familierelaties.
+</p>
+
+<h2>Externe diensten</h2>
+<p>
+De website kan gebruik maken van externe hostingdiensten zoals GitHub Pages.
+Deze diensten kunnen technische gegevens verzamelen zoals IP-adressen of logbestanden.
+</p>
+
+<h2>Correctie of verwijdering</h2>
+<p>
+Indien u van mening bent dat bepaalde informatie onjuist is of verwijderd moet worden, kunt u contact opnemen met de beheerder van deze website.
+</p>
+
+<p style="margin-top:40px;font-size:0.9rem;color:#666;">
+Laatste update: 2026
+</p>
+
+</body>
+</html>
