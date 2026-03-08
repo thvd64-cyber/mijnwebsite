@@ -56,8 +56,12 @@ function createTreeNode(p, rel, color){
     div.style.flexDirection = 'column';
     div.style.alignItems = 'center';
     div.style.justifyContent = 'center';
-
+    
+    // Voeg hier de hoogte toe zodat datum altijd zichtbaar is 
+    div.style.height = '80px'; // Vaste hoogte van de node
+    
     div.innerHTML = `
+    
         <span style="font-size:0.85rem;">${safe(p.ID)}</span>
         <span style="font-weight:600;">${fullName}</span>
         <span style="font-size:0.8rem; color:#555;">${birth}</span>
