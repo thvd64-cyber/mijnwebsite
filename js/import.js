@@ -1,5 +1,5 @@
 // =======================================
-// js.import.js v1.0.1
+// import.js v1.0.1
 // Importeer stamboomData vanuit CSV
 // CSV wordt verwerkt en toegevoegd aan de dataset
 // Ontbrekende ID's worden automatisch gegenereerd met idGenerator
