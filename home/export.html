@@ -1,4 +1,4 @@
-<!-- ======================= home/export.html v0.0.0 ======================= -->
+<!-- ======================= home/export.html v1.0.1 ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -59,43 +59,85 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <!-- ======================= EXPORT JS ======================= -->
 <script>
-const exportBtn = document.getElementById('exportBtn');
-const exportStatus = document.getElementById('exportStatus');
+// 1️⃣ Headers voor CSV
+const headers = ["ID","Doopnaam","Roepnaam","Prefix","Achternaam","Geslacht",
+"Geboortedatum","Geboorteplaats","Overlijdensdatum","Overlijdensplaats",
+"Vader","Moeder ID","Partner ID","Huwelijksdatum","Huwelijksplaats",
+"Opmerkingen","Huisadressen","ContactInfo","URL"];
 
-exportBtn.addEventListener('click', function() {
-    let data = JSON.parse(localStorage.getItem('stamboomData') || '[]');
+// 2️⃣ Mapping naar object-properties
+const mapping = {
+    "ID":"id","Doopnaam":"doopnaam","Roepnaam":"roepnaam","Prefix":"prefix","Achternaam":"achternaam","Geslacht":"geslacht",
+    "Geboortedatum":"geboortedatum","Geboorteplaats":"geboorteplaats","Overlijdensdatum":"overlijdensdatum","Overlijdensplaats":"overlijdensplaats",
+    "Vader":"vader","Moeder ID":"moederId","Partner ID":"partnerId","Huwelijksdatum":"huwelijksdatum","Huwelijksplaats":"huwelijksplaats",
+    "Opmerkingen":"opmerkingen","Huisadressen":"huisadressen","ContactInfo":"contactInfo","URL":"url"
+};
 
-    if (data.length === 0) {
-        exportStatus.textContent = "⚠️ Geen personen gevonden om te exporteren.";
+// 3️⃣ CSV-veld veilig maken
+function escapeCSV(value) {
+    if (value == null) return "";
+    const str = String(value).replace(/"/g,'""');
+    return `"${str}"`;
+}
+
+// 4️⃣ Event listener op export knop
+document.getElementById("exportBtn").addEventListener("click", async function() {
+    const status = document.getElementById("exportStatus");
+    const data = JSON.parse(localStorage.getItem("stamboomData") || "[]");
+
+    if(data.length === 0) {
+        status.textContent = "⚠️ Geen personen om te exporteren.";
+        status.style.color="red";
         return;
     }
 
-    const columns = ["ID","Doopnaam","Roepnaam","Prefix","Achternaam","Geslacht","Geboortedatum","Geboorteplaats","Overlijdensdatum","Overlijdensplaats","Vader","MoederID","PartnerID","Huwelijksdatum","Huwelijksplaats","Opmerkingen","Adres","ContactInfo","URL"];
+    // 5️⃣ Standaard bestandsnaam op basis van datum
+    const now = new Date();
+    const defaultName = `stamboom_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
 
-    let csvContent = columns.join(",") + "\n";
+    // 6️⃣ Prompt voor bestandsnaam
+    let userFileName = prompt("Voer bestandsnaam in (zonder .csv):", defaultName);
+    if(!userFileName) userFileName = defaultName;
+    const fileName = `${userFileName}.csv`;
+
+    // 7️⃣ CSV inhoud opbouwen
+    let csvContent = headers.map(escapeCSV).join(",") + "\n";
     data.forEach(person => {
-        const row = columns.map(col => {
-            let value = person[col] || "";
-            if (value.includes(",")) value = `"${value}"`;
-            return value;
-        }).join(",");
-        csvContent += row + "\n";
+        const row = headers.map(header => escapeCSV(person[mapping[header]] || ""));
+        csvContent += row.join(",") + "\n";
     });
 
-    const now = new Date();
-    const timestamp = now.toISOString().replace(/[:.]/g,"-");
-    const filename = `Stamboom_${timestamp}.csv`;
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    link.style.display = "none";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    exportStatus.textContent = `✅ Export succesvol: ${data.length} personen in ${filename}`;
+    try {
+        // 8️⃣ Moderne Chrome/Edge met HTTPS
+        if(window.showSaveFilePicker && location.protocol==="https:") {
+            const fileHandle = await window.showSaveFilePicker({
+                suggestedName: fileName,
+                types:[{description:"CSV bestand", accept:{"text/csv":[".csv"]}}]
+            });
+            const writable = await fileHandle.createWritable();
+            await writable.write(csvContent);
+            await writable.close();
+            status.textContent = `✅ CSV succesvol geëxporteerd als ${fileName} (locatie gekozen)`;
+            status.style.color="green";
+        } else {
+            // 9️⃣ Fallback voor andere browsers
+            alert("⚠️ Deze browser ondersteunt geen locatiekeuze. Het bestand wordt opgeslagen in de downloadmap.");
+            const blob = new Blob([csvContent], {type:"text/csv"});
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+            status.textContent = `✅ CSV succesvol geëxporteerd als ${fileName} (downloadmap)`;
+            status.style.color="green";
+        }
+    } catch(err) {
+        console.error(err);
+        status.textContent = "❌ Export geannuleerd of mislukt.";
+        status.style.color="red";
+    }
 });
 </script>
   <!-- ======================= layout/Footer.html ======================= -->
