@@ -40,49 +40,40 @@ function formatDate(d){
     return date.toLocaleDateString('nl-NL', options).replace(/\./g,'');
 }
 
-// ======================= // Visuele scheidingslijn in de code voor overzicht
-// NODE CREATOR (Boom-nodes) // Titel van deze code sectie: functie die een persoon-node in de stamboom maakt
-// ======================= // Visuele scheidingslijn
+// =======================
+// NODE CREATOR (Boom-nodes)
+// =======================
+function createTreeNode(p, rel, color){
+    const div = document.createElement('div');
+    div.className = 'tree-node';
+    if(rel) div.classList.add(rel);
 
-function createTreeNode(p, rel, color){ // Functie die een stamboom-node maakt op basis van persoon-object (p), relatie type (rel) en optionele tekstkleur (color)
-    const div = document.createElement('div'); // Maak een nieuw HTML <div> element dat de node (persoon) zal voorstellen
-    div.className = 'tree-node'; // Geef de div de CSS class 'tree-node' zodat standaard node styling uit CSS wordt toegepast
-    if(rel) div.classList.add(rel); // Als er een relatie-type bestaat (bijv. kind, partner, broer/zus) voeg deze als extra CSS class toe
+    const fullName = [safe(p.Roepnaam), safe(p.Prefix), safe(p.Achternaam)]
+                     .filter(Boolean).join(' ').trim();
+    const birth = formatDate(p.GeboorteDatum);
 
-    const fullName = [safe(p.Roepnaam), safe(p.Prefix), safe(p.Achternaam)] // Maak een array met roepnaam, tussenvoegsel en achternaam (veilig gemaakt met safe())
-                     .filter(Boolean).join(' ').trim(); // Verwijder lege waarden, voeg de overgebleven delen samen met een spatie en verwijder eventuele spaties aan begin/einde
-    const birth = formatDate(p.GeboorteDatum); // Format de geboortedatum van de persoon naar een leesbare datum via formatDate()
+    div.style.display = 'flex';
+    div.style.flexDirection = 'column';
+    div.style.alignItems = 'center';
+    div.style.justifyContent = 'center';
 
-    div.style.display = 'flex'; // Zet de node layout op Flexbox zodat de inhoud makkelijk verticaal uitgelijnd kan worden
-    div.style.flexDirection = 'column'; // Plaats de inhoud van de node onder elkaar (verticale richting)
-    div.style.alignItems = 'center'; // Centreer de inhoud horizontaal binnen de node
-    div.style.justifyContent = 'center'; // Centreer de inhoud verticaal binnen de node
+    div.innerHTML = `
+        <span style="font-size:0.85rem;">${safe(p.ID)}</span>
+        <span style="font-weight:600;">${fullName}</span>
+        <span style="font-size:0.8rem; color:#555;">${birth}</span>
+    `;
 
-    // ✅ Voeg hier de hoogte toe zodat datum altijd zichtbaar is
-    div.style.height = '80px';            // Vaste hoogte van de node
+    if(color) div.style.color = color;
+    div.dataset.id = p.ID;
 
-    // Vul de inhoud van de node met HTML
-div.innerHTML = `
-    <span style="font-size:0.85rem;">${safe(p.ID)}</span>
-    <span style="font-weight:600;">${fullName}</span>
-    <span style="font-size:0.8rem; color:#555;">${birth}</span>
-`; // Einde van de HTML inhoud van de node
+    div.addEventListener('click', () => {
+        selectedHoofdId = p.ID;
+        renderTree();
+    });
 
-// Toelichting per regel (buiten backticks):
-// Eerste span: ID van de persoon in iets kleinere tekst
-// Tweede span: volledige naam in semi-bold
-// Derde span: geboortedatum in kleinere grijze tekst
+    return div;
+}
 
-    if(color) div.style.color = color; // Als een kleur is meegegeven, pas deze toe op de tekstkleur van de node
-    div.dataset.id = p.ID; // Sla het persoon-ID op in een HTML data-attribuut zodat scripts later kunnen weten welke persoon dit is
-
-    div.addEventListener('click', () => { // Voeg een klik-event toe aan de node zodat de gebruiker erop kan klikken
-        selectedHoofdId = p.ID; // Zet de aangeklikte persoon als nieuwe hoofdpersoon in de stamboom
-        renderTree(); // Render de stamboom opnieuw zodat deze persoon centraal komt te staan
-    }); // Einde van de click-event functie
-
-    return div; // Geef de gemaakte node terug zodat deze in de stamboom kan worden geplaatst
-} // Einde van de functie createTreeNode
 
 // =======================
 // DATA HELPERS
