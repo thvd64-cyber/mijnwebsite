@@ -1,42 +1,14 @@
-<!-- ======================= Layout/Footer.html v1.0.1 ======================= -->
-<!-- Bestandsheader met naam en versie voor onderhoud -->
-
-<footer> <!-- Start van het HTML5 footer element dat de onderkant van de website definieert -->
+<!-- ======================= Layout/Footer.html v1.1 ======================= -->
+<footer> <!-- Start van de footer -->
 
     <!-- Copyright regel -->
-    <p>
-        &copy; <span id="year"></span> MyFamTreeCollab <!-- Span element waarin automatisch het huidige jaar wordt geplaatst -->
-    </p>
+    <p>&copy; MyFamTreeCollab</p> <!-- Simpel copyright -->
 
     <!-- Juridische links -->
-    <p class="footer-links"> <!-- Paragraaf met links naar juridische documenten -->
-
-        <a href="/MyFamTreeCollab/docs/disclaimer.html">Disclaimer</a> <!-- Link naar disclaimer pagina -->
-        | <!-- Scheidingsteken -->
-
-        <a href="/MyFamTreeCollab/docs/privacy.html">Privacy</a> <!-- Link naar privacy pagina -->
-        | <!-- Scheidingsteken -->
-
-        <a href="/MyFamTreeCollab/docs/terms.html">Terms</a> <!-- Link naar gebruiksvoorwaarden -->
-
+    <p class="footer-links">
+        <a href="/MyFamTreeCollab/docs/disclaimer.html">Disclaimer</a> |
+        <a href="/MyFamTreeCollab/docs/privacy.html">Privacy</a> |
+        <a href="/MyFamTreeCollab/docs/terms.html">Terms</a>
     </p>
 
-    <!-- Extra project informatie -->
-    <p class="footer-meta"> <!-- Extra informatie over het project -->
-
-        Version v1.0 | <!-- Handmatig beheerd versienummer van de website -->
-
-        <a href="https://github.com/thvd64-cyber/MyFamTreeCollab" target="_blank">
-        GitHub Repository
-        </a> <!-- Link naar de GitHub repository van het project -->
-
-    </p>
-
-</footer> <!-- Sluiting van het footer element -->
-
-<script> <!-- JavaScript blok voor kleine dynamische functionaliteit -->
-
-document.getElementById("year").textContent = new Date().getFullYear(); 
-/* Haalt automatisch het huidige jaar op uit de browser en plaatst het in het span element */
-
-</script>
+</footer>
