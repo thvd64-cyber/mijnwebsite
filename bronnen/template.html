@@ -54,6 +54,14 @@ document.addEventListener('DOMContentLoaded', () => {
         <section>
             <h3>Voorbeeld CSV Template (voor download)</h3>
             <p>Dit is een visueel voorbeeld van hoe de CSV eruit zal zien:</p>
+
+            <!-- ===== Informatie over automatisch genereren van ID ===== -->
+            <p style="font-style: italic; color: #555;">
+                ⚠️ Bij gebruik van deze template wordt bij import automatisch een unieke ID gegenereerd 
+                op basis van <strong>Doopnaam</strong>, <strong>Roepnaam</strong>, <strong>Achternaam</strong> 
+                en <strong>Geslacht</strong>, gevolgd door 3 cijfers. Je hoeft deze kolom dus niet zelf in te vullen.
+            </p>
+
             <!-- ===== Visueel voorbeeld van de CSV toegevoegd ===== -->
             <table border="1" cellpadding="4" cellspacing="0">
                 <thead>
@@ -80,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
         <p id="status"></p>
     </div>
 </main>
-
 <!-- ======================= PAGE-SPECIFIC JS ======================= -->
 <script>
 const downloadBtn = document.getElementById('downloadBtn');
