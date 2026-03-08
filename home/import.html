@@ -32,6 +32,18 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html') // Laad Navbar HTML via fetch
 <main> <!-- Hoofd content van de pagina -->
     <div class="container"> <!-- Container voor centrale content, geeft padding en layout -->
 
+        <!-- ======================= Professionele uitleg CSV-import ======================= -->
+        <div style="margin-bottom:15px; font-size:0.95rem; color:#555; line-height:1.5;">
+            <strong>Hoe werkt de CSV-import?</strong><br>
+            1. Je kunt een CSV-bestand importeren dat is geëxporteerd uit deze applicatie of een correct opgemaakte stamboom CSV.<br>
+            2. Alleen CSV-bestanden worden ondersteund. Andere formaten worden niet ingelezen.<br>
+            3. De import zal bestaande stamboomgegevens **overschrijven** of **toevoegen**, afhankelijk van de implementatie van je import.js.<br>
+            4. Het laden gebeurt **lokaal in je browser**; er wordt niets online verstuurd, dus je gegevens blijven privé.<br>
+            5. Browserverschillen:<br>
+            &nbsp;&nbsp;- Chrome, Edge en moderne browsers ondersteunen grote bestanden en geven meestal directe feedback bij fouten.<br>
+            &nbsp;&nbsp;- In oudere browsers of DuckDuckGo kan de performance beperkt zijn bij zeer grote CSV-bestanden.
+        </div>
+
         <!-- ======================= File select + Import knop ======================= -->
         <input type="file" id="importFile" accept=".csv"> <!-- Bestandskiezer: alleen CSV-bestanden toegestaan -->
         <button id="importBtn">Importeer CSV</button> <!-- Knop die de import.js functie triggerd -->
