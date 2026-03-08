@@ -61,11 +61,17 @@ function createTreeNode(p, rel, color){ // Functie die een stamboom-node maakt o
     // ✅ Voeg hier de hoogte toe zodat datum altijd zichtbaar is
     div.style.height = '80px';            // Vaste hoogte van de node
 
-    div.innerHTML = ` // Vul de inhoud van de node met HTML
-        <span style="font-size:0.85rem;">${safe(p.ID)}</span> // Toon het ID van de persoon bovenaan in iets kleinere tekst
-        <span style="font-weight:600;">${fullName}</span> // Toon de volledige naam van de persoon in semi-bold tekst
-        <span style="font-size:0.8rem; color:#555;">${birth}</span> // Toon de geboortedatum in kleinere grijze tekst
-    `; // Einde van de HTML inhoud van de node
+    // Vul de inhoud van de node met HTML
+div.innerHTML = `
+    <span style="font-size:0.85rem;">${safe(p.ID)}</span>
+    <span style="font-weight:600;">${fullName}</span>
+    <span style="font-size:0.8rem; color:#555;">${birth}</span>
+`; // Einde van de HTML inhoud van de node
+
+// Toelichting per regel (buiten backticks):
+// Eerste span: ID van de persoon in iets kleinere tekst
+// Tweede span: volledige naam in semi-bold
+// Derde span: geboortedatum in kleinere grijze tekst
 
     if(color) div.style.color = color; // Als een kleur is meegegeven, pas deze toe op de tekstkleur van de node
     div.dataset.id = p.ID; // Sla het persoon-ID op in een HTML data-attribuut zodat scripts later kunnen weten welke persoon dit is
