@@ -1,4 +1,4 @@
-// ======================= view.js v1.5.1 =======================
+// ======================= view.js v1.5.2 =======================
 // Boom rendering + Live search + Kind/Partner + BZID + kleur/shading + geboortedatum zichtbaar
 // Nodes zijn klikbaar zodat je door de stamboom kan navigeren
 
@@ -225,37 +225,43 @@ treeBox.appendChild(rootWrapper);
         treeBox.prepend(parents); // ouders boven hoofd
     }
 
-    // =======================
-    // Kinderen + partners
-    // =======================
-    const children = dataRel.filter(d => d.Relatie === 'KindID');
-    if(children.length > 0){
-        const kidsWrap = document.createElement('div');
-        kidsWrap.className = 'tree-children';
+// =======================
+// Kinderen + partners
+// =======================
+const children = dataRel.filter(d => d.Relatie === 'KindID');
+if(children.length > 0){
+    const kidsWrap = document.createElement('div');   // wrapper voor alle kinderen
+    kidsWrap.className = 'tree-children';
 
-        children.forEach(k=>{
-            const kidGroup = document.createElement('div');
-            kidGroup.style.display = 'flex';
-            kidGroup.style.alignItems = 'center';
-            kidGroup.style.gap = '5px';
+    children.forEach(k=>{
+        const kidGroup = document.createElement('div'); // groep voor kind + eventuele partner
+        kidGroup.style.display = 'flex';
+        kidGroup.style.alignItems = 'center';
+        kidGroup.style.gap = '5px'; // kleine ruimte tussen nodes
 
-            const shadeClass = k._shade === 'full' ? 'rel-kindid' :
-                               k._shade === 'halfHoofd' ? 'rel-kindid-halfHoofd' :
-                               'rel-kindid-halfPartner';
-            kidGroup.appendChild(createTreeNode(k, shadeClass));
+        // =======================
+        // Shading bepalen op basis van hoofdID en partner van hoofd
+        // =======================
+        let shadeClass = 'rel-kindid'; // standaard
+        if(k._shade === 'full') shadeClass = 'rel-kindid';               // scenario 1: hoofd + partner aanwezig
+        else if(k._shade === 'halfHoofd') shadeClass = 'rel-kindid-halfHoofd'; // scenario 2: alleen hoofd
+        else if(k._shade === 'halfPartner') shadeClass = 'rel-kindid-halfPartner'; // scenario 3: alleen partner van hoofd
 
-            if(k.PartnerID){
-                const kPartner = findPerson(k.PartnerID);
-                if(kPartner){
-                    kidGroup.appendChild(createTreeNode(kPartner,'rel-pkpartnerid'));
-                }
+        kidGroup.appendChild(createTreeNode(k, shadeClass)); // voeg kind node toe
+
+        // partner van kind node (grijs/italic)
+        if(k.PartnerID){
+            const kPartner = findPerson(k.PartnerID);
+            if(kPartner){
+                kidGroup.appendChild(createTreeNode(kPartner,'rel-pkpartnerid')); 
             }
+        }
 
-            kidsWrap.appendChild(kidGroup);
-        });
+        kidsWrap.appendChild(kidGroup); // voeg groep toe aan wrapper
+    });
 
-        treeBox.appendChild(kidsWrap);
-    }
+    treeBox.appendChild(kidsWrap); // voeg alle kinderen + partners toe aan de boom
+}
 
     // =======================
     // BZID nodes in BZBox
