@@ -1,4 +1,4 @@
-// ======================= view.js v1.4.6 =======================
+// ======================= view.js v1.4.7 =======================
 // Boom rendering + Live search + Kind/Partner + BZID + kleur/shading + geboortedatum zichtbaar
 // Nodes zijn klikbaar zodat je door de stamboom kan navigeren
 
@@ -40,60 +40,70 @@ function formatDate(d){
     return date.toLocaleDateString('nl-NL', options).replace(/\./g,'');
 }
 
+
 // =======================
 // NODE CREATOR (Boom-nodes)
 // =======================
 function createTreeNode(p, rel, color){
-    const div = document.createElement('div');               // Maak een div voor de node
-    div.className = 'tree-node';                              // Voeg standaard class toe
-    if(rel) div.classList.add(rel);                           // Voeg relatie-class toe als meegegeven
+    const div = document.createElement('div');           // Maak een nieuwe div voor de node
+    div.className = 'tree-node';                         // Voeg standaard CSS class toe
+    if(rel) div.classList.add(rel);                      // Voeg extra class toe voor relatie (hoofd, partner, kind)
 
     // =======================
-    // Naam en geboortedatum
+    // Naam samenstellen
     // =======================
-    const fullName = [safe(p.Roepnaam), safe(p.Prefix), safe(p.Achternaam)]
-                     .filter(Boolean).join(' ').trim();      // Samenvoegen van roepnaam, prefix en achternaam
-    const birth = formatDate(p.GeboorteDatum);               // Format de geboortedatum
+    const fullName = [safe(p.Roepnaam), safe(p.Prefix), safe(p.Achternaam)] // Verzamel naam onderdelen
+                     .filter(Boolean)                                       // Verwijder lege velden
+                     .join(' ')                                             // Voeg samen met spatie
+                     .trim();                                               // Verwijder spaties voor/achter
+    const birth = formatDate(p.GeboorteDatum);           // Format geboortedatum
 
     // =======================
-    // Flexbox layout voor compacte node
+    // NODE STRUCTUUR (uniform)
     // =======================
-    div.style.display = 'flex';                               // Flexbox layout
-    div.style.flexDirection = 'column';                       // Verticaal stapelen
-    div.style.alignItems = 'center';                          // Horizontaal centreren
-    div.style.justifyContent = 'flex-start';                  // Bovenaan uitlijnen zodat datum zichtbaar blijft
-    div.style.width = '120px';                                 // Vaste breedte voor alle nodes
-    div.style.height = '100px';                                // Compacte hoogte voor node
-    div.style.padding = '5px';                                  // Binnenruimte rondom content
-    div.style.boxSizing = 'border-box';                        // Padding valt binnen breedte/hoogte
-    div.style.textAlign = 'center';                             // Center de tekst
-    div.style.wordWrap = 'break-word';                          // Lange namen breken naar nieuwe regel
+    div.style.display = 'flex';                          // Gebruik Flexbox layout
+    div.style.flexDirection = 'column';                  // Zet inhoud onder elkaar
+    div.style.alignItems = 'center';                     // Centreer horizontaal
+    div.style.justifyContent = 'flex-start';             // Begin bovenaan zodat alles zichtbaar blijft
+    div.style.width = '110px';                           // Vaste breedte voor ALLE nodes
+    div.style.height = '85px';                           // Compacte hoogte voor alle nodes
+    div.style.padding = '4px';                           // Binnenruimte rondom tekst
+    div.style.boxSizing = 'border-box';                  // Padding telt mee in hoogte/breedte
+    div.style.textAlign = 'center';                      // Centreer tekst
+    div.style.wordBreak = 'break-word';                  // Breek lange namen
+    div.style.overflow = 'hidden';                       // Voorkom dat tekst buiten node loopt
 
     // =======================
-    // Inhoud van de node
+    // Node inhoud
     // =======================
     div.innerHTML = `
-        <span style="font-size:0.85rem;">${safe(p.ID)}</span>                           <!-- ID bovenaan, kleine tekst -->
-        <span style="font-weight:600; font-size:0.95rem;">${fullName}</span>           <!-- Volledige naam, semi-bold, iets groter -->
-        <span style="font-size:0.8rem; color:#555; margin-top:4px;">${birth}</span>    <!-- Geboortedatum, kleine grijze tekst -->
+        <span style="font-size:0.75rem;">
+            ${safe(p.ID)}                                
+        </span>
+        <span style="font-size:0.9rem; font-weight:600;">
+            ${fullName}
+        </span>
+        <span style="font-size:0.75rem; color:#555;">
+            ${birth}
+        </span>
     `;
 
     // =======================
-    // Extra styling
+    // Optionele kleur
     // =======================
-    if(color) div.style.color = color;                         // Pas kleur toe indien meegegeven
-    div.dataset.id = p.ID;                                     // Voeg ID toe als data attribuut
+    if(color) div.style.color = color;                   // Pas tekstkleur toe indien opgegeven
+    div.dataset.id = p.ID;                               // Bewaar ID in dataset
 
     // =======================
     // Klik event
     // =======================
     div.addEventListener('click', () => {
-        selectedHoofdId = p.ID;                                // Zet geselecteerde hoofdID
-        renderTree();                                          // Her-render de boom
+        selectedHoofdId = p.ID;                          // Zet gekozen persoon als hoofd
+        renderTree();                                    // Teken boom opnieuw
     });
-
-    return div;                                                // Geef de node terug
+    return div;                                          // Geef node terug
 }
+    
 // =======================
 // DATA HELPERS
 // =======================
