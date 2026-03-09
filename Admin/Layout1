@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
-    <title>MyFamTreeCollab - Layout1</title> <!-- ⚠️ Browser tab titel -->
+    <title>MyFamTreeCollab - [PAGINA NAAM]</title> <!-- Browser tab titel -->
     <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor volledige styling -->
 </head>
 <body>
@@ -44,30 +44,30 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const pageTitleDiv = document.getElementById('pageTitle');  // Doel div
-    const title = "Layout1";            // ⚠️ Zelf invullen title
+    const title = "Sandbox";            // ⚠️ Zelf invullen title
     pageTitleDiv.textContent = title
         .replace(/[-_]/g,' ')          // underscore/koppelteken → spatie
         .replace(/\b\w/g, c => c.toUpperCase()); // eerste letter hoofdletter
 });
 </script>
-<!-- ======================= MAIN INTRO CONTENT ======================= -->
+ <!-- ======================= MAIN INTRO CONTENT ======================= -->
 <section style="margin-top:20px; padding:20px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
-    <h2 style="margin-bottom:15px;">Welkom bij Layout1</h2>
+    <h2 style="margin-bottom:15px;">Welkom in de Sandbox</h2>
     <p style="margin-bottom:15px; line-height:1.6;">
-        Deze pagina toont een overzicht van de kernfunctionaliteiten van jouw stamboomomgeving.
-        Hier kan je gegevens verkennen, relaties analyseren en de structuur van je familie eenvoudig bekijken.
+        De Sandbox biedt een veilige omgeving om te experimenteren met de stamboomdata zonder gevolgen voor de hoofdomgeving.
+        Hier kan je nieuwe relaties uitproberen, gegevens aanpassen en functies testen.
     </p>
     <p style="margin-bottom:15px; line-height:1.6;">
-        Enkele mogelijkheden die je op deze pagina vindt:
+        Enkele mogelijkheden in de Sandbox zijn:
     </p>
     <ul style="margin-left:20px; line-height:1.6;">
-        <li>Overzicht van personen en generaties</li>
-        <li>Visualisatie van relaties en familieverbanden</li>
-        <li>Filteren en zoeken binnen je stamboom</li>
-        <li>Snelle toegang tot detailinformatie per familielid</li>
+        <li>Personen toevoegen, bewerken of verwijderen</li>
+        <li>Relaties en generaties simuleren</li>
+        <li>Data testen voordat je wijzigingen definitief maakt</li>
+        <li>Functionaliteiten van het platform verkennen</li>
     </ul>
     <p style="margin-top:15px; line-height:1.6;">
-        Meer interactieve functies worden stapsgewijs toegevoegd.
+        Alles wat je hier doet, blijft volledig gescheiden van de echte stamboomdata.
     </p>
 </section>
   <!-- ======================= yellow message Under Construction ======================= -->
