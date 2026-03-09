@@ -1,79 +1,86 @@
-/* ============ css/Tree.css v0.0.2 ================== */
+/* ============ css/Tree.css v0.0.3 ================== */
+
 /* ======================= TREE NODE BASIS ======================= */
-/* Alle layout en styling van personen nodes */
 .tree-node {
-    display: flex;                 /* flex layout voor naam + datum */
-    flex-direction: column;        /* tekst onder elkaar */
-    align-items: center;           /* horizontaal centreren */
-    justify-content: flex-start;   /* boven uitlijnen */
-    width: 140px;                  /* vaste breedte */
-    height: 120px;                 /* vaste hoogte */
-    padding: 6px 12px;             /* ruimte in node */
-    margin: 5px;                   /* ruimte tussen nodes */
+    display: flex;                 
+    flex-direction: column;        
+    align-items: center;           
+    justify-content: flex-start;   
+    width: 140px;                  
+    height: 120px;                 
+    padding: 6px 12px;             
+    margin: 5px;                   
     border-radius: 6px;
     border: 1px solid #999;
-    background: #ffffff;
+    background: #ffffff;           
     font-size: 0.9rem;
     cursor: default;
-    box-sizing: border-box;        /* padding telt mee in hoogte/breedte */
+    box-sizing: border-box;        
 }
 
-/* ======================= NODE TYPES ======================= */
+/* ======================= Hoofd + Partner ======================= */
+.tree-node.HoofdID {
+    background-color: #1976d2;    /* donker blauw voor hoofd */
+    color: #fff;
+    font-weight: 600;              
+}
 
-/* ======================= Hoofd persoon ======================= */
-.tree-node.rel-hoofd {
-    background-color: #fffde7;    /* licht geel voor hoofd */
-    font-weight: 600;             /* vetgedrukt */
+.tree-node.PHoofdID {
+    background-color: #d1c4e9;    /* licht paars voor partner van hoofd */
+    color: #000;                   /* zwarte tekst zodat leesbaar op licht paars */
+    font-weight: 600;
+}
+
+/* ======================= Ouders ======================= */
+.tree-node.VHoofdID {
+    background-color: #e8f5e9;    /* licht groen voor vader */
+    font-weight: 500;
+}
+
+.tree-node.MHoofdID {
+    background-color: #e8f5e9;    /* licht groen voor moeder */
+    font-weight: 500;
+}
+
+/* ======================= Kinderen ======================= */
+.tree-node.KindID {                
+    background-color: #2196f3;    /* blauw voor kind + hoofd + partner aanwezig */
+    color: #fff;
+}
+
+.tree-node.rel-kindid-halfHoofd {
+    background-color: #90caf9;    /* lichter blauw voor kind + alleen hoofd aanwezig */
+    color: #000;
+}
+
+.tree-node.rel-kindid-halfPartner {
+    background-color: #bbdefb;    /* lichtblauw voor kind + alleen partner aanwezig */
+    color: #000;
+}
+
+/* Partner van kind */
+.tree-node.PKindID {
+    background-color: #d7d7d7;    /* licht grijs voor partner van kind */
+    font-style: italic;
+}
+
+/* ======================= Broers/Zussen (BZID) ======================= */
+.tree-node.BZID {
+    background-color: #fff9c4;    /* licht geel voor BZID */
+    font-weight: 500;
+}
+
+.tree-node.PBZID {
+    background-color: #d7d7d7;    /* licht grijs voor partner van BZID */
+    font-style: italic;            /* cursief zodat duidelijk partner */
 }
 
 /* ======================= Hoofd + Partner Wrapper ======================= */
 .tree-root-main {
-    display: flex;                /* zet hoofd en partner naast elkaar */
-    align-items: center;          /* verticaal centreren */
-    justify-content: center;      /* horizontaal centreren in container */
-    gap: 10px;                    /* ruimte tussen hoofd en partner */
-}
-}
-
-/* Vader */
-.tree-node.rel-vhoofdid {
-    background-color: #e8f5e9;     /* licht groen */
-    font-weight: 500;
-}
-
-/* Moeder */
-.tree-node.rel-mhoofdid {
-    background-color: #e8f5e9;     /* zelfde groen als vader */
-    font-weight: 500;
-}
-
-/* Partner van hoofd */
-.tree-node.rel-phoofdid {
-    background-color: #f3e5f5;     /* licht paars */
-    font-style: italic;
-}
-
-/* ======================= Kinderen ======================= */
-.tree-node.rel-kindid{
-    background-color:#e3f2fd;        /* donkerblauw voor kind + hoofd + partner van hoofd aanwezig */
-}
-.tree-node.rel-kindid-halfHoofd{
-    background-color:#bbdefb;        /* lichter blauw voor kind + alleen hoofd aanwezig */
-}
-.tree-node.rel-kindid-halfPartner{
-    background-color:#e3f2fd80;      /* lichtblauw transparant voor kind + alleen partner van hoofd aanwezig */
-}
-
-/* Partner van kind */
-.tree-node.rel-pkpartnerid {
-    background-color: #d7d7d7;     /* licht grijs */
-    font-style: italic;
-}
-
-/* Broers/Zussen (BZID) */
-.tree-node.BZID {
-    background-color: #fff3e0;     /* licht oranje/afzonderlijk kleur */
-    font-weight: 500;
+    display: flex;                
+    align-items: center;          
+    justify-content: center;      
+    gap: 10px;                    
 }
 
 /* ======================= TREE STRUCTURE ======================= */
@@ -87,20 +94,20 @@
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
-    margin-bottom: 10px;           /* verticale afstand tussen generaties */
-    gap: 5px;                       /* horizontale afstand tussen nodes binnen generatie */
+    margin-bottom: 10px;           
+    gap: 5px;                       
 }
 
 /* ======================= CONTAINER ======================= */
 .container {
-    display: flex;                  /* boom + BZID naast elkaar */
-    gap: 20px;                      /* ruimte tussen kolommen */
+    display: flex;                  
+    gap: 20px;                      
     align-items: flex-start;
 }
 
 #treeContainer {
-    flex: 1;                        /* boom krijgt meeste ruimte */
-    min-height: 200px;              /* voorkomt lege container */
+    flex: 1;                        
+    min-height: 200px;              
     margin-top: 20px;
     padding: 10px;
     border: 1px solid #ccc;
@@ -108,9 +115,8 @@
     background: #fafafa;
 }
 
-/* BZID container */
 #BZBox {
-    width: 220px;                   /* vaste breedte */
+    width: 220px;                   
     flex-shrink: 0;
     padding: 10px;
     border: 1px solid #ccc;
@@ -118,7 +124,6 @@
     background: #fafafa;
 }
 
-/* BZID lijst items */
 #BZBox .tree-node {
     margin-bottom: 5px;
 }
