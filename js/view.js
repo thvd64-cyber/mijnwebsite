@@ -38,7 +38,9 @@ function formatDate(d){
     if(isNaN(date.getTime())) return d;
     const options = { day:'2-digit', month:'short', year:'numeric' };
     return date.toLocaleDateString('nl-NL', options).replace(/\./g,'');
-}// =======================
+}
+
+// =======================
 // NODE CREATOR (Boom-nodes)
 // =======================
 function createTreeNode(p, rel, color){
