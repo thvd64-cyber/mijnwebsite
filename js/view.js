@@ -1,4 +1,4 @@
-// ======================= view.js v1.5.0 =======================
+// ======================= view.js v1.5.1 =======================
 // Boom rendering + Live search + Kind/Partner + BZID + kleur/shading + geboortedatum zichtbaar
 // Nodes zijn klikbaar zodat je door de stamboom kan navigeren
 
@@ -182,14 +182,28 @@ function buildTree(rootID){
 
     const dataRel = computeRelaties(dataset, rootID);
 
-    // =======================
-    // Hoofd node
-    // =======================
-    const rootNode = createTreeNode(root,'rel-hoofd');
-    const rootWrapper = document.createElement('div');
-    rootWrapper.className = 'tree-root';
-    rootWrapper.appendChild(rootNode);
-    treeBox.appendChild(rootWrapper);
+// =======================
+// Hoofd node + partner
+// =======================
+const rootWrapper = document.createElement('div');     // wrapper div voor hoofd + partner
+rootWrapper.className = 'tree-root-main';             // CSS regelt flexbox naast elkaar
+
+// maak hoofd node
+const rootNode = createTreeNode(root,'rel-hoofd');    
+rootWrapper.appendChild(rootNode);                    // voeg hoofd node toe aan wrapper
+
+// voeg partner van hoofd toe, indien aanwezig
+if(root.PartnerID){
+    const partner = findPerson(root.PartnerID);       // zoek partner
+    if(partner){
+        const partnerNode = createTreeNode(partner,'rel-phoofdid'); // maak partner node
+        rootWrapper.appendChild(partnerNode);        // voeg partner toe naast hoofd in wrapper
+    }
+}
+
+// voeg wrapper toe aan de tree container
+treeBox.appendChild(rootWrapper);                    
+    
 
     // =======================
     // Ouders
@@ -209,16 +223,6 @@ function buildTree(rootID){
 
     if(parents.children.length > 0){
         treeBox.prepend(parents); // ouders boven hoofd
-    }
-
-    // =======================
-    // Partner van hoofd
-    // =======================
-    if(root.PartnerID){
-        const partner = findPerson(root.PartnerID);
-        if(partner){
-            rootWrapper.appendChild(createTreeNode(partner,'rel-phoofdid'));
-        }
     }
 
     // =======================
