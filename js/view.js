@@ -38,56 +38,59 @@ function formatDate(d){
     if(isNaN(date.getTime())) return d;
     const options = { day:'2-digit', month:'short', year:'numeric' };
     return date.toLocaleDateString('nl-NL', options).replace(/\./g,'');
-}
-// =======================
+}// =======================
 // NODE CREATOR (Boom-nodes)
 // =======================
 function createTreeNode(p, rel, color){
-    const div = document.createElement('div');                   // Maak een nieuwe <div> voor de node
-    div.className = 'tree-node';                                  // Voeg standaard class toe voor styling
-    if(rel) div.classList.add(rel);                                // Voeg optioneel relatie-class toe (bv. rel-hoofd, rel-kindid)
+    const div = document.createElement('div');               // Maak een div voor de node
+    div.className = 'tree-node';                              // Voeg standaard class toe
+    if(rel) div.classList.add(rel);                           // Voeg relatie-class toe als meegegeven
 
     // =======================
     // Naam en geboortedatum
     // =======================
-    const fullName = [safe(p.Roepnaam), safe(p.Prefix), safe(p.Achternaam)] // Maak array van roepnaam, tussenvoegsel, achternaam
-                     .filter(Boolean).join(' ').trim();                  // Verwijder lege waarden, voeg samen met spatie
-    const birth = formatDate(p.GeboorteDatum);                        // Format de geboortedatum naar leesbaar formaat
+    const fullName = [safe(p.Roepnaam), safe(p.Prefix), safe(p.Achternaam)]
+                     .filter(Boolean).join(' ').trim();      // Samenvoegen van roepnaam, prefix en achternaam
+    const birth = formatDate(p.GeboorteDatum);               // Format de geboortedatum
 
     // =======================
-    // Flexbox layout node
+    // Flexbox layout voor compacte node
     // =======================
-    div.style.display = 'flex';               // Gebruik Flexbox voor node layout
-    div.style.flexDirection = 'column';       // Plaats inhoud verticaal onder elkaar
-    div.style.alignItems = 'center';          // Horizontaal centreren
-    div.style.justifyContent = 'flex-start';  // Verticaal bovenaan uitlijnen, zodat datum altijd zichtbaar is
-    div.style.height = '120px';               // Vaste hoogte voor consistente node grootte
-    div.style.paddingTop = '5px';             // Kleine padding bovenaan zodat de inhoud niet tegen de rand staat
+    div.style.display = 'flex';                               // Flexbox layout
+    div.style.flexDirection = 'column';                       // Verticaal stapelen
+    div.style.alignItems = 'center';                          // Horizontaal centreren
+    div.style.justifyContent = 'flex-start';                  // Bovenaan uitlijnen zodat datum zichtbaar blijft
+    div.style.width = '120px';                                 // Vaste breedte voor alle nodes
+    div.style.height = '100px';                                // Compacte hoogte voor node
+    div.style.padding = '5px';                                  // Binnenruimte rondom content
+    div.style.boxSizing = 'border-box';                        // Padding valt binnen breedte/hoogte
+    div.style.textAlign = 'center';                             // Center de tekst
+    div.style.wordWrap = 'break-word';                          // Lange namen breken naar nieuwe regel
 
     // =======================
-    // HTML inhoud van de node
+    // Inhoud van de node
     // =======================
     div.innerHTML = `
-        <span style="font-size:0.85rem;">${safe(p.ID)}</span>          <!-- ID van persoon, kleine tekst bovenaan -->
-        <span style="font-weight:600;">${fullName}</span>               <!-- Volledige naam, semi-bold -->
-        <span style="font-size:0.8rem; color:#555; margin-top:4px;">${birth}</span>  <!-- Geboortedatum, kleine grijze tekst met beetje margin -->
+        <span style="font-size:0.85rem;">${safe(p.ID)}</span>                           <!-- ID bovenaan, kleine tekst -->
+        <span style="font-weight:600; font-size:0.95rem;">${fullName}</span>           <!-- Volledige naam, semi-bold, iets groter -->
+        <span style="font-size:0.8rem; color:#555; margin-top:4px;">${birth}</span>    <!-- Geboortedatum, kleine grijze tekst -->
     `;
 
     // =======================
-    // Extra styling en data
+    // Extra styling
     // =======================
-    if(color) div.style.color = color;         // Als er een kleur meegegeven is, gebruik die
-    div.dataset.id = p.ID;                     // Voeg het ID toe als dataset attribuut
+    if(color) div.style.color = color;                         // Pas kleur toe indien meegegeven
+    div.dataset.id = p.ID;                                     // Voeg ID toe als data attribuut
 
     // =======================
-    // Klik event voor selectie
+    // Klik event
     // =======================
     div.addEventListener('click', () => {
-        selectedHoofdId = p.ID;                // Zet geselecteerde hoofdID
-        renderTree();                          // Her-render de boom
+        selectedHoofdId = p.ID;                                // Zet geselecteerde hoofdID
+        renderTree();                                          // Her-render de boom
     });
 
-    return div;                                // Geef de complete node terug
+    return div;                                                // Geef de node terug
 }
 // =======================
 // DATA HELPERS
