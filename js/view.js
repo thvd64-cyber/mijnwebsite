@@ -1,4 +1,4 @@
-// ======================= view.js v1.4.5 =======================
+// ======================= view.js v1.4.6 =======================
 // Boom rendering + Live search + Kind/Partner + BZID + kleur/shading + geboortedatum zichtbaar
 // Nodes zijn klikbaar zodat je door de stamboom kan navigeren
 
@@ -39,46 +39,56 @@ function formatDate(d){
     const options = { day:'2-digit', month:'short', year:'numeric' };
     return date.toLocaleDateString('nl-NL', options).replace(/\./g,'');
 }
-
 // =======================
 // NODE CREATOR (Boom-nodes)
 // =======================
 function createTreeNode(p, rel, color){
-    const div = document.createElement('div');
-    div.className = 'tree-node';
-    if(rel) div.classList.add(rel);
+    const div = document.createElement('div');                   // Maak een nieuwe <div> voor de node
+    div.className = 'tree-node';                                  // Voeg standaard class toe voor styling
+    if(rel) div.classList.add(rel);                                // Voeg optioneel relatie-class toe (bv. rel-hoofd, rel-kindid)
 
-    const fullName = [safe(p.Roepnaam), safe(p.Prefix), safe(p.Achternaam)]
-                     .filter(Boolean).join(' ').trim();
-    const birth = formatDate(p.GeboorteDatum);
+    // =======================
+    // Naam en geboortedatum
+    // =======================
+    const fullName = [safe(p.Roepnaam), safe(p.Prefix), safe(p.Achternaam)] // Maak array van roepnaam, tussenvoegsel, achternaam
+                     .filter(Boolean).join(' ').trim();                  // Verwijder lege waarden, voeg samen met spatie
+    const birth = formatDate(p.GeboorteDatum);                        // Format de geboortedatum naar leesbaar formaat
 
-    div.style.display = 'flex';
-    div.style.flexDirection = 'column';
-    div.style.alignItems = 'center';
-    div.style.justifyContent = 'center';
-    
-    // Voeg hier de hoogte toe zodat datum altijd zichtbaar is 
-    div.style.height = '180px'; // Vaste hoogte van de node
-    
+    // =======================
+    // Flexbox layout node
+    // =======================
+    div.style.display = 'flex';               // Gebruik Flexbox voor node layout
+    div.style.flexDirection = 'column';       // Plaats inhoud verticaal onder elkaar
+    div.style.alignItems = 'center';          // Horizontaal centreren
+    div.style.justifyContent = 'flex-start';  // Verticaal bovenaan uitlijnen, zodat datum altijd zichtbaar is
+    div.style.height = '120px';               // Vaste hoogte voor consistente node grootte
+    div.style.paddingTop = '5px';             // Kleine padding bovenaan zodat de inhoud niet tegen de rand staat
+
+    // =======================
+    // HTML inhoud van de node
+    // =======================
     div.innerHTML = `
-    
-        <span style="font-size:0.85rem;">${safe(p.ID)}</span>
-        <span style="font-weight:600;">${fullName}</span>
-        <span style="font-size:0.8rem; color:#555;">${birth}</span>
+        <span style="font-size:0.85rem;">${safe(p.ID)}</span>          <!-- ID van persoon, kleine tekst bovenaan -->
+        <span style="font-weight:600;">${fullName}</span>               <!-- Volledige naam, semi-bold -->
+        <span style="font-size:0.8rem; color:#555; margin-top:4px;">${birth}</span>  <!-- Geboortedatum, kleine grijze tekst met beetje margin -->
     `;
 
-    if(color) div.style.color = color;
-    div.dataset.id = p.ID;
+    // =======================
+    // Extra styling en data
+    // =======================
+    if(color) div.style.color = color;         // Als er een kleur meegegeven is, gebruik die
+    div.dataset.id = p.ID;                     // Voeg het ID toe als dataset attribuut
 
+    // =======================
+    // Klik event voor selectie
+    // =======================
     div.addEventListener('click', () => {
-        selectedHoofdId = p.ID;
-        renderTree();
+        selectedHoofdId = p.ID;                // Zet geselecteerde hoofdID
+        renderTree();                          // Her-render de boom
     });
 
-    return div;
+    return div;                                // Geef de complete node terug
 }
-
-
 // =======================
 // DATA HELPERS
 // =======================
