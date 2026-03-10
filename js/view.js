@@ -200,11 +200,11 @@ function liveSearch(){
 
     // ======================= POSITIE EN GROOTTE =======================
     popup.style.top = rect.bottom + window.scrollY + 'px';
-    popup.style.left = Math.max(rect.left + window.scrollX, 5) + 'px'; // minimaal 5px vanaf linker kant
+    popup.style.left = Math.max(rect.left + window.scrollX, 20) + 'px'; // minimaal 20px vanaf linker kant
     popup.style.width = (rect.width * 1.2) + 'px'; // 20% breder dan de input
-    popup.style.maxHeight = '300px';               // groter popup
+    popup.style.maxHeight = '600px';               // groter popup
     popup.style.overflowY = 'auto';
-    popup.style.fontSize = '1.1rem';               // grotere tekst
+    popup.style.fontSize = '1.5rem';               // grotere tekst
     popup.style.padding = '8px';                   // meer padding
 
     if(results.length === 0){
