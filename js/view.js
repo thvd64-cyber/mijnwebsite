@@ -49,7 +49,7 @@ function createTreeNode(p, rel){
     const fullName = [safe(p.Roepnaam), safe(p.Prefix), safe(p.Achternaam)].filter(Boolean).join(' ').trim(); // Volledige naam
 
     // Raw datum uit dataset, geen formatting
-    const birth = safe(p.GeboorteDatum);               // <-- RAW datum
+    const birth = safe(p.Geboortedatum);               // <-- RAW datum
 
     // Debug: check of de datum echt uit de dataset komt
     console.log('RAW datum voor', p.ID, ':', birth);
