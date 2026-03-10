@@ -52,9 +52,6 @@ function createTreeNode(p, rel){
         <span class="name">${fullName}</span> 
         <span class="birth">${birth}</span>
     `;
-             // Toon ID
-            // Toon volledige naam
-            // Toon geboortedatum
     
     div.dataset.id = p.ID;                              // Sla ID op in dataset
     div.addEventListener('click', () => {              // Klik selecteert node als hoofd
