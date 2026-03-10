@@ -53,7 +53,19 @@ Hier kan je personen bekijken, relaties analyseren en generaties structureren in
 
 <!-- ======================= Search ======================= -->
 <div style="margin-top:15px; margin-bottom:15px;"> <!-- Omgeving voor input veld -->
-<input type="text" id="searchPerson" placeholder="Voer ID of naam in"> <!-- Live search input veld -->
+    <input type="text" 
+           id="searchPerson" 
+           placeholder="Voer ID of naam in"
+           style="
+               width: calc(100% - 40px); /* 20px marge links + rechts */
+               margin: 0 20px;           /* horizontale marge */
+               height: 45px;             /* hogere input */
+               font-size: 1.2rem;        /* grotere letters */
+               padding: 5px 10px;        /* binnenruimte */
+               border: 1px solid #999;   /* lichte rand */
+               border-radius: 5px;       /* afgeronde hoeken */
+               box-sizing: border-box;   /* breedte inclusief padding/border */
+           ">
 </div>
 
 <!-- ======================= Boom + BZID ======================= -->
