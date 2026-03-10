@@ -30,6 +30,10 @@
     cursor: default;
     box-sizing: border-box;
 }
+/* ======================= TREE NODE BIRTH ======================= */
+.tree-node .birth {
+    display: block;      /* Zorgt dat het op een nieuwe regel staat */
+}
 
 /* ======================= Hoofd + Partner ======================= */
 .tree-node.HoofdID { background-color: var(--color-hoofd); }
