@@ -47,12 +47,7 @@ function createTreeNode(p, rel){
     if(rel) div.classList.add(rel);                     // Voeg relatie-specifieke class toe (kleur via CSS)
 
     const fullName = [safe(p.Roepnaam), safe(p.Prefix), safe(p.Achternaam)].filter(Boolean).join(' ').trim(); // Volledige naam
-
-    // Raw datum uit dataset, geen formatting
-    const birth = safe(p.Geboortedatum);               // <-- RAW datum
-
-    // Debug: check of de datum echt uit de dataset komt
-    console.log('RAW datum voor', p.ID, ':', birth);
+    const birth = formatDate(p.Geboortedatum); // Haal geboortedatum uit dataset en formatteer naar NL datum
 
     div.innerHTML = `
         <span class="id">${safe(p.ID)}</span>
