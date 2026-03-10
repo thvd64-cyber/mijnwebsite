@@ -1,5 +1,4 @@
 /* ============ css/Tree.css v0.0.3 ================== */
-
 /* ======================= TREE NODE BASIS ======================= */
 /* Alle layout en styling van personen nodes */
 .tree-node {
@@ -9,11 +8,11 @@
     justify-content: flex-start;   /* boven uitlijnen */
     width: 140px;                  /* vaste breedte */
     height: 120px;                 /* vaste hoogte */
-    padding: 6px 12px;             /* ruimte in node */
+    padding: 6px 6px;             /* text vs border ruimte in node */
     margin: 5px;                   /* ruimte tussen nodes */
     border-radius: 6px;
     border: 1px solid #999;
-    background: #ffffff;           /* standaard achtergrond */
+    background: #ffffff;           /* standaard witte achtergrond */
     font-size: 0.9rem;
     cursor: default;
     box-sizing: border-box;        /* padding telt mee in hoogte/breedte */
@@ -28,7 +27,7 @@
 
 .tree-node.PHoofdID {
     background-color: #d1c4e9;    /*  #d1c4e9 licht paars PHoofID */
-    color: #000;                   /* zwarte tekst PHoofID */
+    color: #000;                   /* #000 zwarte tekst PHoofID */
     font-weight: 600;            /* 600 = Demi Bold */
 }
 
