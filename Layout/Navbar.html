@@ -1,26 +1,25 @@
+<!-- ======================= Layout/Navbar.html v0.0.0 ======================= -->
 <!-- ======================= HEADER ======================= -->
-<header class="site-header"> <!-- Hoofdheader container -->
-    <img src="img/Logo1.png" alt="MyFamTreeCollab Logo" class="logo"> <!-- Logo afbeelding -->
-    <h1>MyFamTreeCollab</h1> <!-- Pagina titel -->
-
-    <nav>
-        <!-- menu zoals eerder -->
-    </nav>
-</header>
+<header>
+    <h1>MyFamTreeCollab</h1>
 
     <!-- ======================= NAVIGATION MENU ======================= -->
     <nav>
         <ul class="menu">
-            <li class="dropdown"> <!-- Home dropdown -->
-                <a href="#" class="menu-title">Home ▼</a> <!-- Hoofdmenu link -->
-                <ul class="submenu"> <!-- Dropdown submenu -->
-                    <li><a href="/MyFamTreeCollab/home/create.html" class="submenu-link">Create</a></li> <!-- Submenu link -->
+            <!-- Home dropdown -->
+            <li class="dropdown">
+                <a href="#" class="menu-title">Home ▼</a>
+                <ul class="submenu">
+                    <li><a href="/MyFamTreeCollab/home/create.html" class="submenu-link">Create</a></li>
                     <li><a href="/MyFamTreeCollab/home/import.html" class="submenu-link">Import</a></li>
                     <li><a href="/MyFamTreeCollab/home/export.html" class="submenu-link">Export</a></li>
+                   <!-- <li><a href="/MyFamTreeCollab/home/print.html" class="submenu-link">Print</a></li> -->
+                   <!-- <li><a href="/MyFamTreeCollab/home/about.html" class="submenu-link">About</a></li> -->
                 </ul>
             </li>
 
-            <li class="dropdown"> <!-- Stamboom dropdown -->
+            <!-- Stamboom dropdown -->
+            <li class="dropdown">
                 <a href="#" class="menu-title">Stamboom ▼</a>
                 <ul class="submenu">
                     <li><a href="/MyFamTreeCollab/stamboom/view.html" class="submenu-link">View</a></li>
@@ -30,14 +29,43 @@
                 </ul>
             </li>
 
-            <li class="dropdown"> <!-- Bronnen dropdown -->
+            <!-- Bronnen dropdown -->
+            <li class="dropdown">
                 <a href="#" class="menu-title">Bronnen ▼</a>
                 <ul class="submenu">
+                    <!-- <li><a href="/MyFamTreeCollab/bronnen/manuals.html" class="submenu-link">Manuals</a></li> -->
+                    <!-- <li><a href="/MyFamTreeCollab/bronnen/articles.html" class="submenu-link">Articles</a></li> -->
+                    <!-- <li><a href="/MyFamTreeCollab/bronnen/tutorials.html" class="submenu-link">Tutorials</a></li> -->
+                    <!-- <li><a href="/MyFamTreeCollab/bronnen/external.html" class="submenu-link">External</a></li> -->
                     <li><a href="/MyFamTreeCollab/bronnen/template.html" class="submenu-link">Template</a></li>
                 </ul>
             </li>
 
-            <li class="dropdown" id="adminDropdown"> <!-- Admin dropdown -->
+            <!-- Gemeenschap dropdown -->
+            <!-- <li class="dropdown"> -->
+                <!-- <a href="#" class="menu-title">Gemeenschap ▼</a> -->
+              <!--   <ul class="submenu"> -->
+                 <!--    <li><a href="/MyFamTreeCollab/gemeenschap/forum.html" class="submenu-link">Forum</a></li> -->
+                 <!--    <li><a href="/MyFamTreeCollab/gemeenschap/discussions.html" class="submenu-link">Discussions</a></li> -->
+                 <!--    <li><a href="/MyFamTreeCollab/gemeenschap/groups.html" class="submenu-link">Groups</a></li> -->
+                 <!--    <li><a href="/MyFamTreeCollab/gemeenschap/events.html" class="submenu-link">Events</a></li> -->
+                 <!--    <li><a href="/MyFamTreeCollab/gemeenschap/contact.html" class="submenu-link">Contact</a></li> -->
+               <!--  </ul> -->
+         <!--    </li> -->
+
+            <!-- Abonnementen dropdown -->
+            <!-- <li class="dropdown"> -->
+            <!--     <a href="#" class="menu-title">Abonnementen ▼</a> -->
+                <!-- <ul class="submenu"> -->
+             <!--        <li><a href="/MyFamTreeCollab/abonnementen/overview.html" class="submenu-link">Overview</a></li> -->
+             <!--        <li><a href="/MyFamTreeCollab/abonnementen/compare.html" class="submenu-link">Compare</a></li> -->
+             <!--        <li><a href="/MyFamTreeCollab/abonnementen/pricing.html" class="submenu-link">Pricing</a></li>
+             <!--        <li><a href="/MyFamTreeCollab/abonnementen/benefits.html" class="submenu-link">Benefits</a></li> -->
+              <!--   </ul> -->
+         <!--    </li> -->
+
+            <!-- Admin dropdown als laatste -->
+            <li class="dropdown" id="adminDropdown">
                 <a href="#" class="menu-title">Administrator ▼</a>
                 <ul class="submenu">
                     <li><a href="/MyFamTreeCollab/Admin/blank.html" class="submenu-link">blank</a></li>
@@ -45,96 +73,9 @@
                     <li><a href="/MyFamTreeCollab/Admin/PaginaTemplate.html" class="submenu-link">PaginaTemplate</a></li>
                     <li><a href="/MyFamTreeCollab/Admin/Sandbox.html" class="submenu-link">Sandbox</a></li>
                     <li><a href="/MyFamTreeCollab/Admin/Layout1.html" class="submenu-link">Layout1</a></li>
+                    
                 </ul>
             </li>
         </ul>
     </nav>
 </header>
-
-<!-- ======================= STYLES ======================= -->
-<style>
-/* ======================= HEADER LAYOUT ======================= */
-.site-header {
-    display: flex;               /* Flex layout voor logo+h1 + menu naast elkaar */
-    align-items: center;         /* Verticale centrering van alles */
-    justify-content: space-between; /* Plaats logo+h1 links, menu rechts */
-    padding: 10px 20px;          /* Binnenruimte van header */
-    gap: 20px;                   /* Ruimte tussen logo+h1 en menu */
-}
-
-/* ======================= LOGO + TITEL ======================= */
-.logo-title {
-    display: flex;               /* Logo en h1 naast elkaar */
-    align-items: center;         /* Verticale centrering van logo+h1 */
-    gap: 12px;                   /* Ruimte tussen logo en tekst */
-}
-
-.logo-title .logo {
-    height: 3em;                 /* Hoogte logo = 3x lettergrootte h1 */
-    width: auto;                 /* Breedte past automatisch aan */
-}
-
-/* ======================= NAV MENU ======================= */
-.menu {
-    display: flex;               /* Menu-items horizontaal */
-    list-style: none;            /* Geen bullets */
-    padding: 0;                  /* Geen padding */
-    margin: 0;                   /* Geen margin */
-    gap: 20px;                   /* Ruimte tussen hoofdmenu items */
-}
-
-.menu > li {
-    position: relative;          /* Nodig voor dropdown positionering */
-}
-
-.menu a {
-    text-decoration: none;       /* Geen onderstreping */
-    color: #333;                 /* Tekstkleur */
-    font-weight: bold;           /* Vetgedrukte tekst */
-    padding: 5px 0;              /* Verticale padding voor klikgebied */
-}
-
-/* ======================= SUBMENU ======================= */
-.submenu {
-    display: none;               /* Verborgen standaard */
-    position: absolute;          /* Positioneer boven hoofdmenu */
-    top: 100%;                   /* Direct onder parent menu */
-    left: 0;                     /* Uitlijning links */
-    list-style: none;            /* Geen bullets */
-    background-color: #f5f5f5;   /* Achtergrond submenu */
-    padding: 10px 0;             /* Binnenruimte submenu */
-    min-width: 150px;            /* Minimale breedte submenu */
-    border: 1px solid #ddd;      /* Rand om submenu */
-    z-index: 1000;               /* Zorg dat het boven andere content blijft */
-}
-
-.submenu li {
-    padding: 5px 20px;           /* Binnenruimte van submenu items */
-}
-
-.dropdown:hover .submenu {
-    display: block;              /* Toon submenu bij hover */
-}
-
-/* ======================= RESPONSIVE ======================= */
-@media (max-width: 800px) {
-    .site-header {
-        flex-direction: column;  /* Stapel logo+h1 boven menu */
-        align-items: flex-start; /* Alles links uitgelijnd */
-        gap: 10px;               /* Verticale ruimte */
-    }
-    .logo-title .logo {
-        height: 2.5em;           /* Kleinere logo hoogte op mobiel */
-    }
-    .menu {
-        flex-direction: column;   /* Menu-items onder elkaar */
-        gap: 10px;                /* Verticale ruimte tussen items */
-        width: 100%;              /* Volledige breedte */
-    }
-    .submenu {
-        position: static;         /* Submenu inline op mobiel */
-        border: none;             /* Geen rand */
-        padding-left: 10px;       /* Inspringen voor subitems */
-    }
-}
-</style>
