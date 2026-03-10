@@ -1,11 +1,12 @@
-<!-- ======================= stamboom/view.html v1.3.0 ======================= -->
+<!-- ======================= stamboom/view.html v1.5.6 ======================= -->
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="nl"> <!-- Document taal: Nederlands -->
 
 <head>
 <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Mobiel responsive -->
 <title>MyFamTreeCollab - View</title> <!-- Pagina titel in browser -->
+
 <link rel="stylesheet" href="../css/style.css"> <!-- Algemene CSS -->
 <link rel="stylesheet" href="../css/Tree.css"> <!-- Specifieke CSS voor stamboom nodes -->
 </head>
@@ -13,57 +14,57 @@
 <body>
 
 <!-- ======================= TopBar ======================= -->
-<div id="topbar-placeholder"></div> <!-- Placeholder waar topbar wordt ingeladen -->
+<div id="topbar-placeholder"></div> <!-- Placeholder voor TopBar -->
 <script>
 fetch('/MyFamTreeCollab/Layout/TopBar.html') // Haal TopBar HTML op
-.then(resp => resp.text())
-.then(data => document.getElementById('topbar-placeholder').innerHTML = data); // Voeg toe in placeholder
+.then(resp => resp.text()) // Converteer response naar tekst
+.then(data => document.getElementById('topbar-placeholder').innerHTML = data); // Voeg TopBar toe in placeholder
 </script>
 
 <!-- ======================= Navbar ======================= -->
-<div id="Navbar-placeholder"></div> <!-- Placeholder waar Navbar wordt ingeladen -->
+<div id="Navbar-placeholder"></div> <!-- Placeholder voor Navbar -->
 <script>
 fetch('/MyFamTreeCollab/Layout/Navbar.html') // Haal Navbar HTML op
-.then(resp => resp.text())
+.then(resp => resp.text()) // Converteer response naar tekst
 .then(data => {
-    const ph=document.getElementById('Navbar-placeholder'); // check placeholder
-    if(ph) ph.innerHTML=data; // Voeg toe in placeholder
+    const ph=document.getElementById('Navbar-placeholder'); // Haal placeholder element
+    if(ph) ph.innerHTML=data; // Voeg Navbar toe
 });
 </script>
 
 <!-- ======================= Pagina Titel ======================= -->
-<div id="pageTitle"
-style="font-size:1.5rem; font-weight:bold; margin-bottom:5px;"> <!-- Inline styling voor titel -->
-View Stamboom
+<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:5px;"> <!-- Inline styling voor titel -->
+View Stamboom <!-- Titel tekst -->
 </div>
 
-<!-- ======================= Intro ======================= -->
-<section style="margin-top:10px; padding:10px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+<!-- ======================= Introductie ======================= -->
+<section style="margin-top:10px; padding:10px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);"> <!-- Styling voor sectie -->
 <h2 style="margin-bottom:10px;">Welkom bij MyFamTreeCollab</h2> <!-- Intro kopje -->
 
-<p style="margin-bottom:5px; line-height:1.6;">
-Deze omgeving is ontworpen om familiegeschiedenis centraal, overzichtelijk en veilig te beheren.
-Hier kan je personen bekijken, relaties analyseren en generaties structureren in een gedeeld platform.
+<p style="margin-bottom:5px; line-height:1.6;"> <!-- Intro paragraaf -->
+Deze omgeving is ontworpen om familiegeschiedenis centraal, overzichtelijk en veilig te beheren. <!-- Uitleg tekst -->
+Hier kan je personen bekijken, relaties analyseren en generaties structureren in een gedeeld platform. <!-- Verdere uitleg -->
 </p>
 
-<ul style="margin-left:5px; line-height:1.6;">
-<li>Hoofd persoon zoeken en visualisatie van familieverbanden</li>
+<ul style="margin-left:5px; line-height:1.6;"> <!-- Opsomming van functies -->
+<li>Hoofd persoon zoeken en visualisatie van familieverbanden</li> <!-- Punt 1 -->
 </ul>
 </section>
 
 <!-- ======================= Search ======================= -->
-<div style="margin-top:15px; margin-bottom:15px;">
-<input
-type="text"
-id="searchPerson"
-placeholder="Voer ID of naam in"> <!-- Live search input veld -->
+<div style="margin-top:15px; margin-bottom:15px;"> <!-- Omgeving voor input veld -->
+<input type="text" id="searchPerson" placeholder="Voer ID of naam in"> <!-- Live search input veld -->
 </div>
 
 <!-- ======================= Boom + BZID ======================= -->
-<div class="container"> <!-- Flex container: boom + BZID naast elkaar -->
-    <div id="treeContainer"></div> <!-- Container waar boom nodes worden gerenderd -->
-    <div id="BZBox"> <!-- Container voor BZID nodes -->
-        <h4>Broers/Zussen</h4> <!-- Titel BZID -->
+<div class="tree-container-wrapper" style="display:flex; gap:20px;"> <!-- Wrapper voor flex layout: boom + BZID -->
+    <div id="treeContainer" style="flex:3;"> <!-- Container voor boom nodes -->
+        <!-- view.js rendert hier dynamisch alle Hoofd, Vader, Moeder, Partner, Kind nodes -->
+    </div>
+
+    <div id="BZBox" style="flex:1;"> <!-- Container voor Broers/Zussen -->
+        <h4>Broers/Zussen</h4> <!-- Titel BZID sectie -->
+        <!-- view.js rendert hier BZID nodes dynamisch -->
     </div>
 </div>
 
@@ -71,14 +72,14 @@ placeholder="Voer ID of naam in"> <!-- Live search input veld -->
 <script src="../js/schema.js"></script> <!-- Schema definities voor personen -->
 <script src="../js/idGenerator.js"></script> <!-- Functie voor ID generatie -->
 <script src="../js/storage.js"></script> <!-- Local storage functies -->
-<script src="../js/view.js"></script> <!-- Render boom + BZID -->
+<script src="../js/view.js"></script> <!-- Render boom + BZID; v1.5.6 compatibel -->
 
 <!-- ======================= Footer ======================= -->
 <div id="footer-placeholder"></div> <!-- Placeholder voor footer -->
 <script>
 fetch('/MyFamTreeCollab/Layout/Footer.html') // Haal footer HTML op
-.then(resp => resp.text())
-.then(data => document.getElementById('footer-placeholder').innerHTML = data); // Voeg toe in placeholder
+.then(resp => resp.text()) // Converteer naar tekst
+.then(data => document.getElementById('footer-placeholder').innerHTML = data); // Voeg footer toe
 </script>
 
 </body>
