@@ -1,5 +1,4 @@
-/* ============ css/Tree.css v0.0.5 ================== */
-
+/* ============ css/Tree.css v1.5.8 ================== */
 /* ======================= ROOT VARIABLES ======================= */
 :root{
     --color-hoofd: #fff9c4;            /* licht geel voor HoofdID */
@@ -58,44 +57,60 @@
     gap: 10px;
 }
 
-/* ======================= TREE STRUCTURE ======================= */
-.tree-root { text-align: center; margin-bottom: 10px; }
+/* ======================= Partner naast Kind ======================= */
+.tree-kid-group {
+    display: flex;          /* Kind + partner naast elkaar */
+    flex-direction: row;    /* Horizontale lijn */
+    gap: 6px;               /* Ruimte tussen kind en partner */
+    align-items: center;    /* Verticaal uitlijnen van nodes */
+}
+
+/* ======================= TREE STRUCTURE & CONTAINER ======================= */
+
+/* Algemene wrapper voor parents, children, en root */
+.tree-root,
 .tree-parents,
 .tree-children {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-    gap: 5px;
+    display: flex;              /* Flex layout voor alle tree lagen */
+    justify-content: center;    /* Centraal uitlijnen van nodes */
+    flex-wrap: wrap;            /* Laat nodes naar nieuwe regel gaan indien nodig */
+    margin-bottom: 10px;        /* Verticale spacing tussen lagen */
+    gap: 5px;                   /* Horizontale spacing tussen nodes binnen een laag */
+    text-align: center;         /* Center tekst in nodes */
 }
 
-/* ======================= CONTAINER ======================= */
+/* Wrapper voor hele boom + BZBox naast elkaar */
 .container {
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;
+    display: flex;              /* Flex horizontaal: boom + BZBox */
+    gap: 20px;                  /* Ruimte tussen treeContainer en BZBox */
+    align-items: flex-start;    /* Bovenkant uitlijnen */
 }
 
+/* Boom container */
 #treeContainer {
-    flex: 1;
-    min-height: 200px;
-    margin-top: 20px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background: #fafafa;
+    flex: 1;                    /* Neemt beschikbare ruimte in container */
+    min-height: 200px;          /* Min hoogte zodat nodes altijd zichtbaar zijn */
+    margin-top: 20px;           /* Ruimte boven de tree */
+    padding: 10px;              /* Binnenruimte rond nodes */
+    border: 1px solid #ccc;     /* Rand */
+    border-radius: 6px;         /* Afgeronde hoeken */
+    background: #fafafa;        /* Achtergrondkleur */
 }
 
+/* BZID container */
 #BZBox {
-    width: 220px;
-    flex-shrink: 0;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background: #fafafa;
+    width: 220px;               /* Vaste breedte voor BZID box */
+    flex-shrink: 0;             /* Verkleint niet bij kleine schermen */
+    padding: 10px;              /* Binnenruimte */
+    border: 1px solid #ccc;     /* Rand */
+    border-radius: 6px;         /* Afgeronde hoeken */
+    background: #fafafa;        /* Achtergrondkleur */
 }
 
-#BZBox .tree-node { margin-bottom: 5px; }
+/* Nodes binnen BZBox spacing */
+#BZBox .tree-node {
+    margin-bottom: 5px;         /* Ruimte tussen BZ nodes */
+}
 
 /* ======================= HOVER EFFECT ======================= */
 .tree-node:hover {
