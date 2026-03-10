@@ -188,10 +188,7 @@ function liveSearch(){
         safe(p.Roepnaam).toLowerCase().includes(term) ||
         safe(p.Achternaam).toLowerCase().includes(term)
     );
-
-    if(results.length>0 && !selectedHoofdId){
-        selectedHoofdId=safe(results[0].ID);
-        renderTree();
+    
     }
 
     const rect=searchInput.getBoundingClientRect(); 
