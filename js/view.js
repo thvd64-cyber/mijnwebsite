@@ -177,7 +177,7 @@ function buildTree(rootID){
 }
 
 // =======================
-// LIVE SEARCH
+// LIVE SEARCH (GROTERE BOX + TEKST + OFFSET)
 // =======================
 function liveSearch(){
     const term = safe(searchInput.value).toLowerCase();      // Zoekterm
@@ -197,35 +197,39 @@ function liveSearch(){
     popup.style.background='#fff';
     popup.style.border='1px solid #999';
     popup.style.zIndex=1000;
+
+    // ======================= POSITIE EN GROOTTE =======================
     popup.style.top = rect.bottom + window.scrollY + 'px';
-    popup.style.left = rect.left + window.scrollX + 'px';
-    popup.style.width = rect.width + 'px';
-    popup.style.maxHeight = '200px';
+    popup.style.left = Math.max(rect.left + window.scrollX, 5) + 'px'; // minimaal 5px vanaf linker kant
+    popup.style.width = (rect.width * 1.2) + 'px'; // 20% breder dan de input
+    popup.style.maxHeight = '300px';               // groter popup
     popup.style.overflowY = 'auto';
+    popup.style.fontSize = '1.1rem';               // grotere tekst
+    popup.style.padding = '8px';                   // meer padding
 
     if(results.length === 0){
         const row = document.createElement('div');
         row.textContent = 'Geen resultaten';
-        row.style.padding = '5px';
+        row.style.padding = '8px';                // groter padding
         popup.appendChild(row);
     } else {
         results.forEach(p => {
             const row = document.createElement('div');
             row.textContent = `${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`;
-            row.style.padding = '5px';
+            row.style.padding = '8px';            // grotere padding
             row.style.cursor = 'pointer';
+            row.style.fontSize = '1.1rem';        // grotere tekst
             row.addEventListener('click', ()=>{
-                selectedHoofdId = safe(p.ID); // Pas selectie toe alleen bij klik
-                popup.remove();               // Verwijder popup
-                renderTree();                 // Bouw boom
+                selectedHoofdId = safe(p.ID);     // Pas selectie toe alleen bij klik
+                popup.remove();                   // Verwijder popup
+                renderTree();                     // Bouw boom
             });
             popup.appendChild(row);
         });
     }
 
-    document.body.appendChild(popup);                       // Voeg popup toe aan DOM
+    document.body.appendChild(popup);                   // Voeg popup toe aan DOM
 }
-
 // =======================
 // INIT
 // =======================
