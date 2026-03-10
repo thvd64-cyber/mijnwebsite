@@ -339,54 +339,60 @@ function refreshTable(){
 }
 
 // =======================
-// Live Search
+// LIVE SEARCH (Popup met grotere letters)
 // =======================
 function liveSearch(){
-    const term = safe(searchInput.value).toLowerCase();
-    document.getElementById('searchPopup')?.remove();
-    if(!term) return;
+    const term = safe(searchInput.value).toLowerCase();      // Zoekterm
+    document.getElementById('searchPopup')?.remove();        // Verwijder oude popup
+    if(!term) return;                                        // Stop bij lege input
 
-    const results = dataset.filter(p=>
+    const results = dataset.filter(p =>
         safe(p.ID).toLowerCase().includes(term) ||
         safe(p.Roepnaam).toLowerCase().includes(term) ||
         safe(p.Achternaam).toLowerCase().includes(term)
     );
 
-    const rect = searchInput.getBoundingClientRect();
-    const popup = document.createElement('div');
+    const rect = searchInput.getBoundingClientRect();        // Positie input
+    const popup = document.createElement('div');             // Popup container
     popup.id='searchPopup';
     popup.style.position='absolute';
     popup.style.background='#fff';
     popup.style.border='1px solid #999';
     popup.style.zIndex=1000;
-    popup.style.top=rect.bottom+window.scrollY+'px';
-    popup.style.left=rect.left+window.scrollX+'px';
-    popup.style.width=rect.width+'px';
-    popup.style.maxHeight='200px';
-    popup.style.overflowY='auto';
 
-    results.forEach(p=>{
+    // ======================= Positie en Grootte =======================
+    popup.style.top = rect.bottom + window.scrollY + 'px';
+    popup.style.left = Math.max(rect.left + window.scrollX, 5) + 'px'; // 5px vanaf kant
+    popup.style.width = rect.width + 'px';
+    popup.style.maxHeight = '300px';
+    popup.style.overflowY = 'auto';
+    popup.style.fontSize = '1.3rem';       // grotere letters in popup
+    popup.style.padding = '8px';           // meer padding
+
+    if(results.length === 0){
         const row = document.createElement('div');
-        row.textContent=`${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`;
-        row.style.padding='5px'; row.style.cursor='pointer';
-        row.addEventListener('click',()=>{
-            selectedHoofdId = safe(p.ID); 
-            popup.remove();
-            renderTable(dataset);
-        });
+        row.textContent = 'Geen resultaten';
+        row.style.padding = '8px';
+        row.style.fontSize = '1.3rem';     // grotere tekst voor lege melding
         popup.appendChild(row);
-    });
-
-    if(results.length===0){ 
-        const row=document.createElement('div'); 
-        row.textContent='Geen resultaten'; 
-        row.style.padding='5px'; 
-        popup.appendChild(row); 
+    } else {
+        results.forEach(p => {
+            const row = document.createElement('div');
+            row.textContent = `${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`;
+            row.style.padding = '8px';     // comfortabele padding
+            row.style.cursor = 'pointer';
+            row.style.fontSize = '1.3rem'; // grotere letters per regel
+            row.addEventListener('click', ()=>{
+                selectedHoofdId = safe(p.ID); // Pas selectie toe bij klik
+                popup.remove();               // Verwijder popup
+                renderTree();                 // Bouw boom
+            });
+            popup.appendChild(row);
+        });
     }
 
-    document.body.appendChild(popup);
+    document.body.appendChild(popup); // Voeg popup toe aan DOM
 }
-
 // =======================
 // Init
 // =======================
