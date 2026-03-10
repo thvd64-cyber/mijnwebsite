@@ -19,7 +19,7 @@
     align-items: center;
     justify-content: flex-start;
     width: 140px;
-    height: 120px;
+    height: auto;         /* laat de hoogte automatisch passen */
     padding: 6px 6px;
     margin: 5px;
     border-radius: 6px;
@@ -29,6 +29,7 @@
     color: #000;           /* standaard zwart voor alle tekst */
     cursor: default;
     box-sizing: border-box;
+    overflow: visible;   /* laat inhoud niet verbergen */
 }
 /* ======================= TREE NODE BIRTH ======================= */
 .tree-node .birth {
