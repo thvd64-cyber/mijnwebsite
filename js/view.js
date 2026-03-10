@@ -50,7 +50,8 @@ function createTreeNode(p, rel){
     // Raw datum uit dataset, geen formatting
     const birth = safe(p.GeboorteDatum);               // <-- RAW datum
     // const birth = formatDate(p.GeboorteDatum);         // Format geboorte datum
-
+// DEBUG: check of de datum echt uit de dataset komt
+console.log('RAW datum voor', p.ID, ':', birth);
     div.innerHTML = `
         <span class="id">${safe(p.ID)}</span>        <!-- ID van persoon -->
         <span class="name">${fullName}</span>        <!-- Naam van persoon -->
