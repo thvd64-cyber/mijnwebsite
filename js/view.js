@@ -1,5 +1,5 @@
-// ======================= stamboom/view.js v1.5.8 =======================
-// Boom rendering + Live search + Kind/Partner + BZID + partner naast BZID
+// ======================= stamboom/view.js v1.5.9 =======================
+// Live search improvement
 (function(){
 'use strict';
 
@@ -175,14 +175,13 @@ function buildTree(rootID){
         BZBox.appendChild(bzGroup);                    // Voeg complete rij toe aan BZBox
     });
 }
-
 // =======================
 // LIVE SEARCH
 // =======================
 function liveSearch(){
     const term = safe(searchInput.value).toLowerCase();
-    document.getElementById('searchPopup')?.remove(); // Verwijder oud popup
-    if(!term) return; // Niets ingevoerd: stop
+    document.getElementById('searchPopup')?.remove(); // Verwijder oude popup
+    if(!term) return; // Niets ingevoerd, stop
 
     const results = dataset.filter(p =>
         safe(p.ID).toLowerCase().includes(term) ||
@@ -190,7 +189,6 @@ function liveSearch(){
         safe(p.Achternaam).toLowerCase().includes(term)
     );
 
-    // Popup voor selectie
     const rect = searchInput.getBoundingClientRect();
     const popup = document.createElement('div');
     popup.id='searchPopup';
@@ -198,27 +196,27 @@ function liveSearch(){
     popup.style.background='#fff';
     popup.style.border='1px solid #999';
     popup.style.zIndex=1000;
-    popup.style.top=rect.bottom+window.scrollY+'px';
-    popup.style.left=rect.left+window.scrollX+'px';
-    popup.style.width=rect.width+'px';
-    popup.style.maxHeight='200px';
-    popup.style.overflowY='auto';
+    popup.style.top = rect.bottom + window.scrollY + 'px';
+    popup.style.left = rect.left + window.scrollX + 'px';
+    popup.style.width = rect.width + 'px';
+    popup.style.maxHeight = '200px';
+    popup.style.overflowY = 'auto';
 
-    if(results.length===0){
-        const row=document.createElement('div');
-        row.textContent='Geen resultaten';
-        row.style.padding='5px';
+    if(results.length === 0){
+        const row = document.createElement('div');
+        row.textContent = 'Geen resultaten';
+        row.style.padding = '5px';
         popup.appendChild(row);
     } else {
-        results.forEach(p=>{
-            const row=document.createElement('div');
-            row.textContent=`${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`;
-            row.style.padding='5px';
-            row.style.cursor='pointer';
+        results.forEach(p => {
+            const row = document.createElement('div');
+            row.textContent = `${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`;
+            row.style.padding = '5px';
+            row.style.cursor = 'pointer';
             row.addEventListener('click', ()=>{
-                selectedHoofdId = safe(p.ID); // Pas selectie alleen toe bij klik
-                popup.remove();
-                renderTree();
+                selectedHoofdId = safe(p.ID); // Alleen bij klik wordt selectie toegepast
+                popup.remove();               // Verwijder popup
+                renderTree();                 // Bouw boom
             });
             popup.appendChild(row);
         });
@@ -226,7 +224,6 @@ function liveSearch(){
 
     document.body.appendChild(popup);
 }
-
 // =======================
 // INIT
 // =======================
