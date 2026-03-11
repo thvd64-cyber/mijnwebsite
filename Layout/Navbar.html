@@ -1,14 +1,14 @@
 <!-- ======================= Layout/Navbar v0.0.1  logo add ======================= -->
 
-<!-- ======================= Layout/Navbar v0.2 ======================= -->
-
+<!-- ======================= Layout/Navbar v0.3 ======================= -->
 <header class="site-header"> <!-- Hoofdheader container -->
-    <div class="logo-container">
-        <img src="/img/Logo1.png" alt="Vorilo Logo"> <!-- Logo, root-absolute pad zodat hij altijd werkt -->
-        <h1>MyFamTreeCollab</h1> <!-- Titel direct naast logo -->
+    <div class="logo-container"> <!-- Container voor logo en titel -->
+        <a href="https://vorilo.dev"> <!-- Logo klikbaar maken naar hoofdsite -->
+            <img src="/img/Logo1.png" alt="Vorilo Logo"> <!-- Root-pad zodat logo op alle pagina's werkt -->
+        </a>
+        <h1>MyFamTreeCollab</h1> <!-- Titel naast logo -->
     </div>
-
-    <nav class="site-nav">
+    <nav class="site-nav"> <!-- Navigatie menu -->
         <ul>
             <li><a href="/index.html">Home</a></li> <!-- Navigatie link Home -->
             <li><a href="/pages/about.html">About</a></li> <!-- Navigatie link About -->
@@ -16,8 +16,6 @@
         </ul>
     </nav>
 </header>
-
-
     <!-- ======================= NAVIGATION MENU ======================= -->
     <nav>
         <ul class="menu">
@@ -66,6 +64,7 @@
 /* ======================= HEADER LAYOUT ======================= */
 .site-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; background-color: #f5f5f5; } /* Flex layout, centreren, padding en achtergrond */
 .logo-container { display: flex; align-items: center; gap: 10px; } /* Logo + titel horizontaal en gecentreerd, 10px ruimte ertussen */
+.logo-container a { display:flex; align-items:center; text-decoration:none; } /* Klikbaar logo zonder underline */
 .logo-container img { height: 50px; } /* Logo hoogte instellen */
 .logo-container h1 { font-size: 1.5rem; margin: 0; } /* Titel grootte + geen marge */
 .site-nav ul { list-style: none; display: flex; gap: 20px; margin: 0; padding: 0; } /* Navigatie horizontaal, geen bullets, 20px tussen links */
