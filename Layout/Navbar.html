@@ -1,62 +1,129 @@
-<!-- ======================= Layout/Navbar v0.0.4 absoluut pad logo + start ======================= -->
+<!-- ======================= Layout/Navbar v0.0.4 absoluut pad logo + Start + Home knop ======================= -->
 
-<!-- ======================= HEADER ======================= -->
-<header class="site-header" style="display:flex; align-items:center; background-color:#fff; padding:10px 20px;"> 
-    <!-- Logo -->
+<header class="site-header">
+    <!-- Logo links -->
     <img src="/MyFamTreeCollab/img/Logo1.png" 
          alt="Vorilo Logo" 
-         style="height:50px; vertical-align:middle; margin-right:30px;"> <!-- Ruimte rechts zodat menu naast logo begint -->
+         style="height:50px; vertical-align:middle; margin-right:30px;"> 
 
     <!-- ======================= NAVIGATION MENU ======================= -->
     <nav>
-        <ul class="menu" style="display:flex; list-style:none; gap:20px; margin:0; padding:0; align-items:center;">
-            
-            <!-- Home knop naast logo -->
+        <ul class="menu">
+            <!-- Home knop direct naast logo -->
             <li>
-                <a href="/MyFamTreeCollab/index.html" class="menu-title" style="text-decoration:none; color:#333; font-weight:bold;">Home</a>
+                <a href="/MyFamTreeCollab/index.html" class="menu-title">Home</a>
             </li>
 
             <!-- Start dropdown (voorheen Home) -->
             <li class="dropdown">
-                <a href="#" class="menu-title" style="text-decoration:none; color:#333; font-weight:bold;">Start ▼</a>
-                <ul class="submenu" style="display:none; position:absolute; top:100%; left:0; background:#f5f5f5; list-style:none; padding:10px 0; min-width:150px; border:1px solid #ddd; z-index:1000;">
-                    <li><a href="/MyFamTreeCollab/home/create.html" class="submenu-link" style="display:block; padding:5px 20px; color:#333; text-decoration:none;">Create</a></li>
-                    <li><a href="/MyFamTreeCollab/home/import.html" class="submenu-link" style="display:block; padding:5px 20px; color:#333; text-decoration:none;">Import</a></li>
-                    <li><a href="/MyFamTreeCollab/home/export.html" class="submenu-link" style="display:block; padding:5px 20px; color:#333; text-decoration:none;">Export</a></li>
+                <a href="#" class="menu-title">Start ▼</a>
+                <ul class="submenu">
+                    <li><a href="/MyFamTreeCollab/home/create.html" class="submenu-link">Create</a></li>
+                    <li><a href="/MyFamTreeCollab/home/import.html" class="submenu-link">Import</a></li>
+                    <li><a href="/MyFamTreeCollab/home/export.html" class="submenu-link">Export</a></li>
                 </ul>
             </li>
 
             <!-- Stamboom dropdown -->
             <li class="dropdown">
-                <a href="#" class="menu-title" style="text-decoration:none; color:#333; font-weight:bold;">Stamboom ▼</a>
-                <ul class="submenu" style="display:none; position:absolute; top:100%; left:0; background:#f5f5f5; list-style:none; padding:10px 0; min-width:150px; border:1px solid #ddd; z-index:1000;">
-                    <li><a href="/MyFamTreeCollab/stamboom/view.html" class="submenu-link" style="display:block; padding:5px 20px; color:#333; text-decoration:none;">View</a></li>
-                    <li><a href="/MyFamTreeCollab/stamboom/manage.html" class="submenu-link" style="display:block; padding:5px 20px; color:#333; text-decoration:none;">Manage</a></li>
-                    <li><a href="/MyFamTreeCollab/stamboom/storage.html" class="submenu-link" style="display:block; padding:5px 20px; color:#333; text-decoration:none;">Storage</a></li>
-                    <li><a href="/MyFamTreeCollab/stamboom/stats.html" class="submenu-link" style="display:block; padding:5px 20px; color:#333; text-decoration:none;">Stats</a></li>
+                <a href="#" class="menu-title">Stamboom ▼</a>
+                <ul class="submenu">
+                    <li><a href="/MyFamTreeCollab/stamboom/view.html" class="submenu-link">View</a></li>
+                    <li><a href="/MyFamTreeCollab/stamboom/manage.html" class="submenu-link">Manage</a></li>
+                    <li><a href="/MyFamTreeCollab/stamboom/storage.html" class="submenu-link">Storage</a></li>
+                    <li><a href="/MyFamTreeCollab/stamboom/stats.html" class="submenu-link">Stats</a></li>
                 </ul>
             </li>
 
             <!-- Bronnen dropdown -->
             <li class="dropdown">
-                <a href="#" class="menu-title" style="text-decoration:none; color:#333; font-weight:bold;">Bronnen ▼</a>
-                <ul class="submenu" style="display:none; position:absolute; top:100%; left:0; background:#f5f5f5; list-style:none; padding:10px 0; min-width:150px; border:1px solid #ddd; z-index:1000;">
-                    <li><a href="/MyFamTreeCollab/bronnen/template.html" class="submenu-link" style="display:block; padding:5px 20px; color:#333; text-decoration:none;">Template</a></li>
+                <a href="#" class="menu-title">Bronnen ▼</a>
+                <ul class="submenu">
+                    <li><a href="/MyFamTreeCollab/bronnen/template.html" class="submenu-link">Template</a></li>
                 </ul>
             </li>
 
             <!-- Administrator dropdown -->
             <li class="dropdown" id="adminDropdown">
-                <a href="#" class="menu-title" style="text-decoration:none; color:#333; font-weight:bold;">Administrator ▼</a>
-                <ul class="submenu" style="display:none; position:absolute; top:100%; left:0; background:#f5f5f5; list-style:none; padding:10px 0; min-width:150px; border:1px solid #ddd; z-index:1000;">
-                    <li><a href="/MyFamTreeCollab/Admin/blank.html" class="submenu-link" style="display:block; padding:5px 20px; color:#333; text-decoration:none;">blank</a></li>
-                    <li><a href="/MyFamTreeCollab/Admin/LSD.html" class="submenu-link" style="display:block; padding:5px 20px; color:#333; text-decoration:none;">LSD</a></li>
-                    <li><a href="/MyFamTreeCollab/Admin/PaginaTemplate.html" class="submenu-link" style="display:block; padding:5px 20px; color:#333; text-decoration:none;">PaginaTemplate</a></li>
-                    <li><a href="/MyFamTreeCollab/Admin/Sandbox.html" class="submenu-link" style="display:block; padding:5px 20px; color:#333; text-decoration:none;">Sandbox</a></li>
-                    <li><a href="/MyFamTreeCollab/Admin/Layout1.html" class="submenu-link" style="display:block; padding:5px 20px; color:#333; text-decoration:none;">Layout1</a></li>
+                <a href="#" class="menu-title">Administrator ▼</a>
+                <ul class="submenu">
+                    <li><a href="/MyFamTreeCollab/Admin/blank.html" class="submenu-link">blank</a></li>
+                    <li><a href="/MyFamTreeCollab/Admin/LSD.html" class="submenu-link">LSD</a></li>
+                    <li><a href="/MyFamTreeCollab/Admin/PaginaTemplate.html" class="submenu-link">PaginaTemplate</a></li>
+                    <li><a href="/MyFamTreeCollab/Admin/Sandbox.html" class="submenu-link">Sandbox</a></li>
+                    <li><a href="/MyFamTreeCollab/Admin/Layout1.html" class="submenu-link">Layout1</a></li>
                 </ul>
             </li>
-
         </ul>
     </nav>
 </header>
+
+<!-- ======================= STYLES ======================= -->
+<style>
+.site-header {
+    display: flex;
+    align-items: center;
+    background-color:#fff;
+    padding: 10px 20px;
+}
+
+.menu {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 20px;
+}
+
+.menu > li {
+    position: relative;
+}
+
+.menu a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    padding: 5px 0;
+}
+
+/* Submenu styling */
+.submenu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    list-style: none;
+    background-color: #f5f5f5;
+    padding: 10px 0;
+    min-width: 150px;
+    border: 1px solid #ddd;
+    z-index: 1000;
+}
+
+.submenu li {
+    padding: 5px 20px;
+}
+
+.dropdown:hover .submenu {
+    display: block;
+}
+
+/* ======================= RESPONSIVE ======================= */
+@media (max-width: 800px) {
+    .site-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .menu {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+    .submenu {
+        position: static;
+        border: none;
+        padding-left: 10px;
+    }
+}
+</style>
