@@ -1,19 +1,11 @@
-<!-- ======================= Layout/Navbar v0.4 ======================= -->
+<!-- ======================= Layout/Navbar v0.0.1  logo add ======================= -->
+
+<!-- ======================= HEADER ======================= -->
 <header class="site-header"> <!-- Hoofdheader container -->
-    <div class="logo-container"> <!-- Container voor logo en titel -->
-        <a href="https://vorilo.dev"> <!-- Logo klikbaar maken naar hoofdsite -->
-            <img src="/img/Logo1.png" alt="Vorilo Logo"> <!-- Root-pad zodat logo op alle pagina's werkt -->
-        </a>
-        <h1>MyFamTreeCollab</h1> <!-- Titel naast logo -->
-    </div>
-    <nav class="site-nav"> <!-- Navigatie menu -->
-        <ul>
-            <li><a href="/index.html">Home</a></li> <!-- Navigatie link Home -->
-            <li><a href="/pages/about.html">About</a></li> <!-- Navigatie link About -->
-            <li><a href="/pages/contact.html">Contact</a></li> <!-- Navigatie link Contact -->
-        </ul>
-    </nav>
-</header>
+    <!-- Logo + Titel -->
+    <img src="img/Logo1.png" alt="Vorilo Logo" style="height:50px; vertical-align:middle; margin-right:10px;"> <!-- Logo links, 25px hoog -->
+    <h1 style="display:inline; vertical-align:middle;">MyFamTreeCollab</h1> <!-- Titel direct naast logo -->
+
     <!-- ======================= NAVIGATION MENU ======================= -->
     <nav>
         <ul class="menu">
@@ -60,40 +52,71 @@
 <!-- ======================= STYLES ======================= -->
 <style>
 /* ======================= HEADER LAYOUT ======================= */
-.site-header { display:flex; align-items:center; justify-content:space-between; padding:10px 20px; background-color:#f5f5f5; } /* Flex layout */
-
-.logo-container { display:flex; align-items:center; gap:10px; } /* Logo + titel */
-
-.logo-container a { display:flex; align-items:center; text-decoration:none; } /* Klikbaar logo */
-
-.logo-container img { height:50px; } /* Logo grootte */
-
-.logo-container h1 { font-size:1.5rem; margin:0; } /* Titel styling */
-
+.site-header {
+    display: flex;               /* Flex layout voor logo+h1 + menu naast elkaar */
+    align-items: center;         /* Verticale centrering van alles */
+    justify-content: space-between; /* Plaats logo+h1 links, menu rechts */
+    padding: 10px 20px;          /* Binnenruimte van header */
+}
 
 /* ======================= NAV MENU ======================= */
-.menu { display:flex; list-style:none; padding:0; margin:0; gap:20px; } /* Hoofdmenu horizontaal */
+.menu {
+    display: flex;               /* Menu-items horizontaal */
+    list-style: none;            /* Geen bullets */
+    padding: 0;                  /* Geen padding */
+    margin: 0;                   /* Geen margin */
+    gap: 20px;                   /* Ruimte tussen hoofdmenu items */
+}
 
-.menu > li { position:relative; } /* Nodig voor dropdown */
+.menu > li {
+    position: relative;          /* Nodig voor dropdown positionering */
+}
 
-.menu a { display:block; text-decoration:none; color:#333; font-weight:bold; padding:8px 0; } /* Groter klikgebied */
-
+.menu a {
+    text-decoration: none;       /* Geen onderstreping */
+    color: #333;                 /* Tekstkleur */
+    font-weight: bold;           /* Vetgedrukte tekst */
+    padding: 5px 0;              /* Verticale padding voor klikgebied */
+}
 
 /* ======================= SUBMENU ======================= */
-.submenu { display:none; position:absolute; top:100%; left:0; margin-top:5px; list-style:none; background:#f5f5f5; padding:10px 0; min-width:150px; border:1px solid #ddd; z-index:1000; } /* Dropdown */
+.submenu {
+    display: none;               /* Verborgen standaard */
+    position: absolute;          /* Positioneer boven hoofdmenu */
+    top: 100%;                   /* Direct onder parent menu */
+    left: 0;                     /* Uitlijning links */
+    list-style: none;            /* Geen bullets */
+    background-color: #f5f5f5;  /* Achtergrond submenu */
+    padding: 10px 0;             /* Binnenruimte submenu */
+    min-width: 150px;            /* Minimale breedte submenu */
+    border: 1px solid #ddd;      /* Rand om submenu */
+    z-index: 1000;               /* Zorg dat het boven andere content blijft */
+}
 
-.submenu a { display:block; padding:5px 20px; } /* Submenu klikgebied */
+.submenu li {
+    padding: 5px 20px;           /* Binnenruimte van submenu items */
+}
 
-.dropdown:hover .submenu { display:block; } /* Toon dropdown */
-
+.dropdown:hover .submenu {
+    display: block;              /* Toon submenu bij hover */
+}
 
 /* ======================= RESPONSIVE ======================= */
-@media (max-width:800px){
-
-.site-header { flex-direction:column; align-items:flex-start; gap:10px; } /* Header mobiel */
-
-.menu { flex-direction:column; gap:10px; width:100%; } /* Menu verticaal */
-
-.submenu { position:static; border:none; padding-left:10px; } /* Mobiel submenu */
-
+@media (max-width: 800px) {
+    .site-header {
+        flex-direction: column;  /* Stapel logo+h1 boven menu */
+        align-items: flex-start; /* Alles links uitgelijnd */
+        gap: 10px;               /* Verticale ruimte */
+    }
+    .menu {
+        flex-direction: column;   /* Menu-items onder elkaar */
+        gap: 10px;                /* Verticale ruimte tussen items */
+        width: 100%;              /* Volledige breedte */
+    }
+    .submenu {
+        position: static;         /* Submenu inline op mobiel */
+        border: none;             /* Geen rand */
+        padding-left: 10px;       /* Inspringen voor subitems */
+    }
 }
+</style>
