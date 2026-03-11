@@ -1,22 +1,16 @@
-<!-- ======================= Layout/Navbar v0.0.4 absoluut pad logo + Start + Home knop ======================= -->
+<!-- ======================= Layout/Navbar v0.0.1  logo add ======================= -->
 
-<header class="site-header">
-    <!-- Logo links -->
-    <img src="/MyFamTreeCollab/img/Logo1.png" 
-         alt="Vorilo Logo" 
-         style="height:50px; vertical-align:middle; margin-right:30px;"> 
+<!-- ======================= HEADER ======================= -->
+<header class="site-header"> <!-- Hoofdheader container -->
+    <!-- Logo + Titel -->
+    <img src="img/Logo1.png" alt="Vorilo Logo" style="height:50px; vertical-align:middle; margin-right:10px;"> <!-- Logo links, 25px hoog -->
+    <h1 style="display:inline; vertical-align:middle;">MyFamTreeCollab</h1> <!-- Titel direct naast logo -->
 
     <!-- ======================= NAVIGATION MENU ======================= -->
     <nav>
         <ul class="menu">
-            <!-- Home knop direct naast logo -->
-            <li>
-                <a href="/MyFamTreeCollab/index.html" class="menu-title">Home</a>
-            </li>
-
-            <!-- Start dropdown (voorheen Home) -->
-            <li class="dropdown">
-                <a href="#" class="menu-title">Start ▼</a>
+            <li class="dropdown"> <!-- Home dropdown -->
+                <a href="#" class="menu-title">Home ▼</a>
                 <ul class="submenu">
                     <li><a href="/MyFamTreeCollab/home/create.html" class="submenu-link">Create</a></li>
                     <li><a href="/MyFamTreeCollab/home/import.html" class="submenu-link">Import</a></li>
@@ -24,8 +18,7 @@
                 </ul>
             </li>
 
-            <!-- Stamboom dropdown -->
-            <li class="dropdown">
+            <li class="dropdown"> <!-- Stamboom dropdown -->
                 <a href="#" class="menu-title">Stamboom ▼</a>
                 <ul class="submenu">
                     <li><a href="/MyFamTreeCollab/stamboom/view.html" class="submenu-link">View</a></li>
@@ -35,16 +28,14 @@
                 </ul>
             </li>
 
-            <!-- Bronnen dropdown -->
-            <li class="dropdown">
+            <li class="dropdown"> <!-- Bronnen dropdown -->
                 <a href="#" class="menu-title">Bronnen ▼</a>
                 <ul class="submenu">
                     <li><a href="/MyFamTreeCollab/bronnen/template.html" class="submenu-link">Template</a></li>
                 </ul>
             </li>
 
-            <!-- Administrator dropdown -->
-            <li class="dropdown" id="adminDropdown">
+            <li class="dropdown" id="adminDropdown"> <!-- Admin dropdown -->
                 <a href="#" class="menu-title">Administrator ▼</a>
                 <ul class="submenu">
                     <li><a href="/MyFamTreeCollab/Admin/blank.html" class="submenu-link">blank</a></li>
@@ -60,70 +51,72 @@
 
 <!-- ======================= STYLES ======================= -->
 <style>
+/* ======================= HEADER LAYOUT ======================= */
 .site-header {
-    display: flex;
-    align-items: center;
-    background-color:#fff;
-    padding: 10px 20px;
+    display: flex;               /* Flex layout voor logo+h1 + menu naast elkaar */
+    align-items: center;         /* Verticale centrering van alles */
+    justify-content: space-between; /* Plaats logo+h1 links, menu rechts */
+    padding: 10px 20px;          /* Binnenruimte van header */
 }
 
+/* ======================= NAV MENU ======================= */
 .menu {
-    display: flex;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    gap: 20px;
+    display: flex;               /* Menu-items horizontaal */
+    list-style: none;            /* Geen bullets */
+    padding: 0;                  /* Geen padding */
+    margin: 0;                   /* Geen margin */
+    gap: 20px;                   /* Ruimte tussen hoofdmenu items */
 }
 
 .menu > li {
-    position: relative;
+    position: relative;          /* Nodig voor dropdown positionering */
 }
 
 .menu a {
-    text-decoration: none;
-    color: #333;
-    font-weight: bold;
-    padding: 5px 0;
+    text-decoration: none;       /* Geen onderstreping */
+    color: #333;                 /* Tekstkleur */
+    font-weight: bold;           /* Vetgedrukte tekst */
+    padding: 5px 0;              /* Verticale padding voor klikgebied */
 }
 
-/* Submenu styling */
+/* ======================= SUBMENU ======================= */
 .submenu {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    list-style: none;
-    background-color: #f5f5f5;
-    padding: 10px 0;
-    min-width: 150px;
-    border: 1px solid #ddd;
-    z-index: 1000;
+    display: none;               /* Verborgen standaard */
+    position: absolute;          /* Positioneer boven hoofdmenu */
+    top: 100%;                   /* Direct onder parent menu */
+    left: 0;                     /* Uitlijning links */
+    list-style: none;            /* Geen bullets */
+    background-color: #f5f5f5;  /* Achtergrond submenu */
+    padding: 10px 0;             /* Binnenruimte submenu */
+    min-width: 150px;            /* Minimale breedte submenu */
+    border: 1px solid #ddd;      /* Rand om submenu */
+    z-index: 1000;               /* Zorg dat het boven andere content blijft */
 }
 
 .submenu li {
-    padding: 5px 20px;
+    padding: 5px 20px;           /* Binnenruimte van submenu items */
 }
 
 .dropdown:hover .submenu {
-    display: block;
+    display: block;              /* Toon submenu bij hover */
 }
 
 /* ======================= RESPONSIVE ======================= */
 @media (max-width: 800px) {
     .site-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
+        flex-direction: column;  /* Stapel logo+h1 boven menu */
+        align-items: flex-start; /* Alles links uitgelijnd */
+        gap: 10px;               /* Verticale ruimte */
     }
     .menu {
-        flex-direction: column;
-        gap: 10px;
-        width: 100%;
+        flex-direction: column;   /* Menu-items onder elkaar */
+        gap: 10px;                /* Verticale ruimte tussen items */
+        width: 100%;              /* Volledige breedte */
     }
     .submenu {
-        position: static;
-        border: none;
-        padding-left: 10px;
+        position: static;         /* Submenu inline op mobiel */
+        border: none;             /* Geen rand */
+        padding-left: 10px;       /* Inspringen voor subitems */
     }
 }
 </style>
