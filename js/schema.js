@@ -1,5 +1,5 @@
-// ======================= js/schema.js v0.0.0
-// next-level lean, future-proof
+// ======================= js/schema.js v0.0.1 =======================
+// Extensive version
 (function () {
     'use strict';
 
