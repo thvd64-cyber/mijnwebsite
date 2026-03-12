@@ -1,106 +1,52 @@
-<!-- ======================= stamboom/manage.html v1.3.0 ======================= -->
-<!-- compatibel met schema.js v0.0.2 (14 kolommen) en storage.js v0.0.2, inclusief automatische migratie van oude data 19 → 14 kolommen en dynamische ID-generatie  -->
+<!-- ======================= manage.html v1.3.16 ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 zodat alle tekens correct weergegeven worden -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive voor mobiel/desktop -->
-    <title>MyFamTreeCollab - Manage</title> <!-- Browser tab titel -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- Algemene CSS -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Personen</title>
+<style>
+/* ======================= BASIS STIJL ======================= */
+body{font-family:Arial,sans-serif;margin:20px;background:#f9f9f9;color:#333;}
+table{width:100%;border-collapse:collapse;margin-bottom:20px;}
+th,td{border:1px solid #ccc;padding:6px;text-align:left;vertical-align:top;}
+th{background:#eee;}
+textarea{font-family:inherit;font-size:1rem;padding:4px;}
+.rel-hoofdid{background:#d1e7dd;}  /* HoofdID */
+.rel-vhoofdid,.rel-mhoofdid{background:#f8d7da;} /* ouders */
+.rel-phoofdid,.rel-kindpartnerid,.rel-bzpartnerid{background:#fff3cd;} /* partners */
+.rel-kindid{background:#cff4fc;} /* kinderen */
+.rel-bzid{background:#e2e3e5;} /* broers/zussen */
 
-    <!-- ======================= Tabel Styling ======================= -->
-    <style>
-        /* HoofdID */
-        .rel-hoofd { background-color: #fffde7 !important; font-weight:600; }
-        /* Ouders */
-        .rel-vhoofdid, .rel-mhoofdid { background-color: #e8f5e9 !important; font-weight:500; }
-        /* Partner van hoofd */
-        .rel-phoofdid { background-color: #f3e5f5 !important; font-style:italic; }
-        /* Kinderen */
-        .rel-kindid { background-color: #e3f2fd !important; font-weight:400; }
-        .rel-kindid.scenario-1 { background-color: #e3f2fd !important; }
-        .rel-kindid.scenario-2 { background-color: #eef7fe !important; }
-        .rel-kindid.scenario-3 { background-color: #f7fbff !important; }
-        /* Partner van kind */
-        .rel-kindpartnerid { background-color: #d0ebff !important; font-style:italic; }
-        /* Broers/Zussen */
-        .rel-bzid { background-color: #fff3e0 !important; font-weight:500; }
-        .rel-bzpartnerid { background-color: #fbe9e7 !important; font-style:italic; }
-
-        /* Tabel layout */
-        #manageTable { background-color: transparent; border-collapse: collapse; width:100%; }
-        #manageTable td { background-color: transparent; }
-        #manageTable td textarea { 
-            background-color: transparent; border:none; width:100%; box-sizing:border-box; cursor:text; resize:vertical; 
-        }
-        #manageTable tr:hover { background-color: rgba(0,0,0,0.05); }
-    </style>
+/* ======================= KNOPPEN ======================= */
+button{margin-right:5px;padding:6px 12px;font-size:1rem;cursor:pointer;}
+#searchPerson{padding:6px 8px;width:250px;font-size:1rem;}
+</style>
 </head>
 <body>
-<!-- ======================= TopBar & Navbar ======================= -->
-<div id="topbar-placeholder"></div>
-<script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')
-    .then(resp => resp.text())
-    .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
-</script>
 
-<div id="Navbar-placeholder"></div>
-<script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html')
-    .then(resp => resp.text())
-    .then(data => document.getElementById('Navbar-placeholder').innerHTML = data);
-</script>
+<!-- ======================= HEADER ======================= -->
+<h1>Manage Personen</h1>
 
-<!-- ======================= Pagina Titel ======================= -->
-<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;">Manage Stamboom</div>
+<!-- ======================= CONTROLS ======================= -->
+<input type="text" id="searchPerson" placeholder="Zoek persoon...">
+<button id="addBtn">+ Voeg rij toe</button>
+<button id="saveBtn">💾 Opslaan</button>
+<button id="refreshBtn">🔄 Vernieuwen</button>
 
-<main>
-<div class="container">
-    <!-- Zoekveld -->
-    <input type="text" id="searchPerson" placeholder="Voer ID of naam in"
-           style="width: calc(100% - 40px); margin:0 20px; height:50px; font-size:1.4rem; padding:8px 12px; border:1px solid #999; border-radius:5px; box-sizing:border-box;">
+<!-- ======================= TABEL ======================= -->
+<table id="manageTable">
+    <thead>
+        <tr></tr> <!-- Header wordt dynamisch gegenereerd via JS -->
+    </thead>
+    <tbody>
+        <!-- Rijen worden dynamisch gerenderd via JS -->
+    </tbody>
+</table>
 
-    <!-- Knoppen -->
-    <div style="margin-top:10px; margin-bottom:20px;">
-        <button id="refreshBtn" style="height:45px; font-size:1.3rem; padding:0 20px; margin-right:10px; border-radius:5px; cursor:pointer;">Refresh</button>
-        <button id="addBtn" style="height:45px; font-size:1.3rem; padding:0 20px; margin-right:10px; border-radius:5px; cursor:pointer;">+ Toevoegen</button>
-        <button id="saveBtn" style="height:45px; font-size:1.3rem; padding:0 20px; border-radius:5px; cursor:pointer;">Opslaan</button>
-    </div>
+<!-- ======================= INCLUDE JS ======================= -->
+<script src="manage.js"></script>
+<!-- manage.js v1.3.15 drop-in bevat alle logica inclusief INIT, live search en storage -->
 
-    <!-- Zoekresultaat -->
-    <div id="searchResultForm" style="display:none; margin-top:15px; border:1px solid #ccc; padding:10px;">
-        <h4>Gevonden personen:</h4>
-        <form id="resultForm">
-            <table id="resultTable">
-                <thead>
-                    <tr><th>ID</th><th>Roepnaam</th><th>Achternaam</th></tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </form>
-    </div>
-
-    <!-- Manage tabel -->
-    <table id="manageTable">
-        <thead><tr></tr></thead> <!-- Headers worden via JS gevuld -->
-        <tbody></tbody>
-    </table>
-</div>
-</main>
-
-<!-- ======================= Scripts ======================= -->
-<script src="../js/schema.js"></script>
-<script src="../js/idGenerator.js"></script>
-<script src="../js/storage.js"></script>
-<script src="../js/manage.js"></script>
-
-<!-- ======================= Footer ======================= -->
-<div id="footer-placeholder"></div>
-<script>
-fetch('/MyFamTreeCollab/Layout/Footer.html')
-    .then(resp => resp.text())
-    .then(data => document.getElementById('footer-placeholder').innerHTML = data);
-</script>
 </body>
 </html>
