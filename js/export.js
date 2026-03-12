@@ -1,5 +1,5 @@
-/* ======================= js/export.js v1.2.3 ======================= */
-/* CSV-export van stamboomData inclusief extra kolommen tot veld 22
+/* ======================= js/export.js v1.2.4 ======================= */
+/* Robuuste CSV-export van stamboomData inclusief extra kolommen tot veld 22
    - Compatibel met moderne en oudere browsers
    - Veilig gebruik van showSaveFilePicker zonder SecurityError
    - Inline uitleg achter elke regel voor makkelijk onderhoud
@@ -21,33 +21,24 @@ document.getElementById("exportBtn").addEventListener("click", async function ()
         return; // stop verder uitvoeren
     }
 
-    // ======================= DYNAMISCHE HEADERS =======================
-    // verzamel alle keys van alle objecten, incl. _extra
-    const headersSet = new Set();
-    data.forEach(person => {
-        Object.keys(person).forEach(key => {
-            if(key !== "_extra") headersSet.add(key); // normale velden
-        });
-        if(person._extra) { // voeg _extra kolommen toe als aparte kolommen
-            person._extra.forEach((_,i) => headersSet.add(`Extra${i+15}`)); // Extra15 t/m Extra22
-        }
-    });
-    const headers = Array.from(headersSet); // converteer Set naar array
+    // ======================= VASTE HEADERS =======================
+    const baseHeaders = window.StamboomSchema.fields.slice(0,14); // eerste 14 velden
+    const extraHeaders = []; // array voor kolommen Extra15 t/m Extra22
+    for(let i=15;i<=22;i++) extraHeaders.push(`Extra${i}`); // Extra15 .. Extra22
+    const headers = baseHeaders.concat(extraHeaders); // totaal 22 kolommen
 
-    // ======================= CSV CONTENT BOUWEN =======================
+    // ======================= CSV CONTENT BOUW =======================
     let csvContent = headers.map(escapeCSV).join(",") + "\n"; // eerste rij = headers
 
-    data.forEach(person => {
-        const row = []; // rij voor huidige persoon
-        headers.forEach(h => {
-            if(h.startsWith("Extra")) { // extra kolommen
-                const index = parseInt(h.replace("Extra","")) - 15; // 0-based index in _extra array
-                row.push(escapeCSV(person._extra && person._extra[index] ? person._extra[index] : "")); // vul lege string indien niet aanwezig
-            } else { // normale kolommen
-                row.push(escapeCSV(person[h] ?? "")); // null/undefined → lege string
-            }
-        });
-        csvContent += row.join(",") + "\n"; // voeg rij toe aan CSV
+    data.forEach(person => { // loop door alle personen
+        const row = []; // nieuwe rij array
+        // eerste 14 velden
+        baseHeaders.forEach(h => row.push(escapeCSV(person[h] ?? ""))); // null/undefined -> lege string
+        // extra kolommen 15-22
+        for(let i=0;i<8;i++){ 
+            row.push(escapeCSV(person._extra && person._extra[i] ? person._extra[i] : "")); // lege string indien _extra ontbreekt
+        }
+        csvContent += row.join(",") + "\n"; // voeg rij toe aan CSV content
     });
 
     // ======================= BESTANDSNAAM =======================
@@ -62,9 +53,9 @@ document.getElementById("exportBtn").addEventListener("click", async function ()
                 types: [{ description: "CSV bestand", accept: {"text/csv": [".csv"]} }] // alleen CSV
             });
             const writable = await fileHandle.createWritable(); // open schrijfbare stream
-            await writable.write(csvContent); // schrijf CSV
+            await writable.write(csvContent); // schrijf CSV content
             await writable.close(); // sluit bestand
-        } else { // fallback oudere browsers
+        } else { // fallback voor oudere browsers
             const blob = new Blob([csvContent], {type: "text/csv"}); // maak CSV blob
             const url = URL.createObjectURL(blob); // maak tijdelijke URL
             const a = document.createElement("a"); // link element
