@@ -1,51 +1,47 @@
-<!-- ======================= bronnen/template.html v0.0.2 ======================= -->
+<!-- ======================= bronnen/template.html v0.0.3 ======================= -->
+<!-- Kolommen aangeapst van 19 > 14, schema geintegreerd als centale tabel -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
     <title>MyFamTreeCollab - Template (CSV)</title> <!-- Browser tab titel -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt externe CSS -->
+    <script src="../js/schema.js"></script> <!-- Schema v0.0.2 laden -->
 </head>
 <body>
 
-<!-- ======================= layout/TopBar.html ======================= -->
+<!-- ======================= TopBar ======================= -->
 <div id="topbar-placeholder"></div> <!-- container voor TopBar content -->
-
 <script>
 fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
-    .then(resp => resp.text())                // Converteert response naar tekst
-    .then(data => { document.getElementById('topbar-placeholder').innerHTML = data; }) // injecteert TopBar
-    .catch(err => console.error('TopBar laden mislukt:', err)); // Foutafhandeling
+    .then(resp => resp.text())                
+    .then(data => document.getElementById('topbar-placeholder').innerHTML = data)
+    .catch(err => console.error('TopBar laden mislukt:', err));
 </script>
 
-<!-- ======================= layout/Navbar.html ======================= -->
-<div id="Navbar-placeholder"></div> <!-- plek waar Navbar komt -->
-
+<!-- ======================= Navbar ======================= -->
+<div id="Navbar-placeholder"></div> 
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
-    .then(resp => resp.text())               // omzetten naar HTML tekst
+fetch('/MyFamTreeCollab/Layout/Navbar.html')
+    .then(resp => resp.text())
     .then(data => {
-        const placeholder = document.getElementById('Navbar-placeholder'); // placeholder ophalen
-        if (placeholder) {                   // controleren of element bestaat
-            placeholder.innerHTML = data;    // Navbar injecteren
-        } else {
-            console.error('Navbar-placeholder niet gevonden'); // Debugmelding
-        }
+        const placeholder = document.getElementById('Navbar-placeholder');
+        if (placeholder) placeholder.innerHTML = data;
+        else console.error('Navbar-placeholder niet gevonden');
     })
-    .catch(err => console.error('Navbar laden mislukt:', err)); // Foutafhandeling
+    .catch(err => console.error('Navbar laden mislukt:', err));
 </script>
 
-<!-- ======================= Hoofd pagina ======================= -->
+<!-- ======================= Pagina Titel ======================= -->
 <div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:5px;"></div>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const pageTitleDiv = document.getElementById('pageTitle');  // Doel div
-    const title = "Template (CSV)";                             // Titel
+    const pageTitleDiv = document.getElementById('pageTitle');  
+    const title = "Template (CSV)";                             
     pageTitleDiv.textContent = title
-        .replace(/[-_]/g,' ')                                   // underscore/koppelteken → spatie
-        .replace(/\b\w/g, c => c.toUpperCase());               // eerste letter hoofdletter
+        .replace(/[-_]/g,' ')
+        .replace(/\b\w/g, c => c.toUpperCase());
 });
 </script>
 
@@ -55,30 +51,17 @@ document.addEventListener('DOMContentLoaded', () => {
         <section>
             <h3>Voorbeeld CSV Template (voor download)</h3>
             <p>Dit is een visueel voorbeeld van hoe de CSV eruit zal zien:</p>
-
             <p style="font-style: italic; color: #555;">
-                ⚠️ Bij gebruik van deze template wordt bij <strong>import automatisch een unieke ID gegenereerd 
+                ⚠️ Bij gebruik van deze template wordt bij <strong>import automatisch een unieke ID gegenereerd
                 op basis van <strong>Doopnaam</strong>, <strong>Roepnaam</strong>, <strong>Achternaam</strong> 
                 en <strong>Geslacht</strong>, gevolgd door 3 cijfers. Je hoeft deze kolom dus niet zelf in te vullen.
             </p>
 
+            <!-- ======================= Dynamische CSV Tabel ======================= -->
             <table border="1" cellpadding="4" cellspacing="0" style="margin-bottom:15px;">
-                <thead>
-                    <tr>
-                        <th>ID</th><th>Doopnaam</th><th>Roepnaam</th><th>Prefix</th><th>Achternaam</th>
-                        <th>Geslacht</th><th>Geboortedatum</th><th>Geboorteplaats</th><th>Overlijdensdatum</th>
-                        <th>Overlijdensplaats</th><th>VaderID</th><th>MoederID</th><th>PartnerID</th>
-                        <th>Huwelijksdatum</th><th>Huwelijksplaats</th><th>Opmerkingen</th>
-                        <th>Huisadressen</th><th>ContactInfo</th><th>URL</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td colspan="19">&nbsp;</td> <!-- lege voorbeeldrij 1 -->
-                    </tr>
-                    <tr>
-                        <td colspan="19">&nbsp;</td> <!-- lege voorbeeldrij 2 -->
-                    </tr>
+                <thead id="csvHeader"></thead> <!-- header wordt via JS gevuld -->
+                <tbody id="csvBody">
+                    <!-- 2 lege voorbeeldrijen worden via JS toegevoegd -->
                 </tbody>
             </table>
         </section>
@@ -86,11 +69,11 @@ document.addEventListener('DOMContentLoaded', () => {
         <!-- ======================= Professionele uitleg CSV-export ======================= -->
         <div style="margin-bottom:5px; font-size:0.95rem; color:#555; line-height:1.5;">
             <strong>Hoe werkt de CSV-export?</strong><br>
-            1. Het CSV-bestand kan worden geopend in Excel of andere spreadsheetprogramma's.<br>
+            1. CSV-bestand kan geopend worden in Excel of andere spreadsheetprogramma's.<br>
             2. Je kunt altijd zelf een bestandsnaam kiezen via de prompt.<br>
-            3. <strong>DuckDuckGo, Chrome of Edge (HTTPS of localhost)</strong>: je krijgt een echte “Opslaan als” dialoog, waarmee je ook de locatie van het bestand kunt kiezen.<br>
-            4. <strong>Andere browsers</strong> (Firefox, Safari, oudere versies): de locatiekeuze wordt niet ondersteund. Het bestand wordt automatisch opgeslagen in je standaard downloadmap. Een alert legt dit uit bij de export.<br>
-            5. Dit geeft maximale compatibiliteit en duidelijke feedback ongeacht je browser.
+            3. <strong>DuckDuckGo, Chrome of Edge (HTTPS of localhost)</strong>: echte “Opslaan als” dialoog.<br>
+            4. <strong>Andere browsers</strong> (Firefox, Safari, oudere versies): locatiekeuze niet ondersteund. Alert legt uit.<br>
+            5. Maximaal compatibel en duidelijke feedback ongeacht browser.
         </div>
 
         <button id="downloadBtn" style="margin-bottom:15px;">Download CSV Voorbeeld</button>
@@ -100,57 +83,75 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <!-- ======================= PAGE-SPECIFIC JS ======================= -->
 <script>
-const downloadBtn = document.getElementById('downloadBtn'); // Download knop ophalen
-const status = document.getElementById('status');           // Status element ophalen
+document.addEventListener('DOMContentLoaded', () => {
 
-downloadBtn.addEventListener('click', () => {
+    // ✅ Dynamische tabel header op basis van schema.js
+    const csvHeader = document.getElementById('csvHeader');
+    if(csvHeader){
+        const tr = document.createElement('tr');
+        window.StamboomSchema.fields.forEach(field => {
+            const th = document.createElement('th');
+            th.textContent = field;
+            tr.appendChild(th);
+        });
+        csvHeader.appendChild(tr);
+    }
 
-    // ⚡ Definitieve kolommen voor CSV template
-    const columns = [
-        'ID','Doopnaam','Roepnaam','Prefix','Achternaam','Geslacht',
-        'Geboortedatum','Geboorteplaats','Overlijdensdatum','Overlijdensplaats',
-        'VaderID','MoederID','PartnerID','Huwelijksdatum','Huwelijksplaats',
-        'Opmerkingen','Huisadressen','ContactInfo','URL'
-    ];
+    // ✅ 2 lege voorbeeldrijen
+    const csvBody = document.getElementById('csvBody');
+    if(csvBody){
+        for(let i=0;i<2;i++){
+            const tr = document.createElement('tr');
+            window.StamboomSchema.fields.forEach(() => {
+                const td = document.createElement('td');
+                td.innerHTML = "&nbsp;"; // lege cel
+                tr.appendChild(td);
+            });
+            csvBody.appendChild(tr);
+        }
+    }
 
-    // ⚡ Maak 2 lege rijen voor voorbeeld
-    const emptyRow = Array(columns.length).fill("").join(",");
+    // ✅ Download CSV knop
+    const downloadBtn = document.getElementById('downloadBtn');
+    const status = document.getElementById('status');
 
-    // ⚡ CSV inhoud samenstellen + BOM voor Excel
-    const csvContent = "\uFEFF" + `${columns.join(',')}\n${emptyRow}\n${emptyRow}`;
+    downloadBtn.addEventListener('click', () => {
 
-    // ⚡ Standaard bestandsnaam met datum
-    const now = new Date();
-    const defaultFileName = `stamboom_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.csv`;
+        const columns = window.StamboomSchema.fields; // dynamisch uit schema
+        const emptyRow = Array(columns.length).fill("").join(",");
 
-    // ⚡ Prompt voor bestandsnaam (zonder .csv)
-    let userFileName = prompt("Voer bestandsnaam in (zonder .csv):", defaultFileName.replace(".csv",""));
-    if (!userFileName) userFileName = defaultFileName.replace(".csv",""); // fallback
-    const fileName = `${userFileName}.csv`; // definitieve bestandsnaam
+        const csvContent = "\uFEFF" + `${columns.join(',')}\n${emptyRow}\n${emptyRow}`; // BOM voor Excel
 
-    // ⚡ Downloaden van CSV via Blob
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); // CSV blob maken
-    const link = document.createElement("a");                                    // tijdelijk anker element
-    link.href = URL.createObjectURL(blob);                                        // URL genereren
-    link.download = fileName;                                                     // bestandsnaam instellen
-    document.body.appendChild(link);                                              // toevoegen aan DOM
-    link.click();                                                                 // trigger download
-    document.body.removeChild(link);                                              // verwijder link
-    URL.revokeObjectURL(link.href);                                               // geheugen vrijgeven
+        const now = new Date();
+        const defaultFileName = `stamboom_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.csv`;
 
-    // ⚡ Statusmelding na download
-    status.textContent = "✅ CSV template succesvol gedownload! Vul de lege rijen handmatig in.";
+        let userFileName = prompt("Voer bestandsnaam in (zonder .csv):", defaultFileName.replace(".csv",""));
+        if(!userFileName) userFileName = defaultFileName.replace(".csv",""); 
+        const fileName = `${userFileName}.csv`;
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+
+        status.textContent = "✅ CSV template succesvol gedownload! Vul de lege rijen handmatig in.";
+    });
+
 });
 </script>
 
-<!-- ======================= bottom bar ======================= -->
-<div id="footer-placeholder"></div>  <!-- Container voor Footer content -->
-
+<!-- ======================= Footer ======================= -->
+<div id="footer-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html')  // pad naar Footer.html
-    .then(resp => resp.text())                // response omzetten naar HTML
-    .then(data => { document.getElementById('footer-placeholder').innerHTML = data; }) // injecteren
-    .catch(err => console.error('Footer laden mislukt:', err)); // Foutafhandeling
+fetch('/MyFamTreeCollab/Layout/Footer.html')
+    .then(resp => resp.text())
+    .then(data => document.getElementById('footer-placeholder').innerHTML = data)
+    .catch(err => console.error('Footer laden mislukt:', err));
 </script>
+
 </body>
 </html>
