@@ -1,127 +1,58 @@
-/* ======================= js.import.js v1.1.0 ======================= */
-/* Verbeterde CSV import voor MyFamTreeCollab
-   - Extra kolommen toegestaan
-   - Case-insensitive header check
-   - Multi-line cellen & quotes correct verwerkt
-   - Veilige ID generatie
-*/
+<!-- ======================= home/import.html V1.0.0 ======================= --> 
+<!DOCTYPE html> <!-- HTML5 document type -->
+<html lang="nl"> <!-- Document in het Nederlands -->
+<head>
+    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 voor speciale karakters -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Zorgt voor responsieve weergave op mobiel/tablet -->
+    <title>MyFamTreeCollab - Import</title> <!-- Titel van de pagina in de browser tab -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Koppeling naar externe CSS voor styling -->
+</head>
+<body>
 
-(function(){
-'use strict'; // strikte modus
+<!-- ======================= TopBar ======================= -->
+<div id="topbar-placeholder"></div> <!-- Placeholder div waar TopBar HTML wordt ingeladen -->
+<script>
+fetch('/MyFamTreeCollab/Layout/TopBar.html') // Laad TopBar HTML via fetch
+    .then(resp => resp.text())                 // Converteer response naar tekst
+    .then(data => document.getElementById('topbar-placeholder').innerHTML = data); // Plaats TopBar in placeholder
+</script>
 
-/* ======================= EVENT: IMPORT BUTTON ======================= */
-document.getElementById("importBtn").addEventListener("click", async function () {
+<!-- ======================= Navbar ======================= -->
+<div id="Navbar-placeholder"></div> <!-- Placeholder div voor navigatiebalk -->
+<script>
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Laad Navbar HTML via fetch
+    .then(resp => resp.text())                // Converteer response naar tekst
+    .then(data => document.getElementById('Navbar-placeholder').innerHTML = data); // Plaats Navbar in placeholder
+</script>
 
-    const status = document.getElementById("importStatus"); // Status element
+<!-- ======================= Pagina Titel ======================= -->
+<div id="pageTitle" style="font-size:1.5rem;font-weight:bold;margin-bottom:15px;">Import</div> <!-- Titel sectie met inline styling -->
 
-    try {
-        /* ======================= CHECK STORAGE ======================= */
-        if (typeof StamboomStorage === "undefined") {
-            status.innerHTML = "❌ StamboomStorage niet beschikbaar. Laad eerst storage.js!";
-            status.style.color = "red";
-            console.error("StamboomStorage is undefined. Laad storage.js vóór import.js");
-            return;
-        }
+<!-- ======================= MAIN ======================= -->
+<main> <!-- Hoofd content van de pagina -->
+    <div class="container"> <!-- Container voor centrale content, geeft padding en layout -->
 
-        /* ======================= FILE INPUT ======================= */
-        const fileInput = document.getElementById("importFile");
-        const file = fileInput.files[0];
-        if (!file) {
-            status.innerHTML = "❌ Geen bestand geselecteerd.";
-            status.style.color = "red";
-            return;
-        }
+        <!-- ======================= File select + Import knop ======================= -->
+        <input type="file" id="importFile" accept=".csv"> <!-- Bestandskiezer: alleen CSV-bestanden toegestaan -->
+        <button id="importBtn">Importeer CSV</button> <!-- Knop die de import.js functie triggerd -->
 
-        /* ======================= FILE READER ======================= */
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const text = e.target.result;
+        <!-- ======================= Statusmelding ======================= -->
+        <p id="importStatus"></p> <!-- Hier wordt status van de import weergegeven (succes of fout) -->
 
-            /* ======================= DETECT DELIMITER ======================= */
-            function detectDelimiter(csvText) {
-                const firstLine = csvText.split("\n")[0];
-                const delimiters = [';', ',', '\t'];
-                let maxCount = 0, chosen = ',';
-                delimiters.forEach(d => {
-                    const count = firstLine.split(d).length;
-                    if (count > maxCount) { maxCount = count; chosen = d; }
-                });
-                return chosen;
-            }
+    </div>
+</main>
 
-            const delimiter = detectDelimiter(text); // automatische delimiter
+<!-- ======================= Import Script ======================= -->
+<script src="../js/storage.js"></script> <!-- Definieert StamboomStorage -->
+<script src="../js/import.js"></script> <!-- Laad het ../js/import.js script dat CSV uitleest en opslaat -->
 
-            /* ======================= SPLIT LINES ======================= */
-            const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+<!-- ======================= Footer ======================= -->
+<div id="footer-placeholder"></div> <!-- Placeholder div voor footer -->
+<script>
+fetch('/MyFamTreeCollab/Layout/Footer.html') // Laad footer HTML via fetch
+    .then(resp => resp.text())                 // Converteer response naar tekst
+    .then(data => document.getElementById('footer-placeholder').innerHTML = data); // Plaats footer in placeholder
+</script>
 
-            /* ======================= PARSE HEADERS ======================= */
-            const headers = lines[0].split(delimiter).map(h => h.trim());
-
-            /* ======================= HEADER VALIDATOR ======================= */
-            const requiredHeaders = ["ID","Roepnaam","Prefix","Achternaam","Geboortedatum","VaderID","MoederID","PartnerID"];
-            const missingHeaders = requiredHeaders.filter(rh => !headers.some(h => h.toLowerCase() === rh.toLowerCase()));
-
-            if (missingHeaders.length > 0) {
-                status.innerHTML = "❌ CSV header fout. Ontbrekende kolommen: " + missingHeaders.join(", ");
-                status.style.color = "red";
-                console.error("CSV header fout:", missingHeaders);
-                return;
-            }
-
-            /* ======================= PARSE CSV ROWS ======================= */
-            const newData = [];
-            lines.slice(1).forEach(line => {
-                const values = [];
-                let current = '';
-                let insideQuotes = false;
-
-                for (let i = 0; i < line.length; i++) {
-                    const char = line[i];
-                    if (char === '"') insideQuotes = !insideQuotes; // toggle quotes
-                    else if (char === delimiter && !insideQuotes) {
-                        values.push(current);
-                        current = '';
-                    } else {
-                        current += char;
-                    }
-                }
-                values.push(current); // laatste cel
-
-                // verwijder omringende quotes en trim
-                const cleaned = values.map(v => v.replace(/^"(.*)"$/, '$1').trim());
-
-                // maak object dynamisch voor alle kolommen
-                const obj = {};
-                headers.forEach((header, i) => obj[header] = cleaned[i] !== undefined ? cleaned[i] : "");
-                newData.push(obj);
-            });
-
-            /* ======================= COMBINE WITH EXISTING DATA ======================= */
-            const existingData = StamboomStorage.get ? StamboomStorage.get() : [];
-
-            // Genereer ID indien ontbreekt
-            newData.forEach(item => {
-                if (!item.ID || item.ID.trim() === "") {
-                    item.ID = window.genereerCode(item, existingData.concat(newData));
-                }
-            });
-
-            // Combineer data
-            const combinedData = existingData.concat(newData);
-
-            // Sla op
-            if (StamboomStorage.set) StamboomStorage.set(combinedData);
-
-            /* ======================= STATUS ======================= */
-            status.innerHTML = `✅ CSV succesvol geïmporteerd. Rijen toegevoegd: ${newData.length}`;
-            status.style.color = "green";
-        };
-
-        reader.readAsText(file); // start uitlezen
-    } catch (err) {
-        status.innerHTML = "❌ Import mislukt.";
-        status.style.color = "red";
-        console.error(err);
-    }
-});
-})();
+</body>
+</html>
