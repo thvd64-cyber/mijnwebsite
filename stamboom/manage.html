@@ -1,208 +1,106 @@
-<!-- ======================= stamboom/manage.html v1.2.6 ======================= -->
+<!-- ======================= stamboom/manage.html v1.3.0 ======================= -->
+<!-- compatibel met schema.js v0.0.2 (14 kolommen) en storage.js v0.0.2, inclusief automatische migratie van oude data 19 → 14 kolommen en dynamische ID-generatie  -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8"> <!-- Tekencodering UTF-8 zodat alle tekens correct weergegeven worden -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Zorgt dat layout schaalbaar is voor mobiel/desktop -->
-    <title>MyFamTreeCollab - Manage</title> <!-- Titel in browser tab -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- Algemene applicatie CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive voor mobiel/desktop -->
+    <title>MyFamTreeCollab - Manage</title> <!-- Browser tab titel -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Algemene CSS -->
 
-    <!-- ======================= RELATIE STYLING MANAGE TABLE ======================= -->
+    <!-- ======================= Tabel Styling ======================= -->
     <style>
-        /* ====== HoofdID ====== */
-    .rel-hoofd { 
-        background-color: #fffde7 !important; /* Licht geel, benadrukt de hoofdpersoon in stamboom */
-        font-weight: 600;                     /* Bold font voor snelle herkenning */
-    }
-    
-    /* ====== Ouders ====== */
-    .rel-vhoofdid, .rel-mhoofdid { 
-        background-color: #e8f5e9 !important; /* Licht groen voor vader/moeder */
-        font-weight: 500;                     /* Semi-bold voor onderscheid met hoofdID */
-    }
+        /* HoofdID */
+        .rel-hoofd { background-color: #fffde7 !important; font-weight:600; }
+        /* Ouders */
+        .rel-vhoofdid, .rel-mhoofdid { background-color: #e8f5e9 !important; font-weight:500; }
+        /* Partner van hoofd */
+        .rel-phoofdid { background-color: #f3e5f5 !important; font-style:italic; }
+        /* Kinderen */
+        .rel-kindid { background-color: #e3f2fd !important; font-weight:400; }
+        .rel-kindid.scenario-1 { background-color: #e3f2fd !important; }
+        .rel-kindid.scenario-2 { background-color: #eef7fe !important; }
+        .rel-kindid.scenario-3 { background-color: #f7fbff !important; }
+        /* Partner van kind */
+        .rel-kindpartnerid { background-color: #d0ebff !important; font-style:italic; }
+        /* Broers/Zussen */
+        .rel-bzid { background-color: #fff3e0 !important; font-weight:500; }
+        .rel-bzpartnerid { background-color: #fbe9e7 !important; font-style:italic; }
 
-    /* ====== Partner van Hoofd ====== */
-    .rel-phoofdid { 
-        background-color: #f3e5f5 !important; /* Licht paars/lavendel voor partner van hoofd */
-        font-style: italic;                   /* Italic voor visueel onderscheid */
-    }
-    
-    /* ====== Kinderen ====== */
-    .rel-kindid { 
-        background-color: #e3f2fd !important; /* Licht blauw standaard voor kind */
-        font-weight: 400;                     /* Normaal font gewicht */
-    }
-    /* Scenario overrides Kinderen */
-    .rel-kindid.scenario-1 { background-color: #e3f2fd !important; } /* Scenario 1 = standaard blauw */
-    .rel-kindid.scenario-2 { background-color: #eef7fe !important; } /* Scenario 2 = iets lichter blauw */
-    .rel-kindid.scenario-3 { background-color: #f7fbff !important; } /* Scenario 3 = zeer licht blauw */
-
-    /* ====== Partner van Kind ====== */
-    .rel-pkpartnerid { 
-        background-color: #d0ebff !important; /* Iets donkerder blauw voor partner van kind */
-        font-style: italic;                   /* Italic voor visueel onderscheid */
-    }
-    /* Scenario overrides Partner van Kind */
-    .rel-pkpartnerid.scenario-1 { background-color: #d0ebff !important; } /* Scenario 1 = blauw */
-    .rel-pkpartnerid.scenario-2 { background-color: #daf4ff !important; } /* Scenario 2 = lichter blauw */
-    .rel-pkpartnerid.scenario-3 { background-color: #e4f9ff !important; } /* Scenario 3 = zeer licht blauw */
-
-    /* ====== Broers/Zussen ====== */
-    .rel-bzid { 
-        background-color: #fff3e0 !important; /* Licht oranje voor broer/zus */
-        font-weight: 500;                     /* Semi-bold */
-    }
-    /* Scenario overrides Broer/Zus */
-    .rel-bzid.scenario-1 { background-color: #fff3e0 !important; } /* Scenario 1 = standaard oranje */
-    .rel-bzid.scenario-2 { background-color: #fff7ed !important; } /* Scenario 2 = lichter */
-    .rel-bzid.scenario-3 { background-color: #fffaf1 !important; } /* Scenario 3 = zeer licht */
-
-    /* ====== Partner van Broer/Zus ====== */
-    .rel-bzpartnerid { 
-        background-color: #fbe9e7 !important; /* Iets donkerder oranje voor partner broer/zus */
-        font-style: italic;                   /* Italic voor onderscheid */
-    }
-    /* Scenario overrides Partner Broer/Zus */
-    .rel-bzpartnerid.scenario-1 { background-color: #fbe9e7 !important; }
-    .rel-bzpartnerid.scenario-2 { background-color: #fcebe9 !important; }
-    .rel-bzpartnerid.scenario-3 { background-color: #fdecea !important; }
-
-   /* ====== Transparante tabel en cel achtergrond ====== */
-#manageTable {
-    background-color: transparent; /* Tabel zelf doorzichtig */
-    border-collapse: collapse;     /* Celranden netjes samenvallen */
-}
-
-#manageTable td {
-    background-color: transparent; /* Alle cellen doorzichtig */
-}
-
-#manageTable td input {
-    background-color: transparent; /* Input velden doorzichtig */
-    border: none;                  /* Geen borders voor cleaner look */
-    width: 100%;                   /* Vul volledige celbreedte */
-    box-sizing: border-box;        /* Padding valt binnen breedte */
-    cursor: text;                  /* Cursor toont tekst */
-}
-
-    /* ====== Hover effect rijen ====== */
-    #manageTable tr:hover { 
-        background-color: rgba(0,0,0,0.05); /* Lichte overlay bij hover om focus te tonen */
-    }
+        /* Tabel layout */
+        #manageTable { background-color: transparent; border-collapse: collapse; width:100%; }
+        #manageTable td { background-color: transparent; }
+        #manageTable td textarea { 
+            background-color: transparent; border:none; width:100%; box-sizing:border-box; cursor:text; resize:vertical; 
+        }
+        #manageTable tr:hover { background-color: rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
 <!-- ======================= TopBar & Navbar ======================= -->
-<div id="topbar-placeholder"></div> <!-- Topbar placeholder -->
+<div id="topbar-placeholder"></div>
 <script>
 fetch('/MyFamTreeCollab/Layout/TopBar.html')
     .then(resp => resp.text())
-    .then(data => document.getElementById('topbar-placeholder').innerHTML = data); // Voeg TopBar toe aan DOM
+    .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
 </script>
 
-<div id="Navbar-placeholder"></div> <!-- Navbar placeholder -->
+<div id="Navbar-placeholder"></div>
 <script>
 fetch('/MyFamTreeCollab/Layout/Navbar.html')
     .then(resp => resp.text())
-    .then(data => {
-        const placeholder = document.getElementById('Navbar-placeholder');
-        if (placeholder) placeholder.innerHTML = data; // Voeg Navbar toe
-        else console.error('Navbar-placeholder niet gevonden'); // Fallback
-    });
+    .then(data => document.getElementById('Navbar-placeholder').innerHTML = data);
 </script>
 
 <!-- ======================= Pagina Titel ======================= -->
-<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('pageTitle').textContent = "Manage Stamboom"; // Zet titel bij DOM ready
-});
-</script>
+<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;">Manage Stamboom</div>
 
 <main>
 <div class="container">
-    <!-- Zoekveld en knoppen -->
-  <input type="text" 
-       id="searchPerson" 
-       placeholder="Voer ID of naam in"
-       style="
-           width: calc(100% - 40px); /* 20px marge links + rechts */
-           margin: 0 20px;           /* horizontale marge */
-           height: 50px;             /* hogere input */
-           font-size: 1.4rem;        /* grotere letters */
-           padding: 8px 12px;        /* comfortabel typen */
-           border: 1px solid #999;   /* lichte rand */
-           border-radius: 5px;       /* afgeronde hoeken */
-           box-sizing: border-box;   /* breedte inclusief padding/border */
-       ">
-    <!-- ======================= Knoppen ======================= -->
-<div style="margin-top:10px; margin-bottom:20px;">
-    <button id="refreshBtn" 
-            style="
-                height: 45px;           /* hogere knop */
-                font-size: 1.3rem;      /* grotere letters */
-                padding: 0 20px;        /* horizontale padding */
-                margin-right: 10px;     /* ruimte tussen knoppen */
-                border-radius: 5px;     /* afgeronde hoeken */
-                cursor: pointer;        /* hand-cursor */
-            ">Refresh</button>
+    <!-- Zoekveld -->
+    <input type="text" id="searchPerson" placeholder="Voer ID of naam in"
+           style="width: calc(100% - 40px); margin:0 20px; height:50px; font-size:1.4rem; padding:8px 12px; border:1px solid #999; border-radius:5px; box-sizing:border-box;">
 
-    <button id="addBtn" 
-            style="
-                height: 45px; 
-                font-size: 1.3rem; 
-                padding: 0 20px; 
-                margin-right: 10px;
-                border-radius: 5px;
-                cursor: pointer;
-            ">+ Toevoegen</button>
+    <!-- Knoppen -->
+    <div style="margin-top:10px; margin-bottom:20px;">
+        <button id="refreshBtn" style="height:45px; font-size:1.3rem; padding:0 20px; margin-right:10px; border-radius:5px; cursor:pointer;">Refresh</button>
+        <button id="addBtn" style="height:45px; font-size:1.3rem; padding:0 20px; margin-right:10px; border-radius:5px; cursor:pointer;">+ Toevoegen</button>
+        <button id="saveBtn" style="height:45px; font-size:1.3rem; padding:0 20px; border-radius:5px; cursor:pointer;">Opslaan</button>
+    </div>
 
-    <button id="saveBtn" 
-            style="
-                height: 45px; 
-                font-size: 1.3rem; 
-                padding: 0 20px; 
-                border-radius: 5px;
-                cursor: pointer;
-            ">Opslaan</button>
-</div>
-    
-    <!-- Zoekresultaat Formulier -->
+    <!-- Zoekresultaat -->
     <div id="searchResultForm" style="display:none; margin-top:15px; border:1px solid #ccc; padding:10px;">
         <h4>Gevonden personen:</h4>
         <form id="resultForm">
             <table id="resultTable">
                 <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Roepnaam</th>
-                        <th>Achternaam</th>
-                        <th>Geboortedatum</th>
-                    </tr>
+                    <tr><th>ID</th><th>Roepnaam</th><th>Achternaam</th></tr>
                 </thead>
-                <tbody></tbody> <!-- Resultaten via JS -->
+                <tbody></tbody>
             </table>
         </form>
     </div>
 
     <!-- Manage tabel -->
     <table id="manageTable">
-        <thead><tr></tr></thead> <!-- Headers worden dynamisch door JS ingevuld -->
-        <tbody></tbody> <!-- Rijen worden dynamisch door JS ingevuld -->
+        <thead><tr></tr></thead> <!-- Headers worden via JS gevuld -->
+        <tbody></tbody>
     </table>
 </div>
 </main>
 
 <!-- ======================= Scripts ======================= -->
-<script src="../js/schema.js"></script> <!-- Schema functies -->
-<script src="../js/idGenerator.js"></script> <!-- ID generator -->
-<script src="../js/storage.js"></script> <!-- Opslag functies -->
-<script src="../js/manage.js"></script> <!-- Logica renderTable, relaties, CRUD -->
+<script src="../js/schema.js"></script>
+<script src="../js/idGenerator.js"></script>
+<script src="../js/storage.js"></script>
+<script src="../js/manage.js"></script>
 
 <!-- ======================= Footer ======================= -->
 <div id="footer-placeholder"></div>
 <script>
 fetch('/MyFamTreeCollab/Layout/Footer.html')
     .then(resp => resp.text())
-    .then(data => document.getElementById('footer-placeholder').innerHTML = data); // Footer in DOM plaatsen
+    .then(data => document.getElementById('footer-placeholder').innerHTML = data);
 </script>
+</body>
+</html>
