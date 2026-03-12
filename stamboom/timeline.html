@@ -1,1 +1,154 @@
+<!-- ======================= stamboon/timeline.html v0.0.0 ======================= -->
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Persoon Tijdlijn</title>
+<style>
+body{font-family:Arial,sans-serif;margin:20px;}
+#searchPerson{padding:6px 8px;width:250px;font-size:1rem;margin-right:8px;}
+button{padding:6px 12px;font-size:1rem;cursor:pointer;}
+#timelineContainer{margin-top:30px;overflow-x:auto;border-top:1px solid #333;position:relative;height:150px;}
+.timeline-line{position:absolute;top:40px;width:100%;height:2px;background:#333;}
+.timeline-point{position:absolute;top:20px;width:12px;height:12px;background:#007bff;border-radius:50%;text-align:center;}
+.timeline-label{position:absolute;top:35px;font-size:0.9rem;white-space:nowrap;}
+</style>
+</head>
+<body>
 
+<h2>Persoon Tijdlijn</h2>
+<input type="text" id="searchPerson" placeholder="Zoek ID...">
+<button id="showTimeline">▶ Toon Tijdlijn</button>
+
+<div id="timelineContainer">
+    <div class="timeline-line"></div>
+</div>
+
+<script>
+/* ======================= DATA ======================= */
+// Dummy CSV import / client-side dataset
+let dataset = [
+    {ID:'JVD001',Roepnaam:'Jan',Prefix:'van',Achternaam:'Dijk',Geboortedatum:'1843-05-12',VaderID:'',MoederID:'',PartnerID:''},
+    {ID:'MDB002',Roepnaam:'Maria',Prefix:'de',Achternaam:'Boer',Geboortedatum:'1872-11-03',VaderID:'',MoederID:'',PartnerID:''},
+    {ID:'PVD003',Roepnaam:'Piet',Prefix:'van',Achternaam:'Dijk',Geboortedatum:'1901-07-22',VaderID:'JVD001',MoederID:'MDB002',PartnerID:''}
+];
+
+/* ======================= HELPERS ======================= */
+const safe = val => val ? String(val).trim() : '';
+function parseDate(d){ return d ? new Date(d) : new Date(0); }
+function formatYear(d){ return d.getFullYear(); }
+
+/* ======================= LIVE SEARCH HERGEBRUIK ======================= */
+const searchInput = document.getElementById('searchPerson');
+let selectedID = null;
+
+searchInput.addEventListener('input', ()=>{
+    const term = safe(searchInput.value).toLowerCase();
+    document.getElementById('searchPopup')?.remove();
+    if(!term) return;
+
+    const results = dataset.filter(p => safe(p.ID).toLowerCase().includes(term) ||
+                                        safe(p.Roepnaam).toLowerCase().includes(term) ||
+                                        safe(p.Achternaam).toLowerCase().includes(term));
+    const rect = searchInput.getBoundingClientRect();
+    const popup = document.createElement('div');
+    popup.id='searchPopup';
+    popup.style.position='absolute';
+    popup.style.background='#fff';
+    popup.style.border='1px solid #999';
+    popup.style.zIndex=1000;
+    popup.style.top = rect.bottom + window.scrollY + 'px';
+    popup.style.left = Math.max(rect.left + window.scrollX, 5) + 'px';
+    popup.style.width = rect.width + 'px';
+    popup.style.maxHeight = '300px';
+    popup.style.overflowY = 'auto';
+    popup.style.fontSize = '1.1rem';
+    popup.style.padding = '4px';
+
+    if(results.length === 0){
+        const row = document.createElement('div');
+        row.textContent = 'Geen resultaten';
+        row.style.padding='4px';
+        popup.appendChild(row);
+    } else {
+        results.forEach(p => {
+            const row = document.createElement('div');
+            row.textContent = `${p.ID} | ${p.Roepnaam} ${p.Prefix} ${p.Achternaam}`;
+            row.style.cursor='pointer';
+            row.style.padding='4px';
+            row.addEventListener('click', ()=>{
+                selectedID = safe(p.ID);
+                searchInput.value = selectedID;
+                popup.remove();
+            });
+            popup.appendChild(row);
+        });
+    }
+    document.body.appendChild(popup);
+});
+
+// Sluit popup bij klik buiten
+document.addEventListener('click', e=>{
+    const popup=document.getElementById('searchPopup');
+    if(popup && !popup.contains(e.target) && e.target!==searchInput) popup.remove();
+});
+
+/* ======================= TIMELINE LOGICA ======================= */
+document.getElementById('showTimeline').addEventListener('click', ()=>{
+    if(!selectedID) { alert('Selecteer een persoon via ID'); return; }
+
+    // Selecteer persoon + opvolgende kinderen via ID
+    const main = dataset.find(p=>safe(p.ID)===selectedID);
+    if(!main) { alert('Persoon niet gevonden'); return; }
+
+    // Verzamel personen op basis van geboortedatum (chronologisch)
+    const people = dataset
+        .filter(p=>{
+            // Alleen personen die hoofd + directe nakomelingen (relaties) bevat
+            return p.ID === main.ID || p.VaderID===main.ID || p.MoederID===main.ID;
+        })
+        .sort((a,b)=>parseDate(a.Geboortedatum)-parseDate(b.Geboortedatum));
+
+    renderTimeline(people);
+});
+
+/* ======================= RENDER FUNCTIE ======================= */
+function renderTimeline(people){
+    const container = document.getElementById('timelineContainer');
+    container.innerHTML='<div class="timeline-line"></div>'; // reset
+
+    if(people.length===0) return;
+
+    // Bereken min/max datum
+    const dates = people.map(p=>parseDate(p.Geboortedatum));
+    const minDate = new Date(Math.min(...dates));
+    const maxDate = new Date(Math.max(...dates));
+
+    const totalYears = maxDate.getFullYear() - minDate.getFullYear();
+    const width = Math.max(800, totalYears*5); // px breedte per jaar
+    container.style.width = width + 'px';
+    container.style.position='relative';
+
+    people.forEach((p,index)=>{
+        const d = parseDate(p.Geboortedatum);
+        const x = ((d - minDate)/(maxDate - minDate)) * width;
+
+        // Punt
+        const point = document.createElement('div');
+        point.className='timeline-point';
+        point.style.left = x + 'px';
+        container.appendChild(point);
+
+        // Label
+        const label = document.createElement('div');
+        label.className='timeline-label';
+        label.style.left = x + 'px';
+        label.style.top = (30 + index*20) + 'px'; // offset zodat lijnen niet overlappen
+        label.textContent = `${p.Roepnaam} ${p.Prefix} ${p.Achternaam} (${formatYear(d)})`;
+        container.appendChild(label);
+    });
+}
+</script>
+</body>
+</html>
