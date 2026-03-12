@@ -1,75 +1,69 @@
-<!-- ======================= home/import.html v1.0.2 ======================= -->
-<!-- schema +kollomen toegevoegd legacy (19) en new schema (14) herkenning -->
-<!DOCTYPE html>
-<html lang="nl">
+<!-- ======================= home/import.html V1.0.0 ======================= --> 
+<!DOCTYPE html> <!-- HTML5 document type -->
+<html lang="nl"> <!-- Document in het Nederlands -->
 <head>
-    <meta charset="UTF-8"> <!-- UTF-8 codering -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyFamTreeCollab - CSV Import</title>
-    <link rel="stylesheet" href="../css/style.css"> <!-- Stijlbestand -->
-    
-    <!-- ======================= JS DEPENDENCIES ======================= -->
-    <script src="../js/schema.js"></script>   <!-- schema.js v0.0.2 -->
-    <script src="../js/storage.js"></script>  <!-- StamboomStorage -->
-    <script src="../js/import.js"></script>   <!-- import.js v1.0.2 -->
+    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 voor speciale karakters -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Zorgt voor responsieve weergave op mobiel/tablet -->
+    <title>MyFamTreeCollab - Import</title> <!-- Titel van de pagina in de browser tab -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Koppeling naar externe CSS voor styling -->
 </head>
 <body>
 
 <!-- ======================= TopBar ======================= -->
-<div id="topbar-placeholder"></div>
+<div id="topbar-placeholder"></div> <!-- Placeholder div waar TopBar HTML wordt ingeladen -->
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')
-    .then(resp => resp.text())
-    .then(data => document.getElementById('topbar-placeholder').innerHTML = data)
-    .catch(err => console.error('TopBar laden mislukt:', err));
+fetch('/MyFamTreeCollab/Layout/TopBar.html') // Laad TopBar HTML via fetch
+    .then(resp => resp.text())                 // Converteer response naar tekst
+    .then(data => document.getElementById('topbar-placeholder').innerHTML = data); // Plaats TopBar in placeholder
 </script>
 
 <!-- ======================= Navbar ======================= -->
-<div id="Navbar-placeholder"></div>
+<div id="Navbar-placeholder"></div> <!-- Placeholder div voor navigatiebalk -->
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html')
-    .then(resp => resp.text())
-    .then(data => document.getElementById('Navbar-placeholder').innerHTML = data)
-    .catch(err => console.error('Navbar laden mislukt:', err));
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Laad Navbar HTML via fetch
+    .then(resp => resp.text())                // Converteer response naar tekst
+    .then(data => document.getElementById('Navbar-placeholder').innerHTML = data); // Plaats Navbar in placeholder
 </script>
 
 <!-- ======================= Pagina Titel ======================= -->
-<div id="pageTitle" style="font-size:1.5rem;font-weight:bold;margin-bottom:15px;">
-    Import CSV
-</div>
+<div id="pageTitle" style="font-size:1.5rem;font-weight:bold;margin-bottom:15px;">Import</div> <!-- Titel sectie met inline styling -->
 
-<!-- ======================= MAIN CONTENT ======================= -->
-<main>
-    <div class="container">
+<!-- ======================= MAIN ======================= -->
+<main> <!-- Hoofd content van de pagina -->
+    <div class="container"> <!-- Container voor centrale content, geeft padding en layout -->
 
-        <!-- ======================= Uitleg ======================= -->
-        <div style="margin-bottom:10px; font-size:0.95rem; color:#555; line-height:1.5;">
+        <!-- ======================= Professionele uitleg CSV-import ======================= -->
+        <div style="margin-bottom:15px; font-size:0.95rem; color:#555; line-height:1.5;">
             <strong>Hoe werkt de CSV-import?</strong><br>
-            1. Selecteer een CSV-bestand dat geëxporteerd is vanuit deze applicatie of correct opgemaakte stamboom CSV.<br>
+            1. Je kunt een CSV-bestand importeren dat is geëxporteerd uit deze applicatie of een correct opgemaakte stamboom CSV.<br>
             2. Alleen CSV-bestanden worden ondersteund. Andere formaten worden niet ingelezen.<br>
-            3. Extra kolommen in oude CSV’s (legacy) worden automatisch genegeerd; ontbrekende velden worden gevuld met lege waarden.<br>
-            4. IDs worden automatisch gegenereerd als ze ontbreken.<br>
-            5. Het laden gebeurt lokaal in de browser; er wordt niets online verstuurd.<br>
-            6. Moderne browsers (Chrome, Edge, DuckDuckGo) geven directe feedback bij fouten; oudere browsers kunnen beperkt zijn bij grote CSV’s.
+            3. De import zal bestaande stamboomgegevens **overschrijven** of **toevoegen**, afhankelijk van de implementatie van je import.js.<br>
+            4. Het laden gebeurt **lokaal in je browser**; er wordt niets online verstuurd, dus je gegevens blijven privé.<br>
+            5. Browserverschillen:<br>
+            &nbsp;&nbsp;- DuckDuckGo, Chrome, Edge en moderne browsers ondersteunen grote bestanden en geven meestal directe feedback bij fouten.<br>
+            &nbsp;&nbsp;- In oudere browsers kan de performance beperkt zijn bij zeer grote CSV-bestanden.
         </div>
 
-        <!-- ======================= File input + Import knop ======================= -->
-        <input type="file" id="importFile" accept=".csv"> <!-- Bestandskiezer -->
-        <button id="importBtn">Importeer CSV</button>     <!-- Import knop -->
+        <!-- ======================= File select + Import knop ======================= -->
+        <input type="file" id="importFile" accept=".csv"> <!-- Bestandskiezer: alleen CSV-bestanden toegestaan -->
+        <button id="importBtn">Importeer CSV</button> <!-- Knop die de import.js functie triggerd -->
 
         <!-- ======================= Statusmelding ======================= -->
-        <p id="importStatus" style="margin-top:10px;"></p>
+        <p id="importStatus"></p> <!-- Hier wordt status van de import weergegeven (succes of fout) -->
 
     </div>
 </main>
 
+<!-- ======================= Import Script ======================= -->
+<script src="../js/storage.js"></script> <!-- Definieert StamboomStorage -->
+<script src="../js/import.js"></script> <!-- Laad het ../js/import.js script dat CSV uitleest en opslaat -->
+
 <!-- ======================= Footer ======================= -->
-<div id="footer-placeholder"></div>
+<div id="footer-placeholder"></div> <!-- Placeholder div voor footer -->
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html')
-    .then(resp => resp.text())
-    .then(data => document.getElementById('footer-placeholder').innerHTML = data)
-    .catch(err => console.error('Footer laden mislukt:', err));
+fetch('/MyFamTreeCollab/Layout/Footer.html') // Laad footer HTML via fetch
+    .then(resp => resp.text())                 // Converteer response naar tekst
+    .then(data => document.getElementById('footer-placeholder').innerHTML = data); // Plaats footer in placeholder
 </script>
 
 </body>
