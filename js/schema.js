@@ -27,7 +27,10 @@ const FIELDS = [
 "PartnerID",        // partners gescheiden met |
 "Opmerkingen"       // vrije tekst
 ];
-
+  
+// maak globaal beschikbaar voor import.js
+window.StamboomSchema = { fields: FIELDS };
+  
 // ======================= LEGACY HEADERS =======================
 // oude datastructuren die automatisch gemigreerd kunnen worden
 const LEGACY_HEADERS = [
