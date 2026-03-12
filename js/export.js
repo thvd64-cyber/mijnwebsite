@@ -1,8 +1,9 @@
-/* ======================= js/export.js v1.2.4 ======================= */
-/* Robuuste CSV-export van stamboomData inclusief extra kolommen tot veld 22
+/* ======================= js/export.js v1.2.5 ======================= */
+/* CSV-export van stamboomData inclusief extra kolommen tot veld 22
    - Compatibel met moderne en oudere browsers
    - Veilig gebruik van showSaveFilePicker zonder SecurityError
-   - Inline uitleg achter elke regel voor makkelijk onderhoud
+   - Extra kolommen 15-22 krijgen originele headers indien aanwezig
+   - Inline uitleg bij elke regel voor makkelijk onderhoud
 */
 
 function escapeCSV(value) { // functie om waarden correct te escapen voor CSV
@@ -21,10 +22,20 @@ document.getElementById("exportBtn").addEventListener("click", async function ()
         return; // stop verder uitvoeren
     }
 
-    // ======================= VASTE HEADERS =======================
-    const baseHeaders = window.StamboomSchema.fields.slice(0,14); // eerste 14 velden
-    const extraHeaders = []; // array voor kolommen Extra15 t/m Extra22
-    for(let i=15;i<=22;i++) extraHeaders.push(`Extra${i}`); // Extra15 .. Extra22
+    // ======================= VASTE + EXTRA HEADERS =======================
+    const baseHeaders = window.StamboomSchema.fields.slice(0,14); // eerste 14 velden volgens schema
+    let extraHeaders = []; // array voor extra kolommen
+
+    // neem originele headers uit _extra van de eerste persoon die _extra heeft
+    const firstExtra = data.find(p => p._extra && p._extra.length>0); 
+    if(firstExtra) {
+        for(let i=0;i<firstExtra._extra.length;i++){
+            extraHeaders.push(firstExtra._extra[i] || `Extra${i+15}`); // gebruik originele header of fallback
+        }
+    }
+    // vul aan tot maximaal 8 extra kolommen (totaal 22)
+    while(extraHeaders.length<8) extraHeaders.push(`Extra${14+extraHeaders.length+1}`); 
+
     const headers = baseHeaders.concat(extraHeaders); // totaal 22 kolommen
 
     // ======================= CSV CONTENT BOUW =======================
@@ -33,7 +44,7 @@ document.getElementById("exportBtn").addEventListener("click", async function ()
     data.forEach(person => { // loop door alle personen
         const row = []; // nieuwe rij array
         // eerste 14 velden
-        baseHeaders.forEach(h => row.push(escapeCSV(person[h] ?? ""))); // null/undefined -> lege string
+        baseHeaders.forEach(h => row.push(escapeCSV(person[h] ?? ""))); // null/undefined → lege string
         // extra kolommen 15-22
         for(let i=0;i<8;i++){ 
             row.push(escapeCSV(person._extra && person._extra[i] ? person._extra[i] : "")); // lege string indien _extra ontbreekt
