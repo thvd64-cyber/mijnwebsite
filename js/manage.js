@@ -1,11 +1,11 @@
-/* ======================= manage.js v1.3.16 ======================= */
-/* Drop-in, 14 kolommen, INIT + sluit-popup + migratie + inline uitleg */
+/* ======================= manage.js v1.3.17 ======================= */
+/* Drop-in, 14 kolommen, INIT + live search fix + popup + CSV compatible */
 
 (function(){
-'use strict'; // strikte modus
+'use strict';
 
 /* ======================= HELPERS ======================= */
-function safe(val){ return val ? String(val).trim() : ''; } // veilige string conversie
+function safe(val){ return val ? String(val).trim() : ''; } // veilige string
 function parseDate(d){ 
     if(!d) return new Date(0); 
     const parts = d.split('-'); 
@@ -13,7 +13,7 @@ function parseDate(d){
     return new Date(parts.reverse().join('-')); 
 }
 
-/* ======================= STORAGE (drop-in v0.0.2) ======================= */
+/* ======================= STORAGE ======================= */
 const StamboomStorage = {
     get:()=> JSON.parse(localStorage.getItem('stamboom_v0_0_2')||'[]'),
     set:(data)=> localStorage.setItem('stamboom_v0_0_2', JSON.stringify(data))
@@ -21,36 +21,23 @@ const StamboomStorage = {
 
 /* ======================= KOLONNEN ======================= */
 const COLUMNS=[
-    {key:'Relatie',readonly:true},
-    {key:'ID',readonly:true},
-    {key:'Doopnaam',readonly:false},
-    {key:'Roepnaam',readonly:false},
-    {key:'Prefix',readonly:false},
-    {key:'Achternaam',readonly:false},
-    {key:'Geslacht',readonly:false},
-    {key:'Geboortedatum',readonly:false},
-    {key:'Geboorteplaats',readonly:false},
-    {key:'Overlijdensdatum',readonly:false},
-    {key:'Overlijdensplaats',readonly:false},
-    {key:'VaderID',readonly:false},
-    {key:'MoederID',readonly:false},
-    {key:'PartnerID',readonly:false},
-    {key:'Opmerkingen',readonly:false}
+    {key:'Relatie',readonly:true},{key:'ID',readonly:true},{key:'Doopnaam',readonly:false},
+    {key:'Roepnaam',readonly:false},{key:'Prefix',readonly:false},{key:'Achternaam',readonly:false},
+    {key:'Geslacht',readonly:false},{key:'Geboortedatum',readonly:false},{key:'Geboorteplaats',readonly:false},
+    {key:'Overlijdensdatum',readonly:false},{key:'Overlijdensplaats',readonly:false},{key:'VaderID',readonly:false},
+    {key:'MoederID',readonly:false},{key:'PartnerID',readonly:false},{key:'Opmerkingen',readonly:false}
 ];
 
 /* ======================= STATE ======================= */
-let dataset = StamboomStorage.get(); // laad bestaande data
+let dataset = StamboomStorage.get(); 
 let selectedHoofdId = dataset.length>0?dataset[0].ID:null; 
-let tempRowCount=0; // teller tijdelijke rijen
+let tempRowCount=0; 
 
 /* ======================= MIGRATIE ======================= */
 function migrateDataset(oldData){
     return oldData.map(p=>{
         const clone = {...p};
-        // voeg ontbrekende kolommen toe
-        COLUMNS.forEach(c=>{
-            if(!(c.key in clone)) clone[c.key]='';
-        });
+        COLUMNS.forEach(c=>{ if(!(c.key in clone)) clone[c.key]=''; });
         return clone;
     });
 }
@@ -60,8 +47,8 @@ StamboomStorage.set(dataset);
 /* ======================= ID GENERATOR ======================= */
 function genereerCode(persoon,bestaande){
     const letters = (persoon.Doopnaam[0]||'') + (persoon.Roepnaam[0]||'') + (persoon.Achternaam[0]||'') + (persoon.Geslacht[0]||'X');
-    let code;
     const bestaandeIDs=new Set(bestaande.map(p=>p.ID));
+    let code;
     do { code = letters + Math.floor(100+Math.random()*900); } 
     while(bestaandeIDs.has(code));
     return code;
@@ -91,10 +78,7 @@ function computeRelaties(data,hoofdId){
     const hoofd = data.find(p=>p.ID===hoofdId); if(!hoofd) return [];
     const VHoofdID=hoofd.VaderID,MHoofdID=hoofd.MoederID,PHoofdID=hoofd.PartnerID;
     const KindID=data.filter(p=>p.VaderID===hoofdId || p.MoederID===hoofdId || (PHoofdID && (p.VaderID===PHoofdID||p.MoederID===PHoofdID))).map(p=>p.ID);
-    const BZID=data.filter(p=>{
-        const pid=p.ID; if(pid===hoofdId || KindID.includes(pid)||pid===PHoofdID) return false;
-        return (VHoofdID && p.VaderID===VHoofdID) || (MHoofdID && p.MoederID===MHoofdID);
-    }).map(p=>p.ID);
+    const BZID=data.filter(p=>{ const pid=p.ID; if(pid===hoofdId || KindID.includes(pid)||pid===PHoofdID) return false; return (VHoofdID && p.VaderID===VHoofdID) || (MHoofdID && p.MoederID===MHoofdID); }).map(p=>p.ID);
     const KindPartnerID=KindID.map(id=>{const k=data.find(p=>p.ID===id); return k&&k.PartnerID?k.PartnerID:null;}).filter(Boolean);
     const BZPartnerID=BZID.map(id=>{const s=data.find(p=>p.ID===id); return s&&s.PartnerID?s.PartnerID:null;}).filter(Boolean);
     return data.map(p=>{
@@ -128,6 +112,7 @@ function renderTable(dataset){
 
     tableBody.innerHTML='';
     const renderQueue=[];
+
     contextData.filter(p=>p.Relatie==='VHoofdID'||p.Relatie==='MHoofdID').forEach(p=>renderQueue.push(p));
     const hoofd=contextData.find(p=>p.Relatie==='HoofdID'); if(hoofd) renderQueue.push(hoofd);
     contextData.filter(p=>p.Relatie==='PHoofdID').forEach(p=>renderQueue.push(p));
@@ -157,7 +142,9 @@ function renderTable(dataset){
             if(col.key==='Relatie'){td.textContent=relatieLabel;}
             else if(col.readonly){td.textContent=p[col.key]||'';}
             else{
-                const ta=document.createElement('textarea'); ta.value=p[col.key]||''; ta.dataset.field=col.key;
+                const ta=document.createElement('textarea'); 
+                ta.value=p[col.key]||''; 
+                ta.dataset.field=col.key;
                 ta.style.width='100%'; ta.style.boxSizing='border-box'; ta.style.resize='vertical';
                 td.appendChild(ta);
             }
@@ -172,8 +159,12 @@ function renderTable(dataset){
 function showPlaceholder(msg){
     tableBody.innerHTML='';
     const tr=document.createElement('tr');
-    const td=document.createElement('td'); td.colSpan=COLUMNS.length; td.textContent=msg; td.style.textAlign='center';
-    tr.appendChild(td); tableBody.appendChild(tr);
+    const td=document.createElement('td'); 
+    td.colSpan=COLUMNS.length; 
+    td.textContent=msg; 
+    td.style.textAlign='center';
+    tr.appendChild(td); 
+    tableBody.appendChild(tr);
 }
 
 /* ======================= ADD ROW ======================= */
@@ -183,10 +174,20 @@ function addRow(){
     COLUMNS.forEach(col=>{
         const td=document.createElement('td');
         if(col.readonly){ td.textContent=''; } 
-        else { const ta=document.createElement('textarea'); ta.value=''; ta.dataset.field=col.key; ta.style.width='100%'; ta.style.boxSizing='border-box'; ta.style.resize='vertical'; td.appendChild(ta); }
+        else { 
+            const ta=document.createElement('textarea'); 
+            ta.value=''; 
+            ta.dataset.field=col.key; 
+            ta.style.width='100%'; 
+            ta.style.boxSizing='border-box'; 
+            ta.style.resize='vertical'; 
+            td.appendChild(ta); 
+        }
         tr.appendChild(td);
     });
-    tableBody.appendChild(tr); tempRowCount++; adjustTextareas();
+    tableBody.appendChild(tr); 
+    tempRowCount++; 
+    adjustTextareas();
 }
 
 /* ======================= SAVE DATASET ======================= */
@@ -204,37 +205,96 @@ function saveDatasetMerged(){
             if(!persoon.ID) persoon.ID=genereerCode(persoon, Array.from(idMap.values()));
             idMap.set(persoon.ID,{...idMap.get(persoon.ID),...persoon});
         });
-        dataset=Array.from(idMap.values()); StamboomStorage.set(dataset); tempRowCount=0;
+        dataset=Array.from(idMap.values()); 
+        StamboomStorage.set(dataset); 
+        tempRowCount=0;
         alert('Dataset succesvol opgeslagen (merged met bestaande data)');
     }catch(e){alert(`Opslaan mislukt: ${e.message}`); console.error(e);}
 }
 
 /* ======================= REFRESH ======================= */
-function refreshTable(){ dataset=StamboomStorage.get(); if(!selectedHoofdId && dataset.length>0) selectedHoofdId=dataset[0].ID; renderTable(dataset); }
+function refreshTable(){ 
+    dataset=StamboomStorage.get(); 
+    if(!selectedHoofdId && dataset.length>0) selectedHoofdId=dataset[0].ID; 
+    renderTable(dataset); 
+}
 
 /* ======================= LIVE SEARCH ======================= */
 function liveSearch(){
-    const term=safe(searchInput.value).toLowerCase(); document.getElementById('searchPopup')?.remove(); if(!term) return;
-    const results=dataset.filter(p=>safe(p.ID).toLowerCase().includes(term) || safe(p.Roepnaam).toLowerCase().includes(term) || safe(p.Achternaam).toLowerCase().includes(term));
+    const term=safe(searchInput.value).toLowerCase(); 
+
+    // verwijder oude popup
+    document.getElementById('searchPopup')?.remove(); 
+
+    if(!term) return;
+
+    // filter dataset
+    const results=dataset.filter(p=>safe(p.ID).toLowerCase().includes(term) 
+        || safe(p.Roepnaam).toLowerCase().includes(term) 
+        || safe(p.Achternaam).toLowerCase().includes(term));
+
+    // input positie
     const rect=searchInput.getBoundingClientRect();
-    const popup=document.createElement('div'); popup.id='searchPopup'; popup.style.position='absolute'; popup.style.background='#fff'; popup.style.border='1px solid #999'; popup.style.zIndex=1000;
-    popup.style.top=rect.bottom+window.scrollY+'px'; popup.style.left=Math.max(rect.left+window.scrollX,5)+'px'; popup.style.width=rect.width+'px'; popup.style.maxHeight='300px'; popup.style.overflowY='auto'; popup.style.fontSize='1.3rem'; popup.style.padding='8px';
-    if(results.length===0){const row=document.createElement('div'); row.textContent='Geen resultaten'; row.style.padding='8px'; row.style.fontSize='1.3rem'; popup.appendChild(row);}
-    else{results.forEach(p=>{const row=document.createElement('div'); row.textContent=`${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`; row.style.padding='8px'; row.style.cursor='pointer'; row.style.fontSize='1.3rem'; row.addEventListener('click',()=>{selectedHoofdId=safe(p.ID); popup.remove(); renderTable(dataset);}); popup.appendChild(row);});}
+
+    const popup=document.createElement('div'); 
+    popup.id='searchPopup'; 
+    popup.style.position='absolute';
+    popup.style.background='#fff'; 
+    popup.style.border='1px solid #999';
+    popup.style.zIndex=1000;
+    popup.style.top=rect.bottom+window.scrollY+'px';
+    popup.style.left=Math.max(rect.left+window.scrollX,5)+'px';
+    popup.style.width=rect.width+'px';
+    popup.style.maxHeight='300px';
+    popup.style.overflowY='auto';
+    popup.style.fontSize='1.3rem';
+    popup.style.padding='8px';
+    popup.style.borderRadius='5px';
+    popup.style.boxShadow='0 3px 6px rgba(0,0,0,0.2)';
+
+    if(results.length===0){
+        const row=document.createElement('div'); 
+        row.textContent='Geen resultaten'; 
+        row.style.padding='8px'; 
+        row.style.fontSize='1.3rem';
+        popup.appendChild(row);
+    } else {
+        results.forEach(p=>{
+            const row=document.createElement('div'); 
+            row.textContent=`${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`; 
+            row.style.padding='8px'; 
+            row.style.cursor='pointer'; 
+            row.style.fontSize='1.3rem';
+            row.addEventListener('click',()=>{
+                selectedHoofdId=safe(p.ID); 
+                popup.remove(); 
+                renderTable(dataset);
+            });
+            popup.appendChild(row);
+        });
+    }
+
     document.body.appendChild(popup);
 }
 
 /* ======================= INIT ======================= */
 function init(){
-    buildHeader(); renderTable(dataset);
+    buildHeader(); 
+    renderTable(dataset);
+
+    // event listeners
     searchInput.addEventListener('input',liveSearch);
     addBtn.addEventListener('click',addRow);
     saveBtn.addEventListener('click',saveDatasetMerged);
     refreshBtn.addEventListener('click',refreshTable);
-    // sluit popup bij klik buiten
-    document.addEventListener('click',e=>{const popup=document.getElementById('searchPopup'); if(popup && !popup.contains(e.target) && e.target!==searchInput) popup.remove();});
+
+    // klik buiten popup sluit
+    document.addEventListener('click',e=>{
+        const popup=document.getElementById('searchPopup'); 
+        if(popup && !popup.contains(e.target) && e.target!==searchInput) popup.remove();
+    });
 }
 
-init(); // voer INIT uit bij load
+init();
 
 })();
