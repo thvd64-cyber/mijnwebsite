@@ -1,11 +1,10 @@
-<!-- ======================= js.storage.html v0.0.3 ======================= -->
-<!-- Dynamische kolommen, Migratie van oude CSV's, ID-generatie uniform, Filterbare tabel, Export (new) & Reset knop, Versiebeheer -->
+<!-- ======================= js.storage.html v0.0.4 ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyFamTreeCollab - Opslag</title>
+    <title>MyFamTreeCollab - Opslag v0.0.4</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
@@ -31,12 +30,17 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
 
 <!-- ======================= Hoofd Container ======================= -->
 <div class="main-container">
-    <div style="display:flex; justify-content:flex-start; margin-bottom:10px;">
-        <button class="btn-reset" id="resetBtn">Wis alle data</button>
+
+    <!-- Knoppen: Export + Reset -->
+    <div id="buttonsContainer" style="margin-bottom:15px;">
+        <button id="exportJSONBtn">Export JSON</button>
+        <button id="exportCSVBtn">Export CSV</button>
+        <button id="resetBtn">Reset Stamboom</button>
     </div>
 
-    <div class="storage-info" id="storageInfo"></div> <!-- info: versie + record aantal -->
-    <div id="storageContainer"></div> <!-- dynamische tabel wordt hier geplaatst -->
+    <!-- Storage info -->
+    <div class="storage-info" id="storageInfo"></div>
+    <div id="storageContainer"></div>
 </div>
 
 <!-- ======================= CSS ======================= -->
@@ -48,14 +52,18 @@ table { border-collapse: collapse; width:100%; margin-top:10px; }
 th, td { border:1px solid #ccc; padding:8px; text-align:left; }
 th { background:#f4f4f4; }
 .empty { font-style:italic; color:#777; margin-top:20px; }
-.btn-reset { padding:8px 12px; cursor:pointer; background:#d9534f; color:#fff; border:none; border-radius:4px; margin-top:15px; }
-.btn-reset:hover { background:#c9302c; }
+input { padding:2px 4px; }
+button { cursor:pointer; padding:6px 12px; margin-right:5px; border:none; border-radius:4px; }
+#exportJSONBtn, #exportCSVBtn { background:#0275d8; color:#fff; }
+#exportJSONBtn:hover, #exportCSVBtn:hover { background:#025aa5; }
+#resetBtn { background:#d9534f; color:#fff; }
+#resetBtn:hover { background:#c9302c; }
 @media(max-width:768px){ table, th, td { font-size:0.9rem; } }
 </style>
 
 <!-- ======================= Scripts ======================= -->
-<script src="../js/schema.js"></script> <!-- bevat FIELDS + validatie -->
-<script src="../js/storage.js"></script> <!-- opslag API -->
+<script src="../js/schema.js"></script>
+<script src="../js/storage.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function(){
@@ -68,9 +76,15 @@ document.addEventListener('DOMContentLoaded', function(){
     const container = document.getElementById('storageContainer');
     const info = document.getElementById('storageInfo');
     const resetBtn = document.getElementById('resetBtn');
+    const exportJSONBtn = document.getElementById('exportJSONBtn');
+    const exportCSVBtn = document.getElementById('exportCSVBtn');
 
-    // kolommen dynamisch uit schema.js
-    const columns = window.StamboomSchema ? [...window.StamboomSchema.fields] : [];
+    // Dynamische kolommen + _extra
+    const extraColsCount = 22 - window.StamboomSchema.fields.length;
+    const columns = [...window.StamboomSchema.fields];
+    for(let i=0;i<extraColsCount;i++) columns.push(`_extra${i+1}`);
+
+    const filters = {};
 
     function renderTable(){
         let data = StamboomStorage.get();
@@ -84,27 +98,32 @@ document.addEventListener('DOMContentLoaded', function(){
         const table = document.createElement('table');
         const thead = document.createElement('thead');
 
-        // header rij
+        // Header rij
         const headerRow = document.createElement('tr');
-        columns.forEach(col => {
+        columns.forEach(col=>{
             const th = document.createElement('th');
             th.textContent = col;
             headerRow.appendChild(th);
         });
         thead.appendChild(headerRow);
 
-        // filter rij
+        // Filter rij
         const filterRow = document.createElement('tr');
-        const filters = {};
         columns.forEach(col=>{
             const th = document.createElement('th');
             const input = document.createElement('input');
-            input.type = "text"; input.placeholder="Filter..."; input.style.width="95%";
-            input.addEventListener('input', function(){ filters[col]=this.value.toLowerCase(); applyFilters(); });
+            input.type = "text";
+            input.placeholder = "Filter...";
+            input.style.width = "95%";
+            input.addEventListener('input', function(){
+                filters[col] = this.value.toLowerCase();
+                applyFilters();
+            });
             th.appendChild(input);
             filterRow.appendChild(th);
         });
         thead.appendChild(filterRow);
+
         table.appendChild(thead);
 
         const tbody = document.createElement('tbody');
@@ -114,44 +133,71 @@ document.addEventListener('DOMContentLoaded', function(){
         function applyFilters(){
             tbody.innerHTML = "";
             const fragment = document.createDocumentFragment();
-            const filtered = data.filter(person => {
-                return columns.every(col=>{
-                    if(!filters[col]) return true;
-                    const val = (person[col]??"").toString().toLowerCase();
-                    return val.includes(filters[col]);
+            const filtered = data.filter(person=>{
+                return columns.every((col,i)=>{
+                    const val = col.startsWith("_extra") ? (person._extra[i - window.StamboomSchema.fields.length] ?? "") : (person[col] ?? "");
+                    return !filters[col] || val.toString().toLowerCase().includes(filters[col]);
                 });
             });
             filtered.forEach(person=>{
                 const row = document.createElement('tr');
-                columns.forEach(col=>{
+                columns.forEach((col,i)=>{
                     const td = document.createElement('td');
-                    td.textContent = person[col]??"";
+                    td.textContent = col.startsWith("_extra") ? (person._extra[i - window.StamboomSchema.fields.length] ?? "") : (person[col] ?? "");
                     row.appendChild(td);
                 });
                 fragment.appendChild(row);
             });
             tbody.appendChild(fragment);
         }
+
         applyFilters();
     }
 
-    <!-- ======================= EXPORT EN RESET KNOPPEN ======================= -->
-<div id="buttonsContainer" style="margin:10px 0;">
-    <!-- EXPORT knoppen bovenaan -->
-    <button id="exportJSONBtn">Export JSON</button>
-    <button id="exportCSVBtn">Export CSV</button>
-
-    <!-- RESET knop -->
-    <button id="resetBtn">Reset Stamboom</button>
-</div>
-    
-    // reset knop functionaliteit
+    // ======================= RESET KNOP =======================
     resetBtn.addEventListener('click', function(){
         if(!StamboomStorage.get().length) return;
         const confirmMessage = "⚠️ WAARSCHUWING ⚠️\n\nAlle opgeslagen stamboomdata wordt definitief verwijderd.\nMaak eerst een EXPORT van je data.\nKlik OK om te bevestigen.";
         if(!confirm(confirmMessage)) return;
         StamboomStorage.clear();
         renderTable();
+    });
+
+    // ======================= EXPORT JSON =======================
+    exportJSONBtn.addEventListener('click', function(){
+        const data = StamboomStorage.get();
+        const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "stamboomData.json";
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    // ======================= EXPORT CSV =======================
+    exportCSVBtn.addEventListener('click', function(){
+        const data = StamboomStorage.get();
+        if(!data.length) return;
+        const allFields = [...window.StamboomSchema.fields];
+        const extraCount = 22 - allFields.length;
+        for(let i=0;i<extraCount;i++) allFields.push(`_extra${i+1}`);
+        const rows = [];
+        rows.push(allFields.map(f=>`"${f}"`).join(",")); // header
+        data.forEach(person=>{
+            const row = allFields.map((col,i)=>{
+                const val = col.startsWith("_extra") ? (person._extra[i - window.StamboomSchema.fields.length] ?? "") : (person[col] ?? "");
+                return `"${String(val).replace(/"/g,'""')}"`;
+            });
+            rows.push(row.join(","));
+        });
+        const blob = new Blob([rows.join("\n")],{type:"text/csv"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "stamboomData.csv";
+        a.click();
+        URL.revokeObjectURL(url);
     });
 
     renderTable();
