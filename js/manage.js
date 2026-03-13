@@ -1,22 +1,17 @@
-/* ======================= manage.js v1.3.18 ======================= */
-/* Drop-in, 14 kolommen, live search, add/save/refresh, export JSON+CSV, inline uitleg */
+/* ======================= manage.js v1.3.19 ======================= */
+/* Drop-in, 14 kolommen, live search, add/save/refresh, export JSON & CSV, inline uitleg */
 
 (function(){
 'use strict';
 
 /* ======================= HELPERS ======================= */
-function safe(val){ return val ? String(val).trim() : ''; } // Veilige string
-function parseDate(d){ 
-    if(!d) return new Date(0); 
-    const parts = d.split('-'); 
-    if(parts.length!==3) return new Date(0); 
-    return new Date(parts.reverse().join('-')); // dd-mm-yyyy -> yyyy-mm-dd
-}
+function safe(val){ return val ? String(val).trim() : ''; }                 // Zet waarde om naar string en trim spaties
+function parseDate(d){ return d ? new Date(d.split('-').reverse().join('-')) : new Date(0); } // Parse NL datum
 
 /* ======================= STORAGE ======================= */
-const StamboomStorage = {
-    get:()=> JSON.parse(localStorage.getItem('stamboom_v0_0_2')||'[]'), // Haal dataset op
-    set:(data)=> localStorage.setItem('stamboom_v0_0_2', JSON.stringify(data)) // Sla dataset op
+const StamboomStorage = {                                                     
+    get:()=> JSON.parse(localStorage.getItem('stamboomData')||'[]'),          // Haal dataset op
+    set:(data)=> localStorage.setItem('stamboomData', JSON.stringify(data))   // Sla dataset op
 };
 
 /* ======================= KOLONNEN ======================= */
@@ -29,114 +24,94 @@ const COLUMNS=[
 ];
 
 /* ======================= STATE ======================= */
-let dataset = StamboomStorage.get();             // Huidige dataset
-let selectedHoofdId = dataset.length>0?dataset[0].ID:null; // Start selectie eerste persoon
-let tempRowCount = 0;                            // Voor tijdelijk toegevoegde rijen
-
-/* ======================= MIGRATIE ======================= */
-function migrateDataset(oldData){
-    return oldData.map(p=>{
-        const clone = {...p};
-        COLUMNS.forEach(c=>{ if(!(c.key in clone)) clone[c.key]=''; }); // Voeg ontbrekende kolommen toe
-        return clone;
-    });
-}
-dataset = migrateDataset(dataset);
-StamboomStorage.set(dataset); // Sla gemigreerde dataset op
-
-/* ======================= ID GENERATOR ======================= */
-function genereerCode(persoon,bestaande){
-    const letters = (persoon.Doopnaam[0]||'') + (persoon.Roepnaam[0]||'') + (persoon.Achternaam[0]||'') + (persoon.Geslacht[0]||'X');
-    const bestaandeIDs=new Set(bestaande.map(p=>p.ID));
-    let code;
-    do { code = letters + Math.floor(100+Math.random()*900); } 
-    while(bestaandeIDs.has(code));
-    return code; // Unieke ID
-}
+let dataset = StamboomStorage.get();                                           // Laad dataset
+let selectedHoofdId = dataset.length>0 ? dataset[0].ID : null;                  // Init geselecteerde hoofdID
+let tempRowCount=0;                                                             // Bij tijdelijke rijen
 
 /* ======================= DOM ELEMENTEN ======================= */
-const tableBody   = document.querySelector('#manageTable tbody'); 
-const theadRow    = document.querySelector('#manageTable thead tr');
-const addBtn      = document.getElementById('addBtn');
-const saveBtn     = document.getElementById('saveBtn');
-const refreshBtn  = document.getElementById('refreshBtn');
-const jsonBtn     = document.getElementById('exportJSON');
-const csvBtn      = document.getElementById('exportCSV');
-const searchInput = document.getElementById('searchPerson');
+const tableBody   = document.querySelector('#manageTable tbody');              // Table body
+const theadRow    = document.querySelector('#manageTable thead tr');           // Table header row
+const addBtn      = document.getElementById('addBtn');                          // Add row knop
+const saveBtn     = document.getElementById('saveBtn');                         // Save dataset knop
+const refreshBtn  = document.getElementById('refreshBtn');                      // Refresh tabel knop
+const exportJsonBtn = document.getElementById('exportJson');                    // Export JSON knop
+const exportCsvBtn  = document.getElementById('exportCsv');                     // Export CSV knop
+const searchInput = document.getElementById('searchPerson');                    // Live search input
 
-/* ======================= BUILD HEADER ======================= */
+/* ======================= HEADER BOUWEN ======================= */
 function buildHeader(){
-    theadRow.innerHTML=''; // Clear existing
-    COLUMNS.forEach(col=>{
-        const th = document.createElement('th');
-        th.textContent = col.key;
-        theadRow.appendChild(th); // Voeg header toe
+    theadRow.innerHTML='';                                                      // Leeg header
+    COLUMNS.forEach(col=>{                                                      // Voor elke kolom
+        const th=document.createElement('th'); 
+        th.textContent=col.key;                                                 // Zet kolomnaam
+        theadRow.appendChild(th);                                               // Voeg toe
     });
 }
 
 /* ======================= RELATIE ENGINE ======================= */
 function computeRelaties(data,hoofdId){
-    if(!hoofdId) return [];
-    const hoofd = data.find(p=>p.ID===hoofdId); if(!hoofd) return [];
-    const VHoofdID=hoofd.VaderID,MHoofdID=hoofd.MoederID,PHoofdID=hoofd.PartnerID;
+    if(!hoofdId) return [];                                                     // Stop bij geen selectie
+    const hoofd = data.find(p=>safe(p.ID)===safe(hoofdId)); if(!hoofd) return [];
+    const VHoofdID = safe(hoofd.VaderID), MHoofdID = safe(hoofd.MoederID), PHoofdID = safe(hoofd.PartnerID);
+    const KindID = data.filter(p=>safe(p.VaderID)===hoofdId || safe(p.MoederID)===hoofdId).map(p=>p.ID);
+    const BZID = data.filter(p=>{
+        const pid=safe(p.ID); 
+        if(pid===hoofdId || pid===PHoofdID || KindID.includes(pid)) return false;
+        return (VHoofdID && safe(p.VaderID)===VHoofdID) || (MHoofdID && safe(p.MoederID)===MHoofdID);
+    }).map(p=>p.ID);
 
-    const KindID=data.filter(p=>p.VaderID===hoofdId || p.MoederID===hoofdId || (PHoofdID && (p.VaderID===PHoofdID||p.MoederID===PHoofdID))).map(p=>p.ID);
-    const BZID=data.filter(p=>{ const pid=p.ID; if(pid===hoofdId || KindID.includes(pid)||pid===PHoofdID) return false; return (VHoofdID && p.VaderID===VHoofdID) || (MHoofdID && p.MoederID===MHoofdID); }).map(p=>p.ID);
-    const KindPartnerID=KindID.map(id=>{const k=data.find(p=>p.ID===id); return k&&k.PartnerID?k.PartnerID:null;}).filter(Boolean);
-    const BZPartnerID=BZID.map(id=>{const s=data.find(p=>p.ID===id); return s&&s.PartnerID?s.PartnerID:null;}).filter(Boolean);
+    const KindPartnerID = KindID.map(id=>{ const k=data.find(p=>p.ID===id); return k && k.PartnerID ? k.PartnerID : null; }).filter(Boolean);
+    const BZPartnerID = BZID.map(id=>{ const s=data.find(p=>p.ID===id); return s && s.PartnerID ? s.PartnerID : null; }).filter(Boolean);
 
     return data.map(p=>{
-        const pid=p.ID, clone={...p}; clone.Relatie=''; clone._priority=99;
+        const pid=safe(p.ID);
+        const clone={...p}; clone.Relatie=''; clone._priority=99;
         if(pid===hoofdId){clone.Relatie='HoofdID'; clone._priority=1;}
-        else if(pid===VHoofdID||pid===MHoofdID){clone.Relatie=pid===VHoofdID?'VHoofdID':'MHoofdID'; clone._priority=0;}
+        else if(pid===VHoofdID || pid===MHoofdID){clone.Relatie=pid===VHoofdID?'VHoofdID':'MHoofdID'; clone._priority=0;}
         else if(pid===PHoofdID){clone.Relatie='PHoofdID'; clone._priority=2;}
         else if(KindID.includes(pid)){clone.Relatie='KindID'; clone._priority=3;}
         else if(KindPartnerID.includes(pid)){clone.Relatie='KindPartnerID'; clone._priority=3.5;}
         else if(BZID.includes(pid)){clone.Relatie='BZID'; clone._priority=4;}
         else if(BZPartnerID.includes(pid)){clone.Relatie='BZPartnerID'; clone._priority=4.5;}
         return clone;
-    }).sort((a,b)=>a._priority-b._priority);
+    }).sort((a,b)=>a._priority - b._priority);                                  // Sorteer op prioriteit
 }
 
-/* ======================= DYNAMISCHE TEXTAREA HOOGTE ======================= */
+/* ======================= TEXTAREA HOOGTE ======================= */
 function adjustTextareas(){
     tableBody.querySelectorAll('textarea').forEach(ta=>{
-        ta.style.height='auto';
-        const maxH=120;
-        if(ta.scrollHeight>maxH){ta.style.height=maxH+'px'; ta.style.overflowY='auto';}
+        ta.style.height='auto';                                                 // Reset hoogte
+        const maxH=120; 
+        if(ta.scrollHeight>maxH){ta.style.height=maxH+'px'; ta.style.overflowY='auto';} 
         else{ta.style.height=ta.scrollHeight+'px'; ta.style.overflowY='hidden';}
     });
 }
 
 /* ======================= RENDER TABLE ======================= */
-function renderTable(dataset){
+function renderTable(ds){
     if(!selectedHoofdId){ showPlaceholder('Selecteer een persoon'); return; }
-    const contextData=computeRelaties(dataset,selectedHoofdId);
+    const contextData = computeRelaties(ds,selectedHoofdId);
     if(!contextData.length){ showPlaceholder('Geen personen gevonden'); return; }
 
-    tableBody.innerHTML=''; // Clear body
-    const renderQueue=[];
+    tableBody.innerHTML='';                                                    // Leeg body
+    const renderQueue=[];                                                       // Queue voor juiste volgorde
 
-    // Ouders eerst
+    // Ouder, hoofd, partner, kind, BZID
     contextData.filter(p=>p.Relatie==='VHoofdID'||p.Relatie==='MHoofdID').forEach(p=>renderQueue.push(p));
-    // Hoofd
     const hoofd=contextData.find(p=>p.Relatie==='HoofdID'); if(hoofd) renderQueue.push(hoofd);
-    // Partner
     contextData.filter(p=>p.Relatie==='PHoofdID').forEach(p=>renderQueue.push(p));
-    // Kind + Partner
     contextData.filter(p=>p.Relatie==='KindID').forEach(k=>{
         renderQueue.push(k);
         const kp=contextData.find(p=>p.Relatie==='KindPartnerID' && p.ID===k.PartnerID); if(kp) renderQueue.push(kp);
     });
-    // BZID + Partner
     contextData.filter(p=>p.Relatie==='BZID').forEach(s=>{
         renderQueue.push(s);
         const bzP=contextData.find(p=>p.Relatie==='BZPartnerID' && p.ID===s.PartnerID); if(bzP) renderQueue.push(bzP);
     });
 
-    // Render elke rij
+    // Maak rijen
     renderQueue.forEach(p=>{
-        const tr=document.createElement('tr');
+        const tr=document.createElement('tr');                                 
         let relatieLabel='';
         switch(p.Relatie){
             case 'VHoofdID': case 'MHoofdID': relatieLabel='Ouder'; break;
@@ -152,8 +127,8 @@ function renderTable(dataset){
             if(col.key==='Relatie'){td.textContent=relatieLabel;}
             else if(col.readonly){td.textContent=p[col.key]||'';}
             else{
-                const ta=document.createElement('textarea'); 
-                ta.value=p[col.key]||''; 
+                const ta=document.createElement('textarea');
+                ta.value=p[col.key]||'';
                 ta.dataset.field=col.key;
                 ta.style.width='100%'; ta.style.boxSizing='border-box'; ta.style.resize='vertical';
                 td.appendChild(ta);
@@ -162,6 +137,7 @@ function renderTable(dataset){
         });
         tableBody.appendChild(tr);
     });
+
     adjustTextareas();
 }
 
@@ -169,44 +145,47 @@ function renderTable(dataset){
 function showPlaceholder(msg){
     tableBody.innerHTML='';
     const tr=document.createElement('tr');
-    const td=document.createElement('td');
-    td.colSpan=COLUMNS.length;
-    td.style.textAlign='center';
+    const td=document.createElement('td'); 
+    td.colSpan=COLUMNS.length; 
     td.textContent=msg;
-    tr.appendChild(td);
+    td.style.textAlign='center';
+    tr.appendChild(td); 
     tableBody.appendChild(tr);
 }
 
 /* ======================= ADD ROW ======================= */
 function addRow(){
-    if(tempRowCount>=10){ alert('Maximaal 10 rijen toegevoegd. Klik Opslaan.'); return; }
+    if(tempRowCount>=10){alert('Maximaal 10 rijen toegevoegd. Klik Opslaan.'); return;}
     const tr=document.createElement('tr');
     COLUMNS.forEach(col=>{
         const td=document.createElement('td');
-        if(col.readonly){ td.textContent=''; }
-        else{
+        if(col.readonly){ td.textContent=''; } 
+        else { 
             const ta=document.createElement('textarea');
-            ta.value=''; ta.dataset.field=col.key;
-            ta.style.width='100%'; ta.style.boxSizing='border-box'; ta.style.resize='vertical';
+            ta.value='';
+            ta.dataset.field=col.key;
+            ta.style.width='100%'; ta.style.boxSizing='border-box';
+            ta.style.resize='vertical';
             td.appendChild(ta);
         }
         tr.appendChild(td);
     });
-    tableBody.appendChild(tr); tempRowCount++;
+    tableBody.appendChild(tr);
+    tempRowCount++;
     adjustTextareas();
 }
 
 /* ======================= SAVE DATASET ======================= */
 function saveDatasetMerged(){
     try{
-        const rows = tableBody.querySelectorAll('tr');
-        const idMap = new Map(dataset.map(p=>[p.ID,p]));
+        const rows=tableBody.querySelectorAll('tr');
+        const idMap=new Map(dataset.map(p=>[p.ID,p]));
         rows.forEach(tr=>{
             const persoon={};
             COLUMNS.forEach((col,i)=>{
                 const cell=tr.cells[i];
                 if(col.readonly){if(col.key==='ID') persoon.ID=safe(cell.textContent);}
-                else{ const ta=cell.querySelector('textarea'); persoon[col.key]=ta?ta.value.trim():''; }
+                else{const ta=cell.querySelector('textarea'); persoon[col.key]=ta?ta.value.trim():'';}
             });
             if(!persoon.ID) persoon.ID=genereerCode(persoon, Array.from(idMap.values()));
             idMap.set(persoon.ID,{...idMap.get(persoon.ID),...persoon});
@@ -215,37 +194,27 @@ function saveDatasetMerged(){
         StamboomStorage.set(dataset);
         tempRowCount=0;
         alert('Dataset succesvol opgeslagen');
-    }catch(e){ alert('Opslaan mislukt: '+e.message); console.error(e); }
+    }catch(e){alert(`Opslaan mislukt: ${e.message}`);}
 }
 
-/* ======================= REFRESH ======================= */
-function refreshTable(){ 
-    dataset = StamboomStorage.get();
-    if(!selectedHoofdId && dataset.length>0) selectedHoofdId=dataset[0].ID;
-    renderTable(dataset);
-}
-
-/* ======================= EXPORT JSON ======================= */
-function exportJSON(){
-    const dataStr = JSON.stringify(dataset,null,2);
-    const blob = new Blob([dataStr],{type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href=url; a.download='stamboom.json';
-    document.body.appendChild(a); a.click(); a.remove();
+/* ======================= EXPORT JSON & CSV ======================= */
+function exportJSON(){ 
+    const data = JSON.stringify(dataset,null,2); 
+    const blob=new Blob([data],{type:'application/json'}); 
+    const url=URL.createObjectURL(blob); 
+    const a=document.createElement('a'); 
+    a.href=url; a.download='stamboom.json'; a.click(); 
     URL.revokeObjectURL(url);
 }
 
-/* ======================= EXPORT CSV ======================= */
 function exportCSV(){
-    const header = COLUMNS.map(c=>`"${c.key}"`).join(',');
-    const rows = dataset.map(p=>COLUMNS.map(c=>`"${(p[c.key]||'').replace(/"/g,'""')}"`).join(','));
-    const csvStr = [header,...rows].join('\r\n');
-    const blob = new Blob([csvStr],{type:'text/csv'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href=url; a.download='stamboom.csv';
-    document.body.appendChild(a); a.click(); a.remove();
+    const headers=COLUMNS.map(c=>c.key).join(',');
+    const rows=dataset.map(p=>COLUMNS.map(c=>`"${(p[c.key]||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+    const csv=headers+'\n'+rows;
+    const blob=new Blob([csv],{type:'text/csv'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download='stamboom.csv'; a.click();
     URL.revokeObjectURL(url);
 }
 
@@ -254,32 +223,44 @@ function liveSearch(){
     const term = safe(searchInput.value).toLowerCase();
     document.getElementById('searchPopup')?.remove();
     if(!term) return;
+
     const results = dataset.filter(p=>safe(p.ID).toLowerCase().includes(term)
         || safe(p.Roepnaam).toLowerCase().includes(term)
         || safe(p.Achternaam).toLowerCase().includes(term));
-    const rect = searchInput.getBoundingClientRect();
-    const popup = document.createElement('div');
+
+    const rect=searchInput.getBoundingClientRect();
+    const popup=document.createElement('div');
     popup.id='searchPopup';
-    popup.style.position='absolute'; popup.style.background='#fff';
-    popup.style.border='1px solid #999'; popup.style.zIndex=1000;
+    popup.style.position='absolute';
+    popup.style.background='#fff';
+    popup.style.border='1px solid #999';
+    popup.style.zIndex=1000;
     popup.style.top=rect.bottom+window.scrollY+5+'px';
     popup.style.left=Math.max(rect.left+window.scrollX,20)+'px';
     popup.style.width=(rect.width*1.2)+'px';
-    popup.style.maxHeight='600px'; popup.style.overflowY='auto';
-    popup.style.fontSize='1.5rem'; popup.style.padding='8px';
-    popup.style.borderRadius='5px'; popup.style.boxShadow='0 3px 6px rgba(0,0,0,0.2)';
+    popup.style.maxHeight='600px';
+    popup.style.overflowY='auto';
+    popup.style.fontSize='1.5rem';
+    popup.style.padding='8px';
+    popup.style.borderRadius='5px';
+    popup.style.boxShadow='0 3px 6px rgba(0,0,0,0.2)';
 
     if(results.length===0){
-        const row=document.createElement('div'); row.textContent='Geen resultaten';
+        const row=document.createElement('div');
+        row.textContent='Geen resultaten';
         row.style.padding='8px'; row.style.fontSize='1.3rem';
         popup.appendChild(row);
     } else {
         results.forEach(p=>{
             const row=document.createElement('div');
             row.textContent=`${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`;
-            row.style.padding='8px'; row.style.cursor='pointer'; row.style.fontSize='1.3rem';
+            row.style.padding='8px';
+            row.style.cursor='pointer';
+            row.style.fontSize='1.3rem';
             row.addEventListener('click',()=>{
-                selectedHoofdId=safe(p.ID); popup.remove(); renderTable(dataset);
+                selectedHoofdId=safe(p.ID);
+                popup.remove();
+                renderTable(dataset);
             });
             popup.appendChild(row);
         });
@@ -289,18 +270,31 @@ function liveSearch(){
 
 /* ======================= INIT ======================= */
 function init(){
-    buildHeader(); renderTable(dataset);
+    buildHeader();
+    renderTable(dataset);
+
     addBtn.addEventListener('click',addRow);
     saveBtn.addEventListener('click',saveDatasetMerged);
-    refreshBtn.addEventListener('click',refreshTable);
-    jsonBtn.addEventListener('click',exportJSON);
-    csvBtn.addEventListener('click',exportCSV);
+    refreshBtn.addEventListener('click',()=>renderTable(dataset));
+    exportJsonBtn?.addEventListener('click',exportJSON);
+    exportCsvBtn?.addEventListener('click',exportCSV);
     searchInput.addEventListener('input',liveSearch);
+
     document.addEventListener('click',e=>{
         const popup=document.getElementById('searchPopup');
         if(popup && !popup.contains(e.target) && e.target!==searchInput) popup.remove();
     });
 }
+
 init();
+
+/* ======================= ID GENERATOR ======================= */
+function genereerCode(persoon,bestaande){
+    const letters=(persoon.Doopnaam[0]||'')+(persoon.Roepnaam[0]||'')+(persoon.Achternaam[0]||'')+(persoon.Geslacht[0]||'X');
+    const bestaandeIDs=new Set(bestaande.map(p=>p.ID));
+    let code;
+    do{ code=letters+Math.floor(100+Math.random()*900); } while(bestaandeIDs.has(code));
+    return code;
+}
 
 })();
