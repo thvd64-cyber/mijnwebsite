@@ -1,79 +1,75 @@
 /* ======================= js/export.js v1.2.8 ======================= */
-/* Robuuste dynamische CSV-export van stamboomData
-   - Exporteert alle kolommen, inclusief extra kolommen (_extra of andere)
-   - Veilig voor showSaveFilePicker
-   - Fallback naar traditionele download via <a> als API niet beschikbaar
-   - Inline uitleg per regel
-*/
+/* ======================= CSV EXPORT FUNCTION ======================= */
+/* Functie die de lokale data ophaalt via get() en exporteert naar CSV */
+function exportCSV(filename = "export.csv") {
+    // 1. Haal alle records op uit localStorage
+    const data = get();
 
-document.getElementById("exportBtn").addEventListener("click", async function () {
-    const status = document.getElementById("exportStatus"); // element voor meldingen naar gebruiker
+    // 2. Stop als er geen data is
+    if (!data.length) {
+        alert("Geen data beschikbaar om te exporteren.");
+        return;
+    }
 
-    try {
-        /* ======================= DATA OPHALEN ======================= */
-        const data = window.StamboomStorage.get(); // haal volledige dataset op via storage.js
-        if(!data || data.length === 0){ // check of er data is
-            status.innerHTML = "❌ Geen data om te exporteren."; 
-            status.style.color = "red";
+    // 3. Bepaal alle unieke kolomnamen (headers)
+    const headers = Array.from(
+        data.reduce((acc, row) => {
+            Object.keys(row).forEach(key => acc.add(key));
+            return acc;
+        }, new Set())
+    );
+
+    // 4. Zet de data om naar CSV-regels
+    const csvRows = [];
+    csvRows.push(headers.join(",")); // eerste regel: kolomnamen
+
+    data.forEach(row => {
+        const values = headers.map(header => {
+            let val = row[header] !== undefined ? row[header] : ""; // lege string als veld ontbreekt
+            val = String(val).replace(/"/g, '""'); // dubbele quotes escapen
+            if (val.includes(",") || val.includes('"') || val.includes("\n")) {
+                val = `"${val}"`; // waarde tussen quotes als nodig
+            }
+            return val;
+        });
+        csvRows.push(values.join(","));
+    });
+
+    // 5. Maak een Blob van de CSV
+    const csvBlob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+
+    // 6. Creëer een tijdelijke downloadlink en start de download
+    const url = URL.createObjectURL(csvBlob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url); // opruimen
+}
+
+/* ======================= EXPORT KNOP LOGICA ======================= */
+/* Koppelt de exportCSV functie aan de knop in je HTML */
+document.addEventListener("DOMContentLoaded", () => {
+    const exportBtn = document.getElementById("exportBtn"); // selecteer knop
+    const status = document.getElementById("exportStatus"); // selecteer status element
+
+    exportBtn.addEventListener("click", () => {
+        // Optioneel: vraag gebruiker om een bestandsnaam
+        let filename = prompt("Geef de bestandsnaam op voor je CSV", "export.csv");
+        if (!filename) {
+            status.textContent = "Export geannuleerd door gebruiker.";
             return;
         }
 
-        /* ======================= DYNAMISCHE HEADERS ======================= */
-        // combineer alle object keys om volledige set kolommen te krijgen
-        const headers = Object.keys(data.reduce((acc,obj) => ({...acc,...obj}), {}));
-
-        /* ======================= CSV ESCAPE FUNCTIE ======================= */
-        function escapeCSV(value){
-            if(value == null) return ""; // null of undefined -> lege string
-            const str = String(value).replace(/"/g, '""'); // dubbele aanhalingstekens escapen
-            return `"${str}"`; // alles tussen dubbele quotes
+        try {
+            // Start CSV-export
+            exportCSV(filename);
+            status.textContent = `CSV-export succesvol gestart: ${filename}`;
+        } catch (e) {
+            console.error(e);
+            status.textContent = "Er is iets misgegaan bij de export.";
         }
-
-        /* ======================= CSV INHOUD OPBOUWEN ======================= */
-        let csvContent = headers.map(escapeCSV).join(",") + "\n"; // eerste regel = headers
-        data.forEach(person => {
-            // alle kolommen dynamisch mappen naar CSV
-            const row = headers.map(h => escapeCSV(person[h] ?? "")); // nullish coalescing naar lege string
-            csvContent += row.join(",") + "\n"; // voeg regel toe
-        });
-
-        /* ======================= BESTANDSNAAM ======================= */
-        const now = new Date(); // datum/tijd voor standaard bestandsnaam
-        const defaultName = `stamboom_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.csv`;
-        let userFileName = prompt("Voer bestandsnaam in (zonder .csv):", defaultName.replace(".csv",""));
-        if(!userFileName) userFileName = defaultName.replace(".csv",""); // fallback naar standaard
-        const fileName = `${userFileName}.csv`; // voeg extensie toe
-
-        /* ======================= BESTAND OPSLAAN ======================= */
-        if(window.showSaveFilePicker){ // moderne API
-            const fileHandle = await window.showSaveFilePicker({
-                suggestedName: fileName,
-                types: [{ description: "CSV bestand", accept: {"text/csv":[".csv"]} }]
-            });
-            const writable = await fileHandle.createWritable(); // open schrijfbare stream
-            await writable.write(csvContent); // schrijf CSV
-            await writable.close(); // sluit stream
-        } else { // fallback oudere browsers
-            const blob = new Blob([csvContent], {type:"text/csv"});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click(); // trigger download
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url); // release memory
-        }
-
-        /* ======================= SUCCES ======================= */
-        status.innerHTML = `✅ CSV succesvol geëxporteerd als ${fileName}`;
-        status.style.color = "green";
-        console.log("CSV export completed:", data);
-
-    } catch(error) {
-        /* ======================= FOUTAFHANDELING ======================= */
-        console.error(error);
-        status.innerHTML = "❌ Export mislukt of geannuleerd.";
-        status.style.color = "red";
-    }
+    });
 });
