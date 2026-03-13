@@ -148,4 +148,96 @@ if(char === '"'){ // toggle quote status
 
 insideQuotes = !insideQuotes;
 
-}else if(c
+}else if(char === delimiter && !insideQuotes){ // delimiter buiten quotes
+
+values.push(current); // kolom opslaan
+current = "";
+
+}else{
+
+current += char; // karakter toevoegen
+
+}
+
+}
+
+values.push(current); // laatste kolom toevoegen
+
+/* ======================= LIMIT MAX COLUMNS ======================= */
+
+if(values.length > schema.maxColumns) // controle max kolommen
+
+values.length = schema.maxColumns; // truncate
+
+/* ======================= OBJECT VIA SCHEMA ======================= */
+
+const obj = schema.fromCSV(line, headerInfo); // schema parser
+
+if(!obj){
+
+console.warn("CSV rij overgeslagen:", index+1);
+return;
+
+}
+
+/* ======================= EXTRA KOLOMMEN ======================= */
+
+obj._extra = values.slice(schema.coreFieldCount, schema.maxColumns); // kolom 15-22 opslaan
+
+/* ======================= ID GENERATIE ======================= */
+
+if(!obj.ID || obj.ID.trim()===""){ // als ID ontbreekt
+
+if(window.genereerCode){ // gebruik bestaande generator
+
+obj.ID = window.genereerCode(obj, existing.concat(newRows));
+
+}else{
+
+obj.ID = "P"+Date.now()+Math.floor(Math.random()*1000); // fallback ID
+
+}
+
+}
+
+/* ======================= BASIS VALIDATIE ======================= */
+
+if(!schema.validate(obj)){ // schema validatie
+
+console.warn("Ongeldige persoon overgeslagen:", obj);
+return;
+
+}
+
+newRows.push(obj); // rij toevoegen
+
+});
+
+/* ======================= COMBINE DATA ======================= */
+
+const combined = existing.concat(newRows); // combineer oude en nieuwe data
+
+StamboomStorage.set(combined); // opslaan in storage
+
+/* ======================= SUCCESS ======================= */
+
+status.innerHTML = `✅ Import voltooid: ${newRows.length} personen toegevoegd`;
+status.style.color = "green";
+
+console.log("Import completed:", newRows);
+
+};
+
+/* ======================= START FILE READ ======================= */
+
+reader.readAsText(file); // lees CSV bestand
+
+}catch(err){
+
+status.innerHTML = "❌ Import fout";
+status.style.color = "red";
+console.error(err);
+
+}
+
+});
