@@ -1,80 +1,79 @@
-/* ======================= js/export.js v1.2.7 ======================= */
-/* Robuuste CSV-export van de volledige dataset
-   - Neemt letterlijk alles uit StamboomStorage.get()
-   - Dynamische headers uit de dataset
-   - Compatibel met showSaveFilePicker of fallback via <a download>
-   - Gebruiker kan bestandsnaam en locatie kiezen
+/* ======================= js/export.js v1.2.8 ======================= */
+/* Robuuste dynamische CSV-export van stamboomData
+   - Exporteert alle kolommen, inclusief extra kolommen (_extra of andere)
+   - Veilig voor showSaveFilePicker
+   - Fallback naar traditionele download via <a> als API niet beschikbaar
+   - Inline uitleg per regel
 */
 
 document.getElementById("exportBtn").addEventListener("click", async function () {
-    const status = document.getElementById("exportStatus"); // element voor statusmeldingen
+    const status = document.getElementById("exportStatus"); // element voor meldingen naar gebruiker
 
     try {
-        /* ======================= HAAL DATA OP ======================= */
-        const data = StamboomStorage.get(); // alle objecten uit storage ophalen
-        if (!data || !data.length) { // check of er data is
+        /* ======================= DATA OPHALEN ======================= */
+        const data = window.StamboomStorage.get(); // haal volledige dataset op via storage.js
+        if(!data || data.length === 0){ // check of er data is
             status.innerHTML = "❌ Geen data om te exporteren."; 
             status.style.color = "red";
             return;
         }
 
         /* ======================= DYNAMISCHE HEADERS ======================= */
-        // Verzamel alle unieke keys uit de dataset voor CSV headers
-        const headers = Array.from(
-            new Set(data.flatMap(obj => Object.keys(obj))) // flatMap alle keys en unique maken
-        );
+        // combineer alle object keys om volledige set kolommen te krijgen
+        const headers = Object.keys(data.reduce((acc,obj) => ({...acc,...obj}), {}));
 
-        /* ======================= HELPER: CSV ESCAPE ======================= */
-        function escapeCSV(value) {
-            if (value == null) return ""; // null of undefined wordt leeg
-            const str = String(value).replace(/"/g, '""'); // dubbele quotes escapen
-            return `"${str}"`; // altijd quotes om waarde
+        /* ======================= CSV ESCAPE FUNCTIE ======================= */
+        function escapeCSV(value){
+            if(value == null) return ""; // null of undefined -> lege string
+            const str = String(value).replace(/"/g, '""'); // dubbele aanhalingstekens escapen
+            return `"${str}"`; // alles tussen dubbele quotes
         }
 
-        /* ======================= CSV CONTENT OPBOUWEN ======================= */
-        let csvContent = headers.map(escapeCSV).join(",") + "\n"; // header rij
-
-        data.forEach(obj => {
-            const row = headers.map(h => escapeCSV(obj[h] ?? "")); // lege cel als key ontbreekt
-            csvContent += row.join(",") + "\n"; // voeg rij toe
+        /* ======================= CSV INHOUD OPBOUWEN ======================= */
+        let csvContent = headers.map(escapeCSV).join(",") + "\n"; // eerste regel = headers
+        data.forEach(person => {
+            // alle kolommen dynamisch mappen naar CSV
+            const row = headers.map(h => escapeCSV(person[h] ?? "")); // nullish coalescing naar lege string
+            csvContent += row.join(",") + "\n"; // voeg regel toe
         });
 
         /* ======================= BESTANDSNAAM ======================= */
-        const now = new Date(); // huidige datum
-        const defaultName = `stamboom_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.csv`; // standaard naam
-        let userFileName = prompt("Voer bestandsnaam in (zonder .csv):", defaultName.replace(".csv","")); // prompt voor naam
-        if (!userFileName) userFileName = defaultName.replace(".csv",""); // fallback
-        const fileName = `${userFileName}.csv`; // uiteindelijke bestandsnaam
+        const now = new Date(); // datum/tijd voor standaard bestandsnaam
+        const defaultName = `stamboom_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.csv`;
+        let userFileName = prompt("Voer bestandsnaam in (zonder .csv):", defaultName.replace(".csv",""));
+        if(!userFileName) userFileName = defaultName.replace(".csv",""); // fallback naar standaard
+        const fileName = `${userFileName}.csv`; // voeg extensie toe
 
-        /* ======================= OPSLAAN ======================= */
-        if (window.showSaveFilePicker) { // moderne API
+        /* ======================= BESTAND OPSLAAN ======================= */
+        if(window.showSaveFilePicker){ // moderne API
             const fileHandle = await window.showSaveFilePicker({
                 suggestedName: fileName,
-                types: [{ description: "CSV bestand", accept: {"text/csv": [".csv"]} }]
+                types: [{ description: "CSV bestand", accept: {"text/csv":[".csv"]} }]
             });
-            const writable = await fileHandle.createWritable(); // maak schrijfbaar bestand
+            const writable = await fileHandle.createWritable(); // open schrijfbare stream
             await writable.write(csvContent); // schrijf CSV
-            await writable.close(); // sluit bestand
-        } else { // fallback voor oudere browsers
-            const blob = new Blob([csvContent], {type: "text/csv"}); // blob maken
-            const url = URL.createObjectURL(blob); // tijdelijke URL
-            const a = document.createElement("a"); // anchor element
+            await writable.close(); // sluit stream
+        } else { // fallback oudere browsers
+            const blob = new Blob([csvContent], {type:"text/csv"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
             a.href = url;
-            a.download = fileName; // download attribuut
-            document.body.appendChild(a); // toevoegen aan DOM
+            a.download = fileName;
+            document.body.appendChild(a);
             a.click(); // trigger download
-            document.body.removeChild(a); // opruimen
-            URL.revokeObjectURL(url); // memory cleanup
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url); // release memory
         }
 
-        /* ======================= SUCCESS ======================= */
-        status.innerHTML = "✅ CSV succesvol geëxporteerd als " + fileName;
+        /* ======================= SUCCES ======================= */
+        status.innerHTML = `✅ CSV succesvol geëxporteerd als ${fileName}`;
         status.style.color = "green";
+        console.log("CSV export completed:", data);
 
-    } catch (error) {
+    } catch(error) {
         /* ======================= FOUTAFHANDELING ======================= */
         console.error(error);
-        status.innerHTML = "❌ Export geannuleerd of mislukt.";
+        status.innerHTML = "❌ Export mislukt of geannuleerd.";
         status.style.color = "red";
     }
 });
