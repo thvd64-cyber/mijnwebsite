@@ -1,13 +1,12 @@
-/* ======================= js/storage.js v0.0.3 ======================= */
-/* Persistent storage voor MyFamTreeCollab
-   - Slaat alle velden op, ongeacht of het schema er 14 of meer bevat
-   - UI/logic gebruikt alleen schema velden
-   - Compatibel met schema.js v0.0.2
+/* ======================= js/storage.js v0.0.4 ======================= */
+/* Persistent storage voor MyFamTreeCollab, volledig schema-driven
+   - Maakt gebruik van window.StamboomSchema.fields
+   - Automatische migratie van legacy en nieuwe records
    - Publieke API: get, set, add, update, clear
 */
 
-(function(){ 
-'use strict'; // veilige JS uitvoering
+(function(){
+'use strict'; // veilige uitvoering
 
 /* ======================= CONSTANTEN ======================= */
 const STORAGE_KEY = 'stamboomData'; // localStorage sleutel
@@ -15,20 +14,25 @@ const STORAGE_KEY = 'stamboomData'; // localStorage sleutel
 /* ======================= SAFE JSON PARSING ======================= */
 function safeParse(json){
     if(!json) return [];
-    try { return JSON.parse(json); }
-    catch(e){ console.warn('Storage corrupte JSON. Reset.'); return []; }
+    try { 
+        return JSON.parse(json); // probeer JSON te parsen
+    }
+    catch(e){ 
+        console.warn('Storage corrupte JSON. Reset.'); 
+        return []; // bij fout, return lege array
+    }
 }
 
 /* ======================= MIGRATIE FUNCTIE ======================= */
-function migrateLegacy(record){
+function migrate(record){
     if(!record || typeof record !== "object") return {};
-    // kopie van originele record zodat alle velden behouden blijven
-    const migrated = {...record};
+    
+    const migrated = {...record}; // maak kopie zodat originele objecten niet gewijzigd worden
 
-    // zorg dat alle 14 schema velden aanwezig zijn
-    if(window.StamboomSchema && window.StamboomSchema.fields){
+    // Zorg dat alle velden uit schema aanwezig zijn
+    if(window.StamboomSchema && Array.isArray(window.StamboomSchema.fields)){
         window.StamboomSchema.fields.forEach(field => {
-            if(!(field in migrated)) migrated[field] = "";
+            if(!(field in migrated)) migrated[field] = ""; // ontbrekende velden aanvullen
         });
     } else {
         console.error("StamboomSchema niet geladen!");
@@ -44,14 +48,14 @@ function migrateLegacy(record){
 
 /* ======================= GET ======================= */
 function get(){
-    let raw = localStorage.getItem(STORAGE_KEY);
-    let parsed = safeParse(raw);
+    let raw = localStorage.getItem(STORAGE_KEY); // haal JSON string
+    let parsed = safeParse(raw); // parse JSON
     if(!Array.isArray(parsed)) parsed = [];
 
     // voer migratie uit op alle records
-    parsed = parsed.map(r => migrateLegacy(r));
+    parsed = parsed.map(r => migrate(r));
 
-    return parsed;
+    return parsed; // return array van records
 }
 
 /* ======================= SET ======================= */
@@ -60,33 +64,36 @@ function set(dataset){
         console.warn('set() verwacht array'); 
         return false; 
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset)); // sla op
     return true;
 }
 
 /* ======================= ADD ======================= */
 function add(person){
-    if(typeof person !== 'object' || person === null){ console.warn('add() verwacht object'); return false; }
-    const dataset = get();
-    const migrated = migrateLegacy(person);
-    dataset.push(migrated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset));
+    if(typeof person !== 'object' || person === null){ 
+        console.warn('add() verwacht object'); 
+        return false; 
+    }
+    const dataset = get(); // huidige dataset ophalen
+    const migrated = migrate(person); // migratie uitvoeren
+    dataset.push(migrated); // toevoegen
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset)); // opslaan
     return true;
 }
 
 /* ======================= UPDATE ======================= */
 function update(personID, updates){
     const dataset = get();
-    const idx = dataset.findIndex(p => p.ID === personID);
+    const idx = dataset.findIndex(p => p.ID === personID); // zoek persoon
     if(idx === -1) return false;
-    dataset[idx] = {...dataset[idx], ...updates};
-    set(dataset);
+    dataset[idx] = {...dataset[idx], ...updates}; // merge updates
+    set(dataset); // opslaan
     return true;
 }
 
 /* ======================= CLEAR ======================= */
 function clear(){
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEY); // verwijder key
     return true;
 }
 
@@ -97,7 +104,7 @@ window.StamboomStorage = {
     add,
     update,
     clear,
-    version: "v0.0.3"
+    version: "v0.0.4"
 };
 
 console.log("StamboomStorage geladen:", window.StamboomStorage.version);
