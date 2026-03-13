@@ -1,130 +1,151 @@
-/* ======================= js/import.js v1.0.8 ======================= */
-/* Drop-in voor schema.js v0.0.2 en storage.js v0.0.4
-   - Automatische delimiter detectie
-   - Dynamische field mapping op basis van schema.js
-   - Extra kolommen tot 22 opgeslagen als _extra
-   - ID generatie indien leeg
-   - Compatibel met dynamische storage.js
+/* ======================= js/import.js v2.0.0 ======================= */
+/* Compatibel met schema.js v0.1.x en storage.js
+   Robuuste CSV importer voor MyFamTreeCollab
+   - delimiter detectie
+   - BOM verwijdering
+   - quotes + commas correct
+   - max 22 kolommen
+   - eerste 14 schema velden
+   - extra kolommen → _extra
 */
 
-document.getElementById("importBtn").addEventListener("click", async function () {
+document.getElementById("importBtn").addEventListener("click", async function(){
 
-    const status = document.getElementById("importStatus"); // element voor statusmeldingen
+const status = document.getElementById("importStatus"); // status element voor meldingen
 
-    try {
+try{
 
-        /* ======================= STORAGE CHECK ======================= */
-        if(typeof StamboomStorage === "undefined"){
-            status.innerHTML = "❌ StamboomStorage niet beschikbaar. Laad eerst storage.js!";
-            status.style.color = "red";
-            console.error("StamboomStorage is undefined. Zorg dat storage.js vóór import.js geladen wordt.");
-            return;
-        }
+/* ======================= STORAGE CHECK ======================= */
 
-        /* ======================= SCHEMA CHECK ======================= */
-        if(!window.StamboomSchema || !Array.isArray(window.StamboomSchema.fields)){
-            status.innerHTML = "❌ StamboomSchema niet geladen!";
-            status.style.color = "red";
-            console.error("StamboomSchema niet beschikbaar");
-            return;
-        }
+if(typeof StamboomStorage === "undefined"){ // controleer of storage beschikbaar is
 
-        /* ======================= FILE PICK ======================= */
-        const fileInput = document.getElementById("importFile");
-        const file = fileInput.files[0];
-        if(!file){
-            status.innerHTML = "❌ Geen bestand geselecteerd.";
-            status.style.color = "red";
-            return;
-        }
+status.innerHTML = "❌ storage.js niet geladen"; // toon foutmelding
+status.style.color = "red";
+console.error("StamboomStorage ontbreekt");
+return;
 
-        /* ======================= FILE READER ======================= */
-        const reader = new FileReader();
-        reader.onload = function(e){
-            const text = e.target.result;
+}
 
-            /* ======================= DETECT DELIMITER ======================= */
-            function detectDelimiter(csvText) {
-                const firstLine = csvText.split("\n")[0]; // neem header
-                const delimiters = [';', ',', '\t']; // mogelijke delimiters
-                let maxCount = 0, chosen = ',';
-                delimiters.forEach(d => {
-                    const count = firstLine.split(d).length;
-                    if(count > maxCount){ maxCount = count; chosen = d; }
-                });
-                return chosen;
-            }
+/* ======================= SCHEMA CHECK ======================= */
 
-            const delimiter = detectDelimiter(text);
+if(!window.StamboomSchema){ // controleer schema module
 
-            /* ======================= SPLIT LINES ======================= */
-            const lines = text.split("\n").map(l => l.trim()).filter(l => l.length > 0);
-            if(lines.length < 2){
-                status.innerHTML = "❌ CSV bevat geen data.";
-                status.style.color = "red";
-                return;
-            }
+status.innerHTML = "❌ schema.js niet geladen";
+status.style.color = "red";
+console.error("StamboomSchema ontbreekt");
+return;
 
-            /* ======================= PARSE HEADERS ======================= */
-            const headers = lines[0].split(delimiter).map(h => h.trim());
+}
 
-            /* ======================= HEADER VALIDATION ======================= */
-            const missingHeaders = window.StamboomSchema.fields.filter(f => !headers.includes(f));
-            if(missingHeaders.length > 0){
-                status.innerHTML = "❌ CSV header fout. Ontbrekende kolommen: " + missingHeaders.join(", ");
-                status.style.color = "red";
-                console.error("CSV header fout. Ontbrekend:", missingHeaders);
-                return;
-            }
+const schema = window.StamboomSchema; // referentie naar schema module
 
-            /* ======================= PARSE CSV TO OBJECTS ======================= */
-            let newData = [];
-            const schemaLength = window.StamboomSchema.fields.length;
+/* ======================= FILE PICK ======================= */
 
-            lines.slice(1).forEach(line => {
-                let values = [], current = '', insideQuotes = false;
-                for(let i=0;i<line.length;i++){
-                    const char = line[i];
-                    if(char === '"') insideQuotes = !insideQuotes;
-                    else if(char === delimiter && !insideQuotes){ values.push(current); current=''; }
-                    else current += char;
-                }
-                values.push(current); // laatste waarde
-                values = values.map(v => v.replace(/^"(.*)"$/,'$1').trim());
+const fileInput = document.getElementById("importFile"); // file input element
+const file = fileInput.files[0]; // geselecteerd bestand
 
-                /* ======================= MAP CSV NAAR SCHEMA ======================= */
-                const obj = {};
-                for(let j=0; j<schemaLength; j++){
-                    obj[window.StamboomSchema.fields[j]] = values[j] !== undefined ? values[j] : "";
-                }
+if(!file){
 
-                // extra kolommen tot veld 22 bewaren
-                obj._extra = values.slice(schemaLength, 22);
+status.innerHTML = "❌ Geen CSV bestand geselecteerd";
+status.style.color = "red";
+return;
 
-                /* ======================= ID GENERATIE ======================= */
-                if(!obj.ID || obj.ID.trim()===""){
-                    obj.ID = window.genereerCode ? window.genereerCode(obj, StamboomStorage.get().concat(newData)) : 'P'+Date.now();
-                }
+}
 
-                newData.push(obj);
-            });
+/* ======================= FILE READER ======================= */
 
-            /* ======================= COMBINE MET BESTAANDE DATA ======================= */
-            const existingData = StamboomStorage.get();
-            const combinedData = existingData.concat(newData);
-            StamboomStorage.set(combinedData);
+const reader = new FileReader(); // browser file reader
 
-            /* ======================= SUCCESS ======================= */
-            status.innerHTML = `✅ CSV succesvol geïmporteerd. ${newData.length} rijen toegevoegd.`;
-            status.style.color = "green";
-            console.log("CSV import completed:", newData);
-        };
+reader.onload = function(e){
 
-        reader.readAsText(file);
+/* ======================= RAW TEXT ======================= */
 
-    } catch(error){
-        status.innerHTML = "❌ Import mislukt.";
-        status.style.color = "red";
-        console.error(error);
-    }
+let text = e.target.result; // inhoud CSV bestand
+
+text = text.replace(/^\uFEFF/,''); // verwijder BOM indien aanwezig
+
+/* ======================= DELIMITER DETECTIE ======================= */
+
+function detectDelimiter(csv){
+
+const firstLine = csv.split(/\r?\n/)[0]; // eerste regel = header
+
+const options = [",",";","\t"]; // mogelijke delimiters
+
+let best = ","; // standaard delimiter
+let bestScore = 0;
+
+options.forEach(d=>{
+
+const score = firstLine.split(d).length; // aantal kolommen bij split
+
+if(score > bestScore){ // hoogste kolom aantal wint
+
+bestScore = score;
+best = d;
+
+}
+
 });
+
+return best;
+
+}
+
+const delimiter = detectDelimiter(text); // bepaal delimiter
+
+/* ======================= SPLIT LINES ======================= */
+
+const lines = text
+.split(/\r?\n/) // split Windows/Mac regels
+.map(l=>l.trim()) // trim whitespace
+.filter(l=>l.length); // verwijder lege regels
+
+if(lines.length < 2){
+
+status.innerHTML = "❌ CSV bevat geen data";
+status.style.color = "red";
+return;
+
+}
+
+/* ======================= HEADER ANALYSE ======================= */
+
+const headerLine = lines[0]; // eerste regel = header
+
+const headerInfo = schema.normalizeHeader(headerLine); // detecteer schema type
+
+if(headerInfo.type === "unknown"){ // header niet herkend
+
+status.innerHTML = "❌ Onbekende CSV header";
+status.style.color = "red";
+console.error("Header onbekend:", headerLine);
+return;
+
+}
+
+/* ======================= DATA PARSE ======================= */
+
+let newRows = []; // array met nieuwe personen
+
+const existing = StamboomStorage.get(); // bestaande data
+
+lines.slice(1).forEach((line,index)=>{ // loop door alle data regels
+
+if(!line.trim()) return; // sla lege regels over
+
+/* ======================= CSV PARSER ======================= */
+
+let values = []; // array voor kolom waarden
+let current = ""; // huidige kolom tekst
+let insideQuotes = false; // quote status
+
+for(let i=0;i<line.length;i++){
+
+const char = line[i]; // huidige karakter
+
+if(char === '"'){ // toggle quote status
+
+insideQuotes = !insideQuotes;
+
+}else if(c
