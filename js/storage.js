@@ -1,9 +1,9 @@
-/* ======================= js/storage.js v0.0.3 ======================= */
+/* ======================= js/storage.js v0.0.4 ======================= */
 /* Persistent storage voor MyFamTreeCollab
    - Slaat alle velden op, ongeacht of het schema er 14 of meer bevat
    - UI/logic gebruikt alleen schema velden
    - Compatibel met schema.js v0.0.2
-   - Publieke API: get, set, add, update, clear
+   - Publieke API: get, set, add, update, clear, export
 */
 
 (function(){ 
@@ -89,6 +89,50 @@ function clear(){
     localStorage.removeItem(STORAGE_KEY);
     return true;
 }
+/* ======================= CLEAR ======================= */
+function clear(){
+    localStorage.removeItem(STORAGE_KEY);
+    return true;
+}
+
+/* ======================= EXPORT FUNCTIES ======================= */
+function exportJSON(){
+    const data = get(); // gebruik StamboomStorage intern
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = 'stamboom_export.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function exportCSV(){
+    const data = get();
+    if(!data.length) return;
+    const fields = window.StamboomSchema.fields || Object.keys(data[0]);
+    const csvRows = [];
+    csvRows.push(fields.join(","));
+    data.forEach(person => {
+        const row = fields.map(f => {
+            let val = person[f] || "";
+            if(typeof val === 'string' && (val.includes(',') || val.includes('"'))){
+                val = `"${val.replace(/"/g, '""')}"`;
+            }
+            return val;
+        });
+        csvRows.push(row.join(","));
+    });
+    const csvStr = csvRows.join("\n");
+    const blob = new Blob([csvStr], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = 'stamboom_export.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+}
 
 /* ======================= PUBLIEKE API ======================= */
 window.StamboomStorage = {
@@ -97,7 +141,9 @@ window.StamboomStorage = {
     add,
     update,
     clear,
-    version: "v0.0.3"
+    exportJSON,  
+    exportCSV,  
+    version: "v0.0.4" // optioneel versie verhogen
 };
 
 console.log("StamboomStorage geladen:", window.StamboomStorage.version);
