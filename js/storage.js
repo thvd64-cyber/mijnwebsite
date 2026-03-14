@@ -1,4 +1,4 @@
-/* ======================= js/storage.js v0.0.5a ======================= */
+/* ======================= js/storage.js v0.0.5b ======================= */
 /* Persistent storage voor MyFamTreeCollab, volledig schema-driven
    - Maakt gebruik van window.StamboomSchema.fields
    - Automatische migratie van legacy en nieuwe records
@@ -97,8 +97,14 @@ function add(person){
     }
     const dataset = get(); // huidige dataset ophalen
     const migrated = migrate(person); // migratie uitvoeren
-    dataset.push(migrated); // toevoegen
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset)); // opslaan
+
+    // ======================= GENEREER ID ALS LEEG =======================
+    if(!migrated.ID || migrated.ID.trim() === ""){
+        migrated.ID = window.genereerCode(migrated, dataset); // genereer uniek ID op basis van bestaande records
+    }
+
+    dataset.push(migrated); // toevoegen aan dataset
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset)); // opslaan in localStorage
     return true;
 }
 
