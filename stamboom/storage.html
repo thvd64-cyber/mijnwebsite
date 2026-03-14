@@ -1,306 +1,145 @@
-<!-- ======================= js.storage.html v0.0.4 ======================= -->
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <!-- ======================= Meta & Titel ======================= -->
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MyFamTreeCollab - Opslag v0.0.4</title>
-  <link rel="stylesheet" href="../css/style.css">
-</head>
+/* ======================= js/storage.js v0.0.5 ======================= */
+/* Persistent storage voor MyFamTreeCollab, volledig schema-driven
+   - Maakt gebruik van window.StamboomSchema.fields
+   - Automatische migratie van legacy en nieuwe records
+   - Publieke API: get, set, add, update, clear
+   - Nieuwe ID-generator: 4 letters uit specifieke velden + 3 cijfers
+*/
 
-<body>
-  <!-- ======================= TopBar ======================= -->
-  <div id="topbar-placeholder"></div>
-  <script>
-    // Dynamisch TopBar HTML laden
-    fetch('/MyFamTreeCollab/Layout/TopBar.html')
-      .then(resp => resp.text())
-      .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
-  </script>
+(function(){
+'use strict'; // veilige uitvoering
 
-  <!-- ======================= Navbar ======================= -->
-  <div id="Navbar-placeholder"></div>
-  <script>
-    // Dynamisch Navbar HTML laden
-    fetch('/MyFamTreeCollab/Layout/Navbar.html')
-      .then(resp => resp.text())
-      .then(data => document.getElementById('Navbar-placeholder').innerHTML = data);
-  </script>
+/* ======================= CONSTANTEN ======================= */
+const STORAGE_KEY = 'stamboomData'; // localStorage sleutel
 
-  <!-- ======================= Pagina Titel ======================= -->
-  <div id="pageTitle" style="font-size:1.5rem;font-weight:bold;margin-bottom:15px;">
-    Opgeslagen stamboom data
-  </div>
-
-  <!-- ======================= Hoofd Container ======================= -->
-  <div class="main-container">
-
-    <!-- Knoppen: Export + Reset -->
-    <div id="buttonsContainer" style="margin-bottom:15px;">
-      <button id="exportJSONBtn">Export JSON</button>
-      <button id="exportCSVBtn">Export CSV</button>
-      <button id="resetBtn">Reset Stamboom</button>
-    </div>
-
-    <!-- Storage info -->
-    <div class="storage-info" id="storageInfo"></div>
-    <div id="storageContainer"></div>
-
-  </div>
-
-  <!-- ======================= Inline CSS ======================= -->
-  <style>
-    /* ======================= Basis ======================= */
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f8f8f8;
+/* ======================= SAFE JSON PARSING ======================= */
+function safeParse(json){
+    if(!json) return []; // lege string → lege array
+    try { 
+        return JSON.parse(json); // probeer JSON te parsen
     }
-
-    .main-container {
-      width: 100%;
-      padding: 20px;
-      background: #fff;
+    catch(e){ 
+        console.warn('Storage corrupte JSON. Reset.'); 
+        return []; // bij fout, return lege array
     }
+}
 
-    .storage-info {
-      font-weight: bold;
-      margin-bottom: 15px;
-    }
+/* ======================= CUSTOM CODE GENERATOR ======================= */
+/* Genereert een code van 4 letters uit specifieke velden + 3 cijfers */
+function generateCustomCode(record, existingIDs = []){
+    // Pak de velden 2, 3, 5 en 6 uit het record (Object.keys(record) index)
+    const fields = [
+        record[Object.keys(record)[1]] || '', // 2e cel
+        record[Object.keys(record)[2]] || '', // 3e cel
+        record[Object.keys(record)[4]] || '', // 5e cel
+        record[Object.keys(record)[5]] || ''  // 6e cel
+    ];
 
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-top: 10px;
-    }
+    // Pak de eerste letter van elk veld en zet om naar hoofdletter
+    let letters = fields.map(f => f.charAt(0).toUpperCase()).join('');
 
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: left;
-    }
+    // Vul aan met X als niet genoeg letters aanwezig
+    letters = letters.padEnd(4, 'X');
 
-    th {
-      background: #f4f4f4;
-    }
+    // Voeg 3 willekeurige cijfers toe en controleer uniciteit
+    let code;
+    let attempts = 0;
+    do {
+        const numbers = String(Math.floor(Math.random() * 1000)).padStart(3,'0'); // altijd 3 cijfers
+        code = letters + numbers; // combineer letters + cijfers
+        attempts++;
+        if(attempts > 1000) throw new Error('Geen unieke code gevonden na 1000 pogingen'); // safety
+    } while(existingIDs.includes(code)); // check dubbele ID
 
-    .empty {
-      font-style: italic;
-      color: #777;
-      margin-top: 20px;
-    }
+    return code; // retourneer unieke code
+}
 
-    input {
-      padding: 2px 4px;
-    }
+/* ======================= MIGRATIE FUNCTIE ======================= */
+function migrate(record){
+    if(!record || typeof record !== "object") return {}; // ongeldig record → leeg object
+    
+    const migrated = {...record}; // maak kopie zodat originele objecten niet gewijzigd worden
 
-    button {
-      cursor: pointer;
-      padding: 6px 12px;
-      margin-right: 5px;
-      border: none;
-      border-radius: 4px;
-    }
-
-    /* ======================= Knoppen ======================= */
-    #exportJSONBtn, #exportCSVBtn {
-      background: #0275d8;
-      color: #fff;
-    }
-
-    #exportJSONBtn:hover, #exportCSVBtn:hover {
-      background: #025aa5;
-    }
-
-    #resetBtn {
-      background: #d9534f;
-      color: #fff;
-    }
-
-    #resetBtn:hover {
-      background: #c9302c;
-    }
-
-    /* ======================= Responsive ======================= */
-    @media(max-width:768px){
-      table, th, td {
-        font-size: 0.9rem;
-      }
-    }
-  </style>
-
-  <!-- ======================= Scripts ======================= -->
-  <script src="../js/schema.js"></script>
-  <script src="../js/storage.js"></script>
-  <script>
-    // Wacht tot DOM volledig geladen is
-    document.addEventListener('DOMContentLoaded', function(){
-
-      // Controleer of StamboomStorage beschikbaar is
-      if(typeof StamboomStorage === "undefined"){
-        console.error("StamboomStorage niet geladen!");
-        return;
-      }
-
-      // DOM elementen ophalen
-      const container = document.getElementById('storageContainer');
-      const info = document.getElementById('storageInfo');
-      const resetBtn = document.getElementById('resetBtn');
-      const exportJSONBtn = document.getElementById('exportJSONBtn');
-      const exportCSVBtn = document.getElementById('exportCSVBtn');
-
-      // ======================= Kolommen =======================
-      // Extra kolommen berekenen (_extra1 t/m _extraX)
-      const extraColsCount = 22 - window.StamboomSchema.fields.length;
-      const columns = [...window.StamboomSchema.fields];
-      for(let i=0; i<extraColsCount; i++) columns.push(`_extra${i+1}`);
-
-      const filters = {}; // filters per kolom
-
-      // ======================= Functie: Tabel Renderen =======================
-      function renderTable(){
-        let data = StamboomStorage.get();
-        container.innerHTML = "";
-        info.innerHTML = `Storage versie: ${StamboomStorage.version} | Aantal records: ${data.length}`;
-
-        if(!data.length){
-          container.innerHTML = '<div class="empty">Geen data gevonden in localStorage.</div>';
-          return;
-        }
-
-        // Tabel maken
-        const table = document.createElement('table');
-        const thead = document.createElement('thead');
-
-        // Header rij
-        const headerRow = document.createElement('tr');
-        columns.forEach(col=>{
-          const th = document.createElement('th');
-          th.textContent = col;
-          headerRow.appendChild(th);
+    // Zorg dat alle velden uit schema aanwezig zijn
+    if(window.StamboomSchema && Array.isArray(window.StamboomSchema.fields)){
+        window.StamboomSchema.fields.forEach(field => {
+            if(!(field in migrated)) migrated[field] = ""; // ontbrekende velden aanvullen
         });
-        thead.appendChild(headerRow);
+    } else {
+        console.error("StamboomSchema niet geladen!");
+    }
 
-        // Filter rij
-        const filterRow = document.createElement('tr');
-        columns.forEach(col=>{
-          const th = document.createElement('th');
-          const input = document.createElement('input');
-          input.type = "text";
-          input.placeholder = "Filter...";
-          input.style.width = "95%";
-          input.addEventListener('input', function(){
-            filters[col] = this.value.toLowerCase();
-            applyFilters();
-          });
-          th.appendChild(input);
-          filterRow.appendChild(th);
-        });
-        thead.appendChild(filterRow);
+    // genereer unieke ID indien ontbrekend
+    if(!migrated.ID || migrated.ID.trim() === ""){
+        const dataset = get(); // huidige dataset ophalen
+        const existingIDs = dataset.map(p => p.ID); // alle bestaande IDs
+        migrated.ID = generateCustomCode(migrated, existingIDs); // genereer unieke code
+    }
 
-        table.appendChild(thead);
+    return migrated; // retourneer gemigreerd record
+}
 
-        const tbody = document.createElement('tbody');
-        table.appendChild(tbody);
-        container.appendChild(table);
+/* ======================= GET ======================= */
+function get(){
+    let raw = localStorage.getItem(STORAGE_KEY); // haal JSON string
+    let parsed = safeParse(raw); // parse JSON
+    if(!Array.isArray(parsed)) parsed = []; // fallback naar lege array
 
-        // ======================= Functie: Filters toepassen =======================
-        function applyFilters(){
-          tbody.innerHTML = "";
-          const fragment = document.createDocumentFragment();
+    // voer migratie uit op alle records zodat alles conform schema is
+    parsed = parsed.map(r => migrate(r));
 
-          const filtered = data.filter(person=>{
-            return columns.every((col,i)=>{
-              const val = col.startsWith("_extra")
-                ? (person._extra[i - window.StamboomSchema.fields.length] ?? "")
-                : (person[col] ?? "");
-              return !filters[col] || val.toString().toLowerCase().includes(filters[col]);
-            });
-          });
+    return parsed; // return array van records
+}
 
-          filtered.forEach(person=>{
-            const row = document.createElement('tr');
-            columns.forEach((col,i)=>{
-              const td = document.createElement('td');
-              td.textContent = col.startsWith("_extra")
-                ? (person._extra[i - window.StamboomSchema.fields.length] ?? "")
-                : (person[col] ?? "");
-              row.appendChild(td);
-            });
-            fragment.appendChild(row);
-          });
+/* ======================= SET ======================= */
+function set(dataset){
+    if(!Array.isArray(dataset)){ 
+        console.warn('set() verwacht array'); 
+        return false; 
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset)); // sla array op als JSON
+    return true;
+}
 
-          tbody.appendChild(fragment);
-        }
+/* ======================= ADD ======================= */
+function add(person){
+    if(typeof person !== 'object' || person === null){ 
+        console.warn('add() verwacht object'); 
+        return false; 
+    }
+    const dataset = get(); // huidige dataset ophalen
+    const migrated = migrate(person); // voer migratie en ID-generatie uit
+    dataset.push(migrated); // voeg record toe
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset)); // opslaan
+    return true;
+}
 
-        applyFilters();
-      }
+/* ======================= UPDATE ======================= */
+function update(personID, updates){
+    const dataset = get(); // huidige dataset ophalen
+    const idx = dataset.findIndex(p => p.ID === personID); // zoek persoon
+    if(idx === -1) return false; // record niet gevonden
+    dataset[idx] = {...dataset[idx], ...updates}; // merge updates
+    set(dataset); // opslaan
+    return true;
+}
 
-      // ======================= RESET KNOP =======================
-      resetBtn.addEventListener('click', function(){
-        if(!StamboomStorage.get().length) return;
-        const confirmMessage = "⚠️ WAARSCHUWING ⚠️\n\nAlle opgeslagen stamboomdata wordt definitief verwijderd.\nMaak eerst een EXPORT van je data.\nKlik OK om te bevestigen.";
-        if(!confirm(confirmMessage)) return;
-        StamboomStorage.clear();
-        renderTable();
-      });
+/* ======================= CLEAR ======================= */
+function clear(){
+    localStorage.removeItem(STORAGE_KEY); // verwijder key uit localStorage
+    return true;
+}
 
-      // ======================= EXPORT JSON =======================
-      exportJSONBtn.addEventListener('click', function(){
-        const data = StamboomStorage.get();
-        const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "stamboomData.json";
-        a.click();
-        URL.revokeObjectURL(url);
-      });
+/* ======================= PUBLIEKE API ======================= */
+window.StamboomStorage = {
+    get,
+    set,
+    add,
+    update,
+    clear,
+    version: "v0.0.5" // nieuwe versie
+};
 
-      // ======================= EXPORT CSV =======================
-      exportCSVBtn.addEventListener('click', function(){
-        const data = StamboomStorage.get();
-        if(!data.length) return;
+console.log("StamboomStorage geladen:", window.StamboomStorage.version);
 
-        const allFields = [...window.StamboomSchema.fields];
-        const extraCount = 22 - allFields.length;
-        for(let i=0;i<extraCount;i++) allFields.push(`_extra${i+1}`);
-
-        const rows = [];
-        rows.push(allFields.map(f=>`${f}`).join(",")); // header
-
-        data.forEach(person=>{
-          const row = allFields.map((col,i)=>{
-            const val = col.startsWith("_extra")
-              ? (person._extra[i - window.StamboomSchema.fields.length] ?? "")
-              : (person[col] ?? "");
-            return `"${String(val).replace(/"/g,'""')}"`;
-          });
-          rows.push(row.join(","));
-        });
-
-        const blob = new Blob([rows.join("\n")],{type:"text/csv"});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "stamboomData.csv";
-        a.click();
-        URL.revokeObjectURL(url);
-      });
-
-      renderTable(); // eerste render
-    });
-  </script>
-
-  <!-- ======================= Footer ======================= -->
-  <div id="footer-placeholder"></div>
-  <script>
-    fetch('/MyFamTreeCollab/Layout/Footer.html')
-      .then(resp => resp.text())
-      .then(data => document.getElementById('footer-placeholder').innerHTML = data);
-  </script>
-
-</body>
-</html>
+})();
