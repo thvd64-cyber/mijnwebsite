@@ -1,9 +1,9 @@
-/* ======================= js/storage.js v0.0.6 ======================= */
+/* ======================= js/storage.js v0.0.5c ======================= */
 /* Persistent storage voor MyFamTreeCollab, volledig schema-driven
    - Maakt gebruik van window.StamboomSchema.fields
    - Automatische migratie van legacy en nieuwe records
-   - Publieke API: get, set, add, update, clear 
-   - ID-generator toegevoegd en wordt correct toegepast bij lege ID-cellen
+   - Publieke API: get, set, add, update, clear
+   - Nieuwe ID-generator: 4 letters uit specifieke velden + 3 cijfers
 */
 
 (function(){
@@ -14,7 +14,7 @@ const STORAGE_KEY = 'stamboomData'; // localStorage sleutel
 
 /* ======================= SAFE JSON PARSING ======================= */
 function safeParse(json){
-    if(!json) return [];
+    if(!json) return []; // lege string → lege array
     try { 
         return JSON.parse(json); // probeer JSON te parsen
     }
@@ -24,9 +24,39 @@ function safeParse(json){
     }
 }
 
+/* ======================= CUSTOM CODE GENERATOR =====================*== */
+/* Genereert een code van 4 letters uit specifieke velden + 3 cijfers */
+function generateCustomCode(record, existingIDs = []){
+    // Pak de velden 2, 3, 5 en 6 uit het record (Object.keys(record) index)
+    const fields = [
+        record[Object.keys(record)[1]] || '', // 2e cel
+        record[Object.keys(record)[2]] || '', // 3e cel
+        record[Object.keys(record)[4]] || '', // 5e cel
+        record[Object.keys(record)[5]] || ''  // 6e cel
+    ];
+
+    // Pak de eerste letter van elk veld en zet om naar hoofdletter
+    let letters = fields.map(f => f.charAt(0).toUpperCase()).join('');
+
+    // Vul aan met X als niet genoeg letters aanwezig
+    letters = letters.padEnd(4, 'X');
+
+    // Voeg 3 willekeurige cijfers toe en controleer uniciteit
+    let code;
+    let attempts = 0;
+    do {
+        const numbers = String(Math.floor(Math.random() * 1000)).padStart(3,'0'); // altijd 3 cijfers
+        code = letters + numbers; // combineer letters + cijfers
+        attempts++;
+        if(attempts > 1000) throw new Error('Geen unieke code gevonden na 1000 pogingen'); // safety
+    } while(existingIDs.includes(code)); // check dubbele ID
+
+    return code; // retourneer unieke code
+}
+
 /* ======================= MIGRATIE FUNCTIE ======================= */
 function migrate(record){
-    if(!record || typeof record !== "object") return {};
+    if(!record || typeof record !== "object") return {}; // ongeldig record → leeg object
     
     const migrated = {...record}; // maak kopie zodat originele objecten niet gewijzigd worden
 
@@ -39,42 +69,23 @@ function migrate(record){
         console.error("StamboomSchema niet geladen!");
     }
 
-    return migrated;
+    // genereer unieke ID indien ontbrekend
+    if(!migrated.ID || migrated.ID.trim() === ""){
+        const dataset = get(); // huidige dataset ophalen
+        const existingIDs = dataset.map(p => p.ID); // alle bestaande IDs
+        migrated.ID = generateCustomCode(migrated, existingIDs); // genereer unieke code
+    }
+
+    return migrated; // retourneer gemigreerd record
 }
-
-/* ======================= GENERATE UNIQUE ID ======================= */
-// Functie genereert een uniek ID op basis van cel2,3,5,6 + oplopende 3-cijfer code
-window.genereerCode = function(person, allPersons){
-    // ======================= PREPARE LETTERS =======================
-    const c2 = person.Doopnaam && person.Doopnaam.trim() !== "" ? person.Doopnaam.trim()[0].toUpperCase() : 'X'; // eerste letter Doopnaam of X
-    const c3 = person.Roepnaam && person.Roepnaam.trim() !== "" ? person.Roepnaam.trim()[0].toUpperCase() : 'X'; // eerste letter Roepnaam of X
-    const c5 = person.Achternaam && person.Achternaam.trim() !== "" ? person.Achternaam.trim()[0].toUpperCase() : 'X'; // eerste letter Achternaam of X
-    const c6 = person.Geslacht && person.Geslacht.trim() !== "" ? person.Geslacht.trim()[0].toUpperCase() : 'X'; // eerste letter Geslacht of X
-
-    // ======================= BASE PREFIX =======================
-    const prefix = `${c2}${c3}${c5}${c6}`; // samenvoegen van letters tot basis prefix
-
-    // ======================= INITIALISE SEQUENCE =======================
-    let seq = 1; // start van 3-cijferse oplopende code
-    let newID = ''; // variabele voor volledige ID
-
-    // ======================= GENERATE UNIQUE ID LOOP =======================
-    do {
-        const code = seq.toString().padStart(3,'0'); // 3-cijfer code met voorloopnullen
-        newID = `${prefix}${code}`; // volledige ID samenstellen
-        seq++; // volgende nummer voor poging als ID niet uniek is
-    } while(allPersons.some(p => p.ID === newID)); // check: ID uniek tegen bestaande + import personen
-
-    return newID; // retourneer unieke ID
-};
 
 /* ======================= GET ======================= */
 function get(){
     let raw = localStorage.getItem(STORAGE_KEY); // haal JSON string
     let parsed = safeParse(raw); // parse JSON
-    if(!Array.isArray(parsed)) parsed = [];
+    if(!Array.isArray(parsed)) parsed = []; // fallback naar lege array
 
-    // voer migratie uit op alle records
+    // voer migratie uit op alle records zodat alles conform schema is
     parsed = parsed.map(r => migrate(r));
 
     return parsed; // return array van records
@@ -86,7 +97,7 @@ function set(dataset){
         console.warn('set() verwacht array'); 
         return false; 
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset)); // sla op
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset)); // sla array op als JSON
     return true;
 }
 
@@ -97,48 +108,17 @@ function add(person){
         return false; 
     }
     const dataset = get(); // huidige dataset ophalen
-    const migrated = migrate(person); // migratie uitvoeren
-
-    // ======================= GENEREER ID ALS LEEG =======================
-    if(!migrated.ID || migrated.ID.trim() === ""){
-        // genereer unieke ID met check tegen bestaande records
-        migrated.ID = window.genereerCode(migrated, dataset);
-    }
-
-    dataset.push(migrated); // toevoegen aan dataset
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset)); // opslaan in localStorage
+    const migrated = migrate(person); // voer migratie en ID-generatie uit
+    dataset.push(migrated); // voeg record toe
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset)); // opslaan
     return true;
-}
-
-/* ======================= BULK IMPORT FUNCTION ======================= */
-function importCSV(records){
-    if(!Array.isArray(records)) return 0; // controle
-
-    const dataset = get(); // huidige records
-    const imported = []; // array voor nieuwe records met ID
-
-    // loop door elke rij uit CSV
-    records.forEach((row) => {
-        const migrated = migrate(row); // schema velden vullen
-        // ======================= GENEREER ID ALS LEEG =======================
-        if(!migrated.ID || migrated.ID.trim() === ""){
-            // check uniekheid tegen bestaande + reeds geïmporteerde rijen
-            migrated.ID = window.genereerCode(migrated, dataset.concat(imported));
-        }
-        imported.push(migrated); // voeg toe aan tijdelijke import array
-    });
-
-    // voeg alles samen met bestaande dataset
-    const finalDataset = dataset.concat(imported);
-    set(finalDataset); // opslaan
-    return imported.length; // retourneer aantal geïmporteerde rijen
 }
 
 /* ======================= UPDATE ======================= */
 function update(personID, updates){
-    const dataset = get();
+    const dataset = get(); // huidige dataset ophalen
     const idx = dataset.findIndex(p => p.ID === personID); // zoek persoon
-    if(idx === -1) return false;
+    if(idx === -1) return false; // record niet gevonden
     dataset[idx] = {...dataset[idx], ...updates}; // merge updates
     set(dataset); // opslaan
     return true;
@@ -146,7 +126,7 @@ function update(personID, updates){
 
 /* ======================= CLEAR ======================= */
 function clear(){
-    localStorage.removeItem(STORAGE_KEY); // verwijder key
+    localStorage.removeItem(STORAGE_KEY); // verwijder key uit localStorage
     return true;
 }
 
@@ -157,8 +137,7 @@ window.StamboomStorage = {
     add,
     update,
     clear,
-    importCSV, // nieuwe functie toegevoegd voor bulk import met automatische ID generatie
-    version: "v0.0.6"
+    version: "v0.0.5" // nieuwe versie
 };
 
 console.log("StamboomStorage geladen:", window.StamboomStorage.version);
