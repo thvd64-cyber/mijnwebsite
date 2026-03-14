@@ -1,6 +1,5 @@
-/* ======================= js/storage.js v0.0.5 ======================= */
+/* ======================= js/storage.js v0.0.4 ======================= */
 /* Persistent storage voor MyFamTreeCollab, volledig schema-driven
-   - gebruik IDGenerator
    - Maakt gebruik van window.StamboomSchema.fields
    - Automatische migratie van legacy en nieuwe records
    - Publieke API: get, set, add, update, clear
@@ -39,22 +38,10 @@ function migrate(record){
         console.error("StamboomSchema niet geladen!");
     }
 
-   // ======================= ID GENERATIE VIA idGenerator.js =======================
-// genereer ID indien ontbrekend
-if(!migrated.ID || migrated.ID.trim() === ""){
-
-    const bestaandeIDs = get().map(p => p.ID); 
-    // haal alle bestaande IDs uit storage zodat de generator duplicaten kan vermijden
-
-    if(window.genereerCode){
-        migrated.ID = window.genereerCode(migrated, bestaandeIDs); 
-        // gebruik centrale ID generator uit js/idGenerator.js
-    } 
-    else {
-        migrated.ID = 'P' + Date.now(); 
-        // fallback als idGenerator.js niet geladen is
+    // genereer ID indien ontbrekend
+    if(!migrated.ID || migrated.ID.trim() === ""){
+        migrated.ID = window.genereerCode ? window.genereerCode(migrated, []) : 'P'+Date.now();
     }
-}
 
     return migrated;
 }
