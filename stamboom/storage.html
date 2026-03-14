@@ -1,5 +1,4 @@
-<!-- ======================= js.storage.html v0.0.3 ======================= -->
-<!-- Dynamische kolommen, Migratie van oude CSV's, ID-generatie uniform, Filterbare tabel, Export (new) & Reset knop, Versiebeheer -->
+<!-- ======================= storage.html v1.0 ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -7,6 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyFamTreeCollab - Opslag</title>
     <link rel="stylesheet" href="../css/style.css">
+    <style>
+    /* ======================= BASIS STIJL ======================= */
+    body { font-family: Arial,sans-serif; margin:0; padding:0; background:#f8f8f8; }
+    .main-container { width:100%; padding:20px; background:#fff; }
+    .storage-info { font-weight:bold; margin-bottom:15px; }
+    table { border-collapse: collapse; width:100%; margin-top:10px; }
+    th, td { border:1px solid #ccc; padding:8px; text-align:left; }
+    th { background:#f4f4f4; }
+    .empty { font-style:italic; color:#777; margin-top:20px; }
+    button { padding:8px 12px; cursor:pointer; border:none; border-radius:4px; }
+    .btn-reset { background:#d9534f; color:#fff; }
+    .btn-reset:hover { background:#c9302c; }
+    #buttonsContainer { margin-bottom:10px; display:flex; gap:10px; flex-wrap:wrap; }
+    #exportJSONBtn { background:#0275d8; color:#fff; }
+    #exportJSONBtn:hover { background:#025aa5; }
+    #exportCSVBtn { background:#5bc0de; color:#fff; }
+    #exportCSVBtn:hover { background:#31b0d5; }
+    @media(max-width:768px){ table, th, td { font-size:0.9rem; } }
+    </style>
 </head>
 <body>
 
@@ -27,31 +45,24 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
 </script>
 
 <!-- ======================= Pagina Titel ======================= -->
-<div id="pageTitle" style="font-size:1.5rem;font-weight:bold;margin-bottom:15px;">Opgeslagen stamboom data</div>
+<div id="pageTitle" style="font-size:1.5rem;font-weight:bold;margin-bottom:15px;">
+    Opgeslagen stamboom data
+</div>
 
 <!-- ======================= Hoofd Container ======================= -->
 <div class="main-container">
-    <div style="display:flex; justify-content:flex-start; margin-bottom:10px;">
-        <button class="btn-reset" id="resetBtn">Wis alle data</button>
+
+    <!-- ======================= KNOPPEN ======================= -->
+    <div id="buttonsContainer">
+        <button id="exportJSONBtn">Export JSON</button>
+        <button id="exportCSVBtn">Export CSV</button>
+        <button id="resetBtn" class="btn-reset">Reset Stamboom</button>
     </div>
 
     <div class="storage-info" id="storageInfo"></div> <!-- info: versie + record aantal -->
     <div id="storageContainer"></div> <!-- dynamische tabel wordt hier geplaatst -->
-</div>
 
-<!-- ======================= CSS ======================= -->
-<style>
-body { font-family: Arial,sans-serif; margin:0; padding:0; background:#f8f8f8; }
-.main-container { width:100%; padding:20px; background:#fff; }
-.storage-info { font-weight:bold; margin-bottom:15px; }
-table { border-collapse: collapse; width:100%; margin-top:10px; }
-th, td { border:1px solid #ccc; padding:8px; text-align:left; }
-th { background:#f4f4f4; }
-.empty { font-style:italic; color:#777; margin-top:20px; }
-.btn-reset { padding:8px 12px; cursor:pointer; background:#d9534f; color:#fff; border:none; border-radius:4px; margin-top:15px; }
-.btn-reset:hover { background:#c9302c; }
-@media(max-width:768px){ table, th, td { font-size:0.9rem; } }
-</style>
+</div>
 
 <!-- ======================= Scripts ======================= -->
 <script src="../js/schema.js"></script> <!-- bevat FIELDS + validatie -->
@@ -68,14 +79,17 @@ document.addEventListener('DOMContentLoaded', function(){
     const container = document.getElementById('storageContainer');
     const info = document.getElementById('storageInfo');
     const resetBtn = document.getElementById('resetBtn');
+    const exportJSONBtn = document.getElementById('exportJSONBtn');
+    const exportCSVBtn = document.getElementById('exportCSVBtn');
 
-    // kolommen dynamisch uit schema.js
     const columns = window.StamboomSchema ? [...window.StamboomSchema.fields] : [];
 
+    /* ======================= FUNCTIE TABEL RENDEREN ======================= */
     function renderTable(){
         let data = StamboomStorage.get();
         container.innerHTML = "";
         info.innerHTML = `Storage versie: ${StamboomStorage.version} | Aantal records: ${data.length}`;
+
         if(!data.length){
             container.innerHTML = '<div class="empty">Geen data gevonden in localStorage.</div>';
             return;
@@ -84,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function(){
         const table = document.createElement('table');
         const thead = document.createElement('thead');
 
-        // header rij
+        // Header rij
         const headerRow = document.createElement('tr');
         columns.forEach(col => {
             const th = document.createElement('th');
@@ -93,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function(){
         });
         thead.appendChild(headerRow);
 
-        // filter rij
+        // Filter rij
         const filterRow = document.createElement('tr');
         const filters = {};
         columns.forEach(col=>{
@@ -135,17 +149,34 @@ document.addEventListener('DOMContentLoaded', function(){
         applyFilters();
     }
 
-    <!-- ======================= EXPORT EN RESET KNOPPEN ======================= -->
-<div id="buttonsContainer" style="margin:10px 0;">
-    <!-- EXPORT knoppen bovenaan -->
-    <button id="exportJSONBtn">Export JSON</button>
-    <button id="exportCSVBtn">Export CSV</button>
+    /* ======================= EXPORT JSON ======================= */
+    exportJSONBtn.addEventListener('click', function(){
+        const data = StamboomStorage.get();
+        const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = "stamboom.json"; a.click();
+        URL.revokeObjectURL(url);
+    });
 
-    <!-- RESET knop -->
-    <button id="resetBtn">Reset Stamboom</button>
-</div>
-    
-    // reset knop functionaliteit
+    /* ======================= EXPORT CSV ======================= */
+    exportCSVBtn.addEventListener('click', function(){
+        const data = StamboomStorage.get();
+        if(!data.length) return alert("Geen data om te exporteren.");
+        const csvRows = [];
+        csvRows.push(columns.join(",")); // header
+        data.forEach(person=>{
+            const row = columns.map(col => `"${(person[col]??"").toString().replace(/"/g,'""')}"`);
+            csvRows.push(row.join(","));
+        });
+        const blob = new Blob([csvRows.join("\n")], {type:"text/csv"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = "stamboom.csv"; a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    /* ======================= RESET KNOP ======================= */
     resetBtn.addEventListener('click', function(){
         if(!StamboomStorage.get().length) return;
         const confirmMessage = "⚠️ WAARSCHUWING ⚠️\n\nAlle opgeslagen stamboomdata wordt definitief verwijderd.\nMaak eerst een EXPORT van je data.\nKlik OK om te bevestigen.";
@@ -165,5 +196,6 @@ fetch('/MyFamTreeCollab/Layout/Footer.html')
     .then(resp=>resp.text())
     .then(data=>document.getElementById('footer-placeholder').innerHTML=data);
 </script>
+
 </body>
 </html>
