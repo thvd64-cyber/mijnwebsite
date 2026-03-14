@@ -1,8 +1,9 @@
-/* ======================= js/storage.js v0.0.5b ======================= */
+/* ======================= js/storage.js v0.0.6 ======================= */
 /* Persistent storage voor MyFamTreeCollab, volledig schema-driven
    - Maakt gebruik van window.StamboomSchema.fields
    - Automatische migratie van legacy en nieuwe records
    - Publieke API: get, set, add, update, clear 
+   - ID-generator toegevoegd en wordt correct toegepast bij lege ID-cellen
 */
 
 (function(){
@@ -100,12 +101,37 @@ function add(person){
 
     // ======================= GENEREER ID ALS LEEG =======================
     if(!migrated.ID || migrated.ID.trim() === ""){
-        migrated.ID = window.genereerCode(migrated, dataset); // genereer uniek ID op basis van bestaande records
+        // genereer unieke ID met check tegen bestaande records
+        migrated.ID = window.genereerCode(migrated, dataset);
     }
 
     dataset.push(migrated); // toevoegen aan dataset
     localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset)); // opslaan in localStorage
     return true;
+}
+
+/* ======================= BULK IMPORT FUNCTION ======================= */
+function importCSV(records){
+    if(!Array.isArray(records)) return 0; // controle
+
+    const dataset = get(); // huidige records
+    const imported = []; // array voor nieuwe records met ID
+
+    // loop door elke rij uit CSV
+    records.forEach((row) => {
+        const migrated = migrate(row); // schema velden vullen
+        // ======================= GENEREER ID ALS LEEG =======================
+        if(!migrated.ID || migrated.ID.trim() === ""){
+            // check uniekheid tegen bestaande + reeds geïmporteerde rijen
+            migrated.ID = window.genereerCode(migrated, dataset.concat(imported));
+        }
+        imported.push(migrated); // voeg toe aan tijdelijke import array
+    });
+
+    // voeg alles samen met bestaande dataset
+    const finalDataset = dataset.concat(imported);
+    set(finalDataset); // opslaan
+    return imported.length; // retourneer aantal geïmporteerde rijen
 }
 
 /* ======================= UPDATE ======================= */
@@ -131,7 +157,8 @@ window.StamboomStorage = {
     add,
     update,
     clear,
-    version: "v0.0.5"
+    importCSV, // nieuwe functie toegevoegd voor bulk import met automatische ID generatie
+    version: "v0.0.6"
 };
 
 console.log("StamboomStorage geladen:", window.StamboomStorage.version);
