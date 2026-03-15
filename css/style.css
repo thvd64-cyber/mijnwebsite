@@ -1,4 +1,4 @@
-/* ======================= css/style.css v1.0.1 ======================= */
+/* ======================= css/style.css v1.0.3 ======================= */
 /* TREE VIEW STYLING toegevoeg */
 /* ======================= BASIS LAYOUT ======================= */
 body {
@@ -264,7 +264,17 @@ button.danger:hover {
     font-size: 14px;
 }
 
+/* =======================
+   MANAGE TABLE OVERRIDE v1.0.3
+   ======================= */
+/* verwijdert alleen zebra en hover in manage tabel zodat JS-relatiekleuren zichtbaar blijven */
+#manageTable tr:nth-child(even) {
+    background-color: transparent; /* geen achtergrond voor even rijen, JS logica kleuren blijft zichtbaar */
+}
 
+#manageTable tr:hover {
+    background-color: transparent; /* geen hoverkleur, JS logica kleuren blijft zichtbaar */
+}
 /* =======================
    RESPONSIVE IMPROVEMENT
    ======================= */
