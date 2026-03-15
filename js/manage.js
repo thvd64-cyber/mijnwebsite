@@ -1,4 +1,4 @@
-/* ======================= manage.js v1.3.19 ======================= */
+/* ======================= manage.js v1.3.19a ======================= */
 /* Drop-in, 14 kolommen, live search, add/save/refresh, export JSON & CSV, inline uitleg */
 
 (function(){
@@ -121,7 +121,7 @@ function renderTable(ds){
             case 'KindID': relatieLabel='Kind'; break;
             default: relatieLabel=p.Relatie||'-';
         }
-        if(p.Relatie) tr.classList.add(`rel-${p.Relatie.toLowerCase()}`);
+        if(p.Relatie) tr.classList.add(p.Relatie);
         COLUMNS.forEach(col=>{
             const td=document.createElement('td');
             if(col.key==='Relatie'){td.textContent=relatieLabel;}
