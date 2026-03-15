@@ -1,5 +1,5 @@
-<!-- ======================= stamboom/manage.html v1.3.17 ======================= -->
-<!-- Samengevoegd: v1.3.16 + layout & project scripts uit v1.3.0 -->
+<!-- ======================= stamboom/manage.html v1.3.18 ======================= -->
+<!-- relatie kleuren naam aanpas
 <!DOCTYPE html>
 <html lang="nl">
 
@@ -43,11 +43,11 @@ text-align:left; /* tekst links uitlijnen */
 vertical-align:top; /* tekst boven uitlijnen */
 }
 
-/* Header cellen
+/* Header cellen  */
 th{
 background:#eee; /* licht grijze achtergrond voor headers */
 }
- */
+
 /* ======================= TEXTAREA CELLEN ======================= */
 /* Textarea gebruikt om tabeldata direct te kunnen aanpassen */
 #manageTable td textarea{
@@ -68,54 +68,56 @@ padding:4px; /* kleine interne marge */
 background-color:rgba(0,0,0,0.05);
 }
 
-/* ======================= RELATIE KLEUREN ======================= */
-/* kleuren maken relaties visueel herkenbaar */
-/* HoofdID */
-.rel-hoofdid{
-background:#fffde7; /* licht geel */
-font-weight:600; /* iets dikkere tekst */
-}
-/* ouders */
-.rel-vhoofdid,
-.rel-mhoofdid{
-background:#e8f5e9; /* licht groen */
-font-weight:500;
-}
-/* partner van hoofd */
-.rel-phoofdid{
-background:#f3e5f5; /* licht paars */
-font-style:italic; /* cursief */
-}
-/* kinderen */
-.rel-kindid{
-background:#e3f2fd; /* licht blauw */
-}
-/* verschillende scenario's voor kinderen */
-.rel-kindid.scenario-1{
-background:#e3f2fd;  /* licht blauw */
-}
-.rel-kindid.scenario-2{
-background:#eef7fe;    /* zeer lichte blauwachtige tint  */
-}
-.rel-kindid.scenario-3{
-background:#f7fbff;     /* bijna wit, zeer lichte blauw tint  */
-}
-/* partner van kind */
-.rel-kindpartnerid{
-background:#d0ebff;   /* lichte blauw tint  */
-font-style:italic;
-}
-/* broers en zussen */
-.rel-bzid{
-background:#fff3e0;     /* licht oranje-achtig wit tint  */
-font-weight:500;
-}
-/* partner van broer/zus */
-.rel-bzpartnerid{
-background:#fbe9e7;     /* roze/peach tint  */
-font-style:italic;
+/* ======================= RELATIE KLEUREN DIRECTE ID ======================= */
+/* kleuren maken relaties visueel herkenbaar op basis van dataset IDs */
+
+/* Hoofd */
+.HoofdID {
+  background: #fffde7; /* licht geel */
+  font-weight: 600;    /* iets dikkere tekst */
 }
 
+/* Ouders */
+.VHoofdID,
+.MHoofdID {
+  background: #e8f5e9; /* licht groen */
+  font-weight: 500;
+}
+
+/* Partner van hoofd */
+.PHoofdID {
+  background: #f3e5f5; /* licht paars */
+  font-style: italic;   /* cursief */
+}
+
+/* Kinderen */
+.KindID {
+  background: #e3f2fd;  /* blauw */
+}
+.HKindID {
+  background: #eef7fe;  /* licht blauw */
+}
+.PHKindID {
+  background: #f7fbff;  /* zeer licht blauw */
+}
+
+/* Partner van kind */
+.KPartnerID {
+  background: #d0ebff; /* licht blauw */
+  font-style: italic;
+}
+
+/* Broers en zussen */
+.BZID {
+  background: #fff3e0; /* licht oranje */
+  font-weight: 500;
+}
+
+/* Partner van broer/zus */
+.BZPartnerID {
+  background: #fbe9e7; /* roze/peach */
+  font-style: italic;
+}
 /* ======================= CONTROLS ======================= */
 /* zoekveld styling */
 #searchPerson{
