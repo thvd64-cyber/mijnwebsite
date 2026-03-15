@@ -323,21 +323,13 @@ button.danger:hover {
     margin: 6px auto; /* centreren met marge boven en onder */
     width: 50%; /* lijn half de breedte van container voor nette vertakking */
 }
-
 /* ======================= MANAGE TABLE OVERRIDE ======================= */
-/* Zorgt dat de beheer tabel volledig transparant blijft */
+/* verwijdert alleen zebra en hover in manage tabel */
 
-#manageTable,
-#manageTable tr,
-#manageTable td,
-#manageTable th {
+#manageTable tr:nth-child(even) {
     background-color: transparent;
 }
 
-#manageTable tr:nth-child(even) {
-    background-color: transparent; /* verwijdert zebra stripes */
-}
-
 #manageTable tr:hover {
-    background-color: transparent; /* verwijdert hover kleur */
+    background-color: transparent;
 }
