@@ -2,16 +2,16 @@
 /* TREE VIEW STYLING toegevoeg */
 /* ======================= BASIS LAYOUT ======================= */
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #fdfdfd;
+    font-family: Arial, sans-serif; /* basis font voor de pagina */
+    margin: 0; /* verwijder standaard browser marge */
+    padding: 0; /* verwijder standaard browser padding */
+    background-color: #fdfdfd; /* lichte achtergrondkleur */
 }
 
 /* Standaard tekstkleur alleen voor content */
 main {
-    padding: 2rem;
-    color: #333;
+    padding: 2rem; /* interne marge rondom content */
+    color: #333; /* standaard tekstkleur */
 }
 
 
@@ -19,71 +19,71 @@ main {
    HEADER / NAVBAR
    ======================= */
 header {
-    background-color: #004080;
-    color: white;
-    padding: 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    background-color: #004080; /* donkerblauwe achtergrond voor header */
+    color: white; /* tekstkleur wit */
+    padding: 1rem; /* interne marge */
+    display: flex; /* flex layout voor horizontale uitlijning */
+    justify-content: space-between; /* ruimte tussen items */
+    align-items: center; /* verticale uitlijning */
 }
 
 /* Bescherm navbar titel expliciet */
 header h1,
 header .brand,
 header .logo {
-    color: white;
-    margin: 0;
+    color: white; /* forceer witte kleur voor logo/titel */
+    margin: 0; /* verwijder standaard marge */
 }
 
 /* =======================
    NAVIGATIE MENU
    ======================= */
 nav ul.menu {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    gap: 1rem;
+    list-style: none; /* verwijder bullets */
+    margin: 0; /* geen marge */
+    padding: 0; /* geen padding */
+    display: flex; /* horizontale layout */
+    gap: 1rem; /* ruimte tussen items */
 }
 
 nav ul.menu > li {
-    position: relative;
+    position: relative; /* nodig voor submenu positioning */
 }
 
 nav ul.menu a {
-    color: white;
-    text-decoration: none;
-    padding: 0.5rem 1rem;
-    display: block;
+    color: white; /* linkkleur wit */
+    text-decoration: none; /* geen onderlijning */
+    padding: 0.5rem 1rem; /* interne marge */
+    display: block; /* blokniveau voor klikbare ruimte */
 }
 
 nav li.dropdown > a {
-    cursor: pointer;
+    cursor: pointer; /* toon pointer voor dropdowns */
 }
 
 /* =======================
    SUBMENU
    ======================= */
 nav ul.submenu {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background-color: #004080;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    border-radius: 4px;
-    min-width: 150px;
-    z-index: 1000;
+    display: none; /* standaard verborgen */
+    position: absolute; /* positionering t.o.v. parent */
+    top: 100%; /* direct onder parent item */
+    left: 0; /* uitlijning links */
+    background-color: #004080; /* donkerblauw achtergrond */
+    list-style: none; /* geen bullets */
+    padding: 0; /* geen padding */
+    margin: 0; /* geen marge */
+    border-radius: 4px; /* afgeronde hoeken */
+    min-width: 150px; /* minimale breedte */
+    z-index: 1000; /* boven andere elementen */
 }
 
 nav ul.submenu li a {
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 1rem; /* interne marge submenu links */
 }
 
 nav ul.menu li:hover > .submenu {
-    display: block;
+    display: block; /* toon submenu bij hover */
 }
 
 
@@ -91,12 +91,12 @@ nav ul.menu li:hover > .submenu {
    BUTTONS
    ======================= */
 .btn {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    background-color: #0080ff;
-    color: white;
-    text-decoration: none;
-    border-radius: 4px;
+    display: inline-block; /* inline blok voor padding */
+    padding: 0.5rem 1rem; /* interne marge */
+    background-color: #0080ff; /* blauwe knopkleur */
+    color: white; /* witte tekst */
+    text-decoration: none; /* geen onderlijning */
+    border-radius: 4px; /* afgeronde hoeken */
 }
 
 
@@ -104,37 +104,37 @@ nav ul.menu li:hover > .submenu {
    TOPBAR
    ======================= */
 .topbar {
-    background-color: #f0f0f0;
-    height: 35px;
-    display: flex;
-    align-items: center;
-    font-size: 14px;
+    background-color: #f0f0f0; /* lichte achtergrond */
+    height: 35px; /* vaste hoogte */
+    display: flex; /* flex layout */
+    align-items: center; /* verticale uitlijning */
+    font-size: 14px; /* lettergrootte */
 }
 
 .topbar-content {
-    width: 95%;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
+    width: 95%; /* breedte van content */
+    margin: 0 auto; /* centreren horizontaal */
+    display: flex; /* horizontale layout */
+    justify-content: space-between; /* ruimte tussen items */
 }
 
 .top-left a,
 .top-right a {
-    text-decoration: none;
-    color: #333;
-    margin-left: 10px;
-    font-weight: 500;
+    text-decoration: none; /* geen onderlijning */
+    color: #333; /* donkergrijze kleur */
+    margin-left: 10px; /* afstand tussen links */
+    font-weight: 500; /* medium gewicht */
 }
 
 .top-left a:hover,
 .top-right a:hover {
-    text-decoration: underline;
+    text-decoration: underline; /* underline bij hover */
 }
 
 .topbar a.active {
-    font-weight: 700;
-    text-decoration: underline;
-    color: #004080;
+    font-weight: 700; /* vet voor actieve link */
+    text-decoration: underline; /* underline */
+    color: #004080; /* donkerblauw */
 }
 
 
@@ -147,29 +147,29 @@ nav ul.menu li:hover > .submenu {
    TABLE STYLING
    ======================= */
 table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1.5rem;
-    background-color: #ffffff; /* standaard wit, nieuwe rijen wit */
+    width: 100%; /* volledige breedte */
+    border-collapse: collapse; /* samensmelten borders */
+    margin-top: 1.5rem; /* marge boven tabel */
+    background-color: #ffffff; /* standaard wit */
 }
 
 table th {
     background-color: #004080; /* donkerblauw header */
-    color: white;
-    font-weight: 600;
+    color: white; /* witte tekst */
+    font-weight: 600; /* semi-bold */
 }
 
 table th,
 table td {
     border: 1px solid #d9d9d9; /* lichtgrijze scheiding */
-    padding: 0.6rem 0.8rem;
-    text-align: left;
-    vertical-align: top;
-    font-size: 14px;
+    padding: 0.6rem 0.8rem; /* interne marge */
+    text-align: left; /* links uitlijnen */
+    vertical-align: top; /* bovenaan uitlijnen */
+    font-size: 14px; /* lettergrootte */
 }
 
 table tr:nth-child(even) {
-    background-color: #f7f9fc; /* lichte afwisseling voor even rijen */
+    background-color: #f7f9fc; /* lichte afwisseling */
 }
 
 table tr:hover {
@@ -180,7 +180,7 @@ table tr:hover {
    SELECTED ROW
    ======================= */
 table tr.selected {
-    background-color: #dbeeff; /* zachte lichtblauwe kleur voor selectie */
+    background-color: #dbeeff; /* selectie highlight */
 }
 
 
@@ -188,37 +188,37 @@ table tr.selected {
    MODAL WINDOW
    ======================= */
 .modal {
-    position: fixed;
-    top: 8%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 85%;
-    max-width: 1000px;
-    max-height: 85vh;
-    overflow-y: auto;
-    background: #ffffff;
-    border: 2px solid #004080;
-    border-radius: 6px;
-    padding: 1.5rem;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
-    z-index: 9999;
+    position: fixed; /* vaste positionering */
+    top: 8%; /* 8% van boven */
+    left: 50%; /* horizontaal midden */
+    transform: translateX(-50%); /* centreren */
+    width: 85%; /* breedte */
+    max-width: 1000px; /* max breedte */
+    max-height: 85vh; /* max hoogte viewport */
+    overflow-y: auto; /* scroll bij overflow */
+    background: #ffffff; /* witte achtergrond */
+    border: 2px solid #004080; /* blauwe rand */
+    border-radius: 6px; /* afgeronde hoeken */
+    padding: 1.5rem; /* interne marge */
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25); /* schaduw */
+    z-index: 9999; /* boven andere elementen */
 }
 
 .modal-content h2 {
-    margin-top: 0;
-    color: #004080;
+    margin-top: 0; /* geen marge boven */
+    color: #004080; /* donkerblauw */
 }
 
 .hidden {
-    display: none !important;
+    display: none !important; /* forceer verborgen */
 }
 
 .modal pre {
-    background: #f4f6f9;
-    padding: 1rem;
-    border-radius: 4px;
-    font-size: 13px;
-    overflow-x: auto;
+    background: #f4f6f9; /* lichte achtergrond */
+    padding: 1rem; /* interne marge */
+    border-radius: 4px; /* afgeronde hoeken */
+    font-size: 13px; /* compacte tekst */
+    overflow-x: auto; /* horizontaal scrollen indien nodig */
 }
 
 
@@ -226,30 +226,30 @@ table tr.selected {
    ADMIN ACTION BUTTONS
    ======================= */
 button {
-    cursor: pointer;
-    font-family: inherit;
-    border: none;
-    border-radius: 4px;
-    padding: 0.5rem 1rem;
-    font-size: 14px;
-    transition: background-color 0.2s ease, transform 0.05s ease;
+    cursor: pointer; /* pointer cursor */
+    font-family: inherit; /* erven font */
+    border: none; /* geen standaard border */
+    border-radius: 4px; /* afgeronde hoeken */
+    padding: 0.5rem 1rem; /* interne marge */
+    font-size: 14px; /* lettergrootte */
+    transition: background-color 0.2s ease, transform 0.05s ease; /* animatie bij hover/active */
 }
 
 button:hover {
-    opacity: 0.9;
+    opacity: 0.9; /* lichte transparantie bij hover */
 }
 
 button:active {
-    transform: scale(0.98);
+    transform: scale(0.98); /* klein effect bij klikken */
 }
 
 button.danger {
-    background-color: #b30000;
-    color: white;
+    background-color: #b30000; /* rode knop */
+    color: white; /* witte tekst */
 }
 
 button.danger:hover {
-    background-color: #990000;
+    background-color: #990000; /* donkerder rood bij hover */
 }
 
 
@@ -257,42 +257,32 @@ button.danger:hover {
    STORAGE SUMMARY BLOCK
    ======================= */
 #storageSummary {
-    margin-top: 1rem;
-    padding: 0.8rem 1rem;
-    background-color: #eef4fb;
-    border-left: 4px solid #004080;
-    font-size: 14px;
+    margin-top: 1rem; /* marge boven block */
+    padding: 0.8rem 1rem; /* interne marge */
+    background-color: #eef4fb; /* lichtblauwe achtergrond */
+    border-left: 4px solid #004080; /* blauwe linker rand */
+    font-size: 14px; /* lettergrootte */
 }
 
-/* =======================
-   MANAGE TABLE OVERRIDE v1.0.3
-   ======================= */
-/* verwijdert alleen zebra en hover in manage tabel zodat JS-relatiekleuren zichtbaar blijven */
-#manageTable tr:nth-child(even) {
-    background-color: transparent; /* geen achtergrond voor even rijen, JS logica kleuren blijft zichtbaar */
-}
-
-#manageTable tr:hover {
-    background-color: transparent; /* geen hoverkleur, JS logica kleuren blijft zichtbaar */
-}
 /* =======================
    RESPONSIVE IMPROVEMENT
    ======================= */
 @media (max-width: 768px) {
     nav ul.menu {
-        flex-direction: column;
-        gap: 0.5rem;
+        flex-direction: column; /* verticale layout */
+        gap: 0.5rem; /* kleinere spacing */
     }
 
     table th,
     table td {
-        font-size: 13px;
+        font-size: 13px; /* kleinere letters */
     }
 
     .modal {
-        width: 95%;
+        width: 95%; /* bredere modal voor small screens */
     }
 }
+
 /* =======================
    TREE VIEW STYLING
    ======================= */
