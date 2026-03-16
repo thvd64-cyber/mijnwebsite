@@ -1,4 +1,4 @@
-// ======================= stamboom/view.js v1.5.10 =======================
+// ======================= js/view.js v1.5.10 =======================
 // Boom rendering + Live search + Kind/Partner + BZID + BZID partner naast
 (function(){
 'use strict';
