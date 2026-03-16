@@ -1,4 +1,4 @@
-<!-- ======================= stamboom/timeline.html v0.2 ======================= -->
+<!-- ======================= stamboom/timeline.html v0.0.3 ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -27,7 +27,7 @@
 <!-- ======================= TopBar ======================= -->
 <div id="topbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')
+fetch('/MyFamTreeCollab/Layout/TopBar.html') // laad TopBar
 .then(resp => resp.text())
 .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
 </script>
@@ -35,7 +35,7 @@ fetch('/MyFamTreeCollab/Layout/TopBar.html')
 <!-- ======================= Navbar ======================= -->
 <div id="Navbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html')
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // laad Navbar
 .then(resp => resp.text())
 .then(data => { const ph=document.getElementById('Navbar-placeholder'); if(ph) ph.innerHTML=data; });
 </script>
@@ -57,36 +57,33 @@ document.addEventListener('DOMContentLoaded', () => {
 <div id="timelineContainer"></div> <!-- SVG tijdlijn wordt hier geplaatst -->
 
 <!-- ======================= Scripts ======================= -->
-<script src="../js/LiveSearch.js"></script> <!-- Universele LiveSearch module -->
+<script src="../js/schema.js"></script>      <!-- Schema voor personen -->
+<script src="../js/storage.js"></script>     <!-- Echte dataset functies -->
+<script src="../js/LiveSearch.js"></script>  <!-- Universele LiveSearch module -->
 
 <script>
-/* ======================= TEST DATA ======================= */
-const peopleData = [
-    {ID:"JVD001",Roepnaam:"Jan",Prefix:"van",Achternaam:"Dijk",Geboortedatum:"1843-05-12"},
-    {ID:"MDB002",Roepnaam:"Maria",Prefix:"de",Achternaam:"Boer",Geboortedatum:"1872-03-21"},
-    {ID:"PVD003",Roepnaam:"Piet",Prefix:"van",Achternaam:"Dijk",Geboortedatum:"1901-01-03"},
-    {ID:"AJ004",Roepnaam:"Anna",Prefix:"",Achternaam:"Jansen",Geboortedatum:"1935-07-19"}
-];
-
-/* ======================= TIMELINE CALLBACK ======================= */
-function onTimelinePersonSelected(personID){
-    /* Zoek geselecteerde persoon in dataset */
-    const person = peopleData.find(p => p.ID === personID);
-    if(person){
-        drawTimeline(peopleData, person); // teken timeline met focus op geselecteerde persoon
-    }
-}
-
-/* ======================= INIT LIVE SEARCH ======================= */
+/* ======================= DATA LADEN ======================= */
+let peopleData = []; // lege array initiëren
 document.addEventListener('DOMContentLoaded', () => {
+    // Haal alle personen uit storage.js / schema.js
+    if(typeof getPeopleData === "function"){
+        peopleData = getPeopleData(); // echte dataset
+    } else {
+        console.warn("getPeopleData() niet gevonden, controleer schema.js/storage.js");
+    }
+
+    /* ======================= INIT LIVE SEARCH ======================= */
     const input = document.getElementById('liveSearchInput'); // zoekveld ophalen
-    initLiveSearch(input, peopleData, onTimelinePersonSelected); // koppel universele LiveSearch
+    initLiveSearch(input, peopleData, personID => {
+        const person = peopleData.find(p => p.ID === personID); // zoek geselecteerde persoon
+        if(person) drawTimeline(peopleData, person); // focus highlight op timeline
+    });
 });
 
 /* ======================= DRAW TIMELINE ======================= */
 function drawTimeline(data, focusPerson){
     const container = document.getElementById("timelineContainer");
-    container.innerHTML=""; // verwijder oude timeline
+    container.innerHTML=""; // verwijder vorige timeline
 
     /* ======================= SVG CANVAS ======================= */
     const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
@@ -101,7 +98,7 @@ function drawTimeline(data, focusPerson){
 
     /* ======================= JAAR NAAR X-COORDINAAT ======================= */
     function yearToX(year){
-        return ((year-minYear)/(maxYear-minYear))*2800 + 50;
+        return ((year-minYear)/(maxYear-minYear))*2800 + 50; // horizontale positie
     }
 
     /* ======================= BASIS LIJN ======================= */
