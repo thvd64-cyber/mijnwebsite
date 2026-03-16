@@ -1,4 +1,4 @@
-// ======================= stamboom/view.js v1.6.0 =======================
+// ======================= js/view.js v1.6.0 =======================
 // Boom rendering + Live search
 // Relatie logica komt nu uit externe relatieEngine.js
 
