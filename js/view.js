@@ -151,26 +151,34 @@ function buildTree(rootID){
     if(parents.children.length>0) treeBox.prepend(parents);
 
     // =======================
-    // KINDEREN (gesorteerd van oudste naar jongste)
-    // =======================
-    let children = dataRel.filter(d => ['KindID','HKindID','PHKindID'].includes(d.Relatie)); 
-    children.sort((a, b) => parseBirthday(a.Geboortedatum) - parseBirthday(b.Geboortedatum));
+// KINDEREN (gesorteerd van oudste naar jongste) + partner
+// =======================
+let children = dataRel.filter(d => ['KindID','HKindID','PHKindID'].includes(d.Relatie)); 
+// Filter alle kinderen
 
-    if(children.length > 0){ 
-        const kidsWrap = document.createElement('div'); 
-        kidsWrap.className = 'tree-children';                     
+// Sorteer kinderen van oudste naar jongste geboortedatum
+children.sort((a, b) => parseBirthday(a.Geboortedatum) - parseBirthday(b.Geboortedatum));
 
-        children.forEach(k => {                                    
-            const kidGroup = document.createElement('div'); 
-            kidGroup.className = 'tree-kid-group';                
+if(children.length > 0){ 
+    const kidsWrap = document.createElement('div'); 
+    kidsWrap.className = 'tree-children';                     // Wrapper voor alle kinder-nodes
 
-            kidGroup.appendChild(createTreeNode(k, k.Relatie));   
+    children.forEach(k => {                                    
+        const kidGroup = document.createElement('div'); 
+        kidGroup.className = 'tree-kid-group';                // Horizontaal groepje: kind + partner
 
-            kidsWrap.appendChild(kidGroup);                        
-        });
+        kidGroup.appendChild(createTreeNode(k, k.Relatie));   // Voeg kind toe
 
-        treeBox.appendChild(kidsWrap);                              
-    }
+        if(k.PartnerID){                                      // Controleer of kind een partner heeft
+            const kPartner = findPerson(safe(k.PartnerID));   // Zoek partner in dataset
+            if(kPartner) kidGroup.appendChild(createTreeNode(kPartner,'PKindID')); // Voeg partner toe naast kind
+        }
+
+        kidsWrap.appendChild(kidGroup);                        // Voeg groep toe aan wrapper
+    });
+
+    treeBox.appendChild(kidsWrap);                              // Voeg alle kinderen toe aan de boom
+}
 
     // =======================
     // BROER / ZUS (gesorteerd van oudste naar jongste)
