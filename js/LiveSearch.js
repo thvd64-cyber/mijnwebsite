@@ -1,6 +1,6 @@
-/* ======================= js/LiveSearch.js v1.0.2 ======================= */
+/* ======================= js/LiveSearch.js v1.0.3 ======================= */
 /* Universele Live Search module voor view.js (popup) & manage.js (tabel)
-   - Filtert dataset realtime op ID, Roepnaam, Achternaam
+   - Filtert dataset realtime op ID, Roepnaam, Achternaam en Geboortedatum
    - Toon resultaten als dropdown-popup of in een tabel
    - Klikken op resultaat selecteert persoon en roept callback aan
 */
@@ -47,13 +47,13 @@ function initLiveSearch(searchInput, dataset, onSelectCallback){
             return;
         }
 
-// ======================= Dataset filter =======================
-const results = dataset.filter(p =>
-    safe(p.ID).toLowerCase().includes(term) ||              // zoeken op ID
-    safe(p.Roepnaam).toLowerCase().includes(term) ||        // zoeken op roepnaam
-    safe(p.Achternaam).toLowerCase().includes(term) ||      // zoeken op achternaam
-    safe(p.Geboortedatum).toLowerCase().includes(term)      // zoeken op geboortedatum (bijv. 1954 of 12-03-1954)
-);
+        // ======================= Dataset filter =======================
+        const results = dataset.filter(p =>
+            safe(p.ID).toLowerCase().includes(term) ||              // zoeken op ID
+            safe(p.Roepnaam).toLowerCase().includes(term) ||        // zoeken op roepnaam
+            safe(p.Achternaam).toLowerCase().includes(term) ||      // zoeken op achternaam
+            safe(p.Geboortedatum).toLowerCase().includes(term)      // zoeken op geboortedatum (bijv. 1954 of 12-03-1954)
+        );
 
         // ======================= Popup weergave =======================
         if(displayType==='popup') {
@@ -61,7 +61,7 @@ const results = dataset.filter(p =>
             const popup = document.createElement('div');       // nieuw element
             popup.id = 'searchPopup';
 
-            // Styling
+            // Styling van popup
             popup.style.position = 'absolute';
             popup.style.background = '#fff';
             popup.style.border = '1px solid #999';
@@ -83,14 +83,14 @@ const results = dataset.filter(p =>
                 row.style.fontSize='1.3rem';
                 popup.appendChild(row);
             } else {
-                    results.forEach(p=>{
-        const row = document.createElement('div'); // container voor één resultaat
+                results.forEach(p=>{
+                    const row = document.createElement('div'); // container voor één resultaat
 
-        // ======================= TEKST INCL. GEBOORTEDATUM =======================
-        const geboorte = p.Geboortedatum ? ` (${p.Geboortedatum})` : ''; 
-        // Voeg datum toe als die bestaat
-        row.textContent = `${p.ID} | ${p.Roepnaam} | ${p.Achternaam}${geboorte}`;
-        // Voorbeeld output: "JJH123 | Jan | Jansen (12-03-1954)"
+                    // ======================= TEKST INCL. GEBOORTEDATUM =======================
+                    const geboorte = p.Geboortedatum ? ` (${p.Geboortedatum})` : ''; 
+                    // Voeg datum toe als die bestaat
+                    row.textContent = `${p.ID} | ${p.Roepnaam} | ${p.Achternaam}${geboorte}`;
+                    // Voorbeeld output: "JJH123 | Jan | Jansen (12-03-1954)"
 
                     row.style.padding='8px';
                     row.style.cursor='pointer';
@@ -102,11 +102,11 @@ const results = dataset.filter(p =>
                         popup.remove();    // sluit popup
                     });
 
-                    popup.appendChild(row);
+                    popup.appendChild(row); // voeg resultaat toe aan popup
                 });
             }
 
-            document.body.appendChild(popup);
+            document.body.appendChild(popup); // popup toevoegen aan DOM
         }
 
         // ======================= Tabel weergave =======================
@@ -117,6 +117,6 @@ const results = dataset.filter(p =>
     }
 
     /* ======================= Exporteren ======================= */
-    window.liveSearch = liveSearch;
+    window.liveSearch = liveSearch; // exposeer global
 
 })();
