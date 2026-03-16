@@ -150,59 +150,71 @@ function buildTree(rootID){
     if(parents.children.length>0) treeBox.prepend(parents);
 
 // =======================
-// KINDEREN
+// HELPER: Parse geboortedatum naar Date object voor sortering
+// =======================
+function parseBirthday(d){
+    if(!d) return new Date(0);               // Fallback als datum ontbreekt
+    d = d.trim();
+
+    if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return new Date(d);           // ISO YYYY-MM-DD
+    if(/^\d{2}[-/]\d{2}[-/]\d{4}$/.test(d)){                        // NL DD-MM-YYYY of DD/MM/YYYY
+        const parts = d.split(/[-/]/);
+        return new Date(parts[2], parts[1]-1, parts[0]);           // Maand 0-index
+    }
+    if(/^\d{4}$/.test(d)) return new Date(d+'-01-01');             // Alleen jaar
+    const fallback = new Date(d);                                   // Fallback
+    return isNaN(fallback.getTime()) ? new Date(0) : fallback;      // Ongeldige datum → heel oud
+}
+
+// =======================
+// KINDEREN (gesorteerd van oudste naar jongste)
 // =======================
 let children = dataRel.filter(d => ['KindID','HKindID','PHKindID'].includes(d.Relatie)); 
-// Filter alle personen die een kinderrelatie hebben: KindID, HKindID of PHKindID
+// Filter alle kinderen
 
-// =======================
-// Sorteer kinderen op geboortedatum (oudste eerst)
-// =======================
-children.sort((a, b) => {
-    const dateA = a.Geboortedatum ? new Date(a.Geboortedatum) : new Date(0); // fallback: heel oud als datum ontbreekt
-    const dateB = b.Geboortedatum ? new Date(b.Geboortedatum) : new Date(0);
-    return dateA - dateB; // Oudste eerst
-});
+// Sorteer kinderen van oudste naar jongste
+children.sort((a, b) => parseBirthday(a.Geboortedatum) - parseBirthday(b.Geboortedatum));
 
-if(children.length > 0){     // Alleen doorgaan als er kinderen zijn
-
+if(children.length > 0){ 
     const kidsWrap = document.createElement('div'); 
-    kidsWrap.className = 'tree-children';     // Wrapper voor alle kinder-nodes (verticale stapeling)
+    kidsWrap.className = 'tree-children';                     // Wrapper voor alle kinderen
 
-    children.forEach(k => {         // Loop door alle kinderen
-
+    children.forEach(k => {                                    // Loop door kinderen
         const kidGroup = document.createElement('div'); 
-        kidGroup.className = 'tree-kid-group';         // Groep voor kind naast elkaar horizontaal
+        kidGroup.className = 'tree-kid-group';                // Horizontaal groepje (nu alleen kind)
 
-        kidGroup.appendChild(createTreeNode(k, k.Relatie));         // Maak DOM-node voor kind en voeg toe aan kidGroup
+        kidGroup.appendChild(createTreeNode(k, k.Relatie));   // Voeg kind toe
 
-        kidsWrap.appendChild(kidGroup);         // Voeg de groep (nu alleen kind) toe aan kidsWrap
+        kidsWrap.appendChild(kidGroup);                        // Voeg groep toe aan wrapper
     });
 
-    treeBox.appendChild(kidsWrap);     // Voeg alle kinderen toe aan de hoofdboomcontainer
+    treeBox.appendChild(kidsWrap);                              // Voeg alle kinderen toe aan de boom
 }
     
-    // =======================
-    // BROER / ZUS
-    // =======================
-    const bzNodes = dataRel.filter(d=>d.Relatie==='BZID');
+ // =======================
+// BROER / ZUS (gesorteerd van oudste naar jongste)
+// =======================
+let bzNodes = dataRel.filter(d => d.Relatie === 'BZID'); 
+// Filter alle broers/zussen
 
-    bzNodes.forEach(b=>{
+// Sorteer op geboortedatum (oudste eerst)
+bzNodes.sort((a, b) => parseBirthday(a.Geboortedatum) - parseBirthday(b.Geboortedatum));
 
-        const bzGroup=document.createElement('div'); // Wrapper voor BZ + partner
-        bzGroup.className='tree-kid-group';
+bzNodes.forEach(b => {
 
-        bzGroup.appendChild(createTreeNode(b,'BZID'));
+    const bzGroup = document.createElement('div'); 
+    bzGroup.className = 'tree-kid-group';         // Wrapper voor BZ + partner (horizontaal)
 
-        if(b.PartnerID){
-            const bPartner=findPerson(safe(b.PartnerID));
-            if(bPartner) bzGroup.appendChild(createTreeNode(bPartner,'PBZID'));
-        }
+    bzGroup.appendChild(createTreeNode(b, 'BZID')); // Voeg broer/zus toe
 
-        BZBox.appendChild(bzGroup);
-    });
-}
+    // Partner van BZ kan blijven, of verwijderen als je alleen BZID wilt tonen
+    if(b.PartnerID){
+        const bPartner = findPerson(safe(b.PartnerID));
+        if(bPartner) bzGroup.appendChild(createTreeNode(bPartner,'PBZID'));
+    }
 
+    BZBox.appendChild(bzGroup);                   // Voeg groep toe aan de BZ-box
+});
 
 // =======================
 // LIVE SEARCH
