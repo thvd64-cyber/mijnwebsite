@@ -137,12 +137,6 @@ nav ul.menu li:hover > .submenu {
     color: #004080; /* donkerblauw */
 }
 
-
-/* =====================================================
-   ADMIN LSD EXTENSIONS – ROBUUSTE TOEVOEGINGEN
-   (Geen bestaande regels aangepast)
-   ===================================================== */
-
 /* =======================
    TABLE STYLING
    ======================= */
@@ -168,9 +162,12 @@ table td {
     font-size: 14px; /* lettergrootte */
 }
 
+/* 
 table tr:nth-child(even) {
-    background-color: #f7f9fc; /* lichte afwisseling */
-}
+    background-color: #f7f9fc; 
+} 
+/* om-en-om kleur wit/grijs verwijderd zodat alle rijen wit zijn */
+*/
 
 table tr:hover {
     background-color: #eef4fb; /* lichtblauw bij hover */
