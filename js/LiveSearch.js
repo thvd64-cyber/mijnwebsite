@@ -1,7 +1,7 @@
-/* ======================= js/LiveSearch.js v1.0.0 ======================= */
-/* Centrale Live Search module (popup) voor view.js
+/* ======================= js/LiveSearch.js v1.0.1 ======================= */
+/* Universele Live Search module voor view.js (popup) & manage.js (tabel)
    - Filtert dataset realtime op ID, Roepnaam, Achternaam
-   - Toont resultaten in een dropdown-popup
+   - Toon resultaten als dropdown-popup of in een tabel
    - Klikken op resultaat selecteert persoon en roept callback aan
 */
 
@@ -10,17 +10,24 @@
 
     /* ======================= LiveSearch functie ======================= */
     function liveSearch(options) {
-        // Destructureer opties
-        const { searchInput, dataset, renderCallback } = options;
+        const {
+            searchInput,    // input element (HTMLInputElement)
+            dataset,        // array met personen
+            displayType,    // 'popup' of 'table'
+            renderCallback  // callback functie bij selectie/resultaten
+        } = options;
 
-        // Haal de zoekterm op en zet om naar kleine letters
+        // Haal zoekterm op en lowercase
         const term = safe(searchInput.value).toLowerCase();
 
-        // Verwijder vorige popup als die er is
+        // Verwijder eventuele oude popup
         document.getElementById('searchPopup')?.remove();
 
         // Stop als zoekterm leeg is
-        if (!term) return;
+        if (!term) {
+            if(displayType==='table') renderCallback([]); // bij table clear
+            return;
+        }
 
         // ======================= Dataset filter =======================
         const results = dataset.filter(p =>
@@ -29,59 +36,62 @@
             safe(p.Achternaam).toLowerCase().includes(term)
         );
 
-        // ======================= Popup creëren =======================
-        const rect = searchInput.getBoundingClientRect(); // positie van input
-        const popup = document.createElement('div');       // nieuw popup element
-        popup.id = 'searchPopup';                          // uniek ID
+        // ======================= Popup weergave =======================
+        if(displayType==='popup') {
+            const rect = searchInput.getBoundingClientRect(); // positie input
+            const popup = document.createElement('div');       // nieuw element
+            popup.id = 'searchPopup';
 
-        // Basis styling voor popup
-        popup.style.position = 'absolute';
-        popup.style.background = '#fff';
-        popup.style.border = '1px solid #999';
-        popup.style.zIndex = 1000;
-        popup.style.top = rect.bottom + window.scrollY + 5 + 'px';   // net onder input
-        popup.style.left = Math.max(rect.left + window.scrollX, 20) + 'px';
-        popup.style.width = (rect.width * 1.2) + 'px';                // iets breder
-        popup.style.maxHeight = '600px';
-        popup.style.overflowY = 'auto';                               // scroll bij veel items
-        popup.style.fontSize = '1.5rem';
-        popup.style.padding = '8px';
-        popup.style.borderRadius = '5px';
-        popup.style.boxShadow = '0 3px 6px rgba(0,0,0,0.2)';          // subtiele schaduw
+            // Styling
+            popup.style.position = 'absolute';
+            popup.style.background = '#fff';
+            popup.style.border = '1px solid #999';
+            popup.style.zIndex = 1000;
+            popup.style.top = rect.bottom + window.scrollY + 5 + 'px';
+            popup.style.left = Math.max(rect.left + window.scrollX, 20) + 'px';
+            popup.style.width = (rect.width * 1.2) + 'px';
+            popup.style.maxHeight = '600px';
+            popup.style.overflowY = 'auto';
+            popup.style.fontSize = '1.5rem';
+            popup.style.padding = '8px';
+            popup.style.borderRadius = '5px';
+            popup.style.boxShadow = '0 3px 6px rgba(0,0,0,0.2)';
 
-        // ======================= Resultaten vullen =======================
-        if (results.length === 0) {
-            // Geen resultaten
-            const row = document.createElement('div');
-            row.textContent = 'Geen resultaten';
-            row.style.padding = '8px';
-            row.style.fontSize = '1.3rem';
-            popup.appendChild(row);
-        } else {
-            // Voor elk resultaat een klikbare regel maken
-            results.forEach(p => {
+            if(results.length===0){
                 const row = document.createElement('div');
-                row.textContent = `${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`;
-                row.style.padding = '8px';
-                row.style.cursor = 'pointer';
-                row.style.fontSize = '1.3rem';
-
-                // Klik-event voor selectie
-                row.addEventListener('click', () => {
-                    renderCallback(p); // callback aanroepen met geselecteerde persoon
-                    popup.remove();    // popup sluiten
-                });
-
+                row.textContent = 'Geen resultaten';
+                row.style.padding='8px';
+                row.style.fontSize='1.3rem';
                 popup.appendChild(row);
-            });
+            } else {
+                results.forEach(p=>{
+                    const row = document.createElement('div');
+                    row.textContent = `${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`;
+                    row.style.padding='8px';
+                    row.style.cursor='pointer';
+                    row.style.fontSize='1.3rem';
+
+                    // Klik-event voor selectie
+                    row.addEventListener('click', ()=>{
+                        renderCallback(p); // stuur geselecteerde persoon terug
+                        popup.remove();    // sluit popup
+                    });
+
+                    popup.appendChild(row);
+                });
+            }
+
+            document.body.appendChild(popup);
         }
 
-        // Voeg popup toe aan body zodat het zichtbaar wordt
-        document.body.appendChild(popup);
+        // ======================= Tabel weergave =======================
+        else if(displayType==='table') {
+            // stuur de gefilterde resultaten naar de callback (bv. tbody vullen)
+            renderCallback(results);
+        }
     }
 
     /* ======================= Exporteren ======================= */
-    // Maak liveSearch globaal beschikbaar voor view.js
     window.liveSearch = liveSearch;
 
 })();
