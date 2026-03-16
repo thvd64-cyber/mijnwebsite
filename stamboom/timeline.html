@@ -1,18 +1,20 @@
-<!-- ======================= stamboom/timeline.html v0.0.3 ======================= -->
+<!-- ======================= stamboom/timeline.html v0.0.4 ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="UTF-8"> <!-- UTF-8 tekencodering voor internationale namen -->
+<meta charset="UTF-8"> <!-- UTF-8 tekencodering -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Mobiele responsiviteit -->
-<title>MyFamTreeCollab - Timeline</title> <!-- Pagina titel in browser -->
+<title>MyFamTreeCollab - Timeline</title>
+
+<!-- ======================= CSS ======================= -->
 <link rel="stylesheet" href="../css/style.css"> <!-- Algemene CSS -->
 <style>
 /* ======================= TIMELINE CONTAINER ======================= */
 #timelineContainer{
-    overflow-x:auto; /* horizontaal scrollen mogelijk bij grote tijdlijnen */
+    overflow-x:auto; /* horizontaal scrollen mogelijk */
     border:1px solid #ccc; /* licht kader rond timeline */
     padding:20px; /* binnenruimte */
-    margin-top:20px; /* afstand boven */
+    margin-top:20px; /* marge boven */
 }
 
 /* ======================= LABEL TEKST ======================= */
@@ -27,7 +29,7 @@
 <!-- ======================= TopBar ======================= -->
 <div id="topbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html') // laad TopBar
+fetch('/MyFamTreeCollab/Layout/TopBar.html')
 .then(resp => resp.text())
 .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
 </script>
@@ -35,7 +37,7 @@ fetch('/MyFamTreeCollab/Layout/TopBar.html') // laad TopBar
 <!-- ======================= Navbar ======================= -->
 <div id="Navbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // laad Navbar
+fetch('/MyFamTreeCollab/Layout/Navbar.html')
 .then(resp => resp.text())
 .then(data => { const ph=document.getElementById('Navbar-placeholder'); if(ph) ph.innerHTML=data; });
 </script>
@@ -54,87 +56,13 @@ document.addEventListener('DOMContentLoaded', () => {
 <input type="text" id="liveSearchInput" placeholder="Zoek ID of naam...">
 
 <!-- ======================= TIMELINE CONTAINER ======================= -->
-<div id="timelineContainer"></div> <!-- SVG tijdlijn wordt hier geplaatst -->
+<div id="timelineContainer"></div> <!-- SVG timeline wordt hier geplaatst -->
 
 <!-- ======================= Scripts ======================= -->
 <script src="../js/schema.js"></script>      <!-- Schema voor personen -->
 <script src="../js/storage.js"></script>     <!-- Echte dataset functies -->
 <script src="../js/LiveSearch.js"></script>  <!-- Universele LiveSearch module -->
-
-<script>
-/* ======================= DATA LADEN ======================= */
-let peopleData = []; // lege array initiëren
-document.addEventListener('DOMContentLoaded', () => {
-    // Haal alle personen uit storage.js / schema.js
-    if(typeof getPeopleData === "function"){
-        peopleData = getPeopleData(); // echte dataset
-    } else {
-        console.warn("getPeopleData() niet gevonden, controleer schema.js/storage.js");
-    }
-
-    /* ======================= INIT LIVE SEARCH ======================= */
-    const input = document.getElementById('liveSearchInput'); // zoekveld ophalen
-    initLiveSearch(input, peopleData, personID => {
-        const person = peopleData.find(p => p.ID === personID); // zoek geselecteerde persoon
-        if(person) drawTimeline(peopleData, person); // focus highlight op timeline
-    });
-});
-
-/* ======================= DRAW TIMELINE ======================= */
-function drawTimeline(data, focusPerson){
-    const container = document.getElementById("timelineContainer");
-    container.innerHTML=""; // verwijder vorige timeline
-
-    /* ======================= SVG CANVAS ======================= */
-    const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
-    svg.setAttribute("width","3000"); // breed canvas voor veel jaren
-    svg.setAttribute("height","200"); // hoogte canvas
-    container.appendChild(svg);
-
-    /* ======================= JAAR RANGE ======================= */
-    const years = data.map(p => new Date(p.Geboortedatum).getFullYear());
-    const minYear = Math.min(...years);
-    const maxYear = Math.max(...years);
-
-    /* ======================= JAAR NAAR X-COORDINAAT ======================= */
-    function yearToX(year){
-        return ((year-minYear)/(maxYear-minYear))*2800 + 50; // horizontale positie
-    }
-
-    /* ======================= BASIS LIJN ======================= */
-    const line = document.createElementNS("http://www.w3.org/2000/svg","line");
-    line.setAttribute("x1","50"); 
-    line.setAttribute("y1","100");
-    line.setAttribute("x2","2850"); 
-    line.setAttribute("y2","100");
-    line.setAttribute("stroke","black"); 
-    svg.appendChild(line);
-
-    /* ======================= PERSONEN TEKENEN ======================= */
-    data.forEach(p=>{
-        const year = new Date(p.Geboortedatum).getFullYear();
-        const x = yearToX(year);
-        const y = 100; // vaste y-positie
-
-        /* Cirkel voor persoon */
-        const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
-        circle.setAttribute("cx",x);
-        circle.setAttribute("cy",y);
-        circle.setAttribute("r","6");
-        circle.setAttribute("fill", p.ID === focusPerson.ID ? "red" : "black"); // focus persoon rood
-        svg.appendChild(circle);
-
-        /* Label boven cirkel */
-        const name = `${p.Roepnaam} ${p.Prefix||""} ${p.Achternaam}`;
-        const label = document.createElementNS("http://www.w3.org/2000/svg","text");
-        label.setAttribute("x", x+8); 
-        label.setAttribute("y", y-10); 
-        label.setAttribute("class","timelineLabel");
-        label.textContent = `${name} (${year})`;
-        svg.appendChild(label);
-    });
-}
-</script>
+<script src="../js/timeline.js"></script>    <!-- Timeline logica + LiveSearch integratie -->
 
 <!-- ======================= Footer ======================= -->
 <div id="footer-placeholder"></div>
