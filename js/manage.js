@@ -1,4 +1,4 @@
-/* ======================= manage.js v1.3.19a ======================= */
+/* ======================= manage.js v1.3.20 ======================= */
 /* Drop-in, 14 kolommen, live search, add/save/refresh, export JSON & CSV, inline uitleg */
 
 (function(){
@@ -25,7 +25,7 @@ const COLUMNS=[
 
 /* ======================= STATE ======================= */
 let dataset = StamboomStorage.get();                                           // Laad dataset
-let selectedHoofdId = dataset.length>0 ? dataset[0].ID : null;                  // Init geselecteerde hoofdID
+let selectedHoofdId = null;                                                      // geen selectie bij laden
 let tempRowCount=0;                                                             // Bij tijdelijke rijen
 
 /* ======================= DOM ELEMENTEN ======================= */
@@ -220,14 +220,25 @@ function exportCSV(){
 
 /* ======================= INIT ======================= */
 function init(){
-    // Bouw de kolomheaders en render de tabel
+    // Bouw de kolomheaders
     buildHeader();
-    renderTable(dataset);
+
+    // ======================= TABEL INIT =======================
+    // Alleen renderen als er een geselecteerde hoofdID is
+    if(selectedHoofdId){
+        renderTable(dataset); // render tabel met hoofdID
+    } else {
+        // Toon placeholder instructie, geen persoon geselecteerd
+        showPlaceholder('Selecteer een persoon via de zoekfunctie');
+    }
 
     // ======================= KNOPPEN =======================
     addBtn.addEventListener('click', addRow);                     // Voeg nieuwe rij toe
     saveBtn.addEventListener('click', saveDatasetMerged);         // Sla dataset op
-    refreshBtn.addEventListener('click', () => renderTable(dataset)); // Herlaad tabel
+    refreshBtn.addEventListener('click', () => {
+        if(selectedHoofdId) renderTable(dataset);                // Alleen renderen als hoofdID geselecteerd
+        else showPlaceholder('Selecteer een persoon via de zoekfunctie'); // anders placeholder tonen
+    });
     exportJsonBtn?.addEventListener('click', exportJSON);         // Exporteer JSON
     exportCsvBtn?.addEventListener('click', exportCSV);           // Exporteer CSV
 
@@ -235,7 +246,7 @@ function init(){
     if (typeof initLiveSearch === 'function') {
         initLiveSearch(searchInput, dataset, (selectedID) => {
             selectedHoofdId = selectedID;                         // Update geselecteerde hoofdID
-            renderTable(dataset);                                 // Render tabel opnieuw
+            renderTable(dataset);                                 // Render tabel opnieuw na selectie
         });
 
         // Klik buiten popup sluit live search resultaten
