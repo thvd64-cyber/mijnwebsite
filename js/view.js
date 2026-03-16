@@ -152,7 +152,17 @@ function buildTree(rootID){
 // =======================
 // KINDEREN
 // =======================
-const children = dataRel.filter(d => ['KindID','HKindID','PHKindID'].includes(d.Relatie)); // Filter alle personen die een kinderrelatie hebben: KindID, HKindID of PHKindID
+let children = dataRel.filter(d => ['KindID','HKindID','PHKindID'].includes(d.Relatie)); 
+// Filter alle personen die een kinderrelatie hebben: KindID, HKindID of PHKindID
+
+// =======================
+// Sorteer kinderen op geboortedatum (oudste eerst)
+// =======================
+children.sort((a, b) => {
+    const dateA = a.Geboortedatum ? new Date(a.Geboortedatum) : new Date(0); // fallback: heel oud als datum ontbreekt
+    const dateB = b.Geboortedatum ? new Date(b.Geboortedatum) : new Date(0);
+    return dateA - dateB; // Oudste eerst
+});
 
 if(children.length > 0){     // Alleen doorgaan als er kinderen zijn
 
@@ -162,11 +172,9 @@ if(children.length > 0){     // Alleen doorgaan als er kinderen zijn
     children.forEach(k => {         // Loop door alle kinderen
 
         const kidGroup = document.createElement('div'); 
-        kidGroup.className = 'tree-kid-group';         // Groep voor kind (en partner, nu alleen kind) naast elkaar horizontaal
+        kidGroup.className = 'tree-kid-group';         // Groep voor kind naast elkaar horizontaal
 
         kidGroup.appendChild(createTreeNode(k, k.Relatie));         // Maak DOM-node voor kind en voeg toe aan kidGroup
-
-        // Partner van kind is verwijderd, dus geen if(k.PartnerID) blok meer
 
         kidsWrap.appendChild(kidGroup);         // Voeg de groep (nu alleen kind) toe aan kidsWrap
     });
