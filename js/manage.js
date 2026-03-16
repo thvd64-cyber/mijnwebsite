@@ -218,74 +218,37 @@ function exportCSV(){
     URL.revokeObjectURL(url);
 }
 
-/* ======================= LIVE SEARCH ======================= */
-function liveSearch(){
-    const term = safe(searchInput.value).toLowerCase();
-    document.getElementById('searchPopup')?.remove();
-    if(!term) return;
-
-    const results = dataset.filter(p=>safe(p.ID).toLowerCase().includes(term)
-        || safe(p.Roepnaam).toLowerCase().includes(term)
-        || safe(p.Achternaam).toLowerCase().includes(term));
-
-    const rect=searchInput.getBoundingClientRect();
-    const popup=document.createElement('div');
-    popup.id='searchPopup';
-    popup.style.position='absolute';
-    popup.style.background='#fff';
-    popup.style.border='1px solid #999';
-    popup.style.zIndex=1000;
-    popup.style.top=rect.bottom+window.scrollY+5+'px';
-    popup.style.left=Math.max(rect.left+window.scrollX,20)+'px';
-    popup.style.width=(rect.width*1.2)+'px';
-    popup.style.maxHeight='600px';
-    popup.style.overflowY='auto';
-    popup.style.fontSize='1.5rem';
-    popup.style.padding='8px';
-    popup.style.borderRadius='5px';
-    popup.style.boxShadow='0 3px 6px rgba(0,0,0,0.2)';
-
-    if(results.length===0){
-        const row=document.createElement('div');
-        row.textContent='Geen resultaten';
-        row.style.padding='8px'; row.style.fontSize='1.3rem';
-        popup.appendChild(row);
-    } else {
-        results.forEach(p=>{
-            const row=document.createElement('div');
-            row.textContent=`${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`;
-            row.style.padding='8px';
-            row.style.cursor='pointer';
-            row.style.fontSize='1.3rem';
-            row.addEventListener('click',()=>{
-                selectedHoofdId=safe(p.ID);
-                popup.remove();
-                renderTable(dataset);
-            });
-            popup.appendChild(row);
-        });
-    }
-    document.body.appendChild(popup);
-}
-
 /* ======================= INIT ======================= */
 function init(){
+    // Bouw de kolomheaders en render de tabel
     buildHeader();
     renderTable(dataset);
 
-    addBtn.addEventListener('click',addRow);
-    saveBtn.addEventListener('click',saveDatasetMerged);
-    refreshBtn.addEventListener('click',()=>renderTable(dataset));
-    exportJsonBtn?.addEventListener('click',exportJSON);
-    exportCsvBtn?.addEventListener('click',exportCSV);
-    searchInput.addEventListener('input',liveSearch);
+    // ======================= KNOPPEN =======================
+    addBtn.addEventListener('click', addRow);                     // Voeg nieuwe rij toe
+    saveBtn.addEventListener('click', saveDatasetMerged);         // Sla dataset op
+    refreshBtn.addEventListener('click', () => renderTable(dataset)); // Herlaad tabel
+    exportJsonBtn?.addEventListener('click', exportJSON);         // Exporteer JSON
+    exportCsvBtn?.addEventListener('click', exportCSV);           // Exporteer CSV
 
-    document.addEventListener('click',e=>{
-        const popup=document.getElementById('searchPopup');
-        if(popup && !popup.contains(e.target) && e.target!==searchInput) popup.remove();
-    });
+    // ======================= LIVE SEARCH =======================
+    if (typeof initLiveSearch === 'function') {
+        initLiveSearch(searchInput, dataset, (selectedID) => {
+            selectedHoofdId = selectedID;                         // Update geselecteerde hoofdID
+            renderTable(dataset);                                 // Render tabel opnieuw
+        });
+
+        // Klik buiten popup sluit live search resultaten
+        document.addEventListener('click', (e) => {
+            const popup = document.getElementById('searchPopup');
+            if(popup && !popup.contains(e.target) && e.target !== searchInput) {
+                popup.remove();
+            }
+        });
+    }
 }
 
+// Start init bij laden
 init();
 
 /* ======================= ID GENERATOR ======================= */
