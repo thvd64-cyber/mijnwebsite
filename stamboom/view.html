@@ -69,16 +69,25 @@ Hier kan je personen bekijken, relaties analyseren en generaties structureren in
            ">
 </div>
 
-<!-- ======================= Boom + BZID ======================= -->
-<div class="tree-container-wrapper" style="display:flex; gap:20px;"> <!-- Wrapper voor flex layout: boom + BZID -->
-    <div id="treeContainer" style="flex:3;"> <!-- Container voor boom nodes -->
-        <!-- view.js rendert hier dynamisch alle Hoofd, Vader, Moeder, Partner, Kind nodes -->
+<!-- ======================= Box Broer/Zus ======================= -->
+<div class="tree-container-wrapper" style="display:flex; gap:20px;"> <!-- Flex layout: boom links, BZ rechts -->
+
+    <!-- ======================= STAMBOOM ======================= -->
+    <div id="treeContainer" style="flex:3;"> <!-- Container waarin view.js de boom nodes rendert -->
+        <!-- view.js plaatst hier Hoofd, Ouders, Kinderen -->
     </div>
 
-    <div id="BZBox" style="flex:1;"> <!-- Container voor Broers/Zussen -->
-        <h4>Broers/Zussen</h4> <!-- Titel BZID sectie -->
-        <!-- view.js rendert hier BZID nodes dynamisch -->
+    <!-- ======================= BZ KOLOM ======================= -->
+    <div style="flex:1;"> <!-- Wrapper voor titel + BZ nodes -->
+
+        <h4>Broer/Zus</h4> <!-- Titel boven BZBox -->
+
+        <div id="BZBox"> <!-- Container waarin view.js broers/zussen rendert -->
+            <!-- view.js plaatst hier BZID nodes -->
+        </div>
+
     </div>
+
 </div>
 
 <!-- ======================= Scripts ======================= -->
