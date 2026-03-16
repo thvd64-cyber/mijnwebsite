@@ -1,6 +1,6 @@
 // ======================= js/view.js v1.6.0 =======================
 // Boom rendering + Live search
-// Relatie logica komt nu uit externe relatieEngine.js
+// Relatie logica komt nu uit externe relatieEngine.js en partner kind voor BZID verwijderd
 
 (function(){
 'use strict'; // Dwingt strikte JavaScript modus af (voorkomt stille fouten)
@@ -149,36 +149,31 @@ function buildTree(rootID){
 
     if(parents.children.length>0) treeBox.prepend(parents);
 
+// =======================
+// KINDEREN
+// =======================
+const children = dataRel.filter(d => ['KindID','HKindID','PHKindID'].includes(d.Relatie)); // Filter alle personen die een kinderrelatie hebben: KindID, HKindID of PHKindID
 
-    // =======================
-    // KINDEREN
-    // =======================
-    const children=dataRel.filter(d=>['KindID','HKindID','PHKindID'].includes(d.Relatie));
+if(children.length > 0){     // Alleen doorgaan als er kinderen zijn
 
-    if(children.length>0){
+    const kidsWrap = document.createElement('div'); 
+    kidsWrap.className = 'tree-children';     // Wrapper voor alle kinder-nodes (verticale stapeling)
 
-        const kidsWrap=document.createElement('div');
-        kidsWrap.className='tree-children';
+    children.forEach(k => {         // Loop door alle kinderen
 
-        children.forEach(k=>{
+        const kidGroup = document.createElement('div'); 
+        kidGroup.className = 'tree-kid-group';         // Groep voor kind (en partner, nu alleen kind) naast elkaar horizontaal
 
-            const kidGroup=document.createElement('div');
-            kidGroup.className='tree-kid-group'; // Kind + partner naast elkaar
+        kidGroup.appendChild(createTreeNode(k, k.Relatie));         // Maak DOM-node voor kind en voeg toe aan kidGroup
 
-            kidGroup.appendChild(createTreeNode(k,k.Relatie));
+        // Partner van kind is verwijderd, dus geen if(k.PartnerID) blok meer
 
-            if(k.PartnerID){
-                const kPartner=findPerson(safe(k.PartnerID));
-                if(kPartner) kidGroup.appendChild(createTreeNode(kPartner,'PKindID'));
-            }
+        kidsWrap.appendChild(kidGroup);         // Voeg de groep (nu alleen kind) toe aan kidsWrap
+    });
 
-            kidsWrap.appendChild(kidGroup);
-        });
-
-        treeBox.appendChild(kidsWrap);
-    }
-
-
+    treeBox.appendChild(kidsWrap);     // Voeg alle kinderen toe aan de hoofdboomcontainer
+}
+    
     // =======================
     // BROER / ZUS
     // =======================
