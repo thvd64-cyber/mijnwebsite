@@ -83,9 +83,15 @@ const results = dataset.filter(p =>
                 row.style.fontSize='1.3rem';
                 popup.appendChild(row);
             } else {
-                results.forEach(p=>{
-                    const row = document.createElement('div');
-                    row.textContent = `${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`;
+                    results.forEach(p=>{
+        const row = document.createElement('div'); // container voor één resultaat
+
+        // ======================= TEKST INCL. GEBOORTEDATUM =======================
+        const geboorte = p.Geboortedatum ? ` (${p.Geboortedatum})` : ''; 
+        // Voeg datum toe als die bestaat
+        row.textContent = `${p.ID} | ${p.Roepnaam} | ${p.Achternaam}${geboorte}`;
+        // Voorbeeld output: "JJH123 | Jan | Jansen (12-03-1954)"
+
                     row.style.padding='8px';
                     row.style.cursor='pointer';
                     row.style.fontSize='1.3rem';
