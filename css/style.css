@@ -1,5 +1,5 @@
-/* ======================= css/style.css v1.0.3 ======================= */
-/* TREE VIEW STYLING toegevoeg */
+/* ======================= css/style.css v1.0.4 ======================= */
+/* TREE VIEW STYLING toegevoeg table aanpassing plain en toegevoegd storage om-en-om grijs */
 /* ======================= BASIS LAYOUT ======================= */
 body {
     font-family: Arial, sans-serif; /* basis font voor de pagina */
@@ -162,15 +162,19 @@ table td {
     font-size: 14px; /* lettergrootte */
 }
 
-/* 
-table tr:nth-child(even) {
-    background-color: #f7f9fc; 
-} 
-/* om-en-om kleur wit/grijs verwijderd zodat alle rijen wit zijn */
-*/
-
 table tr:hover {
     background-color: #eef4fb; /* lichtblauw bij hover */
+}
+
+/* =======================
+   STORAGE TABLE OMWISSENDE RIJEN
+   ======================= */
+#storageTable tr:nth-child(even) {
+    background-color: #f7f9fc; /* lichtgrijze achtergrond voor even rijen */
+}
+
+#storageTable tr:nth-child(odd) {
+    background-color: #ffffff; /* witte achtergrond voor oneven rijen */
 }
 
 /* =======================
