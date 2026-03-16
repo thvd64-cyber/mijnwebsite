@@ -23,9 +23,9 @@
 .tree-node.MHoofdID { background-color: var(--color-moeder); }
 
 /* ======================= Kinderen  ======================= */
-.tree-node.KindID { background-color: var(--color-kind1); }
-.tree-node.HKindID { background-color: var(--color-kind2); }
-.tree-node.PHKindID { background-color: var(--color-kind3); }
+.tree-node.KindID { background-color: var(--color-KindID); }
+.tree-node.HKindID { background-color: var(--color-HKindID); }
+.tree-node.PHKindID { background-color: var(--color-PHKindID); }
 
 /* =======================  Broers/Zussen (BZID) + partner (PBZID) ======================= */
 .tree-node.BZID { background-color: var(--color-bz); }
