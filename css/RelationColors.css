@@ -1,15 +1,15 @@
-/* ======================= css/RelationColors.css v1.0.0 ======================= */
+/* ======================= css/RelationColors.css v1.0.1 ======================= */
 /* Kleuren voor HoofdID, ouders, kinderen, partners, en BZID */
-
+/*  KindID, HKindID en PHKindID ipv kind1, 2 en 3 */
 /* ======================= ROOT VARIABLES ======================= */
 :root{
     --color-hoofd: #fff9c4;            /* licht geel voor HoofdID */
     --color-partner-hoofd: #d1c4e9;    /* licht paars voor PHoofdID */
     --color-vader: #e8f5e9;            /* licht groen voor VHoofdID */
     --color-moeder: #e8f5e9;           /* licht groen voor MHoofdID */
-    --color-kind1: #2196f3;            /* blauw, scenario 1 relatie = HoofdID + PHoofdID */
-    --color-kind2: #90caf9;            /* sky blauw, scenario 2 relatie = HoofdID */
-    --color-kind3: #bbdefb;            /* licht blauw, scenario 3 relatie = PHoofdID */
+    --color-KindID: #2196f3;        /* blauw, scenario 1 relatie = HoofdID + PHoofdID */
+    --color-HKindID: #90caf9;       /* sky blauw, scenario 2 relatie = HoofdID */
+    --color-PHKindID: #bbdefb;      /* licht blauw, scenario 3 relatie = PHoofdID */
     --color-partner: #d7d7d7;          /* lichtgrijs voor partner van kind/BZ */
     --color-bz: #FFEAD5;               /* licht oranje voor BZID */
 }
@@ -22,12 +22,11 @@
 .tree-node.VHoofdID { background-color: var(--color-vader); }
 .tree-node.MHoofdID { background-color: var(--color-moeder); }
 
-/* ======================= Kinderen ======================= */
-.tree-node.kind1 { background-color: var(--color-kind1); }
-.tree-node.kind2 { background-color: var(--color-kind2); }
-.tree-node.kind3 { background-color: var(--color-kind3); }
+/* ======================= Kinderen  ======================= */
+.tree-node.KindID { background-color: var(--color-kind1); }
+.tree-node.HKindID { background-color: var(--color-kind2); }
+.tree-node.PHKindID { background-color: var(--color-kind3); }
 
-/* ======================= Partner van kind / Broers-Zussen ======================= */
-.tree-node.PKindID { background-color: var(--color-partner); }
+/* =======================  Broers/Zussen (BZID) + partner (PBZID) ======================= */
 .tree-node.BZID { background-color: var(--color-bz); }
 .tree-node.PBZID { background-color: var(--color-partner); }
