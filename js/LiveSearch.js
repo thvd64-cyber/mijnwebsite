@@ -1,9 +1,27 @@
-/* ======================= js/LiveSearch.js v1.0.1 ======================= */
+/* ======================= js/LiveSearch.js v1.0.2 ======================= */
 /* Universele Live Search module voor view.js (popup) & manage.js (tabel)
    - Filtert dataset realtime op ID, Roepnaam, Achternaam
    - Toon resultaten als dropdown-popup of in een tabel
    - Klikken op resultaat selecteert persoon en roept callback aan
 */
+
+/* ======================= LiveSearch INIT voor manage.js ======================= */
+function initLiveSearch(searchInput, dataset, onSelectCallback){
+    // Event listener op input veld
+    searchInput.addEventListener('input', ()=>{
+        // Roep de universele liveSearch functie aan
+        liveSearch({
+            searchInput: searchInput,   // input element
+            dataset: dataset,           // volledige dataset
+            displayType: 'popup',       // gebruik popup weergave
+            renderCallback: (persoon) => {
+                if(!persoon) return;
+                // Als iemand geselecteerd wordt:
+                onSelectCallback(persoon.ID); // update geselecteerde hoofdID
+            }
+        });
+    });
+}
 
 (function() {
     'use strict'; // veilige uitvoering
