@@ -1,5 +1,5 @@
-// ======================= js/view.js v1.6.0 =======================
-// Boom rendering + Live search
+// ======================= js/view.js v1.6.1 =======================
+// Boom rendering + Live search + optimezed code structure
 // Relatie logica komt nu uit externe relatieEngine.js en partner kind voor BZID verwijderd
 
 (function(){
@@ -12,42 +12,55 @@ const treeBox      = document.getElementById('treeContainer'); // Container voor
 const BZBox        = document.getElementById('BZBox');         // Container voor broer/zus nodes
 const searchInput  = document.getElementById('searchPerson');  // Zoekveld voor live search
 
-
 // =======================
 // State
 // =======================
 let dataset = window.StamboomStorage.get() || [];  // Dataset uit storage
 let selectedHoofdId = null;                        // ID van geselecteerde hoofd persoon
 
-
 // =======================
-// Helpers
+// HELPERS
 // =======================
 function safe(val){ 
     return val ? String(val).trim() : ''; // Zorgt dat null/undefined nooit errors geven
 }
 
-
-// =======================
-// DATUM FORMATTER
-// =======================
-function formatDate(d){                              // Formatteert datum naar Nederlands formaat
-    if(!d) return '';                                // Geen datum → lege string
+// Formatteer datum naar Nederlands formaat
+function formatDate(d){                              
+    if(!d) return '';                                
     d = String(d).trim();
 
     let date =
-        /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(d) :                                     // ISO datum
-        /^\d{2}[-/]\d{2}[-/]\d{4}$/.test(d) ? new Date(d.replace(/(\d{2})[-/](\d{2})[-/](\d{4})/,'$3-$2-$1')) : // NL datum
-        /^\d{4}-\d{2}$/.test(d) ? new Date(d+'-01') :                                      // Jaar + maand
-        /^\d{4}$/.test(d) ? new Date(d+'-01-01') :                                          // Alleen jaar
-        new Date(d);                                                                       // Fallback
+        /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(d) :                                     
+        /^\d{2}[-/]\d{2}[-/]\d{4}$/.test(d) ? new Date(d.replace(/(\d{2})[-/](\d{2})[-/](\d{4})/,'$3-$2-$1')) : 
+        /^\d{4}-\d{2}$/.test(d) ? new Date(d+'-01') :                                      
+        /^\d{4}$/.test(d) ? new Date(d+'-01-01') :                                          
+        new Date(d);                                                                       
 
-    if(isNaN(date.getTime())) return d;                                                    // Ongeldige datum → origineel tonen
-
-    const options = { day:'2-digit', month:'short', year:'numeric' };                      // NL datum opties
-    return date.toLocaleDateString('nl-NL', options).replace(/\./g,'');                    // Verwijder puntjes
+    if(isNaN(date.getTime())) return d;                                                    
+    const options = { day:'2-digit', month:'short', year:'numeric' };                      
+    return date.toLocaleDateString('nl-NL', options).replace(/\./g,'');                    
 }
 
+// Parse geboortedatum naar Date object voor sortering
+function parseBirthday(d){
+    if(!d) return new Date(0);               
+    d = d.trim();
+
+    if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return new Date(d);           
+    if(/^\d{2}[-/]\d{2}[-/]\d{4}$/.test(d)){                        
+        const parts = d.split(/[-/]/);
+        return new Date(parts[2], parts[1]-1, parts[0]);           
+    }
+    if(/^\d{4}$/.test(d)) return new Date(d+'-01-01');             
+    const fallback = new Date(d);                                   
+    return isNaN(fallback.getTime()) ? new Date(0) : fallback;      
+}
+
+// Zoek persoon in dataset
+function findPerson(id){
+    return dataset.find(p => safe(p.ID) === safe(id)); 
+}
 
 // =======================
 // NODE CREATOR
@@ -80,15 +93,6 @@ function createTreeNode(p, rel){
     return div;                                 // Geef node terug
 }
 
-
-// =======================
-// DATA HELPERS
-// =======================
-function findPerson(id){
-    return dataset.find(p => safe(p.ID) === safe(id)); // Zoek persoon in dataset
-}
-
-
 // =======================
 // BOOM BUILDER
 // =======================
@@ -98,13 +102,13 @@ function buildTree(rootID){
     BZBox.innerHTML='';   // Reset BZ container
 
     if(!rootID){
-        treeBox.textContent='Selecteer een persoon'; // Geen selectie
+        treeBox.textContent='Selecteer een persoon'; 
         return;
     }
 
-    const root = findPerson(rootID);                 // Zoek hoofd persoon
+    const root = findPerson(rootID);                 
     if(!root){
-        treeBox.textContent='Persoon niet gevonden'; // ID bestaat niet
+        treeBox.textContent='Persoon niet gevonden'; 
         return;
     }
 
@@ -112,24 +116,21 @@ function buildTree(rootID){
     // RELATIE ENGINE CALL
     // =======================
     const dataRel = window.RelatieEngine.computeRelaties(dataset, rootID);
-    // Haalt alle relaties op via externe relatieEngine.js
-
 
     // =======================
     // HOOFD + PARTNER
     // =======================
-    const rootWrapper=document.createElement('div'); // Wrapper voor hoofd + partner
+    const rootWrapper=document.createElement('div'); 
     rootWrapper.className='tree-root-main';
 
-    rootWrapper.appendChild(createTreeNode(root,'HoofdID')); // Voeg hoofd toe
+    rootWrapper.appendChild(createTreeNode(root,'HoofdID')); 
 
     if(root.PartnerID){
-        const partner = findPerson(safe(root.PartnerID)); // Zoek partner
+        const partner = findPerson(safe(root.PartnerID)); 
         if(partner) rootWrapper.appendChild(createTreeNode(partner,'PHoofdID'));
     }
 
     treeBox.appendChild(rootWrapper);
-
 
     // =======================
     // OUDERS
@@ -149,80 +150,57 @@ function buildTree(rootID){
 
     if(parents.children.length>0) treeBox.prepend(parents);
 
-// =======================
-// HELPER: Parse geboortedatum naar Date object voor sortering
-// =======================
-function parseBirthday(d){
-    if(!d) return new Date(0);               // Fallback als datum ontbreekt
-    d = d.trim();
+    // =======================
+    // KINDEREN (gesorteerd van oudste naar jongste)
+    // =======================
+    let children = dataRel.filter(d => ['KindID','HKindID','PHKindID'].includes(d.Relatie)); 
+    children.sort((a, b) => parseBirthday(a.Geboortedatum) - parseBirthday(b.Geboortedatum));
 
-    if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return new Date(d);           // ISO YYYY-MM-DD
-    if(/^\d{2}[-/]\d{2}[-/]\d{4}$/.test(d)){                        // NL DD-MM-YYYY of DD/MM/YYYY
-        const parts = d.split(/[-/]/);
-        return new Date(parts[2], parts[1]-1, parts[0]);           // Maand 0-index
+    if(children.length > 0){ 
+        const kidsWrap = document.createElement('div'); 
+        kidsWrap.className = 'tree-children';                     
+
+        children.forEach(k => {                                    
+            const kidGroup = document.createElement('div'); 
+            kidGroup.className = 'tree-kid-group';                
+
+            kidGroup.appendChild(createTreeNode(k, k.Relatie));   
+
+            kidsWrap.appendChild(kidGroup);                        
+        });
+
+        treeBox.appendChild(kidsWrap);                              
     }
-    if(/^\d{4}$/.test(d)) return new Date(d+'-01-01');             // Alleen jaar
-    const fallback = new Date(d);                                   // Fallback
-    return isNaN(fallback.getTime()) ? new Date(0) : fallback;      // Ongeldige datum → heel oud
-}
 
-// =======================
-// KINDEREN (gesorteerd van oudste naar jongste)
-// =======================
-let children = dataRel.filter(d => ['KindID','HKindID','PHKindID'].includes(d.Relatie)); 
-// Filter alle kinderen
+    // =======================
+    // BROER / ZUS (gesorteerd van oudste naar jongste)
+    // =======================
+    let bzNodes = dataRel.filter(d => d.Relatie === 'BZID'); 
+    bzNodes.sort((a, b) => parseBirthday(a.Geboortedatum) - parseBirthday(b.Geboortedatum));
 
-// Sorteer kinderen van oudste naar jongste
-children.sort((a, b) => parseBirthday(a.Geboortedatum) - parseBirthday(b.Geboortedatum));
+    bzNodes.forEach(b => {
 
-if(children.length > 0){ 
-    const kidsWrap = document.createElement('div'); 
-    kidsWrap.className = 'tree-children';                     // Wrapper voor alle kinderen
+        const bzGroup = document.createElement('div'); 
+        bzGroup.className = 'tree-kid-group';         
 
-    children.forEach(k => {                                    // Loop door kinderen
-        const kidGroup = document.createElement('div'); 
-        kidGroup.className = 'tree-kid-group';                // Horizontaal groepje (nu alleen kind)
+        bzGroup.appendChild(createTreeNode(b, 'BZID')); 
 
-        kidGroup.appendChild(createTreeNode(k, k.Relatie));   // Voeg kind toe
+        if(b.PartnerID){
+            const bPartner = findPerson(safe(b.PartnerID));
+            if(bPartner) bzGroup.appendChild(createTreeNode(bPartner,'PBZID'));
+        }
 
-        kidsWrap.appendChild(kidGroup);                        // Voeg groep toe aan wrapper
+        BZBox.appendChild(bzGroup);                   
     });
-
-    treeBox.appendChild(kidsWrap);                              // Voeg alle kinderen toe aan de boom
 }
-    
- // =======================
-// BROER / ZUS (gesorteerd van oudste naar jongste)
-// =======================
-let bzNodes = dataRel.filter(d => d.Relatie === 'BZID'); 
-// Filter alle broers/zussen
-
-// Sorteer op geboortedatum (oudste eerst)
-bzNodes.sort((a, b) => parseBirthday(a.Geboortedatum) - parseBirthday(b.Geboortedatum));
-
-bzNodes.forEach(b => {
-
-    const bzGroup = document.createElement('div'); 
-    bzGroup.className = 'tree-kid-group';         // Wrapper voor BZ + partner (horizontaal)
-
-    bzGroup.appendChild(createTreeNode(b, 'BZID')); // Voeg broer/zus toe
-
-    // Partner van BZ kan blijven, of verwijderen als je alleen BZID wilt tonen
-    if(b.PartnerID){
-        const bPartner = findPerson(safe(b.PartnerID));
-        if(bPartner) bzGroup.appendChild(createTreeNode(bPartner,'PBZID'));
-    }
-
-    BZBox.appendChild(bzGroup);                   // Voeg groep toe aan de BZ-box
-});
 
 // =======================
 // LIVE SEARCH
 // =======================
 function liveSearch(){
 
-    const term = safe(searchInput.value).toLowerCase();  // Zoekterm
-    document.getElementById('searchPopup')?.remove();    // Verwijder bestaande popup
+    const term = safe(searchInput.value).toLowerCase();  
+    document.getElementById('searchPopup')?.remove();    
 
     if(!term) return;
 
@@ -274,9 +252,9 @@ function liveSearch(){
 
             row.addEventListener('click', ()=>{
 
-                selectedHoofdId = safe(p.ID); // Pas selectie toe
-                popup.remove();               // Sluit popup
-                renderTree();                 // Bouw boom
+                selectedHoofdId = safe(p.ID); 
+                popup.remove();               
+                renderTree();                 
 
             });
 
@@ -287,23 +265,22 @@ function liveSearch(){
     document.body.appendChild(popup);
 }
 
-
 // =======================
 // INIT
 // =======================
 function renderTree(){ 
-    buildTree(selectedHoofdId);  // Bouw boom voor geselecteerde persoon
+    buildTree(selectedHoofdId);  
 }
 
 function refreshView(){
 
-    dataset = window.StamboomStorage.get()||[]; // Herlaad dataset uit storage
-    selectedHoofdId = null;                     // Start zonder selectie
+    dataset = window.StamboomStorage.get()||[]; 
+    selectedHoofdId = null;                     
 
-    renderTree();                               // Bouw boom
+    renderTree();                               
 }
 
-refreshView();                                  // Eerste render
-searchInput.addEventListener('input', liveSearch); // Activeer live search
+refreshView();                                  
+searchInput.addEventListener('input', liveSearch); 
 
 })();
