@@ -1,5 +1,5 @@
-// ======================= js/view.js v1.6.1 =======================
-// Boom rendering + Live search + optimezed code structure
+// ======================= js/view.js v1.6.2 =======================
+// Boom rendering + Live search >> in LiveSearch.js + optimezed code structure
 // Relatie logica komt nu uit externe relatieEngine.js en partner kind voor BZID verwijderd
 
 (function(){
@@ -202,77 +202,22 @@ if(children.length > 0){
     });
 }
 
+ // =======================
+// LIVE SEARCH INTEGRATIE
 // =======================
-// LIVE SEARCH
-// =======================
-function liveSearch(){
-
-    const term = safe(searchInput.value).toLowerCase();  
-    document.getElementById('searchPopup')?.remove();    
-
-    if(!term) return;
-
-    const results = dataset.filter(p =>
-        safe(p.ID).toLowerCase().includes(term) ||
-        safe(p.Roepnaam).toLowerCase().includes(term) ||
-        safe(p.Achternaam).toLowerCase().includes(term)
-    );
-
-    const rect = searchInput.getBoundingClientRect();
-
-    const popup = document.createElement('div');
-    popup.id='searchPopup';
-
-    popup.style.position='absolute';
-    popup.style.background='#fff';
-    popup.style.border='1px solid #999';
-    popup.style.zIndex=1000;
-
-    popup.style.top = rect.bottom + window.scrollY + 'px';
-    popup.style.left = Math.max(rect.left + window.scrollX, 20) + 'px';
-
-    popup.style.width = (rect.width * 1.2) + 'px';
-    popup.style.maxHeight = '600px';
-
-    popup.style.overflowY = 'auto';
-    popup.style.fontSize = '1.5rem';
-    popup.style.padding = '8px';
-
-    if(results.length === 0){
-
-        const row = document.createElement('div');
-        row.textContent = 'Geen resultaten';
-        row.style.padding = '8px';
-
-        popup.appendChild(row);
-
-    } else {
-
-        results.forEach(p => {
-
-            const row = document.createElement('div');
-
-            row.textContent = `${p.ID} | ${p.Roepnaam} | ${p.Achternaam}`;
-
-            row.style.padding = '8px';
-            row.style.cursor = 'pointer';
-            row.style.fontSize = '1.1rem';
-
-            row.addEventListener('click', ()=>{
-
-                selectedHoofdId = safe(p.ID); 
-                popup.remove();               
-                renderTree();                 
-
-            });
-
-            popup.appendChild(row);
-        });
-    }
-
-    document.body.appendChild(popup);
-}
-
+searchInput.addEventListener('input', () => {
+    liveSearch({
+        searchInput,        // input element
+        dataset,            // huidige dataset
+        displayType: 'popup', // we blijven popup gebruiken in view
+        renderCallback: (selected) => {
+            // Callback bij selectie uit popup
+            selectedHoofdId = safe(selected.ID); // stel geselecteerde persoon in
+            renderTree();                        // update de boom
+        }
+    });
+});
+    
 // =======================
 // INIT
 // =======================
