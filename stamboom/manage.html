@@ -1,286 +1,164 @@
-<!-- ======================= stamboom/manage.html v1.3.19 ======================= -->
-<!-- relatie kleuren naam aanpas + LiveSearch.js koppeling
+<!-- ======================= stamboom/manage.html v1.3.20 ======================= -->
+<!-- LiveSearch.js integration and residual code cleaning -->
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="nl"> <!-- Document taal: Nederlands -->
 
 <head>
-<meta charset="UTF-8"> <!-- UTF-8 tekencodering zodat alle internationale tekens correct worden weergegeven -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Zorgt dat de pagina correct schaalt op mobiel, tablet en desktop -->
+<meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Mobiel responsive -->
+<title>MyFamTreeCollab - Manage</title> <!-- Pagina titel in browser -->
 
-<title>MyFamTreeCollab - Manage</title>
-<!-- Titel die zichtbaar is in browser tab -->
+<!-- ======================= CSS ======================= -->
+<link rel="stylesheet" href="../css/style.css"> <!-- Algemene project stylesheet -->
 
-<!-- ======================= GLOBAL CSS ======================= -->
-<link rel="stylesheet" href="../css/style.css">
-<!-- Algemene project stylesheet met layout, menu, container styling -->
-
-<!-- ======================= PAGINA STIJL ======================= -->
+<!-- ======================= PAGINA SPECIFIEKE STIJL ======================= -->
 <style>
 /* ======================= BASIS STIJL ======================= */
-/* Algemene pagina styling */
 body{
-font-family:Arial,sans-serif; /* standaard font */
-margin:20px; /* ruimte rondom pagina */
-background-color: transparent;  /* pagina wordt doorzichtig - orgineel #f9f9f9 = licht grijze achtergrond */
-color:#333; /* standaard tekstkleur */
+    font-family:Arial,sans-serif; /* standaard font */
+    margin:20px; /* ruimte rondom pagina */
+    background-color: transparent; /* transparant */
+    color:#333; /* standaard tekstkleur */
 }
 
 /* ======================= TABEL BASIS ======================= */
-/* Hoofd tabel waarin personen worden beheerd */
 #manageTable{
-width:100%; /* tabel vult volledige breedte */
-border-collapse:collapse; /* randen van cellen samenvoegen */
-margin-top:20px; /* ruimte boven tabel */
-background-color:transparent; /* transparante achtergrond */
+    width:100%; /* tabel vult volledige breedte */
+    border-collapse:collapse; /* borders samensmelten */
+    margin-top:20px; /* marge boven tabel */
+    background-color:transparent;
 }
 
-/* Algemene tabel cellen */
 th,td{
-border:1px solid #ccc; /* dunne rand */
-padding:6px; /* ruimte in cel */
-text-align:left; /* tekst links uitlijnen */
-vertical-align:top; /* tekst boven uitlijnen */
+    border:1px solid #ccc; /* dunne rand */
+    padding:6px;
+    text-align:left;
+    vertical-align:top;
 }
 
-/* Header cellen  */
 th{
-background-color: transparent; /* licht grijze achtergrond voor headers */
+    background-color: transparent;
 }
 
 /* ======================= TEXTAREA CELLEN ======================= */
-/* Textarea gebruikt om tabeldata direct te kunnen aanpassen */
 #manageTable td textarea{
-background-color:transparent; /* geen achtergrond zodat kleur relatie zichtbaar blijft */
-border:none; /* geen rand */
-width:100%; /* volledige breedte van cel */
-box-sizing:border-box; /* padding blijft binnen celbreedte */
-cursor:text; /* tekst cursor */
-resize:vertical; /* alleen verticaal vergroten */
-font-family:inherit; /* zelfde font als tabel */
-font-size:1rem; /* standaard tekstgrootte */
-padding:4px; /* kleine interne marge */
+    background-color:transparent;
+    border:none;
+    width:100%;
+    box-sizing:border-box;
+    cursor:text;
+    resize:vertical;
+    font-family:inherit;
+    font-size:1rem;
+    padding:4px;
 }
 
-/* ======================= ROW HOVER ======================= */
-/* lichte highlight wanneer muis over een rij beweegt */
-#manageTable tr:hover{
-background-color: transparent;
-}
+/* ======================= RELATIE KLEUREN ======================= */
+.HoofdID { background: #fffde7; font-weight:600; }
+.VHoofdID, .MHoofdID { background: #e8f5e9; font-weight:500; }
+.PHoofdID { background: #f3e5f5; font-style:italic; }
+.KindID { background: #e3f2fd; }
+.HKindID { background: #eef7fe; }
+.PHKindID { background: #f7fbff; }
+.KPartnerID { background: #d0ebff; font-style:italic; }
+.BZID { background: #fff3e0; font-weight:500; }
+.BZPartnerID { background: #fbe9e7; font-style:italic; }
 
-/* ======================= RELATIE KLEUREN DIRECTE ID ======================= */
-/* kleuren maken relaties visueel herkenbaar op basis van dataset IDs */
-
-/* Hoofd */
-.HoofdID {
-  background: #fffde7; /* licht geel */
-  font-weight: 600;    /* iets dikkere tekst */
-}
-
-/* Ouders */
-.VHoofdID,
-.MHoofdID {
-  background: #e8f5e9; /* licht groen */
-  font-weight: 500;
-}
-
-/* Partner van hoofd */
-.PHoofdID {
-  background: #f3e5f5; /* licht paars */
-  font-style: italic;   /* cursief */
-}
-
-/* Kinderen */
-.KindID {
-  background: #e3f2fd;  /* blauw */
-}
-.HKindID {
-  background: #eef7fe;  /* licht blauw */
-}
-.PHKindID {
-  background: #f7fbff;  /* zeer licht blauw */
-}
-
-/* Partner van kind */
-.KPartnerID {
-  background: #d0ebff; /* licht blauw */
-  font-style: italic;
-}
-
-/* Broers en zussen */
-.BZID {
-  background: #fff3e0; /* licht oranje */
-  font-weight: 500;
-}
-
-/* Partner van broer/zus */
-.BZPartnerID {
-  background: #fbe9e7; /* roze/peach */
-  font-style: italic;
-}
 /* ======================= CONTROLS ======================= */
-/* zoekveld styling */
 #searchPerson{
-width:calc(100% - 40px); /* volledige breedte minus marges */
-margin:0 20px; /* links en rechts ruimte */
-height:50px; /* groter zoekveld */
-font-size:1.4rem; /* grotere tekst */
-padding:8px 12px; /* interne ruimte */
-border:1px solid #999; /* rand */
-border-radius:5px; /* afgeronde hoeken */
-box-sizing:border-box;
+    width:calc(100% - 40px); /* breedte minus marge */
+    margin:0 20px;
+    height:50px;
+    font-size:1.4rem;
+    padding:8px 12px;
+    border:1px solid #999;
+    border-radius:5px;
+    box-sizing:border-box;
 }
 
 /* ======================= KNOPPEN ======================= */
-/* algemene knop styling */
 button{
-height:45px; /* vaste knophoogte */
-font-size:1.2rem; /* grote tekst */
-padding:0 20px; /* horizontale padding */
-border-radius:5px; /* afgeronde knoppen */
-cursor:pointer; /* handcursor */
-margin-right:10px; /* ruimte tussen knoppen */
+    height:45px;
+    font-size:1.2rem;
+    padding:0 20px;
+    border-radius:5px;
+    cursor:pointer;
+    margin-right:10px;
 }
 </style>
 </head>
+
 <body>
 
 <!-- ======================= TOPBAR ======================= -->
 <div id="topbar-placeholder"></div>
-<!-- Placeholder waar TopBar.html wordt geladen -->
-
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html') 
-<!-- haalt externe HTML file op -->
-.then(resp => resp.text()) 
-<!-- zet response om naar tekst -->
-.then(data => document.getElementById('topbar-placeholder').innerHTML = data); 
-<!-- plaatst HTML in placeholder -->
+fetch('/MyFamTreeCollab/Layout/TopBar.html')
+.then(resp=>resp.text())
+.then(data=>document.getElementById('topbar-placeholder').innerHTML=data);
 </script>
 
 <!-- ======================= NAVBAR ======================= -->
 <div id="Navbar-placeholder"></div>
-<!-- Placeholder voor navigatie menu -->
-
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') 
-<!-- laad navbar component -->
-.then(resp => resp.text()) 
-.then(data => document.getElementById('Navbar-placeholder').innerHTML = data); 
-<!-- inject navbar in pagina -->
+fetch('/MyFamTreeCollab/Layout/Navbar.html')
+.then(resp=>resp.text())
+.then(data=>{
+    const ph=document.getElementById('Navbar-placeholder');
+    if(ph) ph.innerHTML=data;
+});
 </script>
 
 <!-- ======================= PAGINA TITEL ======================= -->
-<div id="pageTitle"
-style="font-size:1.5rem;font-weight:bold;margin-bottom:15px;">
-
+<div id="pageTitle" style="font-size:1.5rem;font-weight:bold;margin-bottom:15px;">
 Manage Stamboom
-<!-- Titel boven de beheerpagina -->
 </div>
 
 <!-- ======================= MAIN CONTENT ======================= -->
 <main>
 <div class="container">
-<!-- container zorgt voor consistente layout met andere pagina’s -->
 
 <!-- ======================= SEARCH ======================= -->
-<input
-type="text"
-id="searchPerson"
-placeholder="Voer ID of naam in"
-/>
-<!-- Live zoekveld waarmee personen gefilterd worden -->
+<input type="text" id="searchPerson" placeholder="Voer ID of naam in" />
 
 <!-- ======================= BUTTONS ======================= -->
 <div style="margin-top:10px;margin-bottom:20px;">
-<!-- container voor actieknoppen -->
-
-<button id="refreshBtn">
-🔄 Refresh
-</button>
-<!-- laad tabel opnieuw vanuit storage -->
-
-<button id="addBtn">
-+ Toevoegen
-</button>
-<!-- voeg nieuwe persoon rij toe -->
-
-<button id="saveBtn">
-💾 Opslaan
-</button>
-<!-- sla wijzigingen op in storage -->
-
-</div>
-
-<!-- ======================= SEARCH RESULT FORM ======================= -->
-
-<div
-id="searchResultForm"
-style="display:none;margin-top:15px;border:1px solid #ccc;padding:10px;"
->
-<!-- resultaatblok dat verschijnt bij live search -->
-<h4>Gevonden personen:</h4>
-<form id="resultForm">
-<table id="resultTable">
-<thead>
-<tr>
-
-<th>ID</th>
-<!-- unieke persoons ID -->
-<th>Roepnaam</th>
-<!-- voornaam -->
-<th>Achternaam</th>
-<!-- familienaam -->
-</tr>
-</thead>
-
-<tbody>
-<!-- wordt dynamisch gevuld via manage.js -->
-</tbody>
-</table>
-</form>
+    <button id="refreshBtn">🔄 Refresh</button>
+    <button id="addBtn">+ Toevoegen</button>
+    <button id="saveBtn">💾 Opslaan</button>
+    <button id="exportJson">JSON</button>
+    <button id="exportCsv">CSV</button>
 </div>
 
 <!-- ======================= MANAGE TABLE ======================= -->
 <table id="manageTable">
-<thead>
-<tr>
-<!-- kolom headers worden automatisch gegenereerd via schema.js -->
-</tr>
-</thead>
-<tbody>
-<!-- personen rijen worden via manage.js gerenderd -->
-</tbody>
+<thead><tr></tr></thead>
+<tbody></tbody>
 </table>
+
 </div>
 </main>
 
+<!-- ======================= HELPERS VOOR LIVSEARCH ======================= -->
+<script>
+/* safe() helper moet beschikbaar zijn voor LiveSearch.js */
+function safe(val){ return val ? String(val).trim() : ''; }
+</script>
+
 <!-- ======================= PROJECT SCRIPTS ======================= -->
-<script src="../js/schema.js"></script>
-<!-- definieert kolom structuur van CSV / data model -->
-
-<script src="../js/idGenerator.js"></script>
-<!-- genereert automatisch ID wanneer deze ontbreekt -->
-
-<script src="../js/storage.js"></script>
-<!-- regelt opslag en ophalen van data (localStorage / CSV) -->
-
-<script src="../js/LiveSearch.js"></script>
-<!-- centrale Live Search module: zorgt dat live zoekfunctie consistent is tussen view & manage -->
-
-<script src="../js/manage.js"></script>
-<!-- bevat logica voor tabel render, zoeken en opslaan -->
+<script src="../js/schema.js"></script>           <!-- definieert kolom structuur -->
+<script src="../js/idGenerator.js"></script>     <!-- genereert ID bij nieuwe persoon -->
+<script src="../js/storage.js"></script>          <!-- opslag/fetch van dataset -->
+<script src="../js/LiveSearch.js"></script>       <!-- centrale Live Search module -->
+<script src="../js/manage.js"></script>          <!-- tabel render, add/save/refresh etc -->
 
 <!-- ======================= FOOTER ======================= -->
 <div id="footer-placeholder"></div>
-<!-- placeholder waar Footer.html wordt geladen -->
-
 <script>
 fetch('/MyFamTreeCollab/Layout/Footer.html')
-<!-- laad footer component -->
-.then(resp => resp.text())
-.then(data => document.getElementById('footer-placeholder').innerHTML = data);
-<!-- inject footer HTML -->
+.then(resp=>resp.text())
+.then(data=>document.getElementById('footer-placeholder').innerHTML=data);
 </script>
+
 </body>
 </html>
