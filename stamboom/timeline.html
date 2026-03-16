@@ -1,26 +1,24 @@
-<!-- ======================= stamboom/timeline.html v0.0.1 ======================= -->
+<!-- ======================= stamboom/timeline.html v0.2 ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
 <meta charset="UTF-8"> <!-- UTF-8 tekencodering voor internationale namen -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Mobiele responsiviteit -->
-<title>MyFamTreeCollab - Timeline</title> <!-- Pagina titel in browser tab -->
-<link rel="stylesheet" href="../css/style.css"> <!-- Verbindt globale stylesheet -->
+<title>MyFamTreeCollab - Timeline</title> <!-- Pagina titel in browser -->
+<link rel="stylesheet" href="../css/style.css"> <!-- Algemene CSS -->
 <style>
 /* ======================= TIMELINE CONTAINER ======================= */
-/* Scrollbare container voor grote tijdlijnen */
 #timelineContainer{
-    overflow-x:auto; /* horizontaal scrollen mogelijk */
-    border:1px solid #ccc; /* licht kader rond tijdlijn */
+    overflow-x:auto; /* horizontaal scrollen mogelijk bij grote tijdlijnen */
+    border:1px solid #ccc; /* licht kader rond timeline */
     padding:20px; /* binnenruimte */
     margin-top:20px; /* afstand boven */
 }
 
 /* ======================= LABEL TEKST ======================= */
-/* Naam labels boven timeline punten */
 .timelineLabel{
     font-size:12px; /* kleine tekst */
-    fill:#333;       /* donkere grijze kleur */
+    fill:#333;       /* donkergrijs */
 }
 </style>
 </head>
@@ -29,53 +27,40 @@
 <!-- ======================= TopBar ======================= -->
 <div id="topbar-placeholder"></div>
 <script>
-/* Laad TopBar dynamisch via fetch */
 fetch('/MyFamTreeCollab/Layout/TopBar.html')
 .then(resp => resp.text())
-.then(data => {
-    document.getElementById('topbar-placeholder').innerHTML = data;
-});
+.then(data => document.getElementById('topbar-placeholder').innerHTML = data);
 </script>
 
 <!-- ======================= Navbar ======================= -->
 <div id="Navbar-placeholder"></div>
 <script>
-/* Laad Navbar dynamisch via fetch */
 fetch('/MyFamTreeCollab/Layout/Navbar.html')
 .then(resp => resp.text())
-.then(data => {
-    const placeholder = document.getElementById('Navbar-placeholder');
-    if(placeholder) placeholder.innerHTML = data;
-});
+.then(data => { const ph=document.getElementById('Navbar-placeholder'); if(ph) ph.innerHTML=data; });
 </script>
 
 <!-- ======================= Pagina Titel ======================= -->
 <div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const pageTitleDiv = document.getElementById('pageTitle'); // titel container
-    const title = "Timeline"; // paginatitel
-    pageTitleDiv.textContent = title
-        .replace(/[-_]/g,' ')          // koppelteken of underscore vervangen door spatie
-        .replace(/\b\w/g, c => c.toUpperCase()); // eerste letter van elk woord hoofdletter
+    const pageTitleDiv = document.getElementById('pageTitle'); 
+    const title = "Timeline"; 
+    pageTitleDiv.textContent = title.replace(/[-_]/g,' ').replace(/\b\w/g, c => c.toUpperCase());
 });
 </script>
 
 <!-- ======================= LIVE SEARCH INPUT ======================= -->
-<input type="text"
-       id="liveSearchInput"
-       placeholder="Zoek ID..."> <!-- Gebruiker kan ID typen -->
-
-<!-- ======================= SEARCH RESULTS (popup) ======================= -->
-<div id="searchResults"></div> <!-- Popup wordt dynamisch aangemaakt door LiveSearch.js -->
+<input type="text" id="liveSearchInput" placeholder="Zoek ID of naam...">
 
 <!-- ======================= TIMELINE CONTAINER ======================= -->
 <div id="timelineContainer"></div> <!-- SVG tijdlijn wordt hier geplaatst -->
 
 <!-- ======================= Scripts ======================= -->
+<script src="../js/LiveSearch.js"></script> <!-- Universele LiveSearch module -->
+
 <script>
 /* ======================= TEST DATA ======================= */
-/* Voor demo; later kan dataset uit CSV/JSON komen */
 const peopleData = [
     {ID:"JVD001",Roepnaam:"Jan",Prefix:"van",Achternaam:"Dijk",Geboortedatum:"1843-05-12"},
     {ID:"MDB002",Roepnaam:"Maria",Prefix:"de",Achternaam:"Boer",Geboortedatum:"1872-03-21"},
@@ -85,24 +70,23 @@ const peopleData = [
 
 /* ======================= TIMELINE CALLBACK ======================= */
 function onTimelinePersonSelected(personID){
-    /* Haal geselecteerde persoon op uit dataset */
+    /* Zoek geselecteerde persoon in dataset */
     const person = peopleData.find(p => p.ID === personID);
     if(person){
-        /* Teken de hele timeline met focus op deze persoon */
-        drawTimeline(peopleData, person);
+        drawTimeline(peopleData, person); // teken timeline met focus op geselecteerde persoon
     }
 }
 
 /* ======================= INIT LIVE SEARCH ======================= */
 document.addEventListener('DOMContentLoaded', () => {
-    const input = document.getElementById('liveSearchInput'); // zoekveld
-    initLiveSearch(input, peopleData, onTimelinePersonSelected); // gebruik universele LiveSearch.js
+    const input = document.getElementById('liveSearchInput'); // zoekveld ophalen
+    initLiveSearch(input, peopleData, onTimelinePersonSelected); // koppel universele LiveSearch
 });
 
 /* ======================= DRAW TIMELINE ======================= */
 function drawTimeline(data, focusPerson){
     const container = document.getElementById("timelineContainer");
-    container.innerHTML=""; // oude timeline verwijderen
+    container.innerHTML=""; // verwijder oude timeline
 
     /* ======================= SVG CANVAS ======================= */
     const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
@@ -117,25 +101,25 @@ function drawTimeline(data, focusPerson){
 
     /* ======================= JAAR NAAR X-COORDINAAT ======================= */
     function yearToX(year){
-        return ((year-minYear)/(maxYear-minYear))*2800 + 50; // horizontale positie
+        return ((year-minYear)/(maxYear-minYear))*2800 + 50;
     }
 
     /* ======================= BASIS LIJN ======================= */
     const line = document.createElementNS("http://www.w3.org/2000/svg","line");
-    line.setAttribute("x1","50");  // beginpunt
+    line.setAttribute("x1","50"); 
     line.setAttribute("y1","100");
-    line.setAttribute("x2","2850"); // eindpunt
+    line.setAttribute("x2","2850"); 
     line.setAttribute("y2","100");
-    line.setAttribute("stroke","black"); // lijnkleur
+    line.setAttribute("stroke","black"); 
     svg.appendChild(line);
 
     /* ======================= PERSONEN TEKENEN ======================= */
     data.forEach(p=>{
         const year = new Date(p.Geboortedatum).getFullYear();
         const x = yearToX(year);
-        const y = 100; // vaste y-positie; kan later gestapeld worden bij overlappende jaren
+        const y = 100; // vaste y-positie
 
-        /* ======================= CIRKEL ======================= */
+        /* Cirkel voor persoon */
         const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
         circle.setAttribute("cx",x);
         circle.setAttribute("cy",y);
@@ -143,12 +127,12 @@ function drawTimeline(data, focusPerson){
         circle.setAttribute("fill", p.ID === focusPerson.ID ? "red" : "black"); // focus persoon rood
         svg.appendChild(circle);
 
-        /* ======================= LABEL ======================= */
+        /* Label boven cirkel */
         const name = `${p.Roepnaam} ${p.Prefix||""} ${p.Achternaam}`;
         const label = document.createElementNS("http://www.w3.org/2000/svg","text");
-        label.setAttribute("x", x+8); // rechts van punt
-        label.setAttribute("y", y-10); // iets boven punt
-        label.setAttribute("class","timelineLabel"); // CSS class
+        label.setAttribute("x", x+8); 
+        label.setAttribute("y", y-10); 
+        label.setAttribute("class","timelineLabel");
         label.textContent = `${name} (${year})`;
         svg.appendChild(label);
     });
@@ -160,9 +144,7 @@ function drawTimeline(data, focusPerson){
 <script>
 fetch('/MyFamTreeCollab/Layout/Footer.html')
 .then(resp => resp.text())
-.then(data => {
-    document.getElementById('footer-placeholder').innerHTML = data;
-});
+.then(data => document.getElementById('footer-placeholder').innerHTML = data);
 </script>
 
 </body>
