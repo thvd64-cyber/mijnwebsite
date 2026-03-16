@@ -47,12 +47,13 @@ function initLiveSearch(searchInput, dataset, onSelectCallback){
             return;
         }
 
-        // ======================= Dataset filter =======================
-        const results = dataset.filter(p =>
-            safe(p.ID).toLowerCase().includes(term) ||
-            safe(p.Roepnaam).toLowerCase().includes(term) ||
-            safe(p.Achternaam).toLowerCase().includes(term)
-        );
+// ======================= Dataset filter =======================
+const results = dataset.filter(p =>
+    safe(p.ID).toLowerCase().includes(term) ||              // zoeken op ID
+    safe(p.Roepnaam).toLowerCase().includes(term) ||        // zoeken op roepnaam
+    safe(p.Achternaam).toLowerCase().includes(term) ||      // zoeken op achternaam
+    safe(p.Geboortedatum).toLowerCase().includes(term)      // zoeken op geboortedatum (bijv. 1954 of 12-03-1954)
+);
 
         // ======================= Popup weergave =======================
         if(displayType==='popup') {
