@@ -1,4 +1,4 @@
-<!-- ======================= stamboom/view.html v1.5.9 ======================= -->
+<!-- ======================= stamboom/view.html v1.5.10 ======================= -->
 <!-- added script relatieEngine.js"Centrale genealogische logica (berekent relaties zoals Hoofd, Partner, Kind, BZID) -->
 <!-- RelationColors.css" Kleurtoewijzing voor Hoofd, Ouders, Kinderen, BZID -->
 <!DOCTYPE html>
@@ -94,11 +94,12 @@ Hier kan je personen bekijken, relaties analyseren en generaties structureren in
 </div>
 
 <!-- ======================= Scripts ======================= -->
-<script src="../js/schema.js"></script> <!-- Schema definities voor personen -->
-<script src="../js/storage.js"></script> <!-- Local storage functies -->
-<script src="../js/relatieEngine.js"></script> <!-- Centrale genealogische logica (berekent relaties zoals Hoofd, Partner, Kind, BZID) -->
-<script src="../js/view.js"></script> <!-- Render boom + BZID; v1.5.6 compatibel -->
-
+<script src="../js/schema.js"></script>           <!-- Schema definities voor personen -->
+<script src="../js/storage.js"></script>          <!-- Local storage functies -->
+<script src="../js/relatieEngine.js"></script>    <!-- Berekening relaties (Hoofd, Partner, Kind, BZID) -->
+<script src="../js/LiveSearch.js"></script>       <!-- Centrale Live Search module -->
+<script src="../js/view.js"></script>            <!-- Render boom + BZID; v1.6+ compatibel -->
+    
 <!-- ======================= Footer ======================= -->
 <div id="footer-placeholder"></div> <!-- Placeholder voor footer -->
 <script>
