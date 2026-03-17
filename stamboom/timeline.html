@@ -1,4 +1,4 @@
-<!-- ======================= stamboom/timeline.html v0.0.5 ======================= -->
+<!-- ======================= stamboom/timeline.html v0.0.6 ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -68,8 +68,25 @@ document.addEventListener('DOMContentLoaded', () => {
         Alles wat je hier ziet komt direct uit de storage en veranderd mee met veranderingen in de manage pagina.
     </p>
 </section>
-<!-- ======================= LIVE SEARCH INPUT ======================= -->
-<input type="text" id="liveSearchInput" placeholder="Zoek ID of naam...">
+
+   <!-- ======================= LIVE SEARCH BOX ======================= -->
+<div style="
+    margin: 20px 0px 20px 50px;   /* boven, rechts, onder, links van de hele container */
+    position: relative;            /* parent div voor absolute positionering van popup */
+">
+    <!-- ======================= INPUT VELD ======================= -->
+    <input type="text"
+           id="sandboxSearch"
+           placeholder="Zoek persoon (Roepnaam, Achternaam, Geboortedatum)"
+           style="
+               width: 50%;                /* breedte van input veld */
+               padding: 8px 12px;         /* binnenruimte: 8px boven/onder, 12px links/rechts */
+               font-size: 1.1rem;         /* lettergrootte */
+               border-radius: 5px;        /* licht afgeronde hoeken */
+               border: 1px solid #aaa;    /* lichte rand */
+               box-sizing: border-box;    /* padding/border inbegrepen in breedte */
+           ">
+</div>
 
 <!-- ======================= TIMELINE CONTAINER ======================= -->
 <div id="timelineContainer"></div> <!-- SVG timeline wordt hier geplaatst -->
