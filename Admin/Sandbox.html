@@ -67,44 +67,28 @@ document.addEventListener('DOMContentLoaded', () => {
     </p>
 </section>
 
-<!-- ======================= LIVE SEARCH BOX ======================= -->
+<!-- ======================= Sandbox LIVE SEARCH BOX ======================= -->
 <div style="
-    margin: 20px 0px 20px 50px;   /* boven, rechts, onder, links */
-    position: relative;     /* zorgt dat absolute dropdown correct ten opzichte van deze div wordt gepositioneerd */
+    margin: 20px 0px 20px 50px;   /* boven, rechts, onder, links van de hele container */
+    position: relative;            /* parent div voor absolute positionering van popup */
 ">
     <!-- ======================= INPUT VELD ======================= -->
     <input type="text"
            id="sandboxSearch"
            placeholder="Zoek persoon (Roepnaam, Achternaam, Geboortedatum)"
            style="
-               width: 50%;                /* breedte van het input veld */
+               width: 50%;                /* breedte van input veld */
                padding: 8px 12px;         /* binnenruimte: 8px boven/onder, 12px links/rechts */
                font-size: 1.1rem;         /* lettergrootte */
-               border-radius: 5px;        /* afgeronde hoeken, minder rond dan 20px */
+               border-radius: 5px;        /* licht afgeronde hoeken */
                border: 1px solid #aaa;    /* lichte rand */
-               box-sizing: border-box;    /* breedte inclusief padding en border */
+               box-sizing: border-box;    /* padding/border inbegrepen in breedte */
            ">
-    <!-- ======================= DROPDOWN ======================= -->
-    <div id="sandboxSearchDropdown" style="
-        position: absolute;      /* dropdown absolute tov parent div */
-        top: 100%;               /* net onder het input veld */
-        left: 0;                 /* uitlijnen links met input */
-        background: #fff;        /* witte achtergrond */
-        border: 1px solid #ccc;  /* lichte rand */
-        border-radius: 5px;      /* afgeronde hoeken (0 = vierkant) */
-        max-height: 200px;       /* max hoogte, scrollbar verschijnt bij overflow */
-        overflow-y: auto;        /* verticale scrollbar bij te veel resultaten */
-        width: 100%;             /* dezelfde breedte als input veld */
-        display: none;           /* standaard verborgen */
-        z-index: 1000;           /* boven andere content */
-        margin-top: 2px;         /* kleine ruimte tussen input en dropdown */
-    "></div>
 </div>
-    
-  <!-- ======================= CSS ======================= -->
-  <!-- ======================= Scripts ======================= -->
-<script src="../js/LiveSearch.js"></script>     <!-- Eerst universele LiveSearch module -->
-<script src="../js/Sandbox.js"></script>        <!-- Dan de sandbox initialisatie -->
+
+<!-- ======================= SCRIPTS ======================= -->
+<script src="../js/LiveSearch.js"></script>   <!-- Universele LiveSearch module -->
+<script src="../js/Sandbox.js"></script>      <!-- Sandbox init met testdata -->
     
 <!-- ======================= bottom bar ======================= -->
   <!-- ======================= layout/Footer.html ======================= -->
