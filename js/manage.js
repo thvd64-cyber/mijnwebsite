@@ -77,7 +77,7 @@ function computeRelaties(data,hoofdId){
     }).sort((a,b)=>a._priority - b._priority);                                  // Sorteer op prioriteit
 }
 
-/* ======================= TEXT AREA HOOGTE ======================= */
+/* ======================= TEXTAREA HOOGTE ======================= */
 function adjustTextareas(){
     tableBody.querySelectorAll('textarea').forEach(ta=>{
         ta.style.height='auto';                                                 // Reset hoogte
@@ -242,37 +242,25 @@ function init(){
     exportJsonBtn?.addEventListener('click', exportJSON);         // Exporteer JSON
     exportCsvBtn?.addEventListener('click', exportCSV);           // Exporteer CSV
 
-  // ======================= LIVE SEARCH =======================
-// Controleer of de functie initLiveSearch bestaat
-if (typeof initLiveSearch === 'function') {
+    // ======================= LIVE SEARCH =======================
+    if (typeof initLiveSearch === 'function') {
+        initLiveSearch(searchInput, dataset, (selectedID) => {
+            selectedHoofdId = selectedID;                         // Update geselecteerde hoofdID
+            renderTable(dataset);                                 // Render tabel opnieuw na selectie
+        });
 
-    // Initialiseer de Live Search module
-    initLiveSearch(
-        searchInput,       // Input veld
-        dataset,           // Data waarop gezocht wordt
-        (selectedID) => {  // Callback bij selectie
-            selectedHoofdId = selectedID; // Update actieve hoofdID
-            renderTable(dataset);         // Render tabel opnieuw
-        }
-    );
-
-    // ======================= CLICK OUTSIDE HANDLER =======================
-    // Enkel één keer binden, voorkomt popup die te vroeg verdwijnt
-    if (!window._liveSearchClickBound) {
+        // Klik buiten popup sluit live search resultaten
         document.addEventListener('click', (e) => {
             const popup = document.getElementById('searchPopup');
-            // Sluit popup alleen als je buiten klikt én niet op het input veld
-            if (popup && !popup.contains(e.target) && e.target !== searchInput) {
+            if(popup && !popup.contains(e.target) && e.target !== searchInput) {
                 popup.remove();
             }
         });
-        window._liveSearchClickBound = true; // Flag zodat dit niet opnieuw wordt gebonden
     }
 }
 
-// ======================= INIT START =======================
-// Start de init functie zodra script geladen is
-init(); // Verwacht dat init() eerder in bestand gedefinieerd is (setup + event binding)
+// Start init bij laden
+init();
 
 /* ======================= ID GENERATOR ======================= */
 function genereerCode(persoon,bestaande){
