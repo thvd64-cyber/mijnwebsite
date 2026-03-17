@@ -1,5 +1,4 @@
-<!-- ======================= Admin/Layout1.html v0.0.0 ======================= -->
-<!-- ======================= Admin/PaginaTemplate.html v1.0.0 ======================= -->
+<!-- ======================= Admin/Layout1.html v1.0.0 ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -75,4 +74,3 @@ fetch('/MyFamTreeCollab/Layout/Footer.html')  // pad naar de layout/Footer.html
     });
 </script>
 </body>
-
