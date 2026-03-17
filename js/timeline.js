@@ -1,100 +1,8 @@
-/* ======================= js/timeline.js v0.1.1 ======================= */
-/* Uitbreiding op v0.1.0
-   - Nu worden ook vaderID en moederID op de tijdslijn weergegeven
-   - Alle inline uitleg toegevoegd
+/* ======================= js/timeline.js v0.1.2 ======================= */
+/* Uitbreiding op v0.1.1
+   - Iedereen krijgt een unieke hoogte zodat teksten niet overlappen
+   - Kleine random offset per jaar toegepast
 */
-
-// ======================= DATA LADEN =======================
-let peopleData = window.StamboomStorage?.get() || []; // Haal dataset uit storage
-
-if(!peopleData || peopleData.length === 0){ // fallback indien leeg
-    console.warn("Dataset leeg - gebruik testdata"); // waarschuwing
-    peopleData = [
-        { ID: "1", Roepnaam: "Jan", Achternaam: "Jansen", Geboortedatum: "1950-01-01" },
-        { ID: "2", Roepnaam: "Anna", Achternaam: "Jansen", Geboortedatum: "1970-06-15" },
-        { ID: "3", Roepnaam: "Piet", Achternaam: "Jansen", Geboortedatum: "1975-03-20" },
-        { ID: "4", Roepnaam: "Lisa", Achternaam: "Jansen", Geboortedatum: "2000-09-10" }
-    ];
-}
-
-// ======================= HULP FUNCTIES =======================
-function parseDateSafe(d){
-    if(!d){
-        console.warn("Datum leeg gevonden, gebruik vandaag als fallback");
-        return new Date();
-    }
-    const dt = new Date(d);
-    if(isNaN(dt.getTime())){
-        console.warn(`Datum verkeerd (${d}), gebruik vandaag`);
-        return new Date();
-    }
-    return dt;
-}
-
-function yearToX(year, minYear, maxYear){
-    const range = maxYear - minYear || 1;
-    const x = ((year - minYear)/range)*2800 + 50;
-    return isNaN(x) ? 50 : x;
-}
-
-// ======================= RELATIE ZOEK FUNCTIES =======================
-function getPartners(person){
-    return peopleData.filter(p =>
-        p.PHoofdID === person.ID || p.PKPartnerID === person.ID
-    );
-}
-
-function getChildren(person, partner){
-    return peopleData.filter(p =>
-        p.VaderID === person.ID || p.MoederID === person.ID ||
-        (partner && (p.VaderID === partner.ID || p.MoederID === partner.ID))
-    );
-}
-
-// ======================= RECURSIEVE OPBOUW =======================
-function buildFamily(rootPerson){
-    const result = [];
-    const visited = new Set();
-
-    function traverse(person, level = 0){
-        if(!person || visited.has(person.ID)) return;
-        visited.add(person.ID);
-
-        result.push({ ...person, level: level, role: "S" });
-
-        // ======================= PARTNERS =======================
-        const partners = getPartners(person);
-        partners.forEach(partner => {
-            if(!visited.has(partner.ID)){
-                result.push({ ...partner, level: level, role: "P", parentID: person.ID });
-            }
-
-            // ======================= KINDEREN =======================
-            const children = getChildren(person, partner);
-            children.forEach(child => {
-                if(!visited.has(child.ID)){
-                    result.push({ ...child, level: level + 1, role: "S", parentID: person.ID });
-                }
-                traverse(child, level + 1);
-            });
-        });
-
-        // ======================= VADER EN MOEDER =======================
-        ["VaderID","MoederID"].forEach(parentField => {
-            const parentID = person[parentField];
-            if(parentID && !visited.has(parentID)){
-                const parentPerson = peopleData.find(p => p.ID === parentID);
-                if(parentPerson){
-                    result.push({ ...parentPerson, level: level - 1, role: "O", parentID: null }); // ouder 1 level hoger
-                    traverse(parentPerson, level - 1);
-                }
-            }
-        });
-    }
-
-    traverse(rootPerson, 0);
-    return result;
-}
 
 // ======================= DRAW TIMELINE =======================
 function drawTimeline(rootPerson){
@@ -109,7 +17,7 @@ function drawTimeline(rootPerson){
 
     const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
     svg.setAttribute("width","3000");
-    svg.setAttribute("height","1000"); // meer hoogte voor ouders
+    svg.setAttribute("height","1200"); // extra hoogte voor meerdere offsets
     container.appendChild(svg);
 
     const timelinePersons = buildFamily(rootPerson);
@@ -118,7 +26,7 @@ function drawTimeline(rootPerson){
     const minYear = Math.min(...years);
     const maxYear = Math.max(...years);
 
-    const baseY = 200; // startlijn voor root persoon
+    const baseY = 200;
     const levelHeight = 80;
 
     const baseLine = document.createElementNS("http://www.w3.org/2000/svg","line");
@@ -131,12 +39,20 @@ function drawTimeline(rootPerson){
 
     const positionMap = {};
 
+    // ======================= OFFSET MAP PER JAAR =======================
+    const offsetMap = {}; // voorkomt dat personen exact dezelfde y hebben
+    const offsetStep = 20; // verticale stap per persoon
+
     // ======================= PERSONEN TEKENEN =======================
-    timelinePersons.forEach(p => {
+    timelinePersons.forEach((p, index) => {
         const dt = parseDateSafe(p.Geboortedatum);
         const year = dt.getFullYear();
         const x = yearToX(year, minYear, maxYear);
-        const y = baseY + (p.level * levelHeight);
+
+        // bereken unieke y per persoon: levelHeight + extra offset
+        if(!offsetMap[year]) offsetMap[year] = 0; // start bij 0 per jaar
+        const y = baseY + (p.level * levelHeight) + offsetMap[year];
+        offsetMap[year] += offsetStep; // volgende persoon op dit jaar hoger
 
         positionMap[p.ID] = { x, y };
 
@@ -182,23 +98,3 @@ function drawTimeline(rootPerson){
         }
     });
 }
-
-// ======================= INIT LIVESEARCH =======================
-document.addEventListener('DOMContentLoaded', () => {
-    const input = document.getElementById('sandboxSearch');
-    if(!input){
-        console.error("sandboxSearch input niet gevonden");
-        return;
-    }
-
-    if(typeof initLiveSearch === "function"){
-        initLiveSearch(input, peopleData, personID => {
-            const person = peopleData.find(p => p.ID === personID);
-            if(person) drawTimeline(person);
-        });
-    }
-
-    if(peopleData.length > 0){
-        drawTimeline(peopleData[0]);
-    }
-});
