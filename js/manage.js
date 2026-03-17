@@ -243,35 +243,31 @@ function init(){
     exportCsvBtn?.addEventListener('click', exportCSV);           // Exporteer CSV
 
   // ======================= LIVE SEARCH =======================
-// Controleer of de functie initLiveSearch bestaat (defensief: voorkomt errors als script niet geladen is)
+// Controleer of de functie initLiveSearch bestaat
 if (typeof initLiveSearch === 'function') {
 
     // Initialiseer de Live Search module
     initLiveSearch(
-        searchInput, // Referentie naar het input veld (#searchPerson)
-        dataset,     // Volledige dataset waarop gezocht wordt (array met personen)
-
-        (selectedID) => { // Callback functie die wordt uitgevoerd bij selectie van een resultaat
-            selectedHoofdId = selectedID; // Sla gekozen persoon op als actieve HoofdID
-            renderTable(dataset);         // Render de tabel opnieuw op basis van nieuwe selectie
+        searchInput,       // Input veld
+        dataset,           // Data waarop gezocht wordt
+        (selectedID) => {  // Callback bij selectie
+            selectedHoofdId = selectedID; // Update actieve hoofdID
+            renderTable(dataset);         // Render tabel opnieuw
         }
     );
 
     // ======================= CLICK OUTSIDE HANDLER =======================
-    // Event listener op hele document om klikken buiten de search popup te detecteren
-    document.addEventListener('click', (e) => {
-
-        const popup = document.getElementById('searchPopup'); // Zoek de huidige popup met resultaten
-
-        // Controle:
-        // - popup bestaat
-        // - klik is NIET binnen popup
-        // - klik is NIET op input veld zelf
-        if (popup && !popup.contains(e.target) && e.target !== searchInput) {
-
-            popup.remove(); // Verwijder popup → sluit zoekresultaten
-        }
-    });
+    // Enkel één keer binden, voorkomt popup die te vroeg verdwijnt
+    if (!window._liveSearchClickBound) {
+        document.addEventListener('click', (e) => {
+            const popup = document.getElementById('searchPopup');
+            // Sluit popup alleen als je buiten klikt én niet op het input veld
+            if (popup && !popup.contains(e.target) && e.target !== searchInput) {
+                popup.remove();
+            }
+        });
+        window._liveSearchClickBound = true; // Flag zodat dit niet opnieuw wordt gebonden
+    }
 }
 
 // ======================= INIT START =======================
