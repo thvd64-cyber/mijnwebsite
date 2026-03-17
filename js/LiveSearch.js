@@ -5,7 +5,10 @@
    - Klikken op resultaat selecteert persoon en roept callback aan
 */
 
-/* ======================= LiveSearch INIT voor manage.js ======================= */
+/* ======================= HELPERS ======================= */ 
+function safe(val){ return val ? String(val).trim() : ''; } // Zet waarde om naar string en trim spaties
+
+/* ======================= LiveSearch INIT  ======================= */
 function initLiveSearch(searchInput, dataset, onSelectCallback){
     // Event listener op input veld
     searchInput.addEventListener('input', ()=>{
