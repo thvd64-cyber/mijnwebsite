@@ -31,7 +31,7 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
         }
     });
 </script>
-
+<!-- ======================= MAIN PAGE  ======================= -->
 <!-- ======================= Pagina Titel Manueel ======================= -->
 <div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
 
@@ -45,72 +45,32 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-<!-- ======================= MAIN CONTENT ======================= -->
+<!-- ======================= INTRODUCTIE TEKST  ======================= -->    
 <section style="margin:20px; padding:20px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
     <h2>Welkom</h2>
     <p>Dit is een herbruikbaar pagina template voor MyFamTreeCollab.</p>
 </section>
 
-<!-- ======================= UNDER CONSTRUCTION ======================= -->
-<div class="under-construction" style="text-align:center; padding:40px; background:#fff3cd; border:1px solid #ffeeba; border-radius:8px; margin:20px;">
-    <h2>⚠️ Under Construction</h2>
-    <p>Deze pagina is nog in ontwikkeling.</p>
+<!-- ======================= yellow message Under Construction ======================= -->
+<div class="under-construction" style="text-align:center; padding:50px 20px; background:#fff3cd; border:1px solid #ffeeba; border-radius:8px; margin-top:20px;">
+    <h2 style="color:#856404; font-size:2rem; margin-bottom:10px;">⚠️ Under Construction</h2>
+    <p style="color:#856404; font-size:1.1rem;">Deze pagina is momenteel in aanbouw. Kom binnenkort terug voor updates!</p>
 </div>
 
 <!-- ======================= FOOTER ======================= -->
 <div id="footer-placeholder"></div> <!-- Placeholder voor Footer -->
 
-<!-- ======================= SCRIPT: LAYOUT LOADER ======================= -->
+ <!-- ======================= CSS ======================= -->
+  <!-- ======================= Scripts ======================= -->
+<!-- ======================= bottom bar ======================= -->
+  <!-- ======================= layout/Footer.html ======================= -->
+<div id="footer-placeholder"></div>  <!-- Doel: container voor Footer content -->
+
 <script>
-/* ======================= GENERIC LAYOUT LOADER ======================= */
-function loadHTML(targetId, filePath) {
-    // Controleer of placeholder bestaat
-    const el = document.getElementById(targetId); // Haal element op
-    if (!el) {
-        console.error(`❌ Element #${targetId} niet gevonden`); // Debug melding
-        return; // Stop functie
-    }
-
-    // Fetch HTML bestand
-    fetch(filePath)
-        .then(response => {
-            if (!response.ok) { // Controleer HTTP status
-                throw new Error(`HTTP ${response.status} - ${filePath}`); // Gooi fout
-            }
-            return response.text(); // Zet om naar tekst
-        })
-        .then(data => {
-            el.innerHTML = data; // Inject HTML in placeholder
-        })
-        .catch(err => {
-            console.error(`❌ Fout bij laden van ${filePath}:`, err); // Fout loggen
-            el.innerHTML = `<p style="color:red;">Fout bij laden van component</p>`; // Fallback UI
-        });
-}
+fetch('/MyFamTreeCollab/Layout/Footer.html')  // pad naar de layout/Footer.html
+    .then(resp => resp.text())                // response omzetten naar leesbare HTML
+    .then(data => {                           // werk met de opgehaalde HTML
+        document.getElementById('footer-placeholder').innerHTML = data; // Footer injecteren
+    });
 </script>
-
-<!-- ======================= SCRIPT: INIT LOAD ======================= -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-
-    /* ======================= LOAD LAYOUT COMPONENTS ======================= */
-    loadHTML('topbar-placeholder', '../layout/TopBar.html'); // TopBar laden
-    loadHTML('navbar-placeholder', '../layout/Navbar.html'); // Navbar laden
-    loadHTML('footer-placeholder', '../layout/Footer.html'); // Footer laden
-
-    /* ======================= PAGINA TITEL AUTOMATISCH ======================= */
-    const pageTitleDiv = document.getElementById('pageTitle'); // Doel element
-
-    let path = window.location.pathname.split("/").pop(); // Pak bestandsnaam
-    let title = path.replace('.html',''); // Verwijder extensie
-
-    title = title
-        .replace(/[-_]/g,' ') // underscores → spaties
-        .replace(/\b\w/g, c => c.toUpperCase()); // eerste letters hoofdletter
-
-    pageTitleDiv.textContent = title; // Zet titel in DOM
-});
-</script>
-
 </body>
-</html>
