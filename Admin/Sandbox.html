@@ -86,22 +86,13 @@ document.addEventListener('DOMContentLoaded', () => {
            ">
 </div>
 
-<!-- ======================= SCRIPTS ======================= -->
-<script src="../js/storage.js"></script>      <!-- Storage module voor StamboomStorage.get() -->
-<script src="../js/LiveSearch.js"></script>   <!-- Universele LiveSearch module -->
+!-- ======================= Scripts ======================= -->
+<script src="../js/schema.js"></script>           <!-- Schema definities voor personen -->
+<script src="../js/storage.js"></script>          <!-- Local storage functies -->
+<script src="../js/relatieEngine.js"></script>    <!-- Berekening relaties (Hoofd, Partner, Kind, BZID) -->
+<script src="../js/LiveSearch.js"></script>       <!-- Centrale Live Search module -->
+<script src="../js/view.js"></script>            <!-- Render boom + BZID; v1.6+ compatibel -->
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const searchInput = document.getElementById('sandboxSearch');    // Haal input veld
-    const dataset = window.StamboomStorage.get() || [];             // Haal dataset uit storage
-
-    // ======================= Init LiveSearch =======================
-    initLiveSearch(searchInput, dataset, (selectedId) => {
-        console.log('Geselecteerde persoon ID:', selectedId);      // Callback bij selectie
-        // ⚡ Hier kan je andere acties uitvoeren, bijv. renderTree(selectedId)
-    });
-});
-</script>
     
 <!-- ======================= bottom bar ======================= -->
   <!-- ======================= layout/Footer.html ======================= -->
