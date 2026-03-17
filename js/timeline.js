@@ -1,18 +1,21 @@
-/* ======================= js/timeline.js v1.0.0 ======================= */
+/* ======================= js/timeline.js v0.0.4 ======================= */
 /* Robuuste Timeline module voor MyFamTreeCollab
    - Volledig losgekoppeld van HTML (alle init hier)
    - Werkt met sandboxSearch (geen HTML wijziging nodig)
    - Veilige datum parsing + fallback handling
    - Automatische eerste render
+   - Highlight focus persoon in rood
 */
 
-// ======================= DATA LADEN =======================
-let peopleData = [];
+/* ======================= DATA LADEN + FALLBACK ======================= */
+let peopleData = []; // globale dataset initialiseren
+
+// Probeer echte dataset op te halen via schema/storage
 if(typeof getPeopleData === "function"){
     peopleData = getPeopleData();
-} 
+}
 
-// ======================= FALLBACK TESTDATA =======================
+// Fallback testdata als storage leeg of niet beschikbaar
 if(!peopleData || peopleData.length === 0){
     console.warn("Dataset leeg - gebruik testdata");
     peopleData = [
@@ -26,127 +29,99 @@ if(!peopleData || peopleData.length === 0){
 /* ======================= INIT TIMELINE + LIVESEARCH ======================= */
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ======================= DATA LADEN =======================
-    let peopleData = []; // lege array initialiseren
-    if(typeof getPeopleData === "function"){
-        peopleData = getPeopleData(); // dataset ophalen uit storage
-    } else {
-        console.warn("getPeopleData() niet gevonden");
-    }
-
-    if(!peopleData || peopleData.length === 0){
-        console.warn("Dataset leeg - geen timeline mogelijk");
-        return; // stop verdere uitvoering
-    }
-
     // ======================= INPUT OPHALEN =======================
-    const input = document.getElementById('sandboxSearch'); // 🔥 juiste ID
-
+    const input = document.getElementById('sandboxSearch'); // juiste ID
     if(!input){
         console.error("Input veld 'sandboxSearch' niet gevonden");
         return; // stop als input ontbreekt
     }
 
     // ======================= LIVESEARCH INITIALISEREN =======================
-    if(typeof initLiveSearch === "function"){
+    if(typeof initLiveSearch === "function") {
         initLiveSearch(input, peopleData, personID => {
-
-            const person = peopleData.find(p => p.ID === personID); // geselecteerde persoon zoeken
-
-            if(person){
-                drawTimeline(peopleData, person); // timeline opnieuw tekenen met focus
-            }
-
+            const person = peopleData.find(p => p.ID === personID); // focus persoon zoeken
+            if(person) drawTimeline(peopleData, person);           // timeline renderen met highlight
         });
-    } else {
-        console.warn("initLiveSearch() niet gevonden");
     }
 
-    // ======================= INITIËLE TIMELINE =======================
-    drawTimeline(peopleData, peopleData[0]); // eerste persoon als default
+    // ======================= AUTOMATISCHE EERSTE RENDER =======================
+    if(peopleData.length > 0){
+        drawTimeline(peopleData, peopleData[0]); // eerste persoon highlight
+    }
 });
-
 
 /* ======================= DRAW TIMELINE ======================= */
 /**
- * Tekent de gehele tijdlijn
- * @param {Array} data - dataset met personen
- * @param {Object} focusPerson - geselecteerde persoon
+ * Tekent de gehele tijdlijn voor een dataset
+ * @param {Array} data - array van personen
+ * @param {Object} focusPerson - persoon die gehighlight wordt
  */
 function drawTimeline(data, focusPerson){
 
-    if(!data || data.length === 0) return; // stop als geen data
+    if(!data || data.length === 0) return; // stop als dataset leeg is
 
-    // ======================= CONTAINER =======================
-    const container = document.getElementById("timelineContainer"); // container ophalen
-    if(!container) return; // extra veiligheid
-
-    container.innerHTML = ""; // oude inhoud verwijderen
-
-    // ======================= SVG =======================
-    const svg = document.createElementNS("http://www.w3.org/2000/svg","svg"); // svg element maken
-    svg.setAttribute("width","3000"); // vaste breedte
-    svg.setAttribute("height","200"); // vaste hoogte
-    container.appendChild(svg); // toevoegen aan DOM
-
-    // ======================= JAAR DATA FILTER =======================
-    const validPeople = data.filter(p => {
-        const d = new Date(p.Geboortedatum); // datum object maken
-        return !isNaN(d); // alleen geldige datums
-    });
-
-    if(validPeople.length === 0){
-        console.warn("Geen geldige geboortedata");
+    // ======================= CONTAINER OPSLAAN =======================
+    const container = document.getElementById("timelineContainer");
+    if(!container){
+        console.error("Timeline container niet gevonden");
         return;
     }
+    container.innerHTML = ""; // oude timeline verwijderen
 
-    // ======================= JAAR RANGE =======================
-    const years = validPeople.map(p => new Date(p.Geboortedatum).getFullYear()); // jaren ophalen
-    const minYear = Math.min(...years); // minimum jaar
-    const maxYear = Math.max(...years); // maximum jaar
+    // ======================= SVG CANVAS =======================
+    const svg = document.createElementNS("http://www.w3.org/2000/svg","svg"); // svg element maken
+    svg.setAttribute("width","3000"); // breed canvas voor grote datasets
+    svg.setAttribute("height","200"); // hoogte canvas
+    container.appendChild(svg); // voeg svg toe aan DOM
 
-    const yearRange = (maxYear - minYear) || 1; // 🔥 voorkomt divide-by-zero
+    // ======================= JAAR RANGE BEREKENEN =======================
+    const years = data.map(p => {
+        const d = new Date(p.Geboortedatum);
+        return isNaN(d.getFullYear()) ? 2000 : d.getFullYear(); // veilige parsing + fallback
+    });
+    const minYear = Math.min(...years); // oudste jaar
+    const maxYear = Math.max(...years); // jongste jaar
+    const range = maxYear - minYear || 1; // edge case: alle personen hetzelfde jaar
 
-    // ======================= JAAR → X POSITIE =======================
+    // ======================= JAAR NAAR PIXEL FUNCTIE =======================
     function yearToX(year){
-        return ((year - minYear) / yearRange) * 2800 + 50; // schaal + marge
+        return ((year - minYear) / range) * 2800 + 50; // omzetting naar x-coordinaat
     }
 
     // ======================= BASIS LIJN =======================
-    const baseLine = document.createElementNS("http://www.w3.org/2000/svg","line"); // lijn maken
-    baseLine.setAttribute("x1","50");  // start x
-    baseLine.setAttribute("y1","100"); // start y
-    baseLine.setAttribute("x2","2850"); // eind x
-    baseLine.setAttribute("y2","100");  // eind y
-    baseLine.setAttribute("stroke","black"); // kleur
-    svg.appendChild(baseLine); // toevoegen
+    const baseLine = document.createElementNS("http://www.w3.org/2000/svg","line");
+    baseLine.setAttribute("x1","50");  // beginpunt x
+    baseLine.setAttribute("y1","100"); // beginpunt y
+    baseLine.setAttribute("x2","2850"); // eindpunt x
+    baseLine.setAttribute("y2","100");  // eindpunt y
+    baseLine.setAttribute("stroke","black"); // lijnkleur zwart
+    svg.appendChild(baseLine); // lijn toevoegen aan svg
 
-    // ======================= PERSONEN =======================
-    validPeople.forEach(p => {
+    // ======================= PERSONEN TEKENEN =======================
+    data.forEach(p => {
 
-        const date = new Date(p.Geboortedatum); // datum object
-        const year = date.getFullYear(); // jaar extraheren
-        const x = yearToX(year); // bereken x
-        const y = 100; // vaste lijn
+        // Veilige datum parsing
+        const d = new Date(p.Geboortedatum);
+        const year = isNaN(d.getFullYear()) ? 2000 : d.getFullYear(); // fallback naar 2000
+        const x = yearToX(year); // x positie
+        const y = 100;           // vaste y-positie
 
-        // ======================= PUNT =======================
-        const circle = document.createElementNS("http://www.w3.org/2000/svg","circle"); // cirkel
-        circle.setAttribute("cx", x); // x positie
-        circle.setAttribute("cy", y); // y positie
-        circle.setAttribute("r", "6"); // grootte
-        circle.setAttribute("fill", p.ID === focusPerson?.ID ? "red" : "black"); // highlight
-        svg.appendChild(circle); // toevoegen
+        // ======================= CIRKEL PUNT =======================
+        const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
+        circle.setAttribute("cx", x); // horizontale positie
+        circle.setAttribute("cy", y); // verticale positie
+        circle.setAttribute("r", "6");  // radius
+        circle.setAttribute("fill", (focusPerson && p.ID === focusPerson.ID) ? "red" : "black"); // highlight focus
+        svg.appendChild(circle); // voeg punt toe
 
-        // ======================= LABEL =======================
-        const name = `${p.Roepnaam} ${p.Prefix || ""} ${p.Achternaam}`.trim(); // naam samenstellen
-
-        const label = document.createElementNS("http://www.w3.org/2000/svg","text"); // tekst element
-        label.setAttribute("x", x + 8); // rechts van punt
-        label.setAttribute("y", y - 10); // boven punt
-        label.setAttribute("class","timelineLabel"); // css class
-        label.textContent = `${name} (${year})`; // tekst
-        svg.appendChild(label); // toevoegen
-
+        // ======================= NAAM LABEL =======================
+        const name = `${p.Roepnaam} ${p.Prefix || ""} ${p.Achternaam}`; // volledige naam
+        const label = document.createElementNS("http://www.w3.org/2000/svg","text");
+        label.setAttribute("x", x + 8);  // iets rechts van cirkel
+        label.setAttribute("y", y - 10); // iets boven cirkel
+        label.setAttribute("class","timelineLabel"); // CSS class
+        label.textContent = `${name} (${year})`; // label tekst
+        svg.appendChild(label); // label toevoegen
     });
 
 }
