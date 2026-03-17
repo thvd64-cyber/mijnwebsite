@@ -1,148 +1,90 @@
-<!-- ======================= Admin/PaginaTemplate.html v0.0.0 ======================= -->
+<!-- ======================= Admin/PaginaTemplate.html v1.0.0 ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
-    <title>MyFamTreeCollab - [PAGINA NAAM]</title> <!-- Browser tab titel -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor volledige styling -->
+    <meta charset="UTF-8"> <!-- UTF-8 tekencodering -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief -->
+    <title>MyFamTreeCollab - Pagina</title> <!-- Browser titel -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Centrale styling -->
 </head>
+
 <body>
-<!-- ======================= layout/TopBar.html ======================= -->
 
-<!-- Placeholder waar de TopBar.html inhoud wordt ingeladen -->
-<div id="topbar-placeholder"></div>  <!-- container voor TopBar content -->
-
-<script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
-    .then(resp => resp.text())                // lees de inhoud van het bestand Converteert response naar tekst
-    .then(data => {                           // werk met de opgehaalde HTML data
-        document.getElementById('topbar-placeholder').innerHTML = data;  // plaats de TopBar HTML in de placeholder
-    });
-</script>
-<!-- ======================= layout/Navbar.html ======================= -->
-<div id="Navbar-placeholder"></div> <!-- plek waar Navbar komt -->
-
-<script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
-    .then(resp => resp.text())               // omzetten naar HTML tekst
-    .then(data => {
-        const placeholder = document.getElementById('Navbar-placeholder'); // placeholder ophalen
-        if (placeholder) {                   // controleren of element bestaat
-            placeholder.innerHTML = data;    // Navbar injecteren
-        } else {
-            console.error('Navbar-placeholder niet gevonden'); // Debugmelding
-        }
-    });
-</script>
-
-<!-- ======================= Hoofd pagina ======================= -->
-<!-- ======================= Pagina Titel Manueel ======================= -->
-<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const pageTitleDiv = document.getElementById('pageTitle');  // Doel div
-    const title = "Sandbox";            // ⚠️ Zelf invullen title
-    pageTitleDiv.textContent = title
-        .replace(/[-_]/g,' ')          // underscore/koppelteken → spatie
-        .replace(/\b\w/g, c => c.toUpperCase()); // eerste letter hoofdletter
-});
-</script>
- <!-- ======================= MAIN INTRO CONTENT ======================= -->
-<section style="margin-top:20px; padding:20px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
-    <h2 style="margin-bottom:15px;">Welkom in de Sandbox</h2>
-    <p style="margin-bottom:15px; line-height:1.6;">
-        De Sandbox biedt een veilige omgeving om te experimenteren met de stamboomdata zonder gevolgen voor de hoofdomgeving.
-        Hier kan je nieuwe relaties uitproberen, gegevens aanpassen en functies testen.
-    </p>
-    <p style="margin-bottom:15px; line-height:1.6;">
-        Enkele mogelijkheden in de Sandbox zijn:
-    </p>
-    <ul style="margin-left:20px; line-height:1.6;">
-        <li>Personen toevoegen, bewerken of verwijderen</li>
-        <li>Relaties en generaties simuleren</li>
-        <li>Data testen voordat je wijzigingen definitief maakt</li>
-        <li>Functionaliteiten van het platform verkennen</li>
-    </ul>
-    <p style="margin-top:15px; line-height:1.6;">
-        Alles wat je hier doet, blijft volledig gescheiden van de echte stamboomdata.
-    </p>
-</section>
-  <!-- ======================= yellow message Under Construction ======================= -->
-<div class="under-construction" style="text-align:center; padding:50px 20px; background:#fff3cd; border:1px solid #ffeeba; border-radius:8px; margin-top:20px;">
-    <h2 style="color:#856404; font-size:2rem; margin-bottom:10px;">⚠️ Under Construction</h2>
-    <p style="color:#856404; font-size:1.1rem;">Deze pagina is momenteel in aanbouw. Kom binnenkort terug voor updates!</p>
-</div>
-  <!-- ======================= CSS ======================= -->
-  <!-- ======================= Scripts ======================= -->
-<!-- ======================= bottom bar ======================= -->
-  <!-- ======================= layout/Footer.html ======================= -->
-<div id="footer-placeholder"></div>  <!-- Doel: container voor Footer content -->
-
-<script>
-fetch('/MyFamTreeCollab/Layout/Footer.html')  // pad naar de layout/Footer.html
-    .then(resp => resp.text())                // response omzetten naar leesbare HTML
-    .then(data => {                           // werk met de opgehaalde HTML
-        document.getElementById('footer-placeholder').innerHTML = data; // Footer injecteren
-    });
-</script>
-</body><!-- ============================= PaginaTemplate ============================= -->
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Import CSV - MyFamTreeCollab</title>
-    <link rel="stylesheet" href="../css/style.css">
-</head>
-<body>
+<!-- ======================= TOPBAR ======================= -->
+<div id="topbar-placeholder"></div> <!-- Placeholder voor TopBar -->
 
 <!-- ======================= NAVBAR ======================= -->
-<div id="navbar-placeholder"></div>
+<div id="navbar-placeholder"></div> <!-- Placeholder voor Navbar -->
+
+<!-- ======================= PAGINA TITEL ======================= -->
+<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin:20px;"></div>
+
+<!-- ======================= MAIN CONTENT ======================= -->
+<section style="margin:20px; padding:20px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+    <h2>Welkom</h2>
+    <p>Dit is een herbruikbaar pagina template voor MyFamTreeCollab.</p>
+</section>
+
+<!-- ======================= UNDER CONSTRUCTION ======================= -->
+<div class="under-construction" style="text-align:center; padding:40px; background:#fff3cd; border:1px solid #ffeeba; border-radius:8px; margin:20px;">
+    <h2>⚠️ Under Construction</h2>
+    <p>Deze pagina is nog in ontwikkeling.</p>
+</div>
+
+<!-- ======================= FOOTER ======================= -->
+<div id="footer-placeholder"></div> <!-- Placeholder voor Footer -->
+
+<!-- ======================= SCRIPT: LAYOUT LOADER ======================= -->
 <script>
-fetch('/MyFamTreeCollab/navbar.html')
-    .then(resp => resp.text())
-    .then(data => {
-        document.getElementById('navbar-placeholder').innerHTML = data;
-    });
+/* ======================= GENERIC LAYOUT LOADER ======================= */
+function loadHTML(targetId, filePath) {
+    // Controleer of placeholder bestaat
+    const el = document.getElementById(targetId); // Haal element op
+    if (!el) {
+        console.error(`❌ Element #${targetId} niet gevonden`); // Debug melding
+        return; // Stop functie
+    }
+
+    // Fetch HTML bestand
+    fetch(filePath)
+        .then(response => {
+            if (!response.ok) { // Controleer HTTP status
+                throw new Error(`HTTP ${response.status} - ${filePath}`); // Gooi fout
+            }
+            return response.text(); // Zet om naar tekst
+        })
+        .then(data => {
+            el.innerHTML = data; // Inject HTML in placeholder
+        })
+        .catch(err => {
+            console.error(`❌ Fout bij laden van ${filePath}:`, err); // Fout loggen
+            el.innerHTML = `<p style="color:red;">Fout bij laden van component</p>`; // Fallback UI
+        });
+}
 </script>
 
-    
-<!-- ======================= main site code  ======================= -->
-<!-- ======================= Pagina Titel dynamisch ======================= -->
-<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px; text-align:left;"></div>
-
+<!-- ======================= SCRIPT: INIT LOAD ======================= -->
 <script>
-// Haal de pagina naam uit het webadres
-document.addEventListener('DOMContentLoaded', function() {
-    const pageTitleDiv = document.getElementById('pageTitle');
+document.addEventListener('DOMContentLoaded', () => {
 
-    // Pak het laatste deel van het pad uit de URL, bv. "storage.html"
-    let path = window.location.pathname.split("/").pop();
+    /* ======================= LOAD LAYOUT COMPONENTS ======================= */
+    loadHTML('topbar-placeholder', '../layout/TopBar.html'); // TopBar laden
+    loadHTML('navbar-placeholder', '../layout/Navbar.html'); // Navbar laden
+    loadHTML('footer-placeholder', '../layout/Footer.html'); // Footer laden
 
-    // Verwijder de extensie .html
-    let title = path.replace('.html','');
+    /* ======================= PAGINA TITEL AUTOMATISCH ======================= */
+    const pageTitleDiv = document.getElementById('pageTitle'); // Doel element
 
-    // Optioneel: underscores of koppeltekens vervangen door spaties en hoofdletters
-    title = title.replace(/[-_]/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+    let path = window.location.pathname.split("/").pop(); // Pak bestandsnaam
+    let title = path.replace('.html',''); // Verwijder extensie
 
-    // Voeg de titel toe aan de pagina
-    pageTitleDiv.textContent = title;
+    title = title
+        .replace(/[-_]/g,' ') // underscores → spaties
+        .replace(/\b\w/g, c => c.toUpperCase()); // eerste letters hoofdletter
+
+    pageTitleDiv.textContent = title; // Zet titel in DOM
 });
 </script>
-<!-- ======================= yellow message Under Construction ======================= -->
-<div class="under-construction" style="text-align:center; padding:50px 20px; background:#fff3cd; border:1px solid #ffeeba; border-radius:8px; margin-top:20px;">
-    <h2 style="color:#856404; font-size:2rem; margin-bottom:10px;">⚠️ Under Construction</h2>
-    <p style="color:#856404; font-size:1.1rem;">Deze pagina is momenteel in aanbouw. Kom binnenkort terug voor updates!</p>
-</div>
-<!-- ======================= CSS ======================= -->
-
-
-<!-- ======================= Scripts ======================= -->
-<!-- ======================= FOOTER ======================= -->
-<footer>
-    <p>&copy; 2026 MyFamTreeCollab website</p>
-</footer>
 
 </body>
+</html>
