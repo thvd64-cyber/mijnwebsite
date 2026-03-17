@@ -1,4 +1,5 @@
 <!-- ======================= Admin/Layout1.html v0.0.0 ======================= -->
+<!-- ======================= Admin/PaginaTemplate.html v1.0.0 ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -9,10 +10,7 @@
 </head>
 <body>
 <!-- ======================= layout/TopBar.html ======================= -->
-
-<!-- Placeholder waar de TopBar.html inhoud wordt ingeladen -->
 <div id="topbar-placeholder"></div>  <!-- container voor TopBar content -->
-
 <script>
 fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
     .then(resp => resp.text())                // lees de inhoud van het bestand Converteert response naar tekst
@@ -22,7 +20,6 @@ fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
 </script>
 <!-- ======================= layout/Navbar.html ======================= -->
 <div id="Navbar-placeholder"></div> <!-- plek waar Navbar komt -->
-
 <script>
 fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
     .then(resp => resp.text())               // omzetten naar HTML tekst
@@ -35,46 +32,36 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
         }
     });
 </script>
-
-<!-- ======================= Hoofd pagina ======================= -->
+<!-- ======================= MAIN PAGE  ======================= -->
 <!-- ======================= Pagina Titel Manueel ======================= -->
 <div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const pageTitleDiv = document.getElementById('pageTitle');  // Doel div
-    const title = "Sandbox";            // ⚠️ Zelf invullen title
+    const title = "Pagina Template ";            // ⚠️ Zelf invullen title
     pageTitleDiv.textContent = title
         .replace(/[-_]/g,' ')          // underscore/koppelteken → spatie
         .replace(/\b\w/g, c => c.toUpperCase()); // eerste letter hoofdletter
 });
 </script>
- <!-- ======================= MAIN INTRO CONTENT ======================= -->
-<section style="margin-top:20px; padding:20px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
-    <h2 style="margin-bottom:15px;">Welkom in de Sandbox</h2>
-    <p style="margin-bottom:15px; line-height:1.6;">
-        De Sandbox biedt een veilige omgeving om te experimenteren met de stamboomdata zonder gevolgen voor de hoofdomgeving.
-        Hier kan je nieuwe relaties uitproberen, gegevens aanpassen en functies testen.
-    </p>
-    <p style="margin-bottom:15px; line-height:1.6;">
-        Enkele mogelijkheden in de Sandbox zijn:
-    </p>
-    <ul style="margin-left:20px; line-height:1.6;">
-        <li>Personen toevoegen, bewerken of verwijderen</li>
-        <li>Relaties en generaties simuleren</li>
-        <li>Data testen voordat je wijzigingen definitief maakt</li>
-        <li>Functionaliteiten van het platform verkennen</li>
-    </ul>
-    <p style="margin-top:15px; line-height:1.6;">
-        Alles wat je hier doet, blijft volledig gescheiden van de echte stamboomdata.
-    </p>
+
+<!-- ======================= INTRODUCTIE TEKST  ======================= -->    
+<section style="margin:20px; padding:20px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+    <h2>Welkom</h2>
+    <p>Dit is een herbruikbaar pagina template voor MyFamTreeCollab.</p>
 </section>
-  <!-- ======================= yellow message Under Construction ======================= -->
+
+<!-- ======================= yellow message Under Construction ======================= -->
 <div class="under-construction" style="text-align:center; padding:50px 20px; background:#fff3cd; border:1px solid #ffeeba; border-radius:8px; margin-top:20px;">
     <h2 style="color:#856404; font-size:2rem; margin-bottom:10px;">⚠️ Under Construction</h2>
     <p style="color:#856404; font-size:1.1rem;">Deze pagina is momenteel in aanbouw. Kom binnenkort terug voor updates!</p>
 </div>
-  <!-- ======================= CSS ======================= -->
+
+<!-- ======================= FOOTER ======================= -->
+<div id="footer-placeholder"></div> <!-- Placeholder voor Footer -->
+
+ <!-- ======================= CSS ======================= -->
   <!-- ======================= Scripts ======================= -->
 <!-- ======================= bottom bar ======================= -->
   <!-- ======================= layout/Footer.html ======================= -->
@@ -88,3 +75,4 @@ fetch('/MyFamTreeCollab/Layout/Footer.html')  // pad naar de layout/Footer.html
     });
 </script>
 </body>
+
