@@ -77,7 +77,7 @@ function computeRelaties(data,hoofdId){
     }).sort((a,b)=>a._priority - b._priority);                                  // Sorteer op prioriteit
 }
 
-/* ======================= TEXTAREA HOOGTE ======================= */
+/* ======================= TEXT AREA HOOGTE ======================= */
 function adjustTextareas(){
     tableBody.querySelectorAll('textarea').forEach(ta=>{
         ta.style.height='auto';                                                 // Reset hoogte
@@ -242,25 +242,41 @@ function init(){
     exportJsonBtn?.addEventListener('click', exportJSON);         // Exporteer JSON
     exportCsvBtn?.addEventListener('click', exportCSV);           // Exporteer CSV
 
-    // ======================= LIVE SEARCH =======================
-    if (typeof initLiveSearch === 'function') {
-        initLiveSearch(searchInput, dataset, (selectedID) => {
-            selectedHoofdId = selectedID;                         // Update geselecteerde hoofdID
-            renderTable(dataset);                                 // Render tabel opnieuw na selectie
-        });
+  // ======================= LIVE SEARCH =======================
+// Controleer of de functie initLiveSearch bestaat (defensief: voorkomt errors als script niet geladen is)
+if (typeof initLiveSearch === 'function') {
 
-        // Klik buiten popup sluit live search resultaten
-        document.addEventListener('click', (e) => {
-            const popup = document.getElementById('searchPopup');
-            if(popup && !popup.contains(e.target) && e.target !== searchInput) {
-                popup.remove();
-            }
-        });
-    }
+    // Initialiseer de Live Search module
+    initLiveSearch(
+        searchInput, // Referentie naar het input veld (#searchPerson)
+        dataset,     // Volledige dataset waarop gezocht wordt (array met personen)
+
+        (selectedID) => { // Callback functie die wordt uitgevoerd bij selectie van een resultaat
+            selectedHoofdId = selectedID; // Sla gekozen persoon op als actieve HoofdID
+            renderTable(dataset);         // Render de tabel opnieuw op basis van nieuwe selectie
+        }
+    );
+
+    // ======================= CLICK OUTSIDE HANDLER =======================
+    // Event listener op hele document om klikken buiten de search popup te detecteren
+    document.addEventListener('click', (e) => {
+
+        const popup = document.getElementById('searchPopup'); // Zoek de huidige popup met resultaten
+
+        // Controle:
+        // - popup bestaat
+        // - klik is NIET binnen popup
+        // - klik is NIET op input veld zelf
+        if (popup && !popup.contains(e.target) && e.target !== searchInput) {
+
+            popup.remove(); // Verwijder popup → sluit zoekresultaten
+        }
+    });
 }
 
-// Start init bij laden
-init();
+// ======================= INIT START =======================
+// Start de init functie zodra script geladen is
+init(); // Verwacht dat init() eerder in bestand gedefinieerd is (setup + event binding)
 
 /* ======================= ID GENERATOR ======================= */
 function genereerCode(persoon,bestaande){
