@@ -67,6 +67,34 @@ document.addEventListener('DOMContentLoaded', () => {
     </p>
 </section>
 
+<!-- ======================= LIVE SEARCH BOX ======================= -->
+<div style="margin:20px 0;">
+    <input type="text"
+           id="sandboxSearch"
+           placeholder="Zoek persoon (Roepnaam, Achternaam, Geboortedatum)"
+           style="
+               width: 50%;
+               padding: 8px 12px;
+               font-size: 1.1rem;
+               border-radius: 5px;
+               border: 1px solid #aaa;
+               box-sizing: border-box;
+           ">
+    <!-- Dropdown container -->
+    <div id="sandboxSearchDropdown" style="
+        position: absolute;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        max-height: 200px;
+        overflow-y: auto;
+        width: calc(50% - 2px);
+        display: none; /* standaard verborgen */
+        z-index: 1000;
+        margin-top: 2px;
+    "></div>
+</div>
+    
   <!-- ======================= CSS ======================= -->
   <!-- ======================= Scripts ======================= -->
 <!-- ======================= bottom bar ======================= -->
