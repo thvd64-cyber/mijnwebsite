@@ -118,8 +118,12 @@ Manage Stamboom
 <main>
 <div class="container">
 
-<!-- ======================= SEARCH ======================= -->
+<!-- ======================= LIVE SEARCH + HELPERS ======================= -->
 <input type="text" id="searchPerson" placeholder="Voer ID of naam in" />
+
+<script>
+function safe(val){ return val ? String(val).trim() : ''; }
+</script>
 
 <!-- ======================= BUTTONS ======================= -->
 <div style="margin-top:10px;margin-bottom:20px;">
@@ -137,11 +141,6 @@ Manage Stamboom
 </div>
 </main>
 
-<!-- ======================= HELPERS VOOR LIVSEARCH ======================= -->
-<script>
-/* safe() helper moet beschikbaar zijn voor LiveSearch.js */
-function safe(val){ return val ? String(val).trim() : ''; }
-</script>
 
 <!-- ======================= PROJECT SCRIPTS ======================= -->
 <script src="../js/schema.js"></script>           <!-- definieert kolom structuur -->
