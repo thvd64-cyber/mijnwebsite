@@ -109,9 +109,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // LiveSearch initialiseren met callback die root persoon update
     if(typeof initLiveSearch === "function"){
-        initLiveSearch(input, peopleData, selectedPerson => {
-            if(selectedPerson) drawTimeline(selectedPerson); // direct renderen op selectie
-        });
+        row.addEventListener('click', ()=>{
+    renderCallback(p); // p is het volledige persoon-object
+    popup.remove();
+});
     }
 
     // ======================= AUTOMATISCHE EERSTE RENDER =======================
