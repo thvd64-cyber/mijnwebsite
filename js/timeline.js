@@ -6,6 +6,23 @@
    - Automatische eerste render
 */
 
+// ======================= DATA LADEN =======================
+let peopleData = [];
+if(typeof getPeopleData === "function"){
+    peopleData = getPeopleData();
+} 
+
+// ======================= FALLBACK TESTDATA =======================
+if(!peopleData || peopleData.length === 0){
+    console.warn("Dataset leeg - gebruik testdata");
+    peopleData = [
+        { ID: "1", Roepnaam: "Jan", Achternaam: "Jansen", Geboortedatum: "1950-01-01" },
+        { ID: "2", Roepnaam: "Anna", Achternaam: "Jansen", Geboortedatum: "1970-06-15" },
+        { ID: "3", Roepnaam: "Piet", Achternaam: "Jansen", Geboortedatum: "1975-03-20" },
+        { ID: "4", Roepnaam: "Lisa", Achternaam: "Jansen", Geboortedatum: "2000-09-10" }
+    ];
+}
+
 /* ======================= INIT TIMELINE + LIVESEARCH ======================= */
 document.addEventListener('DOMContentLoaded', () => {
 
