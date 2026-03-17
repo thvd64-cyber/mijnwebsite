@@ -1,4 +1,4 @@
-<!-- ======================= Asmin/Sandbox v1.0.0 ======================= -->
+<!-- ======================= Admin/Sandbox v1.0.0 ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -84,6 +84,26 @@ document.addEventListener('DOMContentLoaded', () => {
                border: 1px solid #aaa;    /* lichte rand */
                box-sizing: border-box;    /* padding/border inbegrepen in breedte */
            ">
+</div>
+<!-- ======================= Box Broer/Zus ======================= -->
+<div class="tree-container-wrapper" style="display:flex; gap:20px;"> <!-- Flex layout: boom links, BZ rechts -->
+
+    <!-- ======================= STAMBOOM ======================= -->
+    <div id="treeContainer" style="flex:3;"> <!-- Container waarin view.js de boom nodes rendert -->
+        <!-- view.js plaatst hier Hoofd, Ouders, Kinderen -->
+    </div>
+
+    <!-- ======================= BZ KOLOM ======================= -->
+    <div style="flex:1;"> <!-- Wrapper voor titel + BZ nodes -->
+
+        <h4>Broer/Zus</h4> <!-- Titel boven BZBox -->
+
+        <div id="BZBox"> <!-- Container waarin view.js broers/zussen rendert -->
+            <!-- view.js plaatst hier BZID nodes -->
+        </div>
+
+    </div>
+
 </div>
 
 !-- ======================= Scripts ======================= -->
