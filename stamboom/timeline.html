@@ -1,4 +1,4 @@
-<!-- ======================= stamboom/timeline.html v0.0.4 ======================= -->
+<!-- ======================= stamboom/timeline.html v0.0.5 ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -51,7 +51,23 @@ document.addEventListener('DOMContentLoaded', () => {
     pageTitleDiv.textContent = title.replace(/[-_]/g,' ').replace(/\b\w/g, c => c.toUpperCase());
 });
 </script>
-
+ <!-- ======================= MAIN INTRO CONTENT ======================= -->
+<section style="margin-top:20px; padding:20px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+    <h2 style="margin-bottom:15px;">Welkom in de Sandbox</h2>
+    <p style="margin-bottom:15px; line-height:1.6;">
+        In de  TimeLine gaan we een pagina creeren waar  op een tijdslijn waar alle families to zover als er data beschikbaar is getooond worden.
+            </p>
+    <p style="margin-bottom:15px; line-height:1.6;">
+        Enkele mogelijkheden in de tijdlijn zijn:
+    </p>
+    <ul style="margin-left:20px; line-height:1.6;">
+        <li>Personen toevoegen met Live Search en popup selectie</li>
+        <li>visualizatie van personen in een familie (familie root) op een tijdslijn met verschillende niveau</li>
+    </ul>
+    <p style="margin-top:15px; line-height:1.6;">
+        Alles wat je hier ziet komt direct uit de storage en veranderd mee met veranderingen in de manage pagina.
+    </p>
+</section>
 <!-- ======================= LIVE SEARCH INPUT ======================= -->
 <input type="text" id="liveSearchInput" placeholder="Zoek ID of naam...">
 
