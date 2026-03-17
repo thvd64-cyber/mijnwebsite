@@ -86,12 +86,19 @@ document.addEventListener('DOMContentLoaded', () => {
            ">
 </div>
 
+<!-- ======================= LIVE SEARCH INPUT ======================= -->
+<input type="text" id="liveSearchInput" placeholder="Zoek ID of naam...">
+
+<!-- ======================= TIMELINE CONTAINER ======================= -->
+<div id="timelineContainer"></div> <!-- SVG timeline wordt hier geplaatst -->
+    
 <!-- ======================= Scripts ======================= -->
 <script src="../js/schema.js"></script>           <!-- Schema definities voor personen -->
-<script src="../js/storage.js"></script>          <!-- Local storage functies -->
-<script src="../js/relatieEngine.js"></script>    <!-- Berekening relaties (Hoofd, Partner, Kind, BZID) -->
+<script src="../js/storage.js"></script>          <!-- Local storage dataset functies -->
 <script src="../js/LiveSearch.js"></script>       <!-- Centrale Live Search module -->
-    
+<script src="../js/timeline.js"></script>    <!-- Timeline logica + LiveSearch integratie -->
+
+  
 <!-- ======================= bottom bar ======================= -->
   <!-- ======================= layout/Footer.html ======================= -->
 <div id="footer-placeholder"></div>  <!-- Doel: container voor Footer content -->
