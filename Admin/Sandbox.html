@@ -1,4 +1,4 @@
-<!-- ======================= Admin/Sandbox v1.0.1 ======================= -->
+<!-- ======================= Admin/Sandbox v1.0.2 ======================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -6,10 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
     <title>MyFamTreeCollab - [PAGINA NAAM]</title> <!-- Browser tab titel -->
     <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor volledige styling -->
-    
-    <!-- ======================= CSS ======================= -->
-<link rel="stylesheet" href="../css/style.css"> <!-- Algemene CSS -->
-<style>
+
 /* ======================= TIMELINE CONTAINER ======================= */
 #timelineContainer{
     overflow-x:auto; /* horizontaal scrollen mogelijk */
@@ -27,8 +24,6 @@
 </head>
 <body>
 
-</head>
-<body>
 <!-- ======================= layout/TopBar.html ======================= -->
 
 <!-- Placeholder waar de TopBar.html inhoud wordt ingeladen -->
@@ -109,12 +104,95 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <!-- ======================= TIMELINE CONTAINER ======================= -->
 <div id="timelineContainer"></div> <!-- SVG timeline wordt hier geplaatst -->
-    
+
 <!-- ======================= Scripts ======================= -->
 <script src="../js/schema.js"></script>           <!-- Schema definities voor personen -->
 <script src="../js/storage.js"></script>          <!-- Local storage dataset functies -->
 <script src="../js/LiveSearch.js"></script>       <!-- Centrale Live Search module -->
 <script src="../js/timeline.js"></script>    <!-- Timeline logica + LiveSearch integratie -->
+
+    <!-- ======================= Timeline Script ======================= -->
+<script>
+/* ======================= TIMELINE LOGICA ======================= */
+document.addEventListener('DOMContentLoaded', () => {
+
+    // ======================= DATA LADEN =======================
+    let peopleData = [];
+    if(typeof getPeopleData === "function"){
+        peopleData = getPeopleData(); // normale dataset
+    } else if(window.peopleData) {
+        peopleData = window.peopleData; // fallback dataset in window
+    } else {
+        console.warn("Geen dataset beschikbaar");
+    }
+
+    // ======================= LIVESEARCH INITIALISEREN =======================
+    const input = document.getElementById('liveSearchInput'); // input veld ophalen
+    if(input && typeof initLiveSearch === "function") {
+        initLiveSearch(input, peopleData, personID => {
+            const person = peopleData.find(p => p.ID === personID);
+            if(person) drawTimeline(peopleData, person); // timeline tekenen met highlight
+        });
+    }
+
+});
+
+/* ======================= DRAW TIMELINE FUNCTIE ======================= */
+function drawTimeline(data, focusPerson) {
+    if(!data || data.length===0) return;
+
+    const container = document.getElementById("timelineContainer");
+    container.innerHTML = ""; // oude content verwijderen
+
+    // ======================= SVG CANVAS =======================
+    const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+    svg.setAttribute("width","3000"); // breed canvas
+    svg.setAttribute("height","200");
+    container.appendChild(svg);
+
+    // ======================= JAAR RANGE =======================
+    const years = data.map(p => new Date(p.Geboortedatum).getFullYear());
+    const minYear = Math.min(...years);
+    const maxYear = Math.max(...years);
+    const range = maxYear - minYear || 1; // edge case: alle personen hetzelfde jaar
+
+    // ======================= JAAR NAAR PIXEL =======================
+    const yearToX = (year) => ((year - minYear)/range)*2800 + 50;
+
+    // ======================= BASIS LIJN =======================
+    const baseLine = document.createElementNS("http://www.w3.org/2000/svg","line");
+    baseLine.setAttribute("x1","50");
+    baseLine.setAttribute("y1","100");
+    baseLine.setAttribute("x2","2850");
+    baseLine.setAttribute("y2","100");
+    baseLine.setAttribute("stroke","black");
+    svg.appendChild(baseLine);
+
+    // ======================= PERSONEN TEKENEN =======================
+    data.forEach(p => {
+        const year = new Date(p.Geboortedatum).getFullYear();
+        const x = yearToX(year);
+        const y = 100;
+
+        // Cirkel
+        const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
+        circle.setAttribute("cx", x);
+        circle.setAttribute("cy", y);
+        circle.setAttribute("r", "6");
+        circle.setAttribute("fill", (focusPerson && p.ID === focusPerson.ID) ? "red" : "black");
+        svg.appendChild(circle);
+
+        // Naam label
+        const name = `${p.Roepnaam} ${p.Prefix || ""} ${p.Achternaam}`;
+        const label = document.createElementNS("http://www.w3.org/2000/svg","text");
+        label.setAttribute("x", x + 8);
+        label.setAttribute("y", y - 10);
+        label.setAttribute("class","timelineLabel");
+        label.textContent = `${name} (${year})`;
+        svg.appendChild(label);
+    });
+}
+</script>
 
   
 <!-- ======================= bottom bar ======================= -->
