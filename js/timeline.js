@@ -1,16 +1,17 @@
-/* ======================= js/timeline.js v1.0.0 ======================= */
+/* ======================= js/timeline.js v1.1.0 ======================= */
 /* Timeline module met HoofdID integratie + RelatieEngine + datum fallback
    - LiveSearch selecteert hoofdpersoon
-   - RelatieEngine vult overige relaties aan
+   - RelatieEngine vult overige relaties aan (ouders, partner, kinderen, broer/zus, partners)
    - Veilige datum parsing, lege/foute datum -> vandaag + console waarschuwing
    - SVG weergave: persoon als cirkel, naamlabel, jaartal
+   - Inline uitleg bij elke regel
 */
 
 (function(){
-'use strict'; // strikte modus aan
+'use strict'; // Schakel strikte JavaScript modus in
 
 // ======================= DATA LADEN =======================
-let peopleData = window.StamboomStorage?.get() || []; // haal dataset uit storage
+let peopleData = window.StamboomStorage?.get() || []; // Haal dataset uit storage
 
 // fallback testdata als storage leeg is
 if(!peopleData || peopleData.length === 0){
@@ -52,7 +53,7 @@ function drawTimeline(rootPerson){
         console.error("timelineContainer niet gevonden");
         return;
     }
-    container.innerHTML = ""; // oude timeline verwijderen
+    container.innerHTML = ""; // oude timeline wissen
 
     const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
     svg.setAttribute("width","3000");
@@ -61,7 +62,8 @@ function drawTimeline(rootPerson){
 
     // ======================= RELATIES OPHALEN VIA RELATIEENGINE =======================
     const relaties = window.RelatieEngine?.computeRelaties(peopleData, rootPerson.ID) || [];
-    // Relaties bevat nu alle verwantschappen (Vader, Moeder, Partner, Kind, BZ)
+    // Hier roepen we expliciet de functie computeRelaties uit relatieEngine.js aan
+    // Dit zorgt dat alle verwantschappen automatisch worden toegevoegd
 
     // Voeg root zelf toe aan lijst
     const timelinePersons = [rootPerson, ...relaties];
@@ -95,7 +97,7 @@ function drawTimeline(rootPerson){
         circle.setAttribute("fill", p.ID === rootPerson.ID ? "red" : "black"); // root persoon rood
         svg.appendChild(circle);
 
-        // naam label
+        // volledige naam label inclusief ID
         const fullName = [p.ID, p.Roepnaam, p.Prefix || "", p.Achternaam].filter(Boolean).join(" ");
         const birthText = p.Geboortedatum ? `(${p.Geboortedatum})` : "(geen datum)";
         const label = document.createElementNS("http://www.w3.org/2000/svg","text");
