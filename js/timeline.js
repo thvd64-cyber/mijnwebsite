@@ -1,117 +1,135 @@
-/* ======================= js/timeline.js v1.1.0 ======================= */ 
-/* Timeline rendering voor MyFamTreeCollab met LiveSearch integratie
-   - Gebaseerd op peopleData + RelatieEngine
-   - Start met geselecteerde hoofdpersoon uit LiveSearch
-   - Lane weergave: Ouder, Hoofd, Partner, Kind, Broer/Zus
-   - Pixel-perfect positionering volgens geboorte- en overlijdensjaar
-   - Inline uitleg bij elke regel
+/* ======================= js/timeline.js v0.0.9 ======================= */
+/* Timeline module met HoofdID integratie + datum fallback naar vandaag
+   - LiveSearch selecteert hoofd persoon
+   - Alle relaties verschijnen op de tijdlijn
+   - Veilige datum parsing, lege/foute datum -> vandaag + console waarschuwing
+   - Label toont ID, Roepnaam, Prefix, Achternaam en Geboortedatum
+   - Jaar wordt op de balk onder de persoon getoond
 */
 
-(function(){
-'use strict'; // Schakel strikte mode in om stille fouten te voorkomen
+// ======================= DATA LADEN =======================
+let peopleData = window.StamboomStorage?.get() || []; // Haal dataset direct uit storage
 
-// ======================= CONFIG =======================
-// Lane configuratie voor timeline (Y-posities)
-const laneConfig = [
-    { key: 'VHoofdID', label: 'Ouder', y: 50 },          // Vader lane
-    { key: 'MHoofdID', label: 'Ouder', y: 80 },          // Moeder lane
-    { key: 'HoofdID', label: 'Hoofd', y: 120 },          // Hoofd lane
-    { key: 'PHoofdID', label: 'Partner', y: 170 },       // Partner lane
-    { key: 'KindID', label: 'Kind', y: 240 },            // Kind lane
-    { key: 'BZID', label: 'Broer/Zus', y: 300 }          // Broer/Zus lane
-];
+// Fallback testdata als storage leeg of niet beschikbaar
+if(!peopleData || peopleData.length === 0){
+    console.warn("Dataset leeg - gebruik testdata");
+    peopleData = [
+        { ID: "1", Roepnaam: "Jan", Achternaam: "Jansen", Geboortedatum: "1950-01-01" },
+        { ID: "2", Roepnaam: "Anna", Achternaam: "Jansen", Geboortedatum: "1970-06-15" },
+        { ID: "3", Roepnaam: "Piet", Achternaam: "Jansen", Geboortedatum: "1975-03-20" },
+        { ID: "4", Roepnaam: "Lisa", Achternaam: "Jansen", Geboortedatum: "2000-09-10" }
+    ];
+}
 
-// ======================= TIMELINE RENDER FUNCTION =======================
-window.renderTimeline = function(hoofdID){
+// ======================= HULP FUNCTIES =======================
+function parseDateSafe(d){
+    if(!d){ // check lege datum
+        console.warn("Datum leeg gevonden, gebruik vandaag als fallback"); // log waarschuwing
+        return new Date(); // fallback naar vandaag
+    }
+    const dt = new Date(d); // probeer datum te parsen
+    if(isNaN(dt.getTime())){ // check foutieve datum
+        console.warn(`Datum verkeerd gevonden (${d}), gebruik vandaag als fallback`);
+        return new Date(); // fallback naar vandaag
+    }
+    return dt; // geldige datum
+}
 
-    // ======================= DATA LADEN =======================
-    let peopleData = window.StamboomStorage?.get() || []; // Haal dataset direct uit storage
-    if(!peopleData.length) return;                        // Stop als er geen data is
+function yearToX(year, minYear, maxYear){
+    const range = maxYear - minYear || 1; // vermijd deling door nul
+    const x = ((year - minYear)/range)*2800 + 50; // bereken horizontale positie
+    return isNaN(x) ? 50 : x; // fallback x=50 bij NaN
+}
 
-    // ======================= RELATIES BEREKENEN =======================
-    const relaties = window.RelatieEngine.computeRelaties(peopleData, hoofdID); 
-    // Output is een array van personen met Relatie en _priority
+// ======================= DRAW TIMELINE =======================
+function drawTimeline(rootPerson){
+    if(!rootPerson) return; // stop als geen persoon
 
-    // ======================= TIMELINE CONTAINER =======================
-    const container = document.getElementById('timeline'); // Container div
-    container.innerHTML = ''; // Reset eerdere content
+    const container = document.getElementById("timelineContainer"); // container ophalen
+    if(!container){
+        console.error("timelineContainer niet gevonden");
+        return;
+    }
+    container.innerHTML = ""; // oude timeline wissen
 
-    // ======================= HULPFUNCTIE: JAAR → PIXEL =======================
-    const yearToX = year => {
-        const baseYear = 1930;       // Timeline startjaar
-        const scale = 5;             // Pixels per jaar
-        return (year - baseYear) * scale; // Lineaire mapping
-    };
+    const svg = document.createElementNS("http://www.w3.org/2000/svg","svg"); // svg element maken
+    svg.setAttribute("width","3000"); // breedte
+    svg.setAttribute("height","200"); // hoogte
+    container.appendChild(svg); // svg toevoegen aan DOM
 
-    // ======================= RENDER PER LANE =======================
-    laneConfig.forEach(lane => {
-        // Selecteer personen die op deze lane horen
-        const persons = relaties.filter(p => p.Relatie === lane.key);
-        persons.forEach(p => {
+    // ======================= RELATIES OPHALEN =======================
+    const dataRel = window.RelatieEngine?.computeRelaties(peopleData, rootPerson.ID) || []; // relaties ophalen
 
-            // ======================= START/END X =======================
-            const birthYear = p.Geboortedatum instanceof Date ? p.Geboortedatum.getFullYear() : null;
-            const deathYear = p.Overlijdensdatum instanceof Date ? p.Overlijdensdatum.getFullYear() : null;
-            const startX = birthYear ? yearToX(birthYear) : 0; // fallback 0
-            const endX = deathYear ? yearToX(deathYear) : yearToX(new Date().getFullYear());
+    // Voeg root zelf toe aan lijst
+    const timelinePersons = [rootPerson, ...dataRel];
 
-            // ======================= LIJN ELEMENT =======================
-            const line = document.createElement('div');   // lijn voor de periode
-            line.className = 'timeline-line';             // CSS class
-            line.style.left = startX + 'px';              // horizontale start
-            line.style.top = lane.y + 'px';               // Y positie per lane
-            line.style.width = (endX - startX) + 'px';    // lengte lijn
-            line.style.height = '4px';                    // hoogte lijn
-            line.style.backgroundColor = '#333';          // kleur lijn
-            container.appendChild(line);                  // voeg toe aan DOM
+    // ======================= JAAR RANGE =======================
+    const years = timelinePersons.map(p => parseDateSafe(p.Geboortedatum).getFullYear()); // haal jaren
+    const minYear = Math.min(...years); // vroegste jaar
+    const maxYear = Math.max(...years); // laatste jaar
 
-            // ======================= LABEL ELEMENT =======================
-            const label = document.createElement('div');  // naam label
-            label.className = 'timeline-label';          // CSS class
-            label.style.position = 'absolute';
-            label.style.left = startX + 'px';            // zelfde start als lijn
-            label.style.top = (lane.y - 20) + 'px';      // boven lijn
-            label.style.fontSize = '12px';
-            label.style.fontFamily = 'monospace';        // ASCII look
-            label.innerText = `*- ${p.Doopnaam} ${p.Prefix} ${p.Achternaam} ${p.Geslacht==='M'?'♂':'♀'} (${birthYear||'?'}-${deathYear||''})${p.Relatie.includes('Hoofd')?'--------------------------------------':''}`;
-            container.appendChild(label);                // voeg label toe
-        });
+    // ======================= BASIS LIJN =======================
+    const baseLine = document.createElementNS("http://www.w3.org/2000/svg","line"); // lijn element
+    baseLine.setAttribute("x1","50"); // begin x
+    baseLine.setAttribute("y1","100"); // begin y
+    baseLine.setAttribute("x2","2850"); // einde x
+    baseLine.setAttribute("y2","100"); // einde y
+    baseLine.setAttribute("stroke","black"); // lijnkleur
+    svg.appendChild(baseLine); // toevoegen aan svg
+
+    // ======================= PERSONEN TEKENEN =======================
+    timelinePersons.forEach(p => {
+        const dt = parseDateSafe(p.Geboortedatum); // veilige datum
+        const year = dt.getFullYear(); // haal jaar
+        const x = yearToX(year, minYear, maxYear); // bereken horizontale positie
+        const y = 100; // vaste verticale lijn
+
+        // cirkel voor persoon
+        const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
+        circle.setAttribute("cx", x); // horizontale positie
+        circle.setAttribute("cy", y); // verticale positie
+        circle.setAttribute("r","6"); // straal
+        circle.setAttribute("fill", p.ID === rootPerson.ID ? "red" : "black"); // hoofd persoon rood
+        svg.appendChild(circle); // toevoegen aan svg
+
+        // volledige naam label inclusief ID
+        const fullName = [p.ID, p.Roepnaam, p.Prefix || "", p.Achternaam].filter(Boolean).join(" ");
+        const birthText = p.Geboortedatum ? `(${p.Geboortedatum})` : "(geen datum)";
+        const label = document.createElementNS("http://www.w3.org/2000/svg","text");
+        label.setAttribute("x", x + 8); // beetje rechts van cirkel
+        label.setAttribute("y", y - 10); // iets boven cirkel
+        label.setAttribute("class","timelineLabel"); // css class
+        label.textContent = `${fullName} ${birthText}`; // tekst label
+        svg.appendChild(label); // toevoegen aan svg
+
+        // ======================= JAAR ONDER CIRCEL =======================
+        const yearLabel = document.createElementNS("http://www.w3.org/2000/svg","text");
+        yearLabel.setAttribute("x", x - 10); // iets naar links zodat het niet overlapt
+        yearLabel.setAttribute("y", y + 25); // onder de lijn
+        yearLabel.setAttribute("class","timelineLabel"); // css class
+        yearLabel.textContent = `${year}`; // jaartal
+        svg.appendChild(yearLabel); // toevoegen aan svg
     });
+}
 
-    // ======================= JAAR GRID (optioneel, ASCII style) =======================
-    const years = [1930,1940,1950,1960,1970,1980,1990,2000,2010,2020,2026];
-    years.forEach(y=>{
-        const marker = document.createElement('div');
-        marker.className = 'timeline-year';
-        marker.style.position = 'absolute';
-        marker.style.left = yearToX(y) + 'px';
-        marker.style.top = '0px';
-        marker.style.fontSize = '10px';
-        marker.style.fontFamily = 'monospace';
-        marker.innerText = y;
-        container.appendChild(marker);
-    });
-
-};
-
-// ======================= INIT LIVESEARCH & TIMELINE =======================
+// ======================= INIT LIVESEARCH =======================
 document.addEventListener('DOMContentLoaded', () => {
-
-    const input = document.getElementById('sandboxSearch'); // Haal LiveSearch input op
+    const input = document.getElementById('sandboxSearch'); // input ophalen
     if(!input){
         console.error("sandboxSearch input niet gevonden");
         return;
     }
 
-    // Controleer of initLiveSearch beschikbaar is
+    // init liveSearch met callback
     if(typeof initLiveSearch === "function"){
-        initLiveSearch(input, window.StamboomStorage.get(), personID => {
-            const person = window.StamboomStorage.get().find(p => p.ID === personID); // Vind geselecteerde persoon
-            if(person) window.renderTimeline(person.ID); // Teken timeline met hoofdpersoon
+        initLiveSearch(input, peopleData, personID => {
+            const person = peopleData.find(p => p.ID === personID); // zoek geselecteerde persoon
+            if(person) drawTimeline(person); // teken timeline met hoofdpersoon
         });
+    }
 
-        // ======================= START MET EERSTE PERSOON =======================
-        const firstPerson = window.StamboomStorage.get()[0]; // eerste persoon in dataset
-        if(firstPerson) window.renderTimeline(firstPerson.ID); // render timeline bij initial load
+    // ======================= AUTOMATISCHE EERSTE RENDER =======================
+    if(peopleData.length > 0){
+        drawTimeline(peopleData[0]); // eerste persoon highlight
     }
 });
