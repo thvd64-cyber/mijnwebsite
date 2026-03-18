@@ -90,13 +90,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <!-- ======================= TIMELINE CONTAINER ======================= -->
 <div id="timelineContainer"></div> <!-- SVG timeline wordt hier geplaatst -->
+    
+<!-- ======================= SCRIPTS ======================= -->
+<script src="../js/schema.js"></script>        <!-- Dataset schema, altijd eerst -->
+<script src="../js/storage.js"></script>       <!-- Storage functies en dataset -->
+<script src="../js/LiveSearch.js"></script>    <!-- LiveSearch module -->
 
-<!-- ======================= Scripts ======================= -->
-<script src="../js/schema.js"></script>      <!-- Schema voor personen -->
-<script src="../js/storage.js"></script>     <!-- Echte dataset functies -->
-<script src="../js/LiveSearch.js"></script>  <!-- Universele LiveSearch module -->
-<script src="../js/timeline.js"></script>    <!-- Timeline logica + LiveSearch integratie -->
+<!-- ======================= RELATIE ENGINE ======================= -->
+<script src="../js/RelatieEngine.js"></script> <!-- Moet vóór timeline.js, definieert window.RelatieEngine -->
 
+<!-- ======================= TIMELINE LOGICA ======================= -->
+<script src="../js/timeline.js"></script>      <!-- Timeline rendering en LiveSearch integratie -->
 <!-- ======================= Footer ======================= -->
 <div id="footer-placeholder"></div>
 <script>
