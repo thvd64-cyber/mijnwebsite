@@ -343,15 +343,19 @@ button.danger:hover {
     margin-bottom: 16px;         /* verticale afstand tussen levels */
 }
 
+/* ======================= TIMELINE NODES BREEDTE ======================= */
 .timeline-node {
-    padding: 8px 12px;           /* interne marge */
-    border: 1px solid #888;      /* randkleur */
-    border-radius: 6px;          /* afgeronde hoeken */
-    background-color: #f0f0f0;   /* achtergrond kleur */
-    min-width: 120px;            /* minimale breedte */
-    text-align: center;          /* tekst gecentreerd */
-    cursor: pointer;             /* klikbare cursor */
-    font-size: 13px;             /* lettergrootte */
+    display: inline-block;       /* Zorg dat elke node naast elkaar staat maar zijn inhoud bepaalt de breedte */
+    padding: 8px 12px;           /* Interne marge: 8px boven/onder, 12px links/rechts */
+    border: 1px solid #888;      /* Grijze rand rondom node */
+    border-radius: 20px;          /* Afgeronde hoeken voor visueel gemak */
+    background-color: #f0f0f0;   /* Lichtgrijze achtergrond */
+    text-align: center;           /* Tekst in het midden van de node */
+    cursor: pointer;             /* Cursor verandert in pointer bij hover */
+    font-size: 13px;             /* Lettergrootte van de tekst */
+    width: auto;                 /* Breedte wordt automatisch aangepast aan inhoud */
+    min-width: 0;                /* Verwijder minimum breedte beperking */
+    max-width: none;             /* Geen maximale breedte, node groeit mee met inhoud */
 }
 
 .timeline-node.HoofdID { background-color: #ffd700; }   /* geel voor hoofdID */
