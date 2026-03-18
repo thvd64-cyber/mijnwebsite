@@ -1,13 +1,14 @@
-/* ======================= js/timeline.js v0.2.0 ======================= */
-/* Timeline rendering voor MyFamTreeCollab
+/* ======================= js/timeline.js v1.1.0 ======================= */ 
+/* Timeline rendering voor MyFamTreeCollab met LiveSearch integratie
    - Gebaseerd op peopleData + RelatieEngine
-   - Weergave per lane: Ouder, Hoofd, Partner, Kind, Broer/Zus
+   - Start met geselecteerde hoofdpersoon uit LiveSearch
+   - Lane weergave: Ouder, Hoofd, Partner, Kind, Broer/Zus
    - Pixel-perfect positionering volgens geboorte- en overlijdensjaar
    - Inline uitleg bij elke regel
 */
 
 (function(){
-'use strict'; // Schakel strikte mode in om fouten te voorkomen
+'use strict'; // Schakel strikte mode in om stille fouten te voorkomen
 
 // ======================= CONFIG =======================
 // Lane configuratie voor timeline (Y-posities)
@@ -92,4 +93,25 @@ window.renderTimeline = function(hoofdID){
     });
 
 };
-})();
+
+// ======================= INIT LIVESEARCH & TIMELINE =======================
+document.addEventListener('DOMContentLoaded', () => {
+
+    const input = document.getElementById('sandboxSearch'); // Haal LiveSearch input op
+    if(!input){
+        console.error("sandboxSearch input niet gevonden");
+        return;
+    }
+
+    // Controleer of initLiveSearch beschikbaar is
+    if(typeof initLiveSearch === "function"){
+        initLiveSearch(input, window.StamboomStorage.get(), personID => {
+            const person = window.StamboomStorage.get().find(p => p.ID === personID); // Vind geselecteerde persoon
+            if(person) window.renderTimeline(person.ID); // Teken timeline met hoofdpersoon
+        });
+
+        // ======================= START MET EERSTE PERSOON =======================
+        const firstPerson = window.StamboomStorage.get()[0]; // eerste persoon in dataset
+        if(firstPerson) window.renderTimeline(firstPerson.ID); // render timeline bij initial load
+    }
+});
