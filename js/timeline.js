@@ -1,183 +1,204 @@
-/* ======================= js/timeline.js v0.3.0 ======================= */
-/* Robuuste genealogische tijdlijn gebaseerd op StamboomStorage + RelatieEngine
-   - Vaste rijen per rol
-   - X-as = tijd (jaartallen)
-   - Symbolen voor geslacht en overlijdensdatum
-   - Relatielijnen tussen personen
-   - Inline uitleg bij elke regel
+/* ======================= js/timeline.js v0.1.1 ======================= */
+/* Uitbreiding op v0.1.0
+   - Nu worden ook vaderID en moederID op de tijdslijn weergegeven
+   - Alle inline uitleg toegevoegd
 */
 
 // ======================= DATA LADEN =======================
 let peopleData = window.StamboomStorage?.get() || []; // Haal dataset uit storage
-if(!peopleData || peopleData.length===0){              // fallback indien leeg
-    console.warn("Dataset leeg - gebruik testdata");
+
+if(!peopleData || peopleData.length === 0){ // fallback indien leeg
+    console.warn("Dataset leeg - gebruik testdata"); // waarschuwing
     peopleData = [
-        { ID:"1", Roepnaam:"Martien", Achternaam:"van Doorn", Geboortedatum:"1935-02-10", Overlijdensdatum:"2019-03-12", Geslacht:"M" },
-        { ID:"2", Roepnaam:"Tiny", Achternaam:"Peters", Geboortedatum:"1933-07-22", Overlijdensdatum:"2007-05-05", Geslacht:"V" },
-        { ID:"3", Roepnaam:"Theo", Achternaam:"van Doorn", Geboortedatum:"1964-08-18", Geslacht:"M", PartnerID:"4", VaderID:"1", MoederID:"2" },
-        { ID:"4", Roepnaam:"Marcia", Achternaam:"Lobos Astorga", Geboortedatum:"1962-11-02", Geslacht:"V", PartnerID:"3" },
-        { ID:"5", Roepnaam:"David", Achternaam:"van Doorn", Geboortedatum:"1995-03-14", Geslacht:"M", VaderID:"3", MoederID:"4" },
-        { ID:"6", Roepnaam:"Esther", Achternaam:"van Doorn", Geboortedatum:"1972-09-09", Geslacht:"V", VaderID:"1", MoederID:"2" }
+        { ID: "1", Roepnaam: "Jan", Achternaam: "Jansen", Geboortedatum: "1950-01-01" },
+        { ID: "2", Roepnaam: "Anna", Achternaam: "Jansen", Geboortedatum: "1970-06-15" },
+        { ID: "3", Roepnaam: "Piet", Achternaam: "Jansen", Geboortedatum: "1975-03-20" },
+        { ID: "4", Roepnaam: "Lisa", Achternaam: "Jansen", Geboortedatum: "2000-09-10" }
     ];
 }
 
 // ======================= HULP FUNCTIES =======================
-function parseDateSafe(d){                                // Parse een datum, fallback naar vandaag
-    if(!d) return new Date();                              // Geen datum? gebruik vandaag
+function parseDateSafe(d){
+    if(!d){
+        console.warn("Datum leeg gevonden, gebruik vandaag als fallback");
+        return new Date();
+    }
     const dt = new Date(d);
-    if(isNaN(dt.getTime())) return new Date();             // Ongeldige datum? fallback
+    if(isNaN(dt.getTime())){
+        console.warn(`Datum verkeerd (${d}), gebruik vandaag`);
+        return new Date();
+    }
     return dt;
 }
 
-function yearToX(year, minYear, maxYear){                // Zet jaartal om naar X positie in pixels
+function yearToX(year, minYear, maxYear){
     const range = maxYear - minYear || 1;
-    return ((year - minYear)/range)*2800 + 50;            // schaal naar 50-2850 px
+    const x = ((year - minYear)/range)*2800 + 50;
+    return isNaN(x) ? 50 : x;
 }
 
-// ======================= Y-POSITIES PER RELATIE =======================
-const roleYMap = {                                        // Vaste Y-posities
-    "VHoofdID": 50,                                       // Vader / Ouder
-    "MHoofdID": 50,                                       // Moeder / Ouder
-    "HoofdID": 150,                                       // Hoofd persoon
-    "PHoofdID": 250,                                      // Partner
-    "KindID": 350,                                        // Kind
-    "HKindID": 350,                                       // Kind via hoofd
-    "PHKindID": 350,                                      // Kind via partner
-    "BZID": 450,                                          // Broer/Zus
-    "BZPartnerID": 450                                     // Partner van broer/zus
-};
+// ======================= RELATIE ZOEK FUNCTIES =======================
+function getPartners(person){
+    return peopleData.filter(p =>
+        p.PHoofdID === person.ID || p.PKPartnerID === person.ID
+    );
+}
+
+function getChildren(person, partner){
+    return peopleData.filter(p =>
+        p.VaderID === person.ID || p.MoederID === person.ID ||
+        (partner && (p.VaderID === partner.ID || p.MoederID === partner.ID))
+    );
+}
+
+// ======================= RECURSIEVE OPBOUW =======================
+function buildFamily(rootPerson){
+    const result = [];
+    const visited = new Set();
+
+    function traverse(person, level = 0){
+        if(!person || visited.has(person.ID)) return;
+        visited.add(person.ID);
+
+        result.push({ ...person, level: level, role: "S" });
+
+        // ======================= PARTNERS =======================
+        const partners = getPartners(person);
+        partners.forEach(partner => {
+            if(!visited.has(partner.ID)){
+                result.push({ ...partner, level: level, role: "P", parentID: person.ID });
+            }
+
+            // ======================= KINDEREN =======================
+            const children = getChildren(person, partner);
+            children.forEach(child => {
+                if(!visited.has(child.ID)){
+                    result.push({ ...child, level: level + 1, role: "S", parentID: person.ID });
+                }
+                traverse(child, level + 1);
+            });
+        });
+
+        // ======================= VADER EN MOEDER =======================
+        ["VaderID","MoederID"].forEach(parentField => {
+            const parentID = person[parentField];
+            if(parentID && !visited.has(parentID)){
+                const parentPerson = peopleData.find(p => p.ID === parentID);
+                if(parentPerson){
+                    result.push({ ...parentPerson, level: level - 1, role: "O", parentID: null }); // ouder 1 level hoger
+                    traverse(parentPerson, level - 1);
+                }
+            }
+        });
+    }
+
+    traverse(rootPerson, 0);
+    return result;
+}
 
 // ======================= DRAW TIMELINE =======================
-function drawTimeline(rootID){
-    if(!rootID) return;
+function drawTimeline(rootPerson){
+    if(!rootPerson) return;
 
-    const container = document.getElementById("timelineContainer"); // Container div
-    if(!container){ console.error("timelineContainer niet gevonden"); return; }
-    container.innerHTML="";                                     // Wis vorige inhoud
+    const container = document.getElementById("timelineContainer");
+    if(!container){
+        console.error("timelineContainer niet gevonden");
+        return;
+    }
+    container.innerHTML = "";
 
-    const svg = document.createElementNS("http://www.w3.org/2000/svg","svg"); // Maak SVG element
-    svg.setAttribute("width","3000");                             // Breedte canvas
-    svg.setAttribute("height","600");                             // Hoogte canvas
+    const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+    svg.setAttribute("width","3000");
+    svg.setAttribute("height","1000"); // meer hoogte voor ouders
     container.appendChild(svg);
 
-    const timelinePersons = window.RelatieEngine.computeRelaties(peopleData, rootID); // Bereken relaties
+    const timelinePersons = buildFamily(rootPerson);
 
-    // X-as berekenen
     const years = timelinePersons.map(p => parseDateSafe(p.Geboortedatum).getFullYear());
-    const minYear = Math.min(...years)-5;                         // 5 jaar marge
-    const maxYear = Math.max(...years)+5;
+    const minYear = Math.min(...years);
+    const maxYear = Math.max(...years);
 
-    // ======================= TEKEN JAARLIJN =======================
-    const baseY = 25;
+    const baseY = 200; // startlijn voor root persoon
+    const levelHeight = 80;
+
     const baseLine = document.createElementNS("http://www.w3.org/2000/svg","line");
-    baseLine.setAttribute("x1","50");
-    baseLine.setAttribute("y1",baseY);
+    baseLine.setAttribute("x1","50"); 
+    baseLine.setAttribute("y1", baseY);
     baseLine.setAttribute("x2","2850");
-    baseLine.setAttribute("y2",baseY);
+    baseLine.setAttribute("y2", baseY);
     baseLine.setAttribute("stroke","black");
     svg.appendChild(baseLine);
 
-    for(let yYear=minYear; yYear<=maxYear; yYear+=10){          // Decennium markers
-        const x = yearToX(yYear,minYear,maxYear);
-        const tick = document.createElementNS("http://www.w3.org/2000/svg","line");
-        tick.setAttribute("x1",x);
-        tick.setAttribute("y1",baseY-5);
-        tick.setAttribute("x2",x);
-        tick.setAttribute("y2",baseY+5);
-        tick.setAttribute("stroke","black");
-        svg.appendChild(tick);
+    const positionMap = {};
 
-        const label = document.createElementNS("http://www.w3.org/2000/svg","text");
-        label.setAttribute("x",x-15);
-        label.setAttribute("y",baseY-10);
-        label.textContent = yYear;
-        svg.appendChild(label);
-    }
+    // ======================= PERSONEN TEKENEN =======================
+    timelinePersons.forEach(p => {
+        const dt = parseDateSafe(p.Geboortedatum);
+        const year = dt.getFullYear();
+        const x = yearToX(year, minYear, maxYear);
+        const y = baseY + (p.level * levelHeight);
 
-    const positionMap={};                                        // Houd X,Y van elke persoon
+        positionMap[p.ID] = { x, y };
 
-    // ======================= TEKEN PERSONEN =======================
-    timelinePersons.forEach((p,index)=>{
-        const birth = parseDateSafe(p.Geboortedatum);           // Geboortedatum
-        const death = p.Overlijdensdatum ? parseDateSafe(p.Overlijdensdatum) : null; // Overlijdensdatum
-        const year = birth.getFullYear();                        // Geboortejaar
-        const x = yearToX(year,minYear,maxYear);                 // X positie
-        const y = roleYMap[p.Relatie] || 550;                    // Y positie op basis van rol
-        positionMap[p.ID]={x,y};                                 // Opslaan
-
-        // Symbolen voor geslacht
-        let symb = "◌";                                         // Default geslacht onbekend
-        if(p.Geslacht==="M") symb="♂";
-        else if(p.Geslacht==="V") symb="♀";
-
-        // Label
-        const deathText = death ? `–${death.getFullYear()}` : "";
-        const label = document.createElementNS("http://www.w3.org/2000/svg","text");
-        label.setAttribute("x",x+8);
-        label.setAttribute("y",y);
-        label.textContent = `*- ${p.Roepnaam} ${p.Achternaam} ${symb} (${year}${deathText})`;
-        svg.appendChild(label);
-
-        // Kleine cirkel marker
         const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
-        circle.setAttribute("cx",x);
-        circle.setAttribute("cy",y-3);
-        circle.setAttribute("r","5");
-        circle.setAttribute("fill","red");
+        circle.setAttribute("cx", x);
+        circle.setAttribute("cy", y);
+        circle.setAttribute("r","6");
+        circle.setAttribute("fill",
+            p.ID === rootPerson.ID ? "red" :
+            (p.role === "P" ? "blue" :
+            (p.role === "O" ? "green" : "black"))); // ouders groen
         svg.appendChild(circle);
+
+        const fullName = [p.ID, p.Roepnaam, p.Prefix || "", p.Achternaam].filter(Boolean).join(" ");
+        const birthText = p.Geboortedatum ? `(${p.Geboortedatum})` : "(geen datum)";
+
+        const label = document.createElementNS("http://www.w3.org/2000/svg","text");
+        label.setAttribute("x", x + 8);
+        label.setAttribute("y", y - 10);
+        label.textContent = `${fullName} ${birthText}`;
+        svg.appendChild(label);
+
+        const yearLabel = document.createElementNS("http://www.w3.org/2000/svg","text");
+        yearLabel.setAttribute("x", x - 10);
+        yearLabel.setAttribute("y", y + 25);
+        yearLabel.textContent = `${year}`;
+        svg.appendChild(yearLabel);
     });
 
-    // ======================= TEKEN RELATIELIJNEN =======================
-    timelinePersons.forEach(p=>{
-        if(!p.Relatie) return;
+    // ======================= RELATIE LIJNEN =======================
+    timelinePersons.forEach(p => {
+        if(p.parentID && positionMap[p.parentID]){
+            const parent = positionMap[p.parentID];
+            const child = positionMap[p.ID];
 
-        // Ouder → Hoofd / Kind
-        if((p.Relatie==="VHoofdID" || p.Relatie==="MHoofdID") && positionMap[rootID]){
-            const parent = positionMap[p.ID];
-            const child = positionMap[rootID];
-            if(parent && child){
-                const line = document.createElementNS("http://www.w3.org/2000/svg","line");
-                line.setAttribute("x1",parent.x);
-                line.setAttribute("y1",parent.y);
-                line.setAttribute("x2",child.x);
-                line.setAttribute("y2",child.y);
-                line.setAttribute("stroke","gray");
-                line.setAttribute("stroke-dasharray","4,2");
-                svg.appendChild(line);
-            }
-        }
-
-        // Hoofd → Partner
-        if(p.Relatie==="PHoofdID" && positionMap[rootID]){
             const line = document.createElementNS("http://www.w3.org/2000/svg","line");
-            line.setAttribute("x1",positionMap[rootID].x);
-            line.setAttribute("y1",positionMap[rootID].y);
-            line.setAttribute("x2",positionMap[p.ID].x);
-            line.setAttribute("y2",positionMap[p.ID].y);
-            line.setAttribute("stroke","blue");
-            line.setAttribute("stroke-dasharray","4,2");
+            line.setAttribute("x1", parent.x);
+            line.setAttribute("y1", parent.y);
+            line.setAttribute("x2", child.x);
+            line.setAttribute("y2", child.y);
+            line.setAttribute("stroke","gray");
             svg.appendChild(line);
-        }
-
-        // Ouder → Kind
-        if(["KindID","HKindID","PHKindID"].includes(p.Relatie)){
-            const parent = timelinePersons.find(pp=>pp.Relatie==="HoofdID");
-            if(parent && positionMap[parent.ID]){
-                const line = document.createElementNS("http://www.w3.org/2000/svg","line");
-                line.setAttribute("x1",positionMap[parent.ID].x);
-                line.setAttribute("y1",positionMap[parent.ID].y);
-                line.setAttribute("x2",positionMap[p.ID].x);
-                line.setAttribute("y2",positionMap[p.ID].y);
-                line.setAttribute("stroke","green");
-                line.setAttribute("stroke-dasharray","2,2");
-                svg.appendChild(line);
-            }
         }
     });
 }
 
-// ======================= INIT =======================
-document.addEventListener("DOMContentLoaded",()=>{
-    const hoofdID = window.HoofdID || (peopleData[0] && peopleData[0].ID); // fallback eerste persoon
-    if(hoofdID) drawTimeline(hoofdID);                                       // Teken timeline bij load
+// ======================= INIT LIVESEARCH =======================
+document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('sandboxSearch');
+    if(!input){
+        console.error("sandboxSearch input niet gevonden");
+        return;
+    }
+
+    if(typeof initLiveSearch === "function"){
+        initLiveSearch(input, peopleData, personID => {
+            const person = peopleData.find(p => p.ID === personID);
+            if(person) drawTimeline(person);
+        });
+    }
+
+    if(peopleData.length > 0){
+        drawTimeline(peopleData[0]);
+    }
 });
