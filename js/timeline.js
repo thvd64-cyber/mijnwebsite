@@ -1,15 +1,14 @@
-/* ======================= js/timeline.js v0.1.1 ======================= */
-/* Uitbreiding op v0.1.0
-   - Nu worden ook vaderID en moederID op de tijdslijn weergegeven
-   - Alle inline uitleg toegevoegd
-   - Alleen offset toegevoegd zodat teksten niet over elkaar lopen
+/* ======================= js/timeline.js v0.1.2 ======================= */
+/* Uitbreiding op v0.1.1
+   - Integreert hoofdID van search automatisch als root persoon
+   - Inline uitleg behouden
 */
 
 // ======================= DATA LADEN =======================
 let peopleData = window.StamboomStorage?.get() || []; // Haal dataset uit storage
 
 if(!peopleData || peopleData.length === 0){ // fallback indien leeg
-    console.warn("Dataset leeg - gebruik testdata"); // waarschuwing
+    console.warn("Dataset leeg - gebruik testdata");
     peopleData = [
         { ID: "1", Roepnaam: "Jan", Achternaam: "Jansen", Geboortedatum: "1950-01-01" },
         { ID: "2", Roepnaam: "Anna", Achternaam: "Jansen", Geboortedatum: "1970-06-15" },
@@ -86,7 +85,7 @@ function buildFamily(rootPerson){
             if(parentID && !visited.has(parentID)){
                 const parentPerson = peopleData.find(p => p.ID === parentID);
                 if(parentPerson){
-                    result.push({ ...parentPerson, level: level - 1, role: "O", parentID: null }); // ouder 1 level hoger
+                    result.push({ ...parentPerson, level: level - 1, role: "O", parentID: null });
                     traverse(parentPerson, level - 1);
                 }
             }
@@ -110,7 +109,7 @@ function drawTimeline(rootPerson){
 
     const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
     svg.setAttribute("width","3000");
-    svg.setAttribute("height","1000"); // meer hoogte voor ouders
+    svg.setAttribute("height","1000");
     container.appendChild(svg);
 
     const timelinePersons = buildFamily(rootPerson);
@@ -119,7 +118,7 @@ function drawTimeline(rootPerson){
     const minYear = Math.min(...years);
     const maxYear = Math.max(...years);
 
-    const baseY = 200; // startlijn voor root persoon
+    const baseY = 200;
     const levelHeight = 80;
 
     const baseLine = document.createElementNS("http://www.w3.org/2000/svg","line");
@@ -133,7 +132,7 @@ function drawTimeline(rootPerson){
     const positionMap = {};
 
     // ======================= PERSONEN TEKENEN =======================
-    timelinePersons.forEach((p,index) => { // index toegevoegd voor offset
+    timelinePersons.forEach((p,index) => {
         const dt = parseDateSafe(p.Geboortedatum);
         const year = dt.getFullYear();
         const x = yearToX(year, minYear, maxYear);
@@ -148,7 +147,7 @@ function drawTimeline(rootPerson){
         circle.setAttribute("fill",
             p.ID === rootPerson.ID ? "red" :
             (p.role === "P" ? "blue" :
-            (p.role === "O" ? "green" : "black"))); // ouders groen
+            (p.role === "O" ? "green" : "black")));
         svg.appendChild(circle);
 
         const fullName = [p.ID, p.Roepnaam, p.Prefix || "", p.Achternaam].filter(Boolean).join(" ");
@@ -156,13 +155,13 @@ function drawTimeline(rootPerson){
 
         const label = document.createElementNS("http://www.w3.org/2000/svg","text");
         label.setAttribute("x", x + 8);
-        label.setAttribute("y", y - 10 - (index * 2)); // offset toegevoegd per index
+        label.setAttribute("y", y - 10 - (index * 2));
         label.textContent = `${fullName} ${birthText}`;
         svg.appendChild(label);
 
         const yearLabel = document.createElementNS("http://www.w3.org/2000/svg","text");
         yearLabel.setAttribute("x", x - 10);
-        yearLabel.setAttribute("y", y + 25 + (index * 2)); // offset toegevoegd per index
+        yearLabel.setAttribute("y", y + 25 + (index * 2));
         yearLabel.textContent = `${year}`;
         svg.appendChild(yearLabel);
     });
@@ -184,7 +183,7 @@ function drawTimeline(rootPerson){
     });
 }
 
-// ======================= INIT LIVESEARCH =======================
+// ======================= INIT LIVESEARCH + HOOFDPERSOON =======================
 document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('sandboxSearch');
     if(!input){
@@ -195,11 +194,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if(typeof initLiveSearch === "function"){
         initLiveSearch(input, peopleData, personID => {
             const person = peopleData.find(p => p.ID === personID);
-            if(person) drawTimeline(person);
+            if(person) drawTimeline(person); // update timeline bij selectie
         });
     }
 
-    if(peopleData.length > 0){
-        drawTimeline(peopleData[0]);
-    }
+    // ======================= ROOT PERSON VIA HOOFDID =======================
+    const hoofdID = window.HoofdID || (peopleData[0] && peopleData[0].ID); // fallback naar eerste persoon
+    const rootPerson = peopleData.find(p => p.ID === hoofdID);
+    if(rootPerson) drawTimeline(rootPerson);
 });
