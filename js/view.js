@@ -226,22 +226,14 @@ function renderTree(){
 }
 
 function refreshView(){
+
     dataset = window.StamboomStorage.get()||[]; 
     selectedHoofdId = null;                     
+
     renderTree();                               
 }
 
 refreshView();                                  
+searchInput.addEventListener('input', liveSearch); 
 
-// Live search listener met callback
-searchInput.addEventListener('input', () => {
-    liveSearch({
-        searchInput,
-        dataset,
-        displayType: 'popup',
-        renderCallback: (selected) => {
-            selectedHoofdId = safe(selected.ID);
-            renderTree();
-        }
-    });
-});
+})();
