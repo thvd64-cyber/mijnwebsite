@@ -1,5 +1,6 @@
-/* ======================= css/style.css v1.0.4 ======================= */
+/* ======================= css/style.css v1.0.5 ======================= */
 /* TREE VIEW STYLING toegevoeg table aanpassing plain en toegevoegd storage om-en-om grijs */
+/* TIMELINE VIEW STYLING toegevoegd  */
 /* ======================= BASIS LAYOUT ======================= */
 body {
     font-family: Arial, sans-serif; /* basis font voor de pagina */
@@ -323,4 +324,45 @@ button.danger:hover {
     border-top: 1px solid #ccc; /* lichte grijze lijn */
     margin: 6px auto; /* centreren met marge boven en onder */
     width: 50%; /* lijn half de breedte van container voor nette vertakking */
+}
+/* =======================
+   TIMELINE VIEW STYLING
+   ======================= */
+#timelineContainer {
+    margin: 20px 0;              /* ruimte boven en onder de timeline */
+    padding: 10px;               /* interne padding */
+    border: 1px solid #ccc;      /* lichte rand rondom timeline */
+    border-radius: 6px;          /* afgeronde hoeken */
+    background-color: #fdfdfd;   /* lichte achtergrond */
+}
+
+.timeline-level {
+    display: flex;               /* nodes horizontaal naast elkaar */
+    justify-content: center;     /* centreer nodes binnen level */
+    gap: 12px;                   /* ruimte tussen nodes */
+    margin-bottom: 16px;         /* verticale afstand tussen levels */
+}
+
+.timeline-node {
+    padding: 8px 12px;           /* interne marge */
+    border: 1px solid #888;      /* randkleur */
+    border-radius: 6px;          /* afgeronde hoeken */
+    background-color: #f0f0f0;   /* achtergrond kleur */
+    min-width: 120px;            /* minimale breedte */
+    text-align: center;          /* tekst gecentreerd */
+    cursor: pointer;             /* klikbare cursor */
+    font-size: 13px;             /* lettergrootte */
+}
+
+.timeline-node.HoofdID { background-color: #ffd700; }   /* geel voor hoofdID */
+.timeline-node.PHoofdID { background-color: #ffecb3; }  /* lichtgeel voor partner hoofd */
+.timeline-node.VHoofdID, .timeline-node.MHoofdID { background-color: #c8e6c9; } /* groen voor ouders */
+.timeline-node.KindID, .timeline-node.HKindID, .timeline-node.PHKindID { background-color: #90caf9; } /* lichtblauw voor kinderen */
+.timeline-node.PKindID { background-color: #64b5f6; } /* donkerder blauw voor partner kind */
+.timeline-node.BZID { background-color: #ffab91; } /* oranje voor broer/zus */
+.timeline-node.PBZID { background-color: #ff8a65; } /* donkeroranje voor partner broer/zus */
+
+.timeline-node:hover {
+    background-color: #e0f0ff;  /* hover highlight */
+    border-color: #004080;       /* donkerblauwe rand bij hover */
 }
