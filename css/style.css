@@ -366,3 +366,15 @@ button.danger:hover {
     background-color: #e0f0ff;  /* hover highlight */
     border-color: #004080;       /* donkerblauwe rand bij hover */
 }
+
+/* ======================= TIMELINE VERTICAAL ======================= */
+.timeline-level {
+    display: flex;           /* flexbox voor horizontaal/verticaal gedrag */
+    flex-direction: column;  /* nodes onder elkaar */
+    align-items: flex-start; /* uitlijnen aan linkerkant */
+    margin-bottom: 10px;     /* ruimte tussen levels */
+}
+
+.timeline-node {
+    margin: 4px 0;           /* ruimte tussen nodes in dezelfde level */
+}
