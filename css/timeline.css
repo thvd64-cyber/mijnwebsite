@@ -1,112 +1,82 @@
-/* ======================= css/timeline.css v2.0.0 ======================= */
-/* Volledig opgeschoonde timeline styling */
-/* - Geen duplicatie met style.css */
-/* - Verticale layout (1 node per regel) */
-/* - Duidelijke rol-gebaseerde kleuren */
-/* - Consistente spacing en structuur */
+/* ======================= css/timeline.css v1.1.0 ======================= */
+/* Timeline styling voor verticale layout met overlijdensdatum zichtbaar */
 
-
-/* ======================= CONTAINER ======================= */
+/* =======================
+   CONTAINER
+   ======================= */
 #timelineContainer {
     margin: 20px 0;              /* ruimte boven en onder de timeline */
-    padding: 12px;               /* interne ruimte zodat content niet tegen rand zit */
-    border: 1px solid #ccc;      /* subtiele rand voor afbakening */
-    border-radius: 6px;          /* afgeronde hoeken voor modern uiterlijk */
-    background-color: #ffffff;   /* witte achtergrond (scheiding van pagina) */
+    padding: 10px;               /* interne padding rondom timeline */
+    border: 1px solid #ccc;      /* lichte rand rondom container */
+    border-radius: 6px;          /* afgeronde hoeken voor zachtere look */
+    background-color: #fdfdfd;   /* lichte achtergrondkleur */
 }
 
-
-/* ======================= LEVEL STRUCTUUR ======================= */
+/* =======================
+   LEVELS
+   ======================= */
 .timeline-level {
-    display: flex;               /* gebruik flexbox voor layout controle */
-    flex-direction: column;      /* ALLES onder elkaar (verticale flow) */
-    align-items: flex-start;     /* links uitlijnen van alle nodes */
-    gap: 6px;                    /* consistente ruimte tussen nodes */
-    margin-bottom: 14px;         /* ruimte tussen verschillende groepen */
+    display: flex;               /* flexbox voor nodes */
+    flex-direction: column;      /* verticale stapeling van nodes */
+    align-items: flex-start;     /* uitlijning links */
+    margin-bottom: 10px;         /* ruimte tussen levels */
 }
 
-
-/* ======================= NODE BASIS ======================= */
+/* =======================
+   NODES
+   ======================= */
 .timeline-node {
-    display: block;              /* zorgt dat elke node op een nieuwe regel komt */
-    padding: 8px 12px;           /* interne ruimte voor leesbaarheid */
-    border: 1px solid #888;      /* neutrale rand */
-    border-radius: 16px;         /* afgeronde pill-shape */
-    background-color: #f0f0f0;   /* standaard lichtgrijze achtergrond */
-    font-size: 13px;             /* compacte tekstgrootte */
-    line-height: 1.4;            /* betere leesbaarheid van tekst */
-    cursor: pointer;             /* klikbare interactie */
-    transition: all 0.15s ease;  /* subtiele animatie bij hover */
-    width: fit-content;          /* breedte gebaseerd op inhoud */
-    max-width: 100%;             /* voorkomt overflow buiten container */
+    display: block;              /* verticale layout: elke node op aparte regel */
+    padding: 8px 12px;           /* interne marge */
+    border: 1px solid #888;      /* grijze rand rondom node */
+    border-radius: 20px;          /* afgeronde hoeken voor visueel gemak */
+    background-color: #f0f0f0;   /* lichtgrijze achtergrond */
+    text-align: left;             /* tekst links uitlijnen voor datum+overlijden */
+    cursor: pointer;             /* pointer bij hover */
+    font-size: 13px;             /* lettergrootte */
+    width: auto;                 /* breedte afhankelijk van inhoud */
+    min-width: 0;                /* geen minimum breedte */
+    max-width: none;             /* geen maximum breedte */
+    margin: 4px 0;               /* verticale ruimte tussen nodes */
 }
 
+/* =======================
+   NODE RELATIES
+   ======================= */
+.timeline-node.HoofdID { background-color: #ffd700; }   /* geel voor hoofdID */
+.timeline-node.PHoofdID { background-color: #ffecb3; }  /* lichtgeel partner hoofd */
+.timeline-node.VHoofdID, .timeline-node.MHoofdID { background-color: #c8e6c9; } /* groen ouders */
+.timeline-node.KindID, .timeline-node.HKindID, .timeline-node.PHKindID { background-color: #90caf9; } /* lichtblauw kinderen */
+.timeline-node.PKindID { background-color: #64b5f6; } /* donkerblauw partner kind */
+.timeline-node.BZID { background-color: #ffab91; } /* oranje broer/zus */
+.timeline-node.PBZID { background-color: #ff8a65; } /* donkeroranje partner broer/zus */
 
-/* ======================= NODE HOVER ======================= */
 .timeline-node:hover {
-    background-color: #e0f0ff;   /* lichtblauwe highlight bij hover */
-    border-color: #004080;       /* accentkleur rand bij hover */
-    transform: translateX(2px);  /* kleine beweging naar rechts voor feedback */
+    background-color: #e0f0ff;  /* hover highlight */
+    border-color: #004080;       /* donkerblauwe rand bij hover */
 }
 
-
-/* ======================= ROLE KLEUREN ======================= */
-
-/* Hoofd persoon */
-.timeline-node.HoofdID {
-    background-color: #ffd700;   /* goud/geel voor hoofdpersoon */
-    font-weight: 600;            /* iets vetter voor nadruk */
+/* =======================
+   NODE CONTENT
+   ======================= */
+.timeline-node .id {
+    font-weight: bold;            /* ID vetgedrukt */
+    margin-right: 6px;            /* ruimte rechts van ID */
 }
 
-/* Partner hoofd */
-.timeline-node.PHoofdID {
-    background-color: #ffecb3;   /* lichtere geel tint */
+.timeline-node .name {
+    font-weight: 600;             /* iets zwaardere naam */
+    margin-right: 6px;            /* ruimte rechts van naam */
 }
 
-/* Ouders */
-.timeline-node.VHoofdID,
-.timeline-node.MHoofdID {
-    background-color: #c8e6c9;   /* groen voor oudergeneratie */
+.timeline-node .birth {
+    font-style: normal;           /* normale stijl */
+    color: #333;                  /* donkergrijs */
 }
 
-/* Kinderen */
-.timeline-node.KindID,
-.timeline-node.HKindID,
-.timeline-node.PHKindID {
-    background-color: #90caf9;   /* lichtblauw voor kinderen */
-}
-
-/* Partner van kind */
-.timeline-node.PKindID {
-    background-color: #64b5f6;   /* iets donkerder blauw */
-}
-
-/* Broer / zus */
-.timeline-node.BZID {
-    background-color: #ffab91;   /* zachte oranje tint */
-}
-
-/* Partner broer / zus */
-.timeline-node.PBZID {
-    background-color: #ff8a65;   /* donkerder oranje */
-}
-
-
-/* ======================= GROEP VISUEEL SCHEIDEN ======================= */
-.timeline-level:not(:last-child) {
-    border-bottom: 1px dashed #ddd; /* subtiele scheidingslijn tussen groepen */
-    padding-bottom: 10px;           /* ruimte onder groep */
-}
-
-
-/* ======================= RESPONSIVE ======================= */
-@media (max-width: 768px) {
-    .timeline-node {
-        font-size: 12px;            /* iets kleinere tekst op mobiel */
-        padding: 6px 10px;          /* compactere spacing */
-    }
-
-    .timeline-level {
-        gap: 4px;                   /* minder ruimte tussen nodes */
-    }
+.timeline-node .death {
+    font-style: italic;           /* cursief voor overlijdensdatum */
+    color: #888;                  /* lichtgrijs */
+    margin-left: 4px;             /* kleine marge links van geboortedatum */
+    font-size: 12px;              /* iets kleiner dan hoofdtekst */
 }
