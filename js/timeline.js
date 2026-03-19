@@ -39,7 +39,7 @@ function formatDate(d){
 }
 
 function parseBirthday(d){
-    if(!d) return new Date(0);               
+    if(!d) return new Date(0);                // Geen datum → startdatum
     d = d.trim();
     if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return new Date(d);           
     if(/^\d{2}[-/]\d{2}[-/]\d{4}$/.test(d)){                        
