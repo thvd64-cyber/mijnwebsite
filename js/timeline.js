@@ -1,6 +1,7 @@
-/* ======================= js/timeline.js v2.0.4 ======================= */
-/* Timeline rendering van personen met verticale hiërarchie */
-/* Kind + partner direct onder elkaar, partner grijs, birth + death zichtbaar */
+// ======================= js/timeline.js v2.0.4 =======================
+// Timeline rendering van personen met verticale hiërarchie
+// Elke persoon krijgt een aparte verticale box op timeline hoogte
+// Kind + partner direct onder elkaar en partner krijgt grijs
 
 (function(){
 'use strict'; // Strikte modus voorkomt stille fouten
@@ -25,21 +26,21 @@ function safe(val){
 }
 
 function formatDate(d){                              
-    if(!d) return '';                                // lege string bij undefined/null
-    d = String(d).trim();                             // trim whitespace
+    if(!d) return '';                                
+    d = String(d).trim();
     let date =
         /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(d) :                                      // ISO YYYY-MM-DD
         /^\d{2}[-/]\d{2}[-/]\d{4}$/.test(d) ? new Date(d.replace(/(\d{2})[-/](\d{2})[-/](\d{4})/,'$3-$2-$1')) : // DD-MM-YYYY
         /^\d{4}-\d{2}$/.test(d) ? new Date(d+'-01') :                                       // YYYY-MM
         /^\d{4}$/.test(d) ? new Date(d+'-01-01') :                                           // YYYY
         new Date(d);                                                                        // fallback
-    if(isNaN(date.getTime())) return d;                                                     // ongeldig → originele string
+    if(isNaN(date.getTime())) return d;                                                    
     const options = { day:'2-digit', month:'short', year:'numeric' };                      
-    return date.toLocaleDateString('nl-NL', options).replace(/\./g,'');                    // NL format
+    return date.toLocaleDateString('nl-NL', options).replace(/\./g,'');                    
 }
 
 function parseBirthday(d){
-    if(!d) return new Date(0);                // fallback datum
+    if(!d) return new Date(0);               
     d = d.trim();
     if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return new Date(d);           
     if(/^\d{2}[-/]\d{2}[-/]\d{4}$/.test(d)){                        
@@ -78,8 +79,8 @@ function createTimelineNode(p, rel){
 
     div.dataset.id = p.ID;                          // Bewaar ID als data attribuut
     div.addEventListener('click', () => {           // Klik event voor selectie
-        selectedHoofdId = safe(p.ID);              // Update geselecteerde persoon
-        renderTimeline();                           // Re-render timeline
+        selectedHoofdId = safe(p.ID);
+        renderTimeline();                            // Re-render timeline
     });
 
     return div;                                     // Retourneer DOM node
@@ -105,16 +106,15 @@ function buildTimeline(rootID){
     const dataRel = window.RelatieEngine.computeRelaties(dataset, rootID); // Bereken relaties
 
     // =======================
-    // HIËRARCHIE: ouders → hoofd → partner hoofd → kinderen → partner kind → broer/zus → partner broer/zus
+    // HIËRARCHIE: ouders → hoofd → partner hoofd → kinderen+partner → broer/zus → partner broer/zus
     // =======================
     const hierarchy = [
-        { type: 'ouders', nodes: [] },        // 0: VHoofdID + MHoofdID
-        { type: 'hoofd', nodes: [] },         // 1: HoofdID
-        { type: 'partnerHoofd', nodes: [] },  // 2: PHoofdID
-        { type: 'kinderen', nodes: [] },      // 3: KindID / HKindID
-        { type: 'partnerKind', nodes: [] },   // 4: partners van kinderen (wordt grijs)
-        { type: 'broerZus', nodes: [] },      // 5: BZID
-        { type: 'partnerBZ', nodes: [] }      // 6: PBZID
+        { type: 'ouders', nodes: [] },
+        { type: 'hoofd', nodes: [] },
+        { type: 'partnerHoofd', nodes: [] },
+        { type: 'kinderen', nodes: [] },
+        { type: 'broerZus', nodes: [] },
+        { type: 'partnerBZ', nodes: [] }
     ];
 
     // === Ouders ===
@@ -139,10 +139,14 @@ function buildTimeline(rootID){
     children.sort((a,b) => parseBirthday(a.Geboortedatum)-parseBirthday(b.Geboortedatum));
 
     children.forEach(k=>{
-        hierarchy[3].nodes.push(createTimelineNode(k,k.Relatie));       // Voeg kind toe
+        hierarchy[3].nodes.push(createTimelineNode(k,k.Relatie)); // Kind node
+
         if(k.PartnerID){
             const kp = findPerson(safe(k.PartnerID));
-            if(kp) hierarchy[3].nodes.push(createTimelineNode(kp,'partner')); // Partner direct onder kind, grijs
+            if(kp){
+                const partnerDiv = createTimelineNode(kp,'partner'); // partner class grijs
+                hierarchy[3].nodes.push(partnerDiv);                 // Voeg direct onder kind
+            }
         }
     });
 
@@ -151,10 +155,10 @@ function buildTimeline(rootID){
     siblings.sort((a,b) => parseBirthday(a.Geboortedatum)-parseBirthday(b.Geboortedatum));
 
     siblings.forEach(s=>{
-        hierarchy[5].nodes.push(createTimelineNode(s,'BZID'));          // Broer/zus
+        hierarchy[4].nodes.push(createTimelineNode(s,'BZID'));          // Broer/zus
         if(s.PartnerID){
             const sp = findPerson(safe(s.PartnerID));
-            if(sp) hierarchy[6].nodes.push(createTimelineNode(sp,'PBZID')); // Partner broer/zus
+            if(sp) hierarchy[5].nodes.push(createTimelineNode(sp,'PBZID')); // Partner broer/zus
         }
     });
 
@@ -174,12 +178,12 @@ function buildTimeline(rootID){
 // =======================
 searchInput.addEventListener('input', () => {
     liveSearch({
-        searchInput,               // Input element
-        dataset,                   // Dataset
-        displayType: 'popup',      // Popup weergave
+        searchInput,               
+        dataset,                   
+        displayType: 'popup',      
         renderCallback: (selected)=>{
-            selectedHoofdId = safe(selected.ID); // Update geselecteerde persoon
-            renderTimeline();                    // Her-render timeline
+            selectedHoofdId = safe(selected.ID); 
+            renderTimeline();                    
         }
     });
 });
@@ -192,9 +196,9 @@ function renderTimeline(){
 }
 
 function refreshTimeline(){
-    dataset = window.StamboomStorage.get()||[]; // Update dataset
-    selectedHoofdId = null;                      // Reset selectie
-    renderTimeline();                             // Render opnieuw
+    dataset = window.StamboomStorage.get()||[]; 
+    selectedHoofdId = null;                      
+    renderTimeline();                             
 }
 
 refreshTimeline(); // Init render bij pagina laden
