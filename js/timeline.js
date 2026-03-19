@@ -1,7 +1,7 @@
 // ======================= js/timeline.js v2.0.4 =======================
 // Timeline rendering van personen met verticale hiërarchie
 // Elke persoon krijgt een aparte verticale box op timeline hoogte
-// Inclusief geboortedatum en overlijdensdatum
+// Kind + partner direct onder elkaar en partner krijgt grijs
 
 (function(){
 'use strict'; // Strikte modus voorkomt stille fouten
@@ -60,8 +60,6 @@ function findPerson(id){
 // NODE CREATOR
 // =======================
 function createTimelineNode(p, rel){
-    console.log("CREATE NODE:", p.ID); // DEBUG: check of functie wordt aangeroepen
-
     const div = document.createElement('div');      // Maak een DOM element
     div.className = 'timeline-node';               // Basis class voor styling
     if(rel) div.classList.add(rel);                // Voeg relatie-specifieke class toe
@@ -108,16 +106,15 @@ function buildTimeline(rootID){
     const dataRel = window.RelatieEngine.computeRelaties(dataset, rootID); // Bereken relaties
 
     // =======================
-    // HIËRARCHIE: ouders → hoofd → partner hoofd → kinderen → partner kind → broer/zus → partner broer/zus
+    // HIËRARCHIE: ouders → hoofd → partner hoofd → kinderen+partner → broer/zus → partner broer/zus
     // =======================
     const hierarchy = [
-        { type: 'ouders', nodes: [] },        // 0: VHoofdID + MHoofdID
-        { type: 'hoofd', nodes: [] },         // 1: HoofdID
-        { type: 'partnerHoofd', nodes: [] },  // 2: PHoofdID
-        { type: 'kinderen', nodes: [] },      // 3: KindID / HKindID
-        { type: 'partnerKind', nodes: [] },   // 4: partners van kinderen
-        { type: 'broerZus', nodes: [] },      // 5: BZID
-        { type: 'partnerBZ', nodes: [] }      // 6: PBZID
+        { type: 'ouders', nodes: [] },
+        { type: 'hoofd', nodes: [] },
+        { type: 'partnerHoofd', nodes: [] },
+        { type: 'kinderen', nodes: [] },
+        { type: 'broerZus', nodes: [] },
+        { type: 'partnerBZ', nodes: [] }
     ];
 
     // === Ouders ===
@@ -137,15 +134,19 @@ function buildTimeline(rootID){
         if(p) hierarchy[2].nodes.push(createTimelineNode(p,'PHoofdID'));
     }
 
-    // === Kinderen + partner ===
+    // === Kinderen + partner direct onder elkaar ===
     let children = dataRel.filter(d => ['KindID','HKindID','PHKindID'].includes(d.Relatie));
     children.sort((a,b) => parseBirthday(a.Geboortedatum)-parseBirthday(b.Geboortedatum));
 
     children.forEach(k=>{
-        hierarchy[3].nodes.push(createTimelineNode(k,k.Relatie));       // Kind
+        hierarchy[3].nodes.push(createTimelineNode(k,k.Relatie)); // Kind node
+
         if(k.PartnerID){
             const kp = findPerson(safe(k.PartnerID));
-            if(kp) hierarchy[4].nodes.push(createTimelineNode(kp,'PKindID')); // Partner kind
+            if(kp){
+                const partnerDiv = createTimelineNode(kp,'partner'); // partner class grijs
+                hierarchy[3].nodes.push(partnerDiv);                 // Voeg direct onder kind
+            }
         }
     });
 
@@ -154,10 +155,10 @@ function buildTimeline(rootID){
     siblings.sort((a,b) => parseBirthday(a.Geboortedatum)-parseBirthday(b.Geboortedatum));
 
     siblings.forEach(s=>{
-        hierarchy[5].nodes.push(createTimelineNode(s,'BZID'));          // Broer/zus
+        hierarchy[4].nodes.push(createTimelineNode(s,'BZID'));          // Broer/zus
         if(s.PartnerID){
             const sp = findPerson(safe(s.PartnerID));
-            if(sp) hierarchy[6].nodes.push(createTimelineNode(sp,'PBZID')); // Partner broer/zus
+            if(sp) hierarchy[5].nodes.push(createTimelineNode(sp,'PBZID')); // Partner broer/zus
         }
     });
 
@@ -177,12 +178,12 @@ function buildTimeline(rootID){
 // =======================
 searchInput.addEventListener('input', () => {
     liveSearch({
-        searchInput,               // Input element
-        dataset,                   // Dataset
-        displayType: 'popup',      // Popup weergave
+        searchInput,               
+        dataset,                   
+        displayType: 'popup',      
         renderCallback: (selected)=>{
-            selectedHoofdId = safe(selected.ID); // Update geselecteerde persoon
-            renderTimeline();                    // Her-render timeline
+            selectedHoofdId = safe(selected.ID); 
+            renderTimeline();                    
         }
     });
 });
@@ -195,9 +196,9 @@ function renderTimeline(){
 }
 
 function refreshTimeline(){
-    dataset = window.StamboomStorage.get()||[]; // Update dataset
-    selectedHoofdId = null;                      // Reset selectie
-    renderTimeline();                             // Render opnieuw
+    dataset = window.StamboomStorage.get()||[]; 
+    selectedHoofdId = null;                      
+    renderTimeline();                             
 }
 
 refreshTimeline(); // Init render bij pagina laden
