@@ -60,6 +60,8 @@ function findPerson(id){
 // NODE CREATOR
 // =======================
 function createTimelineNode(p, rel){
+    console.log("CREATE NODE:", p.ID); // DEBUG: check of functie wordt aangeroepen
+
     const div = document.createElement('div');      // Maak een DOM element
     div.className = 'timeline-node';               // Basis class voor styling
     if(rel) div.classList.add(rel);                // Voeg relatie-specifieke class toe
