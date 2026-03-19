@@ -110,5 +110,17 @@ fetch('/MyFamTreeCollab/Layout/Footer.html')
 .then(data => document.getElementById('footer-placeholder').innerHTML = data);
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const c = document.getElementById('timelineContainer');
+
+    console.log("Container gevonden:", !!c); // true = bestaat
+
+    c.style.border = "3px solid red";        // visuele check
+    c.style.minHeight = "100px";             // force hoogte
+
+});
+</script>
+    
 </body>
 </html>
