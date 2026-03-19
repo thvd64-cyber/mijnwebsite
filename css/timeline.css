@@ -1,59 +1,62 @@
 /* ======================= css/timeline.css v1.1.0 ======================= */
-/* Timeline styling voor verticale layout met overlijdensdatum zichtbaar */
+/* Timeline styling voor verticale layout met geboortedatum en overlijdensdatum zichtbaar */
 
 /* =======================
    CONTAINER
    ======================= */
 #timelineContainer {
-    margin: 20px 0;              /* ruimte boven en onder de timeline */
-    padding: 10px;               /* interne padding rondom timeline */
-    border: 1px solid #ccc;      /* lichte rand rondom container */
-    border-radius: 6px;          /* afgeronde hoeken voor zachtere look */
-    background-color: #fdfdfd;   /* lichte achtergrondkleur */
+    margin: 20px 0;              /* Ruimte boven en onder de timeline */
+    padding: 10px;               /* Interne padding rondom timeline */
+    border: 1px solid #ccc;      /* Lichte rand rondom container */
+    border-radius: 6px;          /* Afgeronde hoeken voor zachtere look */
+    background-color: #fdfdfd;   /* Lichte achtergrondkleur */
+    overflow-x: auto;            /* Horizontaal scrollen indien nodig */
 }
 
 /* =======================
    LEVELS
    ======================= */
 .timeline-level {
-    display: flex;               /* flexbox voor nodes */
-    flex-direction: column;      /* verticale stapeling van nodes */
-    align-items: flex-start;     /* uitlijning links */
-    margin-bottom: 10px;         /* ruimte tussen levels */
+    display: flex;               /* Flexbox voor nodes */
+    flex-direction: column;      /* Verticaal stapelen van nodes */
+    align-items: flex-start;     /* Links uitlijnen */
+    margin-bottom: 10px;         /* Ruimte tussen levels */
 }
 
+/* =======================
+   NODES
+   ======================= */
 .timeline-node {
-    display: block;              /* nodes op aparte regel */
-    padding: 8px 12px;           /* interne marge */
-    border: 1px solid #888;      /* rand rondom node */
-    border-radius: 20px;          /* afgeronde hoeken */
-    background-color: #f0f0f0;   /* achtergrondkleur */
-    text-align: left;             /* tekst links uitlijnen */
-    cursor: pointer;             /* pointer bij hover */
-    font-size: 13px;             /* tekstgrootte */
-    width: auto;                 /* breedte afhankelijk van inhoud */
-    min-width: 0;                
-    max-width: none;             
-    margin: 4px 0;               
-    display: flex;               /* maak node flex container */
-    flex-direction: column;       /* kinderen onder elkaar: ID, naam, datum */
-    gap: 2px;                     /* kleine ruimte tussen ID/naam/datum */
+    display: flex;               /* Maak node een flex container */
+    flex-direction: column;      /* ID, naam, datum onder elkaar */
+    gap: 2px;                    /* Kleine ruimte tussen ID/naam/datum */
+    padding: 8px 12px;           /* Interne marge */
+    border: 1px solid #888;      /* Rand rondom node */
+    border-radius: 20px;         /* Afgeronde hoeken */
+    background-color: #f0f0f0;   /* Basis achtergrondkleur */
+    text-align: left;            /* Tekst links uitlijnen */
+    cursor: pointer;             /* Pointer bij hover */
+    font-size: 13px;             /* Tekstgrootte */
+    width: auto;                 /* Breedte afhankelijk van inhoud */
+    min-width: 0;                /* Geen minimum breedte */
+    max-width: none;             /* Geen maximum breedte */
+    margin: 4px 0;               /* Verticale ruimte tussen nodes */
 }
 
 /* =======================
    NODE RELATIES
    ======================= */
-.timeline-node.HoofdID { background-color: #ffd700; }   /* geel voor hoofdID */
-.timeline-node.PHoofdID { background-color: #ffecb3; }  /* lichtgeel partner hoofd */
-.timeline-node.VHoofdID, .timeline-node.MHoofdID { background-color: #c8e6c9; } /* groen ouders */
-.timeline-node.KindID, .timeline-node.HKindID, .timeline-node.PHKindID { background-color: #90caf9; } /* lichtblauw kinderen */
-.timeline-node.PKindID { background-color: #64b5f6; } /* donkerblauw partner kind */
-.timeline-node.BZID { background-color: #ffab91; } /* oranje broer/zus */
-.timeline-node.PBZID { background-color: #ff8a65; } /* donkeroranje partner broer/zus */
+.timeline-node.HoofdID { background-color: #ffd700; }   /* Geel voor hoofdID */
+.timeline-node.PHoofdID { background-color: #ffecb3; }  /* Lichtgeel partner hoofd */
+.timeline-node.VHoofdID, .timeline-node.MHoofdID { background-color: #c8e6c9; } /* Groen ouders */
+.timeline-node.KindID, .timeline-node.HKindID, .timeline-node.PHKindID { background-color: #90caf9; } /* Lichtblauw kinderen */
+.timeline-node.PKindID { background-color: #64b5f6; } /* Donkerblauw partner kind */
+.timeline-node.BZID { background-color: #ffab91; } /* Oranje broer/zus */
+.timeline-node.PBZID { background-color: #ff8a65; } /* Donkeroranje partner broer/zus */
 
 .timeline-node:hover {
-    background-color: #e0f0ff;  /* hover highlight */
-    border-color: #004080;       /* donkerblauwe rand bij hover */
+    background-color: #e0f0ff;  /* Hover highlight */
+    border-color: #004080;       /* Donkerblauwe rand bij hover */
 }
 
 /* =======================
@@ -61,22 +64,22 @@
    ======================= */
 .timeline-node .id {
     font-weight: bold;            /* ID vetgedrukt */
-    margin-right: 6px;            /* ruimte rechts van ID */
+    margin-right: 6px;            /* Ruimte rechts van ID */
 }
 
 .timeline-node .name {
-    font-weight: 600;             /* iets zwaardere naam */
-    margin-right: 6px;            /* ruimte rechts van naam */
+    font-weight: 600;             /* Iets zwaardere naam */
+    margin-right: 6px;            /* Ruimte rechts van naam */
 }
 
 .timeline-node .birth {
-    font-style: normal;           /* normale stijl */
-    color: #333;                  /* donkergrijs */
+    font-style: normal;           /* Normale stijl voor geboortedatum */
+    color: #333;                  /* Donkergrijs */
 }
 
 .timeline-node .death {
-    font-style: italic;           /* cursief voor overlijdensdatum */
-    color: #888;                  /* lichtgrijs */
-    margin-left: 4px;             /* kleine marge links van geboortedatum */
-    font-size: 12px;              /* iets kleiner dan hoofdtekst */
+    font-style: italic;           /* Cursief voor overlijdensdatum */
+    color: #888;                  /* Lichtgrijs */
+    margin-left: 4px;             /* Kleine marge links van geboortedatum */
+    font-size: 12px;              /* Iets kleiner dan hoofdtekst */
 }
