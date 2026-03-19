@@ -22,22 +22,22 @@
     margin-bottom: 10px;         /* ruimte tussen levels */
 }
 
-/* =======================
-   NODES
-   ======================= */
 .timeline-node {
-    display: block;              /* verticale layout: elke node op aparte regel */
+    display: block;              /* nodes op aparte regel */
     padding: 8px 12px;           /* interne marge */
-    border: 1px solid #888;      /* grijze rand rondom node */
-    border-radius: 20px;          /* afgeronde hoeken voor visueel gemak */
-    background-color: #f0f0f0;   /* lichtgrijze achtergrond */
-    text-align: left;             /* tekst links uitlijnen voor datum+overlijden */
+    border: 1px solid #888;      /* rand rondom node */
+    border-radius: 20px;          /* afgeronde hoeken */
+    background-color: #f0f0f0;   /* achtergrondkleur */
+    text-align: left;             /* tekst links uitlijnen */
     cursor: pointer;             /* pointer bij hover */
-    font-size: 13px;             /* lettergrootte */
+    font-size: 13px;             /* tekstgrootte */
     width: auto;                 /* breedte afhankelijk van inhoud */
-    min-width: 0;                /* geen minimum breedte */
-    max-width: none;             /* geen maximum breedte */
-    margin: 4px 0;               /* verticale ruimte tussen nodes */
+    min-width: 0;                
+    max-width: none;             
+    margin: 4px 0;               
+    display: flex;               /* maak node flex container */
+    flex-direction: column;       /* kinderen onder elkaar: ID, naam, datum */
+    gap: 2px;                     /* kleine ruimte tussen ID/naam/datum */
 }
 
 /* =======================
