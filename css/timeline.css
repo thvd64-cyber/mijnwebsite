@@ -1,0 +1,112 @@
+/* ======================= css/timeline.css v0.0.1 ======================= */
+/* ======================= TIMELINE CONTAINER ======================= */
+#timelineContainer {
+    display: flex;                 /* Gebruik flexbox layout voor container */
+    flex-direction: column;        /* Alle levels onder elkaar */
+    align-items: flex-start;       /* Links uitlijnen (geen stretch over volle breedte) */
+    gap: 12px;                     /* Ruimte tussen de verschillende levels */
+    padding: 10px;                 /* Binnenruimte rondom timeline */
+}
+
+/* ======================= TIMELINE LEVEL ======================= */
+.timeline-level {
+    display: flex;                 /* Flexbox voor nodes binnen een level */
+    flex-direction: column;        /* Nodes onder elkaar (verticale stack) */
+    align-items: flex-start;       /* Links uitlijnen */
+    gap: 6px;                      /* Ruimte tussen nodes */
+    width: 100%;                   /* Level neemt volledige breedte container */
+}
+
+/* ======================= TIMELINE NODE BASIS ======================= */
+.timeline-node {
+    display: block;                /* Forceert elke node op een eigen regel */
+    width: fit-content;            /* Breedte = inhoud (geen vaste breedte) */
+    padding: 8px 12px;             /* Binnenruimte */
+    border: 1px solid #888;        /* Standaard rand */
+    border-radius: 6px;            /* Afgeronde hoeken */
+    background-color: #f0f0f0;     /* Default achtergrond */
+    text-align: center;            /* Tekst gecentreerd */
+    cursor: pointer;               /* Klikbare cursor */
+    font-size: 13px;               /* Tekstgrootte */
+    transition: all 0.2s ease;     /* Zachte animatie bij hover */
+}
+
+/* ======================= HOVER EFFECT ======================= */
+.timeline-node:hover {
+    transform: scale(1.03);        /* Kleine vergroting bij hover */
+    border-color: #333;            /* Donkere rand bij hover */
+}
+
+/* ======================= NODE CONTENT ======================= */
+.timeline-node .id {
+    display: block;                /* ID op eigen regel */
+    font-size: 10px;               /* Kleinere tekst */
+    color: #666;                   /* Grijze kleur */
+}
+
+.timeline-node .name {
+    display: block;                /* Naam op eigen regel */
+    font-weight: bold;             /* Vetgedrukt */
+}
+
+.timeline-node .birth {
+    display: block;                /* Geboortedatum op eigen regel */
+    font-size: 11px;               /* Iets kleiner */
+    color: #444;                   /* Donkergrijs */
+}
+
+/* ======================= RELATIE KLEUREN ======================= */
+
+/* Hoofd persoon */
+.HoofdID {
+    background-color: #d0e6ff;     /* Lichtblauw */
+}
+
+/* Partner van hoofd */
+.PHoofdID {
+    background-color: #e6d0ff;     /* Lichtpaars */
+}
+
+/* Vader */
+.VHoofdID {
+    background-color: #d0ffd6;     /* Lichtgroen */
+}
+
+/* Moeder */
+.MHoofdID {
+    background-color: #ffd0d0;     /* Lichtrood */
+}
+
+/* Kind */
+.KindID,
+.HKindID,
+.PHKindID {
+    background-color: #fff0c2;     /* Lichtgeel */
+}
+
+/* Partner van kind */
+.PKindID {
+    background-color: #ffe4b5;     /* Zacht oranje */
+}
+
+/* Broer / zus */
+.BZID {
+    background-color: #d0f0ff;     /* Licht cyaan */
+}
+
+/* Partner van broer/zus */
+.PBZID {
+    background-color: #f5d0ff;     /* Licht roze/paars */
+}
+
+/* ======================= RESPONSIVE (OPTIONEEL) ======================= */
+@media (max-width: 600px) {
+    #timelineContainer {
+        padding: 6px;              /* Minder padding op kleine schermen */
+    }
+
+    .timeline-node {
+        font-size: 12px;           /* Kleinere tekst voor mobiel */
+        padding: 6px 10px;         /* Compactere nodes */
+    }
+}
