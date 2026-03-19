@@ -1,6 +1,6 @@
-/* ======================= css/style.css v1.0.5 ======================= */
-/* TREE VIEW STYLING toegevoeg table aanpassing plain en toegevoegd storage om-en-om grijs */
-/* TIMELINE VIEW STYLING toegevoegd  */
+/* ======================= css/style.css v1.0.6 ======================= */
+/* Algemene styling (zonder timeline — die zit nu in timeline.css) */
+
 /* ======================= BASIS LAYOUT ======================= */
 body {
     font-family: Arial, sans-serif; /* basis font voor de pagina */
@@ -9,376 +9,286 @@ body {
     background-color: #fdfdfd; /* lichte achtergrondkleur */
 }
 
-/* Standaard tekstkleur alleen voor content */
 main {
     padding: 2rem; /* interne marge rondom content */
     color: #333; /* standaard tekstkleur */
 }
 
-
-/* =======================
-   HEADER / NAVBAR
-   ======================= */
+/* ======================= HEADER / NAVBAR ======================= */
 header {
-    background-color: #004080; /* donkerblauwe achtergrond voor header */
+    background-color: #004080; /* donkerblauwe achtergrond */
     color: white; /* tekstkleur wit */
     padding: 1rem; /* interne marge */
-    display: flex; /* flex layout voor horizontale uitlijning */
+    display: flex; /* flex layout */
     justify-content: space-between; /* ruimte tussen items */
     align-items: center; /* verticale uitlijning */
 }
 
-/* Bescherm navbar titel expliciet */
 header h1,
 header .brand,
 header .logo {
-    color: white; /* forceer witte kleur voor logo/titel */
-    margin: 0; /* verwijder standaard marge */
+    color: white; /* forceer wit */
+    margin: 0; /* verwijder marge */
 }
 
-/* =======================
-   NAVIGATIE MENU
-   ======================= */
+/* ======================= NAVIGATIE ======================= */
 nav ul.menu {
-    list-style: none; /* verwijder bullets */
-    margin: 0; /* geen marge */
-    padding: 0; /* geen padding */
-    display: flex; /* horizontale layout */
+    list-style: none; /* geen bullets */
+    margin: 0;
+    padding: 0;
+    display: flex; /* horizontaal */
     gap: 1rem; /* ruimte tussen items */
 }
 
 nav ul.menu > li {
-    position: relative; /* nodig voor submenu positioning */
+    position: relative; /* nodig voor submenu */
 }
 
 nav ul.menu a {
-    color: white; /* linkkleur wit */
-    text-decoration: none; /* geen onderlijning */
-    padding: 0.5rem 1rem; /* interne marge */
-    display: block; /* blokniveau voor klikbare ruimte */
+    color: white; /* witte links */
+    text-decoration: none; /* geen underline */
+    padding: 0.5rem 1rem; /* klikruimte */
+    display: block; /* blokniveau */
 }
 
 nav li.dropdown > a {
-    cursor: pointer; /* toon pointer voor dropdowns */
+    cursor: pointer; /* visuele hint */
 }
 
-/* =======================
-   SUBMENU
-   ======================= */
+/* ======================= SUBMENU ======================= */
 nav ul.submenu {
     display: none; /* standaard verborgen */
-    position: absolute; /* positionering t.o.v. parent */
-    top: 100%; /* direct onder parent item */
-    left: 0; /* uitlijning links */
-    background-color: #004080; /* donkerblauw achtergrond */
-    list-style: none; /* geen bullets */
-    padding: 0; /* geen padding */
-    margin: 0; /* geen marge */
-    border-radius: 4px; /* afgeronde hoeken */
-    min-width: 150px; /* minimale breedte */
-    z-index: 1000; /* boven andere elementen */
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #004080;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-radius: 4px;
+    min-width: 150px;
+    z-index: 1000;
 }
 
 nav ul.submenu li a {
-    padding: 0.5rem 1rem; /* interne marge submenu links */
+    padding: 0.5rem 1rem;
 }
 
 nav ul.menu li:hover > .submenu {
-    display: block; /* toon submenu bij hover */
+    display: block; /* zichtbaar bij hover */
 }
 
-
-/* =======================
-   BUTTONS
-   ======================= */
+/* ======================= BUTTONS ======================= */
 .btn {
-    display: inline-block; /* inline blok voor padding */
-    padding: 0.5rem 1rem; /* interne marge */
-    background-color: #0080ff; /* blauwe knopkleur */
-    color: white; /* witte tekst */
-    text-decoration: none; /* geen onderlijning */
-    border-radius: 4px; /* afgeronde hoeken */
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background-color: #0080ff;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
 }
 
-
-/* =======================
-   TOPBAR
-   ======================= */
+/* ======================= TOPBAR ======================= */
 .topbar {
-    background-color: #f0f0f0; /* lichte achtergrond */
-    height: 35px; /* vaste hoogte */
-    display: flex; /* flex layout */
-    align-items: center; /* verticale uitlijning */
-    font-size: 14px; /* lettergrootte */
+    background-color: #f0f0f0;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
 }
 
 .topbar-content {
-    width: 95%; /* breedte van content */
-    margin: 0 auto; /* centreren horizontaal */
-    display: flex; /* horizontale layout */
-    justify-content: space-between; /* ruimte tussen items */
+    width: 95%;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
 }
 
 .top-left a,
 .top-right a {
-    text-decoration: none; /* geen onderlijning */
-    color: #333; /* donkergrijze kleur */
-    margin-left: 10px; /* afstand tussen links */
-    font-weight: 500; /* medium gewicht */
+    text-decoration: none;
+    color: #333;
+    margin-left: 10px;
+    font-weight: 500;
 }
 
 .top-left a:hover,
 .top-right a:hover {
-    text-decoration: underline; /* underline bij hover */
+    text-decoration: underline;
 }
 
 .topbar a.active {
-    font-weight: 700; /* vet voor actieve link */
-    text-decoration: underline; /* underline */
-    color: #004080; /* donkerblauw */
+    font-weight: 700;
+    text-decoration: underline;
+    color: #004080;
 }
 
-/* =======================
-   TABLE STYLING
-   ======================= */
+/* ======================= TABLE ======================= */
 table {
-    width: 100%; /* volledige breedte */
-    border-collapse: collapse; /* samensmelten borders */
-    margin-top: 1.5rem; /* marge boven tabel */
-    background-color: #ffffff; /* standaard wit */
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5rem;
+    background-color: #ffffff;
 }
 
 table th {
-    background-color: #004080; /* donkerblauw header */
-    color: white; /* witte tekst */
-    font-weight: 600; /* semi-bold */
+    background-color: #004080;
+    color: white;
+    font-weight: 600;
 }
 
 table th,
 table td {
-    border: 1px solid #d9d9d9; /* lichtgrijze scheiding */
-    padding: 0.6rem 0.8rem; /* interne marge */
-    text-align: left; /* links uitlijnen */
-    vertical-align: top; /* bovenaan uitlijnen */
-    font-size: 14px; /* lettergrootte */
+    border: 1px solid #d9d9d9;
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    vertical-align: top;
+    font-size: 14px;
 }
 
 table tr:hover {
-    background-color: #eef4fb; /* lichtblauw bij hover */
+    background-color: #eef4fb;
 }
 
-/* =======================
-   STORAGE TABLE OMWISSENDE RIJEN
-   ======================= */
+/* ======================= STORAGE TABLE ======================= */
 #storageTable tr:nth-child(even) {
-    background-color: #f7f9fc; /* lichtgrijze achtergrond voor even rijen */
+    background-color: #f7f9fc;
 }
 
 #storageTable tr:nth-child(odd) {
-    background-color: #ffffff; /* witte achtergrond voor oneven rijen */
+    background-color: #ffffff;
 }
 
-/* =======================
-   SELECTED ROW
-   ======================= */
+/* ======================= SELECTED ROW ======================= */
 table tr.selected {
-    background-color: #dbeeff; /* selectie highlight */
+    background-color: #dbeeff;
 }
 
-
-/* =======================
-   MODAL WINDOW
-   ======================= */
+/* ======================= MODAL ======================= */
 .modal {
-    position: fixed; /* vaste positionering */
-    top: 8%; /* 8% van boven */
-    left: 50%; /* horizontaal midden */
-    transform: translateX(-50%); /* centreren */
-    width: 85%; /* breedte */
-    max-width: 1000px; /* max breedte */
-    max-height: 85vh; /* max hoogte viewport */
-    overflow-y: auto; /* scroll bij overflow */
-    background: #ffffff; /* witte achtergrond */
-    border: 2px solid #004080; /* blauwe rand */
-    border-radius: 6px; /* afgeronde hoeken */
-    padding: 1.5rem; /* interne marge */
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25); /* schaduw */
-    z-index: 9999; /* boven andere elementen */
+    position: fixed;
+    top: 8%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 85%;
+    max-width: 1000px;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: #ffffff;
+    border: 2px solid #004080;
+    border-radius: 6px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    z-index: 9999;
 }
 
 .modal-content h2 {
-    margin-top: 0; /* geen marge boven */
-    color: #004080; /* donkerblauw */
+    margin-top: 0;
+    color: #004080;
 }
 
 .hidden {
-    display: none !important; /* forceer verborgen */
+    display: none !important;
 }
 
 .modal pre {
-    background: #f4f6f9; /* lichte achtergrond */
-    padding: 1rem; /* interne marge */
-    border-radius: 4px; /* afgeronde hoeken */
-    font-size: 13px; /* compacte tekst */
-    overflow-x: auto; /* horizontaal scrollen indien nodig */
+    background: #f4f6f9;
+    padding: 1rem;
+    border-radius: 4px;
+    font-size: 13px;
+    overflow-x: auto;
 }
 
-
-/* =======================
-   ADMIN ACTION BUTTONS
-   ======================= */
+/* ======================= BUTTONS (ADMIN) ======================= */
 button {
-    cursor: pointer; /* pointer cursor */
-    font-family: inherit; /* erven font */
-    border: none; /* geen standaard border */
-    border-radius: 4px; /* afgeronde hoeken */
-    padding: 0.5rem 1rem; /* interne marge */
-    font-size: 14px; /* lettergrootte */
-    transition: background-color 0.2s ease, transform 0.05s ease; /* animatie bij hover/active */
+    cursor: pointer;
+    font-family: inherit;
+    border: none;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    font-size: 14px;
+    transition: background-color 0.2s ease, transform 0.05s ease;
 }
 
 button:hover {
-    opacity: 0.9; /* lichte transparantie bij hover */
+    opacity: 0.9;
 }
 
 button:active {
-    transform: scale(0.98); /* klein effect bij klikken */
+    transform: scale(0.98);
 }
 
 button.danger {
-    background-color: #b30000; /* rode knop */
-    color: white; /* witte tekst */
+    background-color: #b30000;
+    color: white;
 }
 
 button.danger:hover {
-    background-color: #990000; /* donkerder rood bij hover */
+    background-color: #990000;
 }
 
-
-/* =======================
-   STORAGE SUMMARY BLOCK
-   ======================= */
+/* ======================= STORAGE SUMMARY ======================= */
 #storageSummary {
-    margin-top: 1rem; /* marge boven block */
-    padding: 0.8rem 1rem; /* interne marge */
-    background-color: #eef4fb; /* lichtblauwe achtergrond */
-    border-left: 4px solid #004080; /* blauwe linker rand */
-    font-size: 14px; /* lettergrootte */
+    margin-top: 1rem;
+    padding: 0.8rem 1rem;
+    background-color: #eef4fb;
+    border-left: 4px solid #004080;
+    font-size: 14px;
 }
 
-/* =======================
-   RESPONSIVE IMPROVEMENT
-   ======================= */
+/* ======================= RESPONSIVE ======================= */
 @media (max-width: 768px) {
     nav ul.menu {
-        flex-direction: column; /* verticale layout */
-        gap: 0.5rem; /* kleinere spacing */
+        flex-direction: column;
+        gap: 0.5rem;
     }
 
     table th,
     table td {
-        font-size: 13px; /* kleinere letters */
+        font-size: 13px;
     }
 
     .modal {
-        width: 95%; /* bredere modal voor small screens */
+        width: 95%;
     }
 }
 
-/* =======================
-   TREE VIEW STYLING
-   ======================= */
+/* ======================= TREE VIEW ======================= */
 #treeContainer { 
-    margin: 20px 0; /* ruimte boven en onder de boom */
-    padding: 10px; /* interne padding voor visuele luchtigheid */
-    border: 1px solid #ccc; /* lichte rand rondom de boom */
-    border-radius: 6px; /* afgeronde hoeken voor zachtere look */
-    background-color: #fdfdfd; /* lichte achtergrond zodat nodes opvallen */
-    text-align: center; /* centraallijn voor ouders en kinderen */
+    margin: 20px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fdfdfd;
+    text-align: center;
 }
 
-.tree-parents, .tree-children { 
-    text-align: center; /* horizontaal gecentreerde nodes binnen ouder/kind containers */
-    margin: 10px 0; /* verticale ruimte tussen rijen */
+.tree-parents, 
+.tree-children { 
+    text-align: center;
+    margin: 10px 0;
 }
 
 .tree-node { 
-    display: inline-block; /* nodes naast elkaar plaatsen */
-    padding: 6px 10px; /* interne padding voor leesbaarheid */
-    margin: 6px; /* ruimte tussen nodes */
-    border: 1px solid #444; /* donkere rand rondom iedere node */
-    border-radius: 6px; /* afgeronde hoeken voor nodes */
-    background: #f5f5f5; /* lichte grijze achtergrondkleur voor nodes */
-    font-size: 13px; /* compacte maar leesbare tekst */
-    cursor: default; /* standaard cursor bij hover over node */
+    display: inline-block;
+    padding: 6px 10px;
+    margin: 6px;
+    border: 1px solid #444;
+    border-radius: 6px;
+    background: #f5f5f5;
+    font-size: 13px;
+    cursor: default;
 }
 
 .tree-node:hover { 
-    background-color: #e0f0ff; /* lichte hover highlight om focus te tonen */
-    border-color: #004080; /* donkerdere rand bij hover */
+    background-color: #e0f0ff;
+    border-color: #004080;
 }
 
 .tree-connector { 
-    display: block; /* maakt verticale of horizontale lijnen zichtbaar */
-    height: 1px; /* hoogte lijn voor horizontale connector */
-    border-top: 1px solid #ccc; /* lichte grijze lijn */
-    margin: 6px auto; /* centreren met marge boven en onder */
-    width: 50%; /* lijn half de breedte van container voor nette vertakking */
-}
-/* =======================
-   TIMELINE VIEW STYLING
-   ======================= */
-#timelineContainer {
-    margin: 20px 0;              /* ruimte boven en onder de timeline */
-    padding: 10px;               /* interne padding */
-    border: 1px solid #ccc;      /* lichte rand rondom timeline */
-    border-radius: 6px;          /* afgeronde hoeken */
-    background-color: #fdfdfd;   /* lichte achtergrond */
-}
-
-.timeline-level {
-    display: flex;               /* nodes horizontaal naast elkaar */
-    justify-content: center;     /* centreer nodes binnen level */
-    gap: 12px;                   /* ruimte tussen nodes */
-    margin-bottom: 16px;         /* verticale afstand tussen levels */
-}
-
-/* ======================= TIMELINE NODES BREEDTE ======================= */
-.timeline-node {
-    display: inline-block;       /* Zorg dat elke node naast elkaar staat maar zijn inhoud bepaalt de breedte */
-    padding: 8px 12px;           /* Interne marge: 8px boven/onder, 12px links/rechts */
-    border: 1px solid #888;      /* Grijze rand rondom node */
-    border-radius: 20px;          /* Afgeronde hoeken voor visueel gemak */
-    background-color: #f0f0f0;   /* Lichtgrijze achtergrond */
-    text-align: center;           /* Tekst in het midden van de node */
-    cursor: pointer;             /* Cursor verandert in pointer bij hover */
-    font-size: 13px;             /* Lettergrootte van de tekst */
-    width: auto;                 /* Breedte wordt automatisch aangepast aan inhoud */
-    min-width: 0;                /* Verwijder minimum breedte beperking */
-    max-width: none;             /* Geen maximale breedte, node groeit mee met inhoud */
-}
-
-.timeline-node.HoofdID { background-color: #ffd700; }   /* geel voor hoofdID */
-.timeline-node.PHoofdID { background-color: #ffecb3; }  /* lichtgeel voor partner hoofd */
-.timeline-node.VHoofdID, .timeline-node.MHoofdID { background-color: #c8e6c9; } /* groen voor ouders */
-.timeline-node.KindID, .timeline-node.HKindID, .timeline-node.PHKindID { background-color: #90caf9; } /* lichtblauw voor kinderen */
-.timeline-node.PKindID { background-color: #64b5f6; } /* donkerder blauw voor partner kind */
-.timeline-node.BZID { background-color: #ffab91; } /* oranje voor broer/zus */
-.timeline-node.PBZID { background-color: #ff8a65; } /* donkeroranje voor partner broer/zus */
-
-.timeline-node:hover {
-    background-color: #e0f0ff;  /* hover highlight */
-    border-color: #004080;       /* donkerblauwe rand bij hover */
-}
-
-/* ======================= TIMELINE VERTICAAL ======================= */
-.timeline-level {
-    display: flex;           /* flexbox voor horizontaal/verticaal gedrag */
-    flex-direction: column;  /* nodes onder elkaar */
-    align-items: flex-start; /* uitlijnen aan linkerkant */
-    margin-bottom: 10px;     /* ruimte tussen levels */
-}
-
-.timeline-node {
-    margin: 4px 0;           /* ruimte tussen nodes in dezelfde level */
+    display: block;
+    height: 1px;
+    border-top: 1px solid #ccc;
+    margin: 6px auto;
+    width: 50%;
 }
