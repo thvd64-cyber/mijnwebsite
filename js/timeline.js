@@ -1,6 +1,7 @@
-// ======================= js/timeline.js v2.0.3 =======================
+// ======================= js/timeline.js v2.0.4 =======================
 // Timeline rendering van personen met verticale hiërarchie
 // Elke persoon krijgt een aparte verticale box op timeline hoogte
+// Inclusief geboortedatum en overlijdensdatum
 
 (function(){
 'use strict'; // Strikte modus voorkomt stille fouten
@@ -39,7 +40,7 @@ function formatDate(d){
 }
 
 function parseBirthday(d){
-    if(!d) return new Date(0);                // Geen datum → startdatum
+    if(!d) return new Date(0);               
     d = d.trim();
     if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return new Date(d);           
     if(/^\d{2}[-/]\d{2}[-/]\d{4}$/.test(d)){                        
