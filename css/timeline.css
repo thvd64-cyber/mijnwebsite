@@ -29,9 +29,9 @@
     background-color: #f0f0f0;   /* lichtgrijze achtergrond */
     cursor: pointer;             /* cursor pointer bij hover */
     font-size: 13px;             /* tekstgrootte */
-    width: auto;                 /* breedte afhankelijk van inhoud */
-    min-width: 0;                /* minimale breedte 0 */
-    max-width: none;             /* geen maximum breedte */
+    width: max-content;          /* width past zich aan de inhoud aan */
+    min-width: 150px;            /* minimale breedte voor leesbaarheid */
+    max-width: 400px;            /* voorkom dat node te breed wordt */
     margin: 4px 0;               /* verticale marge tussen nodes */
 }
 
