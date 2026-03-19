@@ -1,4 +1,4 @@
-// ======================= js/timeline.js v2.0.2 =======================
+// ======================= js/timeline.js v2.0.3 =======================
 // Timeline rendering van personen met verticale hiërarchie
 // Elke persoon krijgt een aparte verticale box op timeline hoogte
 
@@ -8,8 +8,8 @@
 // =======================
 // DOM-elementen
 // =======================
-const timelineBox  = document.getElementById('timelineContainer'); // Container waarin de timeline nodes komen
-const searchInput  = document.getElementById('sandboxSearch');     // Live search input veld uit HTML
+const timelineBox  = document.getElementById('timelineContainer'); // Container voor timeline nodes
+const searchInput  = document.getElementById('sandboxSearch');     // Live search input veld
 
 // =======================
 // State
@@ -29,7 +29,7 @@ function formatDate(d){
     d = String(d).trim();
     let date =
         /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(d) :                                      // ISO YYYY-MM-DD
-        /^\d{2}[-/]\d{2}[-/]\d{4}$/.test(d) ? new Date(d.replace(/(\d{2})[-/](\d{2})[-/](\d{4})/,'$3-$2-$1')) : // DD-MM-YYYY of DD/MM/YYYY
+        /^\d{2}[-/]\d{2}[-/]\d{4}$/.test(d) ? new Date(d.replace(/(\d{2})[-/](\d{2})[-/](\d{4})/,'$3-$2-$1')) : // DD-MM-YYYY
         /^\d{4}-\d{2}$/.test(d) ? new Date(d+'-01') :                                       // YYYY-MM
         /^\d{4}$/.test(d) ? new Date(d+'-01-01') :                                           // YYYY
         new Date(d);                                                                        // fallback
@@ -39,12 +39,12 @@ function formatDate(d){
 }
 
 function parseBirthday(d){
-    if(!d) return new Date(0);               // Geen datum → 0 datum
+    if(!d) return new Date(0);               
     d = d.trim();
     if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return new Date(d);           
     if(/^\d{2}[-/]\d{2}[-/]\d{4}$/.test(d)){                        
         const parts = d.split(/[-/]/);
-        return new Date(parts[2], parts[1]-1, parts[0]);           // let op maand is 0-indexed
+        return new Date(parts[2], parts[1]-1, parts[0]);           // maand 0-indexed
     }
     if(/^\d{4}$/.test(d)) return new Date(d+'-01-01');             
     const fallback = new Date(d);                                   
@@ -52,30 +52,32 @@ function parseBirthday(d){
 }
 
 function findPerson(id){
-    return dataset.find(p => safe(p.ID) === safe(id)); // Zoek persoon in dataset op ID
+    return dataset.find(p => safe(p.ID) === safe(id)); // Zoek persoon op ID
 }
 
 // =======================
 // NODE CREATOR
 // =======================
 function createTimelineNode(p, rel){
-    const div = document.createElement('div');      // Maak DOM element
+    const div = document.createElement('div');      // Maak een DOM element
     div.className = 'timeline-node';               // Basis class voor styling
-    if(rel) div.classList.add(rel);                // Voeg relatie class toe (bv. HoofdID, VHoofdID)
+    if(rel) div.classList.add(rel);                // Voeg relatie-specifieke class toe
 
     const fullName = [safe(p.Roepnaam), safe(p.Prefix), safe(p.Achternaam)]
                      .filter(Boolean).join(' ').trim(); // Combineer naam onderdelen
 
     const birth = formatDate(p.Geboortedatum);     // Formatteer geboortedatum
+    const death = formatDate(p.Overlijdensdatum);  // Formatteer overlijdensdatum
 
     div.innerHTML = `
-        <span class="id">${safe(p.ID)}</span>
-        <span class="name">${fullName}</span>
-        <span class="birth">${birth}</span>
-    `; // Vul node inhoud
+        <span class="id">${safe(p.ID)}</span>                    <!-- Persoon ID -->
+        <span class="name">${fullName}</span>                     <!-- Volledige naam -->
+        <span class="birth">${birth}</span>                       <!-- Geboortedatum -->
+        ${death ? `<span class="death">- ${death}</span>` : ''}  <!-- Overlijdensdatum indien aanwezig -->
+    `;
 
     div.dataset.id = p.ID;                          // Bewaar ID als data attribuut
-    div.addEventListener('click', () => {           // Klik selecteert deze persoon
+    div.addEventListener('click', () => {           // Klik event voor selectie
         selectedHoofdId = safe(p.ID);
         renderTimeline();                            // Re-render timeline
     });
@@ -103,13 +105,16 @@ function buildTimeline(rootID){
     const dataRel = window.RelatieEngine.computeRelaties(dataset, rootID); // Bereken relaties
 
     // =======================
-    // HIËRARCHIE: ouders → hoofd → partner → kinderen → broer/zus
+    // HIËRARCHIE: ouders → hoofd → partner hoofd → kinderen → partner kind → broer/zus → partner broer/zus
     // =======================
     const hierarchy = [
-        { type: 'parents',   nodes: [] },           // Ouders
-        { type: 'hoofd',     nodes: [] },           // HoofdID + partner
-        { type: 'children',  nodes: [] },           // Kinderen + partner
-        { type: 'siblings',  nodes: [] }            // Broer/zus + partner
+        { type: 'ouders', nodes: [] },        // 0: VHoofdID + MHoofdID
+        { type: 'hoofd', nodes: [] },         // 1: HoofdID
+        { type: 'partnerHoofd', nodes: [] },  // 2: PHoofdID
+        { type: 'kinderen', nodes: [] },      // 3: KindID / HKindID
+        { type: 'partnerKind', nodes: [] },   // 4: partners van kinderen
+        { type: 'broerZus', nodes: [] },      // 5: BZID
+        { type: 'partnerBZ', nodes: [] }      // 6: PBZID
     ];
 
     // === Ouders ===
@@ -126,7 +131,7 @@ function buildTimeline(rootID){
     hierarchy[1].nodes.push(createTimelineNode(root,'HoofdID'));
     if(root.PartnerID){
         const p = findPerson(safe(root.PartnerID));
-        if(p) hierarchy[1].nodes.push(createTimelineNode(p,'PHoofdID'));
+        if(p) hierarchy[2].nodes.push(createTimelineNode(p,'PHoofdID'));
     }
 
     // === Kinderen + partner ===
@@ -134,10 +139,10 @@ function buildTimeline(rootID){
     children.sort((a,b) => parseBirthday(a.Geboortedatum)-parseBirthday(b.Geboortedatum));
 
     children.forEach(k=>{
-        hierarchy[2].nodes.push(createTimelineNode(k,k.Relatie));
+        hierarchy[3].nodes.push(createTimelineNode(k,k.Relatie));       // Kind
         if(k.PartnerID){
             const kp = findPerson(safe(k.PartnerID));
-            if(kp) hierarchy[2].nodes.push(createTimelineNode(kp,'PKindID'));
+            if(kp) hierarchy[4].nodes.push(createTimelineNode(kp,'PKindID')); // Partner kind
         }
     });
 
@@ -146,19 +151,18 @@ function buildTimeline(rootID){
     siblings.sort((a,b) => parseBirthday(a.Geboortedatum)-parseBirthday(b.Geboortedatum));
 
     siblings.forEach(s=>{
-        hierarchy[3].nodes.push(createTimelineNode(s,'BZID'));
+        hierarchy[5].nodes.push(createTimelineNode(s,'BZID'));          // Broer/zus
         if(s.PartnerID){
             const sp = findPerson(safe(s.PartnerID));
-            if(sp) hierarchy[3].nodes.push(createTimelineNode(sp,'PBZID'));
+            if(sp) hierarchy[6].nodes.push(createTimelineNode(sp,'PBZID')); // Partner broer/zus
         }
     });
 
     // =======================
     // RENDER HIËRARCHIE VERTICAAL
     // =======================
-    hierarchy.forEach((level, idx)=>{
+    hierarchy.forEach(level=>{
         if(level.nodes.length === 0) return;       // Skip lege levels
-
         level.nodes.forEach(node=>{
             timelineBox.appendChild(node);         // Voeg elke node direct onder elkaar
         });
@@ -171,10 +175,10 @@ function buildTimeline(rootID){
 searchInput.addEventListener('input', () => {
     liveSearch({
         searchInput,               // Input element
-        dataset,                   // Dataset waarin gezocht wordt
-        displayType: 'popup',      // Popup weergave van zoekresultaten
+        dataset,                   // Dataset
+        displayType: 'popup',      // Popup weergave
         renderCallback: (selected)=>{
-            selectedHoofdId = safe(selected.ID); // Update geselecteerde hoofdID
+            selectedHoofdId = safe(selected.ID); // Update geselecteerde persoon
             renderTimeline();                    // Her-render timeline
         }
     });
@@ -184,15 +188,15 @@ searchInput.addEventListener('input', () => {
 // INIT
 // =======================
 function renderTimeline(){
-    buildTimeline(selectedHoofdId); // Bouw timeline met geselecteerde persoon
+    buildTimeline(selectedHoofdId); // Bouw timeline
 }
 
 function refreshTimeline(){
     dataset = window.StamboomStorage.get()||[]; // Update dataset
     selectedHoofdId = null;                      // Reset selectie
-    renderTimeline();                             // Render timeline opnieuw
+    renderTimeline();                             // Render opnieuw
 }
 
-refreshTimeline(); // Init render bij laden pagina
+refreshTimeline(); // Init render bij pagina laden
 
 })();
