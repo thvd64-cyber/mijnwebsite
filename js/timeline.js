@@ -1,5 +1,5 @@
-/* ======================= js/timeline.js v2.0.7 ======================= */
-/* Timeline rendering met verticale levels + correcte hiërarchie, kinderen en broer/zus onder elkaar */
+/* ======================= js/timeline.js v2.0.8 ======================= */
+/* Timeline rendering met verticale levels + correcte hiërarchie, kinderen en broer/zus onder elkaar + pop-up sluiting */
 
 (function(){
 'use strict'; // Strikte modus voorkomt stille fouten
@@ -212,8 +212,19 @@ searchInput.addEventListener('input', () => {
         dataset,
         displayType: 'popup',
         renderCallback: (selected)=>{
-            selectedHoofdId = safe(selected.ID);
-            renderTimeline();
+            selectedHoofdId = safe(selected.ID);   // update geselecteerde persoon
+            renderTimeline();                       // render timeline
+
+            // =======================
+            // POP-UP SLUITEN
+            // =======================
+            if(typeof liveSearch.closePopup==='function'){
+                liveSearch.closePopup();           // gebruik interne close functie
+            } else {
+                // fallback: verwijder DOM popup zelf
+                const popup = document.querySelector('.live-search-popup');
+                if(popup) popup.remove();
+            }
         }
     });
 });
