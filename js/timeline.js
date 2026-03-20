@@ -156,57 +156,83 @@ function buildTimeline(rootID){
         { type:'broerZus', nodes:[] },
         { type:'partnerBZ', nodes:[] }
     ];
+// ======================= OUDERS  VaderID>VHoofdID & MoederID>MHoofdID=======================
+if(root.VaderID){                                              // Controleer of er een VaderID bestaat op de root persoon
+    const v = findPerson(safe(root.VaderID));                  // Zoek de vader op in dataset (safe = trim/validatie)
+    if(v) hierarchy[0].nodes.push(createTimelineNode(v,'VHoofdID')); // Voeg vader node toe aan level 0 (ouders)
+}
+if(root.MoederID){                                             // Controleer of er een MoederID bestaat
+    const m = findPerson(safe(root.MoederID));                 // Zoek de moeder op
+    if(m) hierarchy[0].nodes.push(createTimelineNode(m,'MHoofdID')); // Voeg moeder node toe aan level 0 (ouders)
+}
 
-    if(root.VaderID){
-        const v = findPerson(safe(root.VaderID));
-        if(v) hierarchy[0].nodes.push(createTimelineNode(v,'VHoofdID'));
-    }
-    if(root.MoederID){
-        const m = findPerson(safe(root.MoederID));
-        if(m) hierarchy[0].nodes.push(createTimelineNode(m,'MHoofdID'));
-    }
+// ======================= HOOFDPERSOON = HoofdID=======================
+hierarchy[1].nodes.push(createTimelineNode(root,'HoofdID'));   // Voeg de geselecteerde persoon toe aan level 1 (centrum)
 
-    hierarchy[1].nodes.push(createTimelineNode(root,'HoofdID'));     
-    if(root.PartnerID){
-        const p = findPerson(safe(root.PartnerID));
-        if(p) hierarchy[2].nodes.push(createTimelineNode(p,'PHoofdID'));
-    }
+    // ======================= PARTNER VAN HOOFD = PHoofdID =======================
+if(root.PartnerID){                                            // Controleer of de hoofdpersoon een partner heeft
+    const p = findPerson(safe(root.PartnerID));                // Zoek partner op in dataset
+    if(p) hierarchy[2].nodes.push(createTimelineNode(p,'PHoofdID')); // Voeg partner toe aan level 2
+}
 
-    let children = dataRel.filter(d => ['KindID','HKindID','PHKindID'].includes(d.Relatie));
-    children.sort((a,b) => parseBirthday(a.Geboortedatum)-parseBirthday(b.Geboortedatum));
+// ======================= KINDEREN = 'KindID','HKindID','PHKindID en Kind-Partner = PartnerID =======================
+// ======================= KINDEREN =======================
 
-    children.forEach(k=>{
-        const kidNode = createTimelineNode(k,k.Relatie);
-        kidNode.style.position='absolute';                         // Absolute position
-        kidNode.style.left = dateToX(k.Geboortedatum)+'%';          // Horizontaal uitlijnen op geboortedatum
-        hierarchy[3].nodes.push(kidNode);
+children.forEach(k=>{                                          // Loop door elk kind
 
-        if(k.PartnerID){
-            const kp = findPerson(safe(k.PartnerID));
-            const kpNode = createTimelineNode(kp,'partner');
-            kpNode.style.position='absolute';
-            kpNode.style.left = dateToX(k.Geboortedatum)+'%';       // Partner horizontaal gelijk aan kind
-            hierarchy[4].nodes.push(kpNode);
+    const kidNode = createTimelineNode(k,k.Relatie);           // Maak node voor kind
+    kidNode.style.position='absolute';                         // Absolute positioning
+    kidNode.style.left = dateToX(k.Geboortedatum)+'%';         // X-positie op timeline
+
+    hierarchy[3].nodes.push(kidNode);                          // Voeg toe aan level kinderen
+
+    if(k.PartnerID){                                           // Check of kind partner heeft
+        const kp = findPerson(safe(k.PartnerID));              // Zoek partner
+
+        if(kp){                                                // Veiligheidscheck
+            const kpNode = createTimelineNode(kp,'partner');   // Maak partner node
+            kpNode.style.position='absolute';                  // Absolute positionering
+            kpNode.style.left = dateToX(k.Geboortedatum)+'%';  // Zelfde X als kind
+
+            hierarchy[4].nodes.push(kpNode);                   // Voeg toe aan partner-kind level
         }
-    });
+    }
 
-    let siblings = dataRel.filter(d => d.Relatie==='BZID');
-    siblings.sort((a,b) => parseBirthday(a.Geboortedatum)-parseBirthday(b.Geboortedatum));
+}); // ✅ BELANGRIJK: children loop correct afgesloten
 
-    siblings.forEach(s=>{
-        const sNode = createTimelineNode(s,'BZID');
-        sNode.style.position='absolute';
-        sNode.style.left = dateToX(s.Geboortedatum)+'%';
-        hierarchy[5].nodes.push(sNode);
 
-        if(s.PartnerID){
-            const sp = findPerson(safe(s.PartnerID));
-            const spNode = createTimelineNode(sp,'PBZID');
-            spNode.style.position='absolute';
-            spNode.style.left = dateToX(s.Geboortedatum)+'%';
-            hierarchy[6].nodes.push(spNode);
+
+// ======================= BZ (BROER / ZUS RELATIES) =======================
+
+let bzRelaties = dataRel.filter(d =>                           // Filter alle relaties
+    d.Relatie === 'BZID'                                       // Alleen BZ relaties
+);
+
+bzRelaties.sort((a,b) =>                                       // Sorteer op geboortedatum
+    parseBirthday(a.Geboortedatum) - parseBirthday(b.Geboortedatum) // Oud → jong
+);
+
+bzRelaties.forEach(bz => {                                     // Loop door elke BZ persoon
+
+    const bzNode = createTimelineNode(bz,'BZID');              // Maak node
+    bzNode.style.position = 'absolute';                        // Absolute positioning
+    bzNode.style.left = dateToX(bz.Geboortedatum) + '%';       // X positie
+
+    hierarchy[5].nodes.push(bzNode);                           // Voeg toe aan BZ level
+
+    if(bz.PartnerID){                                          // Check partner
+        const partnerBZ = findPerson(safe(bz.PartnerID));      // Zoek partner
+
+        if(partnerBZ){                                         // Veiligheidscheck
+            const partnerNode = createTimelineNode(partnerBZ,'PBZID'); // Node partner
+            partnerNode.style.position = 'absolute';           // Absolute positioning
+            partnerNode.style.left = dateToX(bz.Geboortedatum) + '%'; // Zelfde X
+
+            hierarchy[6].nodes.push(partnerNode);              // Voeg toe aan partner BZ level
         }
-    });
+    }
+
+});
 
     // =======================
     // RENDER HIËRARCHIE VERTICAAL
