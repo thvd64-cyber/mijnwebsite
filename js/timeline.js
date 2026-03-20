@@ -1,4 +1,4 @@
-/* ======================= js/timeline.js v2.0.6 ======================= */
+/* ======================= js/timeline.js v2.0.6a ======================= */
 /* Timeline rendering met verticale levels + horizontale tijdlijn bovenaan + nodes uitgelijnd op geboortedatum */
 
 (function(){
@@ -190,23 +190,31 @@ function buildTimeline(rootID){
         }
     });
 
-    let siblings = dataRel.filter(d => d.Relatie==='BZID');
-    siblings.sort((a,b) => parseBirthday(a.Geboortedatum)-parseBirthday(b.Geboortedatum));
+    // =======================
+// BROER/ ZUS (BZ) + PARTNER BZ
+// =======================
+// Filter de dataRel voor alle personen die broer of zus zijn van HoofdID
+let broerZusList = dataRel.filter(d => d.Relatie === 'BZID');
 
-    siblings.forEach(s=>{
-        const sNode = createTimelineNode(s,'BZID');
-        sNode.style.position='absolute';
-        sNode.style.left = dateToX(s.Geboortedatum)+'%';
-        hierarchy[5].nodes.push(sNode);
+// Sorteer broer/zus op geboortedatum, van jong naar oud
+broerZusList.sort((a, b) => parseBirthday(a.Geboortedatum) - parseBirthday(b.Geboortedatum));
 
-        if(s.PartnerID){
-            const sp = findPerson(safe(s.PartnerID));
-            const spNode = createTimelineNode(sp,'PBZID');
-            spNode.style.position='absolute';
-            spNode.style.left = dateToX(s.Geboortedatum)+'%';
-            hierarchy[6].nodes.push(spNode);
-        }
-    });
+// Voeg elke broer/zus toe aan het juiste hiërarchie level
+broerZusList.forEach(bz => {
+    const bzNode = createTimelineNode(bz, 'BZID');          // Maak een timeline node voor BZ
+    bzNode.style.position = 'absolute';                     // Absolute position
+    bzNode.style.left = dateToX(bz.Geboortedatum) + '%';    // Horizontaal uitlijnen op geboortedatum
+    hierarchy[5].nodes.push(bzNode);                        // Voeg toe aan broerZus level
+
+    // Voeg partner van broer/zus toe als die bestaat
+    if (bz.PartnerID) {
+        const bzPartner = findPerson(safe(bz.PartnerID));
+        const bzPartnerNode = createTimelineNode(bzPartner, 'PBZID'); // Node voor partner BZ
+        bzPartnerNode.style.position = 'absolute';
+        bzPartnerNode.style.left = dateToX(bz.Geboortedatum) + '%';   // Horizontaal uitlijnen gelijk aan BZ
+        hierarchy[6].nodes.push(bzPartnerNode);                        // Voeg toe aan partnerBZ level
+    }
+});
 
     // =======================
     // RENDER HIËRARCHIE VERTICAAL
