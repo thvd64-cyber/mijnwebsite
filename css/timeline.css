@@ -1,5 +1,5 @@
-/* ======================= css/timeline.css v1.1.2 ======================= */
-/* Timeline styling voor verticale layout met horizontale node inhoud (ID | Naam | Birth | Death) */
+/* ======================= css/timeline.css v1.2.7 ======================= */
+/* Timeline styling voor verticale layout met correcte hiërarchie: ouders, hoofd, partner, kinderen, broer/zus + partners */
 
 /* =======================
    CONTAINER
@@ -10,9 +10,21 @@
     border: 1px solid #ccc;      /* lichte rand */
     border-radius: 6px;          /* afgeronde hoeken */
     background-color: #fdfdfd;   /* lichte achtergrondkleur */
-    display: flex;               /* flex container om nodes verticaal te stapelen */
+    display: flex;               /* flex container om levels verticaal te stapelen */
     flex-direction: column;      /* verticale stapeling van child nodes */
-    gap: 6px;                    /* ruimte tussen de verticale nodes */
+    gap: 12px;                   /* ruimte tussen de verticale levels */
+}
+
+/* =======================
+   HORIZONTALE LEVELS
+   ======================= */
+.timeline-level {
+    display: flex;               /* flex container voor nodes in één level */
+    flex-direction: row;         /* nodes naast elkaar horizontaal */
+    flex-wrap: wrap;             /* als te breed, ga naar nieuwe regel */
+    gap: 8px 12px;               /* verticale en horizontale ruimte tussen nodes */
+    margin-bottom: 12px;         /* ruimte tussen levels */
+    position: relative;          /* nodig als fallback positioning */
 }
 
 /* =======================
@@ -86,4 +98,5 @@
     display: flex;               /* flex container voor kind + partner naast elkaar */
     flex-direction: row;         /* horizontale richting */
     gap: 4px;                    /* kleine ruimte tussen kind en partner */
+    align-items: center;         /* verticaal gecentreerd */
 }
