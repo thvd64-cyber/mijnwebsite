@@ -1,6 +1,5 @@
-/* ======================= js/timeline.js v2.1.1 ======================= */
-/* Timeline rendering met horizontale tijdlijn (geboorte) + verticale hiërarchie
-   + automatische containerhoogte op basis van nodes */
+/* ======================= js/timeline.js v2.1.2 ======================= */
+/* Timeline rendering met absolute X/Y: verticale hiërarchie + horizontale geboortedatum */
 
 (function(){
 'use strict'; // Strikte modus voorkomt stille fouten
@@ -25,7 +24,7 @@ function safe(val){
 }
 
 function parseBirthday(d){
-    if(!d) return new Date(0);                
+    if(!d) return new Date(0);                // Geen datum? fallback
     d = d.trim();
     if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return new Date(d);           
     if(/^\d{2}[-/]\d{2}[-/]\d{4}$/.test(d)){                        
@@ -59,12 +58,12 @@ function findPerson(id){
 // NODE CREATOR
 // =======================
 function createTimelineNode(p, rel){
-    const div = document.createElement('div');      
-    div.className = 'timeline-node';               
-    if(rel) div.classList.add(rel);                
+    const div = document.createElement('div');      // DOM element voor persoon
+    div.className = 'timeline-node';               // Basis class
+    if(rel) div.classList.add(rel);                // Voeg relatie-specifieke class toe
 
     const fullName = [safe(p.Roepnaam), safe(p.Prefix), safe(p.Achternaam)]
-                     .filter(Boolean).join(' ').trim(); 
+                     .filter(Boolean).join(' ').trim(); // Volledige naam
 
     const birth = formatDate(p.Geboortedatum);     
     const death = formatDate(p.Overlijdensdatum);
@@ -77,7 +76,7 @@ function createTimelineNode(p, rel){
     `;
 
     div.dataset.id = p.ID;                           
-    div.dataset.geboorte = p.Geboortedatum;          
+    div.dataset.geboorte = p.Geboortedatum;          // Bewaar geboortedatum voor x positie
     div.addEventListener('click', () => {           
         selectedHoofdId = safe(p.ID);                
         renderTimeline();                            
@@ -90,7 +89,7 @@ function createTimelineNode(p, rel){
 // BUILD TIMELINE
 // =======================
 function buildTimeline(rootID){
-    timelineBox.innerHTML='';                       
+    timelineBox.innerHTML='';                        // Reset container
 
     if(!rootID){
         timelineBox.textContent='Selecteer een persoon';
@@ -103,7 +102,7 @@ function buildTimeline(rootID){
         return;
     }
 
-    const dataRel = window.RelatieEngine.computeRelaties(dataset, rootID); 
+    const dataRel = window.RelatieEngine.computeRelaties(dataset, rootID); // Relaties
 
     // =======================
     // TIMELINE START/EIND
@@ -140,110 +139,78 @@ function buildTimeline(rootID){
         { type:'partnerBZ', nodes:[], y:6 }
     ];
 
-    let maxBottom = 0; // Houd bij wat de grootste 'top + height' is
+    // Voeg nodes toe per type
+    function addNodesToLevel(list, levelIndex){
+        list.forEach((p, idx)=>{
+            const node = createTimelineNode(p, p.Relatie || '');
+            node.style.position='absolute';
+            node.style.left = dateToX(p.Geboortedatum)+'%';
+            node.style.top  = (hierarchy[levelIndex].y * levelHeight + idx*20)+'px'; 
+            hierarchy[levelIndex].nodes.push(node);
+        });
+    }
 
-    // Voeg ouders toe
+    // Ouders
+    let ouders = [];
     if(root.VaderID){
         const v = findPerson(safe(root.VaderID));
-        if(v){
-            const node = createTimelineNode(v,'VHoofdID');
-            node.style.position='absolute';
-            node.style.left = dateToX(v.Geboortedatum)+'%';
-            node.style.top  = (hierarchy[0].y * levelHeight)+'px';
-            hierarchy[0].nodes.push(node);
-            maxBottom = Math.max(maxBottom, hierarchy[0].y * levelHeight + node.offsetHeight);
-        }
+        if(v) ouders.push(v);
     }
     if(root.MoederID){
         const m = findPerson(safe(root.MoederID));
-        if(m){
-            const node = createTimelineNode(m,'MHoofdID');
-            node.style.position='absolute';
-            node.style.left = dateToX(m.Geboortedatum)+'%';
-            node.style.top  = (hierarchy[0].y * levelHeight + 30)+'px'; // extra spacing
-            hierarchy[0].nodes.push(node);
-            maxBottom = Math.max(maxBottom, hierarchy[0].y * levelHeight + 30 + node.offsetHeight);
-        }
+        if(m) ouders.push(m);
     }
+    addNodesToLevel(ouders,0);
 
-    // Voeg hoofd
-    const hoofdNode = createTimelineNode(root,'HoofdID');
-    hoofdNode.style.position='absolute';
-    hoofdNode.style.left = dateToX(root.Geboortedatum)+'%';
-    hoofdNode.style.top  = (hierarchy[1].y * levelHeight)+'px';
-    hierarchy[1].nodes.push(hoofdNode);
-    maxBottom = Math.max(maxBottom, hierarchy[1].y * levelHeight + hoofdNode.offsetHeight);
+    // Hoofd
+    addNodesToLevel([root],1);
 
     // Partner hoofd
     if(root.PartnerID){
         const p = findPerson(safe(root.PartnerID));
-        const node = createTimelineNode(p,'PHoofdID');
-        node.style.position='absolute';
-        node.style.left = dateToX(p.Geboortedatum)+'%';
-        node.style.top  = (hierarchy[2].y * levelHeight)+'px';
-        hierarchy[2].nodes.push(node);
-        maxBottom = Math.max(maxBottom, hierarchy[2].y * levelHeight + node.offsetHeight);
+        addNodesToLevel([p],2);
     }
 
     // Kinderen + partner kind
     let children = dataRel.filter(d => ['KindID','HKindID','PHKindID'].includes(d.Relatie));
     children.sort((a,b) => parseBirthday(a.Geboortedatum)-parseBirthday(b.Geboortedatum));
+    addNodesToLevel(children,3);
 
     children.forEach((k, idx)=>{
-        const kidNode = createTimelineNode(k,k.Relatie);
-        kidNode.style.position='absolute';
-        kidNode.style.left = dateToX(k.Geboortedatum)+'%';
-        kidNode.style.top  = (hierarchy[3].y * levelHeight + idx*30)+'px';
-        hierarchy[3].nodes.push(kidNode);
-        maxBottom = Math.max(maxBottom, hierarchy[3].y * levelHeight + idx*30 + kidNode.offsetHeight);
-
         if(k.PartnerID){
             const kp = findPerson(safe(k.PartnerID));
-            const kpNode = createTimelineNode(kp,'partner');
-            kpNode.style.position='absolute';
-            kpNode.style.left = dateToX(k.Geboortedatum)+'%';
-            kpNode.style.top  = (hierarchy[4].y * levelHeight + idx*30)+'px';
-            hierarchy[4].nodes.push(kpNode);
-            maxBottom = Math.max(maxBottom, hierarchy[4].y * levelHeight + idx*30 + kpNode.offsetHeight);
+            kp.Relatie = 'partner';
+            kp._idx = idx; // bewaar index om Y-spacing te behouden
+            addNodesToLevel([kp],4);
         }
     });
 
     // Broer/zus + partner
     let broerZusList = dataRel.filter(d => d.Relatie === 'BZID');
-    broerZusList.sort((a,b) => parseBirthday(a.Geboortedatum) - parseBirthday(b.Geboortedatum));
+    broerZusList.sort((a,b) => parseBirthday(a.Geboortedatum)-parseBirthday(b.Geboortedatum));
+    addNodesToLevel(broerZusList,5);
 
     broerZusList.forEach((bz, idx)=>{
-        const bzNode = createTimelineNode(bz, 'BZID');
-        bzNode.style.position='absolute';
-        bzNode.style.left = dateToX(bz.Geboortedatum)+'%';
-        bzNode.style.top  = (hierarchy[5].y * levelHeight + idx*30)+'px';
-        hierarchy[5].nodes.push(bzNode);
-        maxBottom = Math.max(maxBottom, hierarchy[5].y * levelHeight + idx*30 + bzNode.offsetHeight);
-
         if(bz.PartnerID){
             const bzPartner = findPerson(safe(bz.PartnerID));
-            const bzPartnerNode = createTimelineNode(bzPartner, 'PBZID');
-            bzPartnerNode.style.position='absolute';
-            bzPartnerNode.style.left = dateToX(bz.Geboortedatum)+'%';
-            bzPartnerNode.style.top  = (hierarchy[6].y * levelHeight + idx*30)+'px';
-            hierarchy[6].nodes.push(bzPartnerNode);
-            maxBottom = Math.max(maxBottom, hierarchy[6].y * levelHeight + idx*30 + bzPartnerNode.offsetHeight);
+            bzPartner.Relatie = 'PBZID';
+            bzPartner._idx = idx;
+            addNodesToLevel([bzPartner],6);
         }
     });
 
     // =======================
-    // RENDER NODES
+    // RENDER NODES + AUTOMATISCHE CONTAINERHOOGTE
     // =======================
+    let maxY = 0;
     hierarchy.forEach(level=>{
         level.nodes.forEach(node=>{
-            timelineBox.appendChild(node); // Voeg toe aan container
+            timelineBox.appendChild(node);
+            const nodeBottom = parseFloat(node.style.top) + node.offsetHeight;
+            if(nodeBottom > maxY) maxY = nodeBottom;
         });
     });
-
-    // =======================
-    // AUTOMATISCHE CONTAINERHOOGTE
-    // =======================
-    timelineBox.style.height = (maxBottom + 50)+'px'; // Voeg extra buffer toe
+    timelineBox.style.height = (maxY + 20) + 'px'; // 20px marge onderaan
 }
 
 // =======================
