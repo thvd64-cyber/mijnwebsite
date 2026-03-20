@@ -5,13 +5,14 @@
 #timelineContainer {
     position: relative;           /* Basis voor absolute posities van nodes */
     width: 100%;                  /* Container neemt volledige breedte */
-    min-height: 400px;            /* Genoeg ruimte voor alle verticale levels */
+    min-height: 600px;            /* Genoeg ruimte voor alle verticale levels */
     margin: 20px 0;               /* Ruimte boven en onder de timeline */
     padding: 10px;                /* Binnenruimte rondom nodes */
     border: 1px solid #ccc;       /* Lichte rand voor visuele afbakening */
     border-radius: 6px;           /* Afgeronde hoeken */
     background-color: #fdfdfd;    /* Lichte achtergrondkleur */
     display: block;               /* Geen flex, want nodes krijgen absolute x/y posities */
+    overflow: visible;     /* Zorg dat absolute children zichtbaar blijven */
 }
 
 /* ======================= TIMELINE YEAR MARKERS ======================= */
