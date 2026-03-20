@@ -1,19 +1,17 @@
-/* ======================= css/timeline.css v1.2.8 ======================= */
-/* Verbeterde timeline CSS: verticale hiërarchie + horizontale node levels + kleuren per relatie */
+/* ======================= css/timeline.css v1.3.0 ======================= */
+/* Verbeterde timeline CSS: absolute x/y posities, verticale hiërarchie + horizontale tijdlijn + kleuren per relatie */
 
 /* ======================= TIMELINE CONTAINER ======================= */
 #timelineContainer {
-    position: relative;           /* Basis voor absolute posities van nodes indien nodig */
+    position: relative;           /* Basis voor absolute posities van nodes */
     width: 100%;                  /* Container neemt volledige breedte */
-    min-height: 200px;            /* Zorgt dat er genoeg ruimte is voor alle levels */
+    min-height: 400px;            /* Genoeg ruimte voor alle verticale levels */
     margin: 20px 0;               /* Ruimte boven en onder de timeline */
     padding: 10px;                /* Binnenruimte rondom nodes */
     border: 1px solid #ccc;       /* Lichte rand voor visuele afbakening */
     border-radius: 6px;           /* Afgeronde hoeken */
     background-color: #fdfdfd;    /* Lichte achtergrondkleur */
-    display: flex;                /* Flexbox voor verticale stapeling */
-    flex-direction: column;       /* Levels stapelen van boven naar beneden */
-    gap: 12px;                    /* Ruimte tussen de verticale levels */
+    display: block;               /* Geen flex, want nodes krijgen absolute x/y posities */
 }
 
 /* ======================= TIMELINE YEAR MARKERS ======================= */
@@ -25,47 +23,37 @@
     color: #666;                  /* Grijze kleur voor contrast */
 }
 
-/* ======================= HORIZONTALE LEVELS ======================= */
-.timeline-level {
-    display: flex;                /* Nodes naast elkaar horizontaal */
-    flex-direction: row;          /* Zorg dat nodes in één lijn komen */
-    flex-wrap: wrap;              /* Als te breed, op nieuwe regel */
-    gap: 8px 12px;                /* Verticale en horizontale afstand tussen nodes */
-    margin-bottom: 12px;          /* Ruimte tussen levels */
-    position: relative;           /* Positionering fallback indien nodig */
-}
-
 /* ======================= BASIS NODE STYLING ======================= */
 .timeline-node {
+    position: absolute;           /* Absolute posities voor x/y coördinaten */
     display: flex;                /* Flex container voor ID, naam, geboortedatum, overlijdensdatum */
     flex-direction: row;          /* Horizontaal naast elkaar */
     align-items: center;          /* Verticaal gecentreerd */
-    gap: 6px;                     /* Ruimte tussen de elementen */
+    gap: 6px;                     /* Ruimte tussen elementen */
     padding: 8px 12px;            /* Binnenruimte van de node */
     border: 1px solid #888;       /* Grijze rand */
-    border-radius: 20px;          /* Afgeronde hoeken voor moderne look */
+    border-radius: 20px;          /* Afgeronde hoeken */
     background-color: #f0f0f0;    /* Lichte achtergrondkleur */
     cursor: pointer;              /* Handcursor bij hover */
     font-size: 13px;              /* Tekstgrootte */
     width: max-content;           /* Breedte past zich aan inhoud aan */
     min-width: 150px;             /* Zorg dat node leesbaar blijft */
     max-width: 400px;             /* Voorkom extreem brede nodes */
-    margin: 4px 0;                /* Verticale marge tussen nodes */
-    white-space: nowrap;           /* Zorg dat tekst niet wrapt naar nieuwe regel */
+    white-space: nowrap;          /* Tekst niet wrappen */
     z-index: 1;                   /* Basis z-index voor overlappende nodes */
 }
 
 /* ======================= NODE RELATIES EN KLEUREN ======================= */
-.timeline-node.HoofdID        { background-color: #ffd700; }   /* Geel voor hoofd */
-.timeline-node.PHoofdID       { background-color: #ffecb3; }   /* Lichtgeel voor partner hoofd */
+.timeline-node.HoofdID        { background-color: #ffd700; z-index:10; }   /* Geel voor hoofd */
+.timeline-node.PHoofdID       { background-color: #ffecb3; z-index:9; }    /* Lichtgeel voor partner hoofd */
 .timeline-node.VHoofdID, 
-.timeline-node.MHoofdID       { background-color: #c8e6c9; }   /* Groen voor ouders */
+.timeline-node.MHoofdID       { background-color: #c8e6c9; z-index:8; }    /* Groen voor ouders */
 .timeline-node.KindID, 
 .timeline-node.HKindID, 
-.timeline-node.PHKindID       { background-color: #90caf9; }   /* Lichtblauw voor kinderen */
-.timeline-node.partner         { background-color: #ccc; }      /* Grijs voor partner kind */
-.timeline-node.BZID            { background-color: #ffab91; }   /* Oranje voor broer/zus */
-.timeline-node.PBZID           { background-color: #ff8a65; }   /* Donkeroranje voor partner broer/zus */
+.timeline-node.PHKindID       { background-color: #90caf9; z-index:7; }    /* Lichtblauw voor kinderen */
+.timeline-node.partner         { background-color: #ccc; z-index:6; }       /* Grijs voor partner kind */
+.timeline-node.BZID            { background-color: #ffab91; z-index:5; }    /* Oranje voor broer/zus */
+.timeline-node.PBZID           { background-color: #ff8a65; z-index:4; }    /* Donkeroranje voor partner broer/zus */
 
 /* ======================= NODE HOVER EFFECT ======================= */
 .timeline-node:hover {
@@ -101,11 +89,12 @@
     align-items: center;         /* Verticaal gecentreerd */
 }
 
-/* ======================= HIËRARCHIE LEVELS VERTICAAL ======================= */
-#timelineContainer .level-ouders        { top: 0px; }       /* Ouders bovenaan */
-#timelineContainer .level-hoofd         { top: 40px; }      /* Hoofd persoon */
-#timelineContainer .level-partnerHoofd  { top: 80px; }      /* Partner van hoofd */
-#timelineContainer .level-kinderen      { top: 120px; }     /* Kinderen */
-#timelineContainer .level-partnerKind   { top: 160px; }     /* Partners van kinderen */
-#timelineContainer .level-broerZus      { top: 200px; }     /* Broer/zus */
-#timelineContainer .level-partnerBZ     { top: 240px; }     /* Partner van broer/zus */
+/* ======================= HIËRARCHIE LEVELS (OPTIONEEL LABEL) ======================= */
+/* Deze top-waarden kunnen als referentie dienen, JS bepaalt de exacte top per node */
+#timelineContainer .level-ouders        { top: 0px; }       
+#timelineContainer .level-hoofd         { top: 40px; }      
+#timelineContainer .level-partnerHoofd  { top: 80px; }      
+#timelineContainer .level-kinderen      { top: 120px; }     
+#timelineContainer .level-partnerKind   { top: 160px; }     
+#timelineContainer .level-broerZus      { top: 200px; }     
+#timelineContainer .level-partnerBZ     { top: 240px; }     
