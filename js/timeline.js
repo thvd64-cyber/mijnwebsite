@@ -1,4 +1,4 @@
-/* ======================= js/timeline.js v2.0.6a ======================= */
+/* ======================= js/timeline.js v2.0.6b ======================= */
 /* Timeline rendering met verticale levels + horizontale tijdlijn bovenaan + nodes uitgelijnd op geboortedatum */
 
 (function(){
@@ -103,46 +103,47 @@ function buildTimeline(rootID){
 
     const dataRel = window.RelatieEngine.computeRelaties(dataset, rootID); // Relaties
 
-    // =======================
-    // BEREKEN TIJDLIJN START/EIND
-    // =======================
-    const today = new Date();                            
-    const nextQuarterMonth = Math.ceil((today.getMonth()+1)/3)*3; // Volgend kwartaal maand
-    const endDate = new Date(today.getFullYear(), nextQuarterMonth, 1); 
-    const startDate = new Date(endDate.getFullYear()-200, 0, 1);   // Max 200 jaar terug
+   // =======================
+// BEREKEN TIJDLIJN START/EIND
+// =======================
+const today = new Date();                             // Huidige datum ophalen
+const nextQuarterMonth = Math.ceil((today.getMonth()+1)/3)*3; // Bereken de eerstvolgende kwartaal-maand
+const endDate = new Date(today.getFullYear(), nextQuarterMonth, 1); // Einddatum tijdlijn (eerste dag van volgende kwartaal)
+const startDate = new Date(endDate.getFullYear()-200, 0, 1);   // Startdatum tijdlijn (200 jaar terug vanaf einddatum)
 
-    // =======================
-    // HORIZONTALE TIMELINE MARKERS
-    // =======================
-    const timelineWrapper = document.createElement('div');  
-    timelineWrapper.className='timeline-year-wrapper'; 
-    timelineWrapper.style.display='flex';               
-    timelineWrapper.style.justifyContent='space-between'; 
-    timelineWrapper.style.marginBottom='10px';          
+// =======================
+// HORIZONTALE TIMELINE MARKERS
+// =======================
+const timelineWrapper = document.createElement('div');  // Maak wrapper div voor jaartallen
+timelineWrapper.className='timeline-year-wrapper';     // Voeg CSS class toe
+timelineWrapper.style.display='flex';                  // Flex layout voor horizontale spreiding
+timelineWrapper.style.justifyContent='space-between';  // Spreid markers gelijkmatig
+timelineWrapper.style.marginBottom='10px';             // Ruimte onder jaartallen
 
-    for(let y=startDate.getFullYear(); y<=endDate.getFullYear(); y+=20){ // Elke 20 jaar
-        const span = document.createElement('span');             
-        span.textContent = y;                                    
-        span.style.fontSize = '12px';                             
-        span.style.color = '#666';                                
-        timelineWrapper.appendChild(span);                         
-    }
+for(let y=startDate.getFullYear(); y<=endDate.getFullYear(); y+=20){ // Loop door elk 20e jaar
+    const span = document.createElement('span');       // Maak span voor jaar
+    span.textContent = y;                              // Voeg jaartal toe aan span
+    span.style.fontSize = '12px';                      // Font grootte instellen
+    span.style.color = '#666';                         // Kleur grijs
+    timelineWrapper.appendChild(span);                 // Voeg jaar toe aan wrapper
+}
 
-    timelineBox.appendChild(timelineWrapper);                    // Voeg tijdlijn toe boven nodes
+timelineBox.appendChild(timelineWrapper);             // Voeg wrapper boven timeline nodes toe
 
-    const timelineWidth = timelineBox.clientWidth;                // Breedte container
+const timelineWidth = timelineBox.clientWidth;        // Meet de breedte van de container voor positionering
 
-    // =======================
-    // FUNCTIE: GEEF HORIZONTALE POSITIE OP BASIS VAN GEBOORTE
-    // =======================
-    function dateToX(d){
-        const date = parseBirthday(d);                            // Converteer naar Date
-        const totalMs = endDate - startDate;                      // Totaal tijdlijn ms
-        const nodeMs  = date - startDate;                         // Node positie ms
-        let perc = (nodeMs / totalMs)*100;                        // Percentage
-        if(perc<0) perc=0; if(perc>100) perc=100;                 // Clamp 0-100%
-        return perc;
-    }
+// =======================
+// FUNCTIE: GEEF HORIZONTALE POSITIE OP BASIS VAN GEBOORTE
+// =======================
+function dateToX(d){
+    const date = parseBirthday(d);                     // Converteer input string naar Date object
+    const totalMs = endDate - startDate;              // Bereken totaal aantal milliseconden op tijdlijn
+    const nodeMs  = date - startDate;                 // Bereken milliseconden vanaf startdatum tot node
+    let perc = (nodeMs / totalMs)*100;                // Zet om naar percentage van de tijdlijn
+    if(perc<0) perc=0;                                // Clamp minimum 0%
+    if(perc>100) perc=100;                            // Clamp maximum 100%
+    return perc;                                      // Return horizontale positie in percentage
+}
 
     // =======================
     // HIËRARCHIE: ouders → hoofd → partner hoofd → kinderen → partner kind → broer/zus → partner broer/zus
