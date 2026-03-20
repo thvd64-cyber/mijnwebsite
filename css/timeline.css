@@ -1,5 +1,5 @@
-/* ======================= css/timeline.css v1.2.7 ======================= */
-/* Timeline styling voor verticale hiërarchie + horizontale node inhoud (ID | Naam | Birth | Death) */
+/* ======================= css/timeline.css v1.1.2 ======================= */
+/* Timeline styling voor verticale layout met horizontale node inhoud (ID | Naam | Birth | Death) */
 
 /* =======================
    CONTAINER
@@ -10,19 +10,9 @@
     border: 1px solid #ccc;      /* lichte rand */
     border-radius: 6px;          /* afgeronde hoeken */
     background-color: #fdfdfd;   /* lichte achtergrondkleur */
-    display: flex;               /* flex container om levels verticaal te stapelen */
-    flex-direction: column;      /* verticale stapeling van levels */
-    gap: 6px;                    /* ruimte tussen de verticale levels */
-}
-
-/* =======================
-   TIMELINE LEVEL (VERTICAAL)
-   ======================= */
-.timeline-level {
-    position: relative;          /* relative zodat child nodes absolute kunnen worden gepositioneerd */
-    height: 40px;                /* vaste hoogte per hiërarchie level */
-    width: 100%;                 /* volledige breedte container */
-    margin-bottom: 6px;          /* ruimte onder level */
+    display: flex;               /* flex container om nodes verticaal te stapelen */
+    flex-direction: column;      /* verticale stapeling van child nodes */
+    gap: 6px;                    /* ruimte tussen de verticale nodes */
 }
 
 /* =======================
@@ -39,11 +29,10 @@
     background-color: #f0f0f0;   /* lichtgrijze achtergrond */
     cursor: pointer;             /* cursor pointer bij hover */
     font-size: 13px;             /* tekstgrootte */
-    width: max-content;          /* breedte past zich aan de inhoud aan */
+    width: max-content;          /* width past zich aan de inhoud aan */
     min-width: 150px;            /* minimale breedte voor leesbaarheid */
     max-width: 400px;            /* voorkom dat node te breed wordt */
-    position: absolute;          /* absolute positie binnen level voor timeline uitlijning */
-    top: 0;                      /* bovenkant van level */
+    margin: 4px 0;               /* verticale marge tussen nodes */
 }
 
 /* =======================
@@ -97,15 +86,4 @@
     display: flex;               /* flex container voor kind + partner naast elkaar */
     flex-direction: row;         /* horizontale richting */
     gap: 4px;                    /* kleine ruimte tussen kind en partner */
-}
-
-/* =======================
-   HORIZONTALE JAARLIJN
-   ======================= */
-.timeline-year-wrapper {
-    display: flex;               /* flex voor horizontale jaarmarkers */
-    justify-content: space-between; /* gelijk verdeelde jaarmarkers */
-    margin-bottom: 10px;         /* marge onder tijdlijn */
-    font-size: 12px;             /* kleine tekst voor jaren */
-    color: #666;                 /* donkergrijze kleur voor tekst */
 }
