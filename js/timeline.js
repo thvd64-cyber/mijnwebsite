@@ -1,5 +1,5 @@
-/* ======================= js/timeline.js v2.0.8 ======================= */
-/* Timeline rendering met verticale levels + correcte hiërarchie, kinderen en broer/zus onder elkaar + pop-up sluiting */
+ /* ======================= js/timeline.js v2.0.9 ======================= */
+/* Timeline rendering met verticale hiërarchie, kinderen & broer/zus onder elkaar + correct afsluiten van pop-up */
 
 (function(){
 'use strict'; // Strikte modus voorkomt stille fouten
@@ -207,6 +207,12 @@ function buildTimeline(rootID){
 // LIVE SEARCH
 // =======================
 searchInput.addEventListener('input', () => {
+    // =======================
+    // VERWIJDER OUDERE POPUP OM STACKING TE VOORKOMEN
+    // =======================
+    const oldPopup = document.querySelector('.live-search-popup');
+    if(oldPopup) oldPopup.remove();
+
     liveSearch({
         searchInput,
         dataset,
@@ -216,15 +222,10 @@ searchInput.addEventListener('input', () => {
             renderTimeline();                       // render timeline
 
             // =======================
-            // POP-UP SLUITEN
+            // POP-UP SLUITEN BIJ SELECTIE
             // =======================
-            if(typeof liveSearch.closePopup==='function'){
-                liveSearch.closePopup();           // gebruik interne close functie
-            } else {
-                // fallback: verwijder DOM popup zelf
-                const popup = document.querySelector('.live-search-popup');
-                if(popup) popup.remove();
-            }
+            const popup = document.querySelector('.live-search-popup');
+            if(popup) popup.remove();               // verwijder popup DOM
         }
     });
 });
