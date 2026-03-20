@@ -1,5 +1,8 @@
-/* ======================= js/timeline.js v2.0.6 ======================= */
-/* Timeline rendering met verticale levels + horizontale tijdlijn bovenaan + nodes uitgelijnd op geboortedatum */
+/* ======================= js/timeline.js v2.0.8 ======================= */
+/* Timeline rendering met verticale levels + horizontale tijdlijn bovenaan
+   + correcte hiërarchie, live search pop-up sluit na selectie
+   + geen 'sibeling', inline uitleg bij elke regel
+*/
 
 (function(){
 'use strict'; // Strikte modus voorkomt stille fouten
@@ -8,7 +11,7 @@
 // DOM-elementen
 // =======================
 const timelineBox  = document.getElementById('timelineContainer'); // Container voor timeline
-const searchInput  = document.getElementById('sandboxSearch');     // Live search input
+const searchInput  = document.getElementById('sandboxSearch');     // Input veld voor live search
 
 // =======================
 // STATE
@@ -55,7 +58,7 @@ function findPerson(id){
 }
 
 // =======================
-// NODE CREATOR HORIZONTAAL
+// NODE CREATOR
 // =======================
 function createTimelineNode(p, rel){
     const div = document.createElement('div');      // DOM element voor persoon
@@ -85,7 +88,7 @@ function createTimelineNode(p, rel){
 }
 
 // =======================
-// TIMELINE RENDERER + HORIZONTALE POSITIES
+// TIMELINE BUILDER
 // =======================
 function buildTimeline(rootID){
     timelineBox.innerHTML='';                        // Reset container
@@ -101,19 +104,16 @@ function buildTimeline(rootID){
         return;
     }
 
-    const dataRel = window.RelatieEngine.computeRelaties(dataset, rootID); // Relaties
+    const dataRel = window.RelatieEngine.computeRelaties(dataset, rootID) || []; // Relaties
 
     // =======================
-    // BEREKEN TIJDLIJN START/EIND
+    // HORIZONTALE TIMELIJN BEREKENING
     // =======================
-    const today = new Date();                            
-    const nextQuarterMonth = Math.ceil((today.getMonth()+1)/3)*3; // Volgend kwartaal maand
+    const today = new Date();
+    const nextQuarterMonth = Math.ceil((today.getMonth()+1)/3)*3; // Volgend kwartaal
     const endDate = new Date(today.getFullYear(), nextQuarterMonth, 1); 
-    const startDate = new Date(endDate.getFullYear()-200, 0, 1);   // Max 200 jaar terug
+    const startDate = new Date(endDate.getFullYear()-200,0,1);      // Max 200 jaar terug
 
-    // =======================
-    // HORIZONTALE TIMELINE MARKERS
-    // =======================
     const timelineWrapper = document.createElement('div');  
     timelineWrapper.className='timeline-year-wrapper'; 
     timelineWrapper.style.display='flex';               
@@ -128,111 +128,105 @@ function buildTimeline(rootID){
         timelineWrapper.appendChild(span);                         
     }
 
-    timelineBox.appendChild(timelineWrapper);                    // Voeg tijdlijn toe boven nodes
+    timelineBox.appendChild(timelineWrapper);                    // Voeg jaar markers toe
 
     const timelineWidth = timelineBox.clientWidth;                // Breedte container
 
     // =======================
-    // FUNCTIE: GEEF HORIZONTALE POSITIE OP BASIS VAN GEBOORTE
+    // HORIZONTALE POSITIE OP BASIS VAN GEBOORTE
     // =======================
     function dateToX(d){
-        const date = parseBirthday(d);                            // Converteer naar Date
-        const totalMs = endDate - startDate;                      // Totaal tijdlijn ms
-        const nodeMs  = date - startDate;                         // Node positie ms
-        let perc = (nodeMs / totalMs)*100;                        // Percentage
-        if(perc<0) perc=0; if(perc>100) perc=100;                 // Clamp 0-100%
+        const date = parseBirthday(d);                            
+        const totalMs = endDate - startDate;                      
+        const nodeMs  = date - startDate;                         
+        let perc = (nodeMs / totalMs)*100;                        
+        if(perc<0) perc=0; if(perc>100) perc=100;                 
         return perc;
     }
 
     // =======================
-    // HIËRARCHIE: ouders → hoofd → partner hoofd → kinderen → partner kind → broer/zus → partner broer/zus
+    // HIËRARCHIE DEFINITIE
     // =======================
     const hierarchy = [
-        { type:'ouders', nodes:[] },
-        { type:'hoofd', nodes:[] },
-        { type:'partnerHoofd', nodes:[] },
-        { type:'kinderen', nodes:[] },
-        { type:'partnerKind', nodes:[] },
-        { type:'broerZus', nodes:[] },
-        { type:'partnerBZ', nodes:[] }
+        { type:'ouders', nodes:[] },        // level 0
+        { type:'hoofd', nodes:[] },         // level 1
+        { type:'partnerHoofd', nodes:[] },  // level 2
+        { type:'kinderen', nodes:[] },      // level 3
+        { type:'partnerKind', nodes:[] },   // level 4
+        { type:'broerZus', nodes:[] },      // level 5
+        { type:'partnerBZ', nodes:[] }      // level 6
     ];
-// ======================= OUDERS  VaderID>VHoofdID & MoederID>MHoofdID=======================
-if(root.VaderID){                                              // Controleer of er een VaderID bestaat op de root persoon
-    const v = findPerson(safe(root.VaderID));                  // Zoek de vader op in dataset (safe = trim/validatie)
-    if(v) hierarchy[0].nodes.push(createTimelineNode(v,'VHoofdID')); // Voeg vader node toe aan level 0 (ouders)
-}
-if(root.MoederID){                                             // Controleer of er een MoederID bestaat
-    const m = findPerson(safe(root.MoederID));                 // Zoek de moeder op
-    if(m) hierarchy[0].nodes.push(createTimelineNode(m,'MHoofdID')); // Voeg moeder node toe aan level 0 (ouders)
-}
 
-// ======================= HOOFDPERSOON = HoofdID=======================
-hierarchy[1].nodes.push(createTimelineNode(root,'HoofdID'));   // Voeg de geselecteerde persoon toe aan level 1 (centrum)
-
-    // ======================= PARTNER VAN HOOFD = PHoofdID =======================
-if(root.PartnerID){                                            // Controleer of de hoofdpersoon een partner heeft
-    const p = findPerson(safe(root.PartnerID));                // Zoek partner op in dataset
-    if(p) hierarchy[2].nodes.push(createTimelineNode(p,'PHoofdID')); // Voeg partner toe aan level 2
-}
-
-// ======================= KINDEREN = 'KindID','HKindID','PHKindID en Kind-Partner = PartnerID =======================
-// ======================= KINDEREN =======================
-
-children.forEach(k=>{                                          // Loop door elk kind
-
-    const kidNode = createTimelineNode(k,k.Relatie);           // Maak node voor kind
-    kidNode.style.position='absolute';                         // Absolute positioning
-    kidNode.style.left = dateToX(k.Geboortedatum)+'%';         // X-positie op timeline
-
-    hierarchy[3].nodes.push(kidNode);                          // Voeg toe aan level kinderen
-
-    if(k.PartnerID){                                           // Check of kind partner heeft
-        const kp = findPerson(safe(k.PartnerID));              // Zoek partner
-
-        if(kp){                                                // Veiligheidscheck
-            const kpNode = createTimelineNode(kp,'partner');   // Maak partner node
-            kpNode.style.position='absolute';                  // Absolute positionering
-            kpNode.style.left = dateToX(k.Geboortedatum)+'%';  // Zelfde X als kind
-
-            hierarchy[4].nodes.push(kpNode);                   // Voeg toe aan partner-kind level
-        }
+    // =======================
+    // OUDERS
+    // =======================
+    if(root.VaderID){                                             
+        const v = findPerson(safe(root.VaderID));                  
+        if(v) hierarchy[0].nodes.push(createTimelineNode(v,'VHoofdID'));
+    }
+    if(root.MoederID){                                             
+        const m = findPerson(safe(root.MoederID));                 
+        if(m) hierarchy[0].nodes.push(createTimelineNode(m,'MHoofdID'));
     }
 
-}); // ✅ BELANGRIJK: children loop correct afgesloten
+    // =======================
+    // HOOFD PERSOON
+    // =======================
+    hierarchy[1].nodes.push(createTimelineNode(root,'HoofdID'));  
 
-
-
-// ======================= BZ (BROER / ZUS RELATIES) =======================
-
-let bzRelaties = dataRel.filter(d =>                           // Filter alle relaties
-    d.Relatie === 'BZID'                                       // Alleen BZ relaties
-);
-
-bzRelaties.sort((a,b) =>                                       // Sorteer op geboortedatum
-    parseBirthday(a.Geboortedatum) - parseBirthday(b.Geboortedatum) // Oud → jong
-);
-
-bzRelaties.forEach(bz => {                                     // Loop door elke BZ persoon
-
-    const bzNode = createTimelineNode(bz,'BZID');              // Maak node
-    bzNode.style.position = 'absolute';                        // Absolute positioning
-    bzNode.style.left = dateToX(bz.Geboortedatum) + '%';       // X positie
-
-    hierarchy[5].nodes.push(bzNode);                           // Voeg toe aan BZ level
-
-    if(bz.PartnerID){                                          // Check partner
-        const partnerBZ = findPerson(safe(bz.PartnerID));      // Zoek partner
-
-        if(partnerBZ){                                         // Veiligheidscheck
-            const partnerNode = createTimelineNode(partnerBZ,'PBZID'); // Node partner
-            partnerNode.style.position = 'absolute';           // Absolute positioning
-            partnerNode.style.left = dateToX(bz.Geboortedatum) + '%'; // Zelfde X
-
-            hierarchy[6].nodes.push(partnerNode);              // Voeg toe aan partner BZ level
-        }
+    // =======================
+    // PARTNER HOOFD
+    // =======================
+    if(root.PartnerID){                                            
+        const p = findPerson(safe(root.PartnerID));                
+        if(p) hierarchy[2].nodes.push(createTimelineNode(p,'PHoofdID'));
     }
 
-});
+    // =======================
+    // KINDEREN + PARTNERS
+    // =======================
+    let children = dataRel.filter(d => ['KindID','HKindID','PHKindID'].includes(d.Relatie));
+    children.sort((a,b) => parseBirthday(a.Geboortedatum)-parseBirthday(b.Geboortedatum));
+
+    children.forEach(k=>{
+        const kidNode = createTimelineNode(k,k.Relatie);
+        kidNode.style.position='absolute';
+        kidNode.style.left = dateToX(k.Geboortedatum)+'%';
+        hierarchy[3].nodes.push(kidNode);
+
+        if(k.PartnerID){
+            const kp = findPerson(safe(k.PartnerID));
+            if(kp){
+                const kpNode = createTimelineNode(kp,'partner');
+                kpNode.style.position='absolute';
+                kpNode.style.left = dateToX(k.Geboortedatum)+'%';
+                hierarchy[4].nodes.push(kpNode);
+            }
+        }
+    });
+
+    // =======================
+    // BROER/ZUS + PARTNERS
+    // =======================
+    let bzRelaties = dataRel.filter(d => d.Relatie==='BZID'); // Alleen broer/zus
+    bzRelaties.sort((a,b) => parseBirthday(a.Geboortedatum)-parseBirthday(b.Geboortedatum));
+
+    bzRelaties.forEach(bz => {
+        const bzNode = createTimelineNode(bz,'BZID');
+        bzNode.style.position='absolute';
+        bzNode.style.left = dateToX(bz.Geboortedatum)+'%';
+        hierarchy[5].nodes.push(bzNode);
+
+        if(bz.PartnerID){
+            const partnerBZ = findPerson(safe(bz.PartnerID));
+            if(partnerBZ){
+                const partnerNode = createTimelineNode(partnerBZ,'PBZID');
+                partnerNode.style.position='absolute';
+                partnerNode.style.left = dateToX(bz.Geboortedatum)+'%';
+                hierarchy[6].nodes.push(partnerNode);
+            }
+        }
+    });
 
     // =======================
     // RENDER HIËRARCHIE VERTICAAL
@@ -254,8 +248,8 @@ searchInput.addEventListener('input', () => {
         dataset,
         displayType: 'popup',
         renderCallback: (selected)=>{
-            selectedHoofdId = safe(selected.ID);
-            renderTimeline();
+            selectedHoofdId = safe(selected.ID); // Update geselecteerde persoon
+            renderTimeline();                     // Re-render timeline
         }
     });
 });
