@@ -1,5 +1,5 @@
-/* ======================= js/timeline.js v2.2.1 ======================= */
-/* Timeline rendering met horizontale geboortedatum + verticale hiërarchie + automatische level backgrounds */
+/* ======================= js/timeline.js v2.2.0 ======================= */
+/* Timeline rendering met absolute X/Y: verticale hiërarchie + horizontale geboortedatum */
 
 (function(){
 'use strict'; // Strikte modus voorkomt stille fouten
@@ -26,14 +26,14 @@ function safe(val){
 function parseBirthday(d){
     if(!d) return new Date(0);                // Geen datum? fallback
     d = d.trim();
-    if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return new Date(d); // YYYY-MM-DD
-    if(/^\d{2}[-/]\d{2}[-/]\d{4}$/.test(d)){ // DD/MM/YYYY
+    if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return new Date(d);           
+    if(/^\d{2}[-/]\d{2}[-/]\d{4}$/.test(d)){                        
         const parts = d.split(/[-/]/);
-        return new Date(parts[2], parts[1]-1, parts[0]); // Maand 0-index
+        return new Date(parts[2], parts[1]-1, parts[0]);           
     }
-    if(/^\d{4}$/.test(d)) return new Date(d+'-01-01');   // Alleen jaar
-    const fallback = new Date(d);                         
-    return isNaN(fallback.getTime()) ? new Date(0) : fallback; 
+    if(/^\d{4}$/.test(d)) return new Date(d+'-01-01');             
+    const fallback = new Date(d);                                   
+    return isNaN(fallback.getTime()) ? new Date(0) : fallback;      
 }
 
 function formatDate(d){                              
@@ -59,7 +59,7 @@ function findPerson(id){
 // =======================
 function createTimelineNode(p, rel){
     const div = document.createElement('div');      // DOM element voor persoon
-    div.className = 'timeline-node';               // Basis CSS class
+    div.className = 'timeline-node';               // Basis class
     if(rel) div.classList.add(rel);                // Voeg relatie-specifieke class toe
 
     const fullName = [safe(p.Roepnaam), safe(p.Prefix), safe(p.Achternaam)]
@@ -75,8 +75,8 @@ function createTimelineNode(p, rel){
         ${death ? `<span class="death">- ${death}</span>` : ''}  
     `;
 
-    div.dataset.id = p.ID;                            // Bewaar ID
-    div.dataset.geboorte = p.Geboortedatum;          // Bewaar geboortedatum voor X positie
+    div.dataset.id = p.ID;                           
+    div.dataset.geboorte = p.Geboortedatum;          // Bewaar geboortedatum voor x positie
     div.addEventListener('click', () => {           
         selectedHoofdId = safe(p.ID);                
         renderTimeline();                            
@@ -102,7 +102,7 @@ function buildTimeline(rootID){
         return;
     }
 
-    const dataRel = window.RelatieEngine.computeRelaties(dataset, rootID); // Bereken relaties
+    const dataRel = window.RelatieEngine.computeRelaties(dataset, rootID); // Relaties
 
     // =======================
     // TIMELINE START/EIND
@@ -139,100 +139,78 @@ function buildTimeline(rootID){
         { type:'partnerBZ', nodes:[], y:6 }
     ];
 
-    // =======================
-    // LEVEL BACKGROUNDS
-    // =======================
-    hierarchy.forEach(level=>{
-        const bg = document.createElement('div');           // Maak achtergrond div
-        bg.className = 'level-' + level.type;               // Voeg juiste CSS class toe
-        bg.style.top = (level.y * levelHeight) + 'px';      // Positie op Y
-        timelineBox.appendChild(bg);                        // Voeg toe aan container
-    });
+    // Voeg nodes toe per type
+    function addNodesToLevel(list, levelIndex){
+        list.forEach((p, idx)=>{
+            const node = createTimelineNode(p, p.Relatie || '');
+            node.style.position='absolute';
+            node.style.left = dateToX(p.Geboortedatum)+'%';
+            node.style.top  = (hierarchy[levelIndex].y * levelHeight + idx*20)+'px'; 
+            hierarchy[levelIndex].nodes.push(node);
+        });
+    }
 
-    // =======================
-    // Voeg ouders toe
-    // =======================
+    // Ouders
+    let ouders = [];
     if(root.VaderID){
         const v = findPerson(safe(root.VaderID));
-        if(v) hierarchy[0].nodes.push(createTimelineNode(v,'VHoofdID'));
+        if(v) ouders.push(v);
     }
     if(root.MoederID){
         const m = findPerson(safe(root.MoederID));
-        if(m) hierarchy[0].nodes.push(createTimelineNode(m,'MHoofdID'));
+        if(m) ouders.push(m);
     }
+    addNodesToLevel(ouders,0);
 
-    // =======================
-    // Voeg hoofd toe
-    // =======================
-    hierarchy[1].nodes.push(createTimelineNode(root,'HoofdID'));     
+    // Hoofd
+    addNodesToLevel([root],1);
 
-    // =======================
-    // Voeg partner hoofd toe
-    // =======================
+    // Partner hoofd
     if(root.PartnerID){
         const p = findPerson(safe(root.PartnerID));
-        hierarchy[2].nodes.push(createTimelineNode(p,'PHoofdID'));
+        addNodesToLevel([p],2);
     }
 
-    // =======================
     // Kinderen + partner kind
-    // =======================
     let children = dataRel.filter(d => ['KindID','HKindID','PHKindID'].includes(d.Relatie));
     children.sort((a,b) => parseBirthday(a.Geboortedatum)-parseBirthday(b.Geboortedatum));
+    addNodesToLevel(children,3);
 
     children.forEach((k, idx)=>{
-        const kidNode = createTimelineNode(k,k.Relatie);
-        kidNode.style.position='absolute';                       
-        kidNode.style.left = dateToX(k.Geboortedatum)+'%';        
-        kidNode.style.top  = (hierarchy[3].y * levelHeight + idx*20)+'px'; // Y positie + kleine spacing
-        hierarchy[3].nodes.push(kidNode);
-
         if(k.PartnerID){
             const kp = findPerson(safe(k.PartnerID));
-            const kpNode = createTimelineNode(kp,'partner');
-            kpNode.style.position='absolute';
-            kpNode.style.left = dateToX(k.Geboortedatum)+'%';      
-            kpNode.style.top  = (hierarchy[4].y * levelHeight + idx*20)+'px';
-            hierarchy[4].nodes.push(kpNode);
+            kp.Relatie = 'partner';
+            kp._idx = idx; // bewaar index om Y-spacing te behouden
+            addNodesToLevel([kp],4);
         }
     });
 
-    // =======================
     // Broer/zus + partner
-    // =======================
     let broerZusList = dataRel.filter(d => d.Relatie === 'BZID');
-    broerZusList.sort((a,b) => parseBirthday(a.Geboortedatum) - parseBirthday(b.Geboortedatum));
+    broerZusList.sort((a,b) => parseBirthday(a.Geboortedatum)-parseBirthday(b.Geboortedatum));
+    addNodesToLevel(broerZusList,5);
 
     broerZusList.forEach((bz, idx)=>{
-        const bzNode = createTimelineNode(bz, 'BZID');
-        bzNode.style.position='absolute';
-        bzNode.style.left = dateToX(bz.Geboortedatum)+'%';
-        bzNode.style.top  = (hierarchy[5].y * levelHeight + idx*20)+'px';
-        hierarchy[5].nodes.push(bzNode);
-
         if(bz.PartnerID){
             const bzPartner = findPerson(safe(bz.PartnerID));
-            const bzPartnerNode = createTimelineNode(bzPartner, 'PBZID');
-            bzPartnerNode.style.position='absolute';
-            bzPartnerNode.style.left = dateToX(bz.Geboortedatum)+'%';
-            bzPartnerNode.style.top  = (hierarchy[6].y * levelHeight + idx*20)+'px';
-            hierarchy[6].nodes.push(bzPartnerNode);
+            bzPartner.Relatie = 'PBZID';
+            bzPartner._idx = idx;
+            addNodesToLevel([bzPartner],6);
         }
     });
 
     // =======================
-    // RENDER NODES
+    // RENDER NODES + AUTOMATISCHE CONTAINERHOOGTE
     // =======================
-    let maxHeight = 0; // Voor automatische containerhoogte
+    let maxY = 0;
     hierarchy.forEach(level=>{
         level.nodes.forEach(node=>{
-            timelineBox.appendChild(node);              // Voeg toe aan container
+            timelineBox.appendChild(node);
             const nodeBottom = parseFloat(node.style.top) + node.offsetHeight;
-            if(nodeBottom > maxHeight) maxHeight = nodeBottom; // Update maxHeight
+            if(nodeBottom > maxY) maxY = nodeBottom;
         });
     });
-
-    timelineBox.style.height = (maxHeight + 20)+'px'; // Voeg extra padding onderin
+    timelineBox.style.height = (maxY + 20) + 'px'; // 20px marge onderaan
 }
 
 // =======================
