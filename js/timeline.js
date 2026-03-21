@@ -1,4 +1,4 @@
-/* ======================= js/timeline.js v2.1.2 ======================= */
+/* ======================= js/timeline.js v2.2.0 ======================= */
 /* Timeline rendering met absolute X/Y: verticale hiërarchie + horizontale geboortedatum */
 
 (function(){
