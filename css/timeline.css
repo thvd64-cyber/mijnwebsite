@@ -97,3 +97,29 @@
 .level-partnerKind    {}
 .level-broerZus       {}
 .level-partnerBZ      {}
+
+/* ======================= LEVEL BACKGROUND STRIPES ======================= */
+/* Lichtgekleurde achtergrond per hiërarchisch level, full-width, achter nodes */
+#timelineContainer .level-ouders        { background-color: rgba(200,230,201,0.2); }
+#timelineContainer .level-hoofd         { background-color: rgba(255,215,0,0.15); }
+#timelineContainer .level-partnerHoofd  { background-color: rgba(255,236,179,0.15); }
+#timelineContainer .level-kinderen      { background-color: rgba(144,202,249,0.15); }
+#timelineContainer .level-partnerKind   { background-color: rgba(204,204,204,0.15); }
+#timelineContainer .level-broerZus      { background-color: rgba(255,171,145,0.15); }
+#timelineContainer .level-partnerBZ     { background-color: rgba(255,138,101,0.15); }
+
+/* Extra styling om de stroken full-width te maken */
+#timelineContainer .level-ouders,
+#timelineContainer .level-hoofd,
+#timelineContainer .level-partnerHoofd,
+#timelineContainer .level-kinderen,
+#timelineContainer .level-partnerKind,
+#timelineContainer .level-broerZus,
+#timelineContainer .level-partnerBZ {
+    position: absolute;       /* Achter nodes plaatsen via absolute Y */
+    width: 100%;              /* Full-width strook */
+    left: 0;                  /* Start bij container linkerkant */
+    height: 60px;             /* Hoogte per level (zelfde als levelHeight in JS) */
+    pointer-events: none;     /* Stroken blokkeren geen klikken op nodes */
+    z-index: 0;               /* Achter nodes */
+}
