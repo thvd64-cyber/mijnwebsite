@@ -8,9 +8,7 @@
     'use strict';                                                           // Strikte modus: voorkomt stille JS-fouten
 
     /* ======================= HELPERS ======================= */
-    function safe(val) {                                                    // Hulpfunctie die altijd een veilige string teruggeeft
-        return val ? String(val).trim() : '';                               // Als val leeg/null/undefined is → lege string, anders: omzetten naar string en trimmen
-    }
+    const safe = window.ftSafe;                                             // Gebruik de centrale safe() uit utils.js — geen lokale kopie meer nodig
 
     /* ======================= KOLOMMEN DEFINITIE ======================= */
     const COLUMNS = [                                                       // Array die alle tabelkolommen definieert met naam en bewerkbaarheid
@@ -57,68 +55,8 @@
     }
 
     /* ======================= RELATIE ENGINE ======================= */
-    // Let op: deze lokale versie wordt vervangen zodra relatieEngine.js
-    // gecentraliseerd is in fase 1 (duplicaten samenvoegen)
-    function computeRelaties(data, hoofdId) {
-        if (!hoofdId) return [];                                            // Geen hoofdpersoon geselecteerd → geef lege array terug
-
-        const hoofd = data.find(p => safe(p.ID) === safe(hoofdId));        // Zoek de hoofdpersoon op in de dataset op basis van ID
-        if (!hoofd) return [];                                              // Hoofdpersoon niet gevonden in dataset → stop
-
-        const VHoofdID = safe(hoofd.VaderID);                              // ID van de vader van de hoofdpersoon (leeg string als geen vader)
-        const MHoofdID = safe(hoofd.MoederID);                             // ID van de moeder van de hoofdpersoon (leeg string als geen moeder)
-        const PHoofdID = safe(hoofd.PartnerID);                            // ID van de partner van de hoofdpersoon (leeg string als geen partner)
-
-        const KindID = data                                                 // Zoek alle kinderen van de hoofdpersoon
-            .filter(p => safe(p.VaderID) === hoofdId                       // Persoon is kind als VaderID overeenkomt met hoofdpersoon
-                      || safe(p.MoederID) === hoofdId)                     // OF als MoederID overeenkomt met hoofdpersoon
-            .map(p => p.ID);                                               // Bewaar alleen de ID's van de gevonden kinderen
-
-        const BZID = data                                                   // Zoek alle broers en zussen van de hoofdpersoon
-            .filter(p => {
-                const pid = safe(p.ID);                                    // Haal het ID van de huidige persoon op als veilige string
-                if (pid === hoofdId)   return false;                       // Sla de hoofdpersoon zelf over
-                if (pid === PHoofdID)  return false;                       // Sla de partner van hoofd over
-                if (KindID.includes(pid)) return false;                    // Sla kinderen van hoofd over
-                return (VHoofdID && safe(p.VaderID) === VHoofdID)          // Zelfde vader als hoofdpersoon = broer/zus
-                    || (MHoofdID && safe(p.MoederID) === MHoofdID);        // OF zelfde moeder als hoofdpersoon = broer/zus
-            })
-            .map(p => p.ID);                                               // Bewaar alleen de ID's van gevonden broers/zussen
-
-        const KindPartnerID = KindID                                       // Zoek de partners van alle kinderen
-            .map(id => {
-                const k = data.find(p => p.ID === id);                     // Zoek het kind-object op via zijn ID
-                return k && k.PartnerID ? k.PartnerID : null;              // Geef het PartnerID terug als het kind er een heeft, anders null
-            })
-            .filter(Boolean);                                              // Verwijder alle null-waarden uit de array
-
-        const BZPartnerID = BZID                                           // Zoek de partners van alle broers/zussen
-            .map(id => {
-                const s = data.find(p => p.ID === id);                     // Zoek de broer/zus op via zijn ID
-                return s && s.PartnerID ? s.PartnerID : null;              // Geef het PartnerID terug als die er een heeft, anders null
-            })
-            .filter(Boolean);                                              // Verwijder alle null-waarden uit de array
-
-        return data                                                        // Verwerk elk persoon in de dataset naar een object met Relatie-label
-            .map(p => {
-                const pid   = safe(p.ID);                                  // Haal het ID van de huidige persoon op als veilige string
-                const clone = { ...p };                                    // Maak een kopie zodat de originele dataset niet gewijzigd wordt
-                clone.Relatie   = '';                                      // Start met lege relatie (persoon is nog niet ingedeeld)
-                clone._priority = 99;                                      // Standaard lage prioriteit (wordt gebruikt voor sortering)
-
-                if      (pid === hoofdId)              { clone.Relatie = 'HoofdID';      clone._priority = 1; }  // Hoofdpersoon zelf
-                else if (pid === VHoofdID)             { clone.Relatie = 'VHoofdID';     clone._priority = 0; }  // Vader van hoofd
-                else if (pid === MHoofdID)             { clone.Relatie = 'MHoofdID';     clone._priority = 0; }  // Moeder van hoofd
-                else if (pid === PHoofdID)             { clone.Relatie = 'PHoofdID';     clone._priority = 2; }  // Partner van hoofd
-                else if (KindID.includes(pid))         { clone.Relatie = 'KindID';       clone._priority = 3; }  // Kind van hoofd
-                else if (KindPartnerID.includes(pid))  { clone.Relatie = 'KindPartnerID';clone._priority = 3.5; }// Partner van kind
-                else if (BZID.includes(pid))           { clone.Relatie = 'BZID';         clone._priority = 4; }  // Broer of zus van hoofd
-                else if (BZPartnerID.includes(pid))    { clone.Relatie = 'BZPartnerID';  clone._priority = 4.5; }// Partner van broer/zus
-
-                return clone;                                              // Geef het persoon-object terug mét Relatie en _priority ingevuld
-            })
-            .sort((a, b) => a._priority - b._priority);                   // Sorteer de resultaten op prioriteit (ouders → hoofd → partner → kinderen → ...)
-    }
+    // Geen lokale versie meer — we gebruiken de centrale relatieEngine.js
+    const computeRelaties = window.RelatieEngine.computeRelaties;          // Haal de centrale functie op uit relatieEngine.js (moet eerder geladen zijn in HTML)
 
     /* ======================= TEXTAREA AUTO-HOOGTE ======================= */
     function adjustTextareas() {
