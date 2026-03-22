@@ -64,128 +64,116 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
 
 </div>
 
-<!-- ======================= Scripts ======================= -->
-<script src="../js/schema.js"></script> <!-- bevat FIELDS + validatie -->
-<script src="../js/storage.js"></script> <!-- opslag API -->
+<!-- ======================= Scripts (volgorde verplicht) ======================= -->
+<script src="../js/schema.js"></script>       <!-- Laad eerst het schema met veldnamen -->
+<script src="../js/storage.js"></script>      <!-- Laad dan de storage API (StamboomStorage) -->
+<script src="../js/export.js"></script>       <!-- Laad de centrale exportmodule (ExportModule) -->
 
 <script>
-document.addEventListener('DOMContentLoaded', function(){
+document.addEventListener('DOMContentLoaded', function () {
 
-    if(typeof StamboomStorage === "undefined"){
-        console.error("StamboomStorage niet geladen!");
-        return;
+    if (typeof StamboomStorage === 'undefined') {                         // Controleer of storage.js correct geladen is
+        console.error('StamboomStorage niet geladen!');                   // Log fout als storage ontbreekt
+        return;                                                           // Stop als storage niet beschikbaar is
     }
 
-    const container = document.getElementById('storageContainer');
-    const info = document.getElementById('storageInfo');
-    const resetBtn = document.getElementById('resetBtn');
-    const exportJSONBtn = document.getElementById('exportJSONBtn');
-    const exportCSVBtn = document.getElementById('exportCSVBtn');
+    const container     = document.getElementById('storageContainer');   // Container voor de datatable
+    const info          = document.getElementById('storageInfo');         // Element voor versie + recordtelling
+    const resetBtn      = document.getElementById('resetBtn');            // Reset-knop
+    const exportJSONBtn = document.getElementById('exportJSONBtn');       // JSON-exportknop
+    const exportCSVBtn  = document.getElementById('exportCSVBtn');        // CSV-exportknop
 
-    const columns = window.StamboomSchema ? [...window.StamboomSchema.fields] : [];
+    const columns = window.StamboomSchema                                 // Haal kolomnamen op uit het centrale schema
+        ? [...window.StamboomSchema.fields]                               // Gebruik de officiële veldlijst als schema.js geladen is
+        : [];                                                             // Lege array als schema ontbreekt
 
-    /* ======================= FUNCTIE TABEL RENDEREN ======================= */
-    function renderTable(){
-        let data = StamboomStorage.get();
-        container.innerHTML = "";
-        info.innerHTML = `Storage versie: ${StamboomStorage.version} | Aantal records: ${data.length}`;
+    /* ======================= TABEL RENDEREN ======================= */
+    function renderTable() {
+        const data = StamboomStorage.get();                               // Haal de volledige dataset op uit localStorage
+        container.innerHTML = '';                                         // Leeg de container voor een nieuwe render
+        info.innerHTML = `Storage versie: ${StamboomStorage.version} | Aantal records: ${data.length}`; // Toon versie en recordtelling
 
-        if(!data.length){
+        if (!data.length) {                                               // Geen data aanwezig
             container.innerHTML = '<div class="empty">Geen data gevonden in localStorage.</div>';
             return;
         }
 
-        const table = document.createElement('table');
-        const thead = document.createElement('thead');
+        const table = document.createElement('table');                   // Maak de tabelcontainer
+        const thead = document.createElement('thead');                   // Maak de thead voor koppen en filters
 
-        // Header rij
-        const headerRow = document.createElement('tr');
-        columns.forEach(col => {
-            const th = document.createElement('th');
-            th.textContent = col;
-            headerRow.appendChild(th);
+        const headerRow = document.createElement('tr');                  // Rij voor kolomtitels
+        columns.forEach(col => {                                          // Loop door alle kolomnamen
+            const th = document.createElement('th');                     // Maak een koptekstcel
+            th.textContent = col;                                         // Zet de kolomnaam als tekst
+            headerRow.appendChild(th);                                   // Voeg de cel toe aan de headerrij
         });
-        thead.appendChild(headerRow);
+        thead.appendChild(headerRow);                                    // Voeg de headerrij toe aan de thead
 
-        // Filter rij
-        const filterRow = document.createElement('tr');
-        const filters = {};
-        columns.forEach(col=>{
-            const th = document.createElement('th');
-            const input = document.createElement('input');
-            input.type = "text"; input.placeholder="Filter..."; input.style.width="95%";
-            input.addEventListener('input', function(){ filters[col]=this.value.toLowerCase(); applyFilters(); });
+        const filterRow = document.createElement('tr');                  // Tweede rij: filterinputs per kolom
+        const filters   = {};                                             // Object om actieve filterwaarden bij te houden
+        columns.forEach(col => {                                          // Loop door alle kolommen
+            const th    = document.createElement('th');                  // Filtercel
+            const input = document.createElement('input');               // Tekstinvoerveld voor de filter
+            input.type        = 'text';
+            input.placeholder = 'Filter...';
+            input.style.width = '95%';
+            input.addEventListener('input', function () {                // Luister naar elke toetsaanslag
+                filters[col] = this.value.toLowerCase();                 // Sla filterwaarde op in kleine letters
+                applyFilters();                                          // Herfilter de tabel
+            });
             th.appendChild(input);
             filterRow.appendChild(th);
         });
         thead.appendChild(filterRow);
         table.appendChild(thead);
 
-        const tbody = document.createElement('tbody');
+        const tbody = document.createElement('tbody');                   // Maak de tabelinhoud container
         table.appendChild(tbody);
         container.appendChild(table);
 
-        function applyFilters(){
-            tbody.innerHTML = "";
-            const fragment = document.createDocumentFragment();
-            const filtered = data.filter(person => {
-                return columns.every(col=>{
-                    if(!filters[col]) return true;
-                    const val = (person[col]??"").toString().toLowerCase();
-                    return val.includes(filters[col]);
-                });
-            });
-            filtered.forEach(person=>{
-                const row = document.createElement('tr');
-                columns.forEach(col=>{
+        function applyFilters() {                                        // Herrendert tabelinhoud op basis van actieve filters
+            tbody.innerHTML = '';
+            const fragment  = document.createDocumentFragment();         // Fragment voor betere performance
+            const gefilterd = data.filter(persoon =>
+                columns.every(col => {
+                    if (!filters[col]) return true;                      // Geen filter: persoon mag door
+                    const waarde = (persoon[col] ?? '').toString().toLowerCase();
+                    return waarde.includes(filters[col]);                // Controleer of waarde de filterterm bevat
+                })
+            );
+            gefilterd.forEach(persoon => {
+                const rij = document.createElement('tr');
+                columns.forEach(col => {
                     const td = document.createElement('td');
-                    td.textContent = person[col]??"";
-                    row.appendChild(td);
+                    td.textContent = persoon[col] ?? '';                 // Lege string als veld ontbreekt
+                    rij.appendChild(td);
                 });
-                fragment.appendChild(row);
+                fragment.appendChild(rij);
             });
-            tbody.appendChild(fragment);
+            tbody.appendChild(fragment);                                 // Voeg alle rijen in één keer toe
         }
-        applyFilters();
+        applyFilters();                                                   // Render tabel direct bij laden
     }
 
-    /* ======================= EXPORT JSON ======================= */
-    exportJSONBtn.addEventListener('click', function(){
-        const data = StamboomStorage.get();
-        const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = "stamboom.json"; a.click();
-        URL.revokeObjectURL(url);
+    /* ======================= EXPORT KNOPPEN → centrale export.js ======================= */
+    exportCSVBtn.addEventListener('click', function () {                  // Luister naar klik op CSV-knop
+        window.ExportModule.exportCSV();                                  // Roep centrale CSV-exportfunctie aan
     });
 
-    /* ======================= EXPORT CSV ======================= */
-    exportCSVBtn.addEventListener('click', function(){
-        const data = StamboomStorage.get();
-        if(!data.length) return alert("Geen data om te exporteren.");
-        const csvRows = [];
-        csvRows.push(columns.join(",")); // header
-        data.forEach(person=>{
-            const row = columns.map(col => `"${(person[col]??"").toString().replace(/"/g,'""')}"`);
-            csvRows.push(row.join(","));
-        });
-        const blob = new Blob([csvRows.join("\n")], {type:"text/csv"});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = "stamboom.csv"; a.click();
-        URL.revokeObjectURL(url);
+    exportJSONBtn.addEventListener('click', function () {                 // Luister naar klik op JSON-knop
+        window.ExportModule.exportJSON();                                 // Roep centrale JSON-exportfunctie aan
     });
 
     /* ======================= RESET KNOP ======================= */
-    resetBtn.addEventListener('click', function(){
-        if(!StamboomStorage.get().length) return;
-        const confirmMessage = "⚠️ WAARSCHUWING ⚠️\n\nAlle opgeslagen stamboomdata wordt definitief verwijderd.\nMaak eerst een EXPORT van je data.\nKlik OK om te bevestigen.";
-        if(!confirm(confirmMessage)) return;
-        StamboomStorage.clear();
-        renderTable();
+    resetBtn.addEventListener('click', function () {                      // Luister naar klik op reset-knop
+        if (!StamboomStorage.get().length) return;                        // Niets te resetten als er geen data is
+        const bevestiging = '⚠️ WAARSCHUWING ⚠️\n\nAlle opgeslagen stamboomdata wordt definitief verwijderd.\nMaak eerst een EXPORT van je data.\nKlik OK om te bevestigen.';
+        if (!confirm(bevestiging)) return;                                // Stop als gebruiker annuleert
+        StamboomStorage.clear();                                          // Verwijder alle data uit localStorage
+        renderTable();                                                    // Herrender de lege tabel
     });
 
-    renderTable();
+    renderTable();                                                        // Render tabel bij paginaladen
 });
 </script>
 
