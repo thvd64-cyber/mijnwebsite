@@ -1,5 +1,6 @@
-<!-- ======================= home/export.html v2.0.0 =======================
+<!-- ======================= home/export.html v2.1.0 =======================
      Exportpagina: CSV en JSON download van de volledige stamboom
+     Wijziging v2.1.0: nieuwe opmaak — welkomstblok, CSV en JSON als aparte secties
      Scripts: schema.js → storage.js → export.js (verplichte volgorde)
      ======================================================================= -->
 <!DOCTYPE html>
@@ -11,13 +12,61 @@
     <link rel="icon" href="../favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="../css/style.css">
     <style>
-        /* ======================= KNOP STIJLEN (overgenomen van storage.html) ======================= */
-        button          { padding:8px 12px; cursor:pointer; border:none; border-radius:4px; }
-        #exportJSONBtn  { background:#0275d8; color:#fff; }               /* Blauw voor JSON-export */
-        #exportJSONBtn:hover { background:#025aa5; }                      /* Donkerder blauw bij hover */
-        #exportCSVBtn   { background:#5bc0de; color:#fff; }               /* Lichtblauw voor CSV-export */
-        #exportCSVBtn:hover  { background:#31b0d5; }                      /* Donkerder lichtblauw bij hover */
-        #buttonsContainer { margin-bottom:10px; display:flex; gap:10px; flex-wrap:wrap; } /* Knoppen naast elkaar met ruimte ertussen */
+        /* ======================= EXPORT SECTIE STIJLEN ======================= */
+        .export-sectie {                                                   /* Stijl voor elke export-sectie (CSV en JSON) */
+            border: 1px solid #ddd;                                        /* Subtiele rand om de sectie af te bakenen */
+            border-radius: 6px;                                            /* Licht afgeronde hoeken */
+            padding: 20px 24px;                                            /* Binnenste ruimte zodat tekst niet tegen de rand staat */
+            margin-bottom: 20px;                                           /* Ruimte tussen de twee secties */
+            background: #fafafa;                                           /* Lichtgrijze achtergrond om de secties te onderscheiden van de pagina */
+        }
+        .export-sectie h2 {                                               /* Titel van elke sectie */
+            font-size: 1.1rem;                                             /* Iets groter dan de broodtekst */
+            font-weight: bold;                                             /* Vetgedrukt zodat het opvalt als kopje */
+            margin: 0 0 10px 0;                                            /* Geen bovenmarge, 10px onder de titel */
+            color: #333;                                                   /* Donkergrijs voor goede leesbaarheid */
+        }
+        .export-sectie p {                                                /* Uitlegparagraaf binnen een sectie */
+            font-size: 0.95rem;                                            /* Iets kleiner dan standaard voor subtiele uitleg */
+            color: #555;                                                   /* Middengrijs voor de bijschrift-uitstraling */
+            line-height: 1.6;                                              /* Ruime regelafstand voor leesbaarheid */
+            margin: 0 0 14px 0;                                            /* Geen bovenmarge, 14px ruimte tussen tekst en knop */
+        }
+        .export-sectie .opmerking {                                       /* Kleine aanvullende opmerking onder de knop */
+            font-size: 0.85rem;                                            /* Kleiner dan de hoofdtekst */
+            color: #888;                                                   /* Lichtgrijs zodat het duidelijk secundair is */
+            margin-top: 10px;                                              /* Ruimte boven de opmerking */
+        }
+        button {                                                           /* Basisstijl voor alle knoppen op deze pagina */
+            padding: 9px 18px;                                             /* Ruim klikgebied */
+            cursor: pointer;                                               /* Handje bij hover zodat duidelijk is dat het klikbaar is */
+            border: none;                                                  /* Geen rand: de achtergrondkleur geeft al genoeg definitie */
+            border-radius: 4px;                                            /* Licht afgeronde hoeken */
+            font-size: 0.95rem;                                            /* Zelfde grootte als de uitlegtekst */
+            font-weight: bold;                                             /* Vetgedrukt zodat de actie duidelijk is */
+        }
+        #exportCSVBtn  { background: #5bc0de; color: #fff; }              /* Lichtblauw voor CSV — vertrouwde kleur voor spreadsheet-export */
+        #exportCSVBtn:hover  { background: #31b0d5; }                     /* Donkerder lichtblauw bij hover */
+        #exportJSONBtn { background: #0275d8; color: #fff; }              /* Donkerblauw voor JSON — back-up heeft wat meer gewicht */
+        #exportJSONBtn:hover { background: #025aa5; }                     /* Donkerder blauw bij hover */
+        #exportStatus  { font-size: 0.9rem; margin-top: 8px; }            /* Statusmelding onder de knoppen: klein en subtiel */
+
+        /* ======================= WELKOMSTBLOK ======================= */
+        .welkom-blok {                                                     /* Introductieblok bovenaan de pagina */
+            margin-bottom: 24px;                                           /* Ruimte tussen welkomstblok en de secties */
+        }
+        .welkom-blok h1 {                                                 /* Welkomsttitel */
+            font-size: 1.4rem;                                             /* Groter dan de sectietitels */
+            font-weight: bold;                                             /* Vetgedrukt als primaire koptekst */
+            margin: 0 0 8px 0;                                             /* Geen bovenmarge, 8px onder de titel */
+            color: #222;                                                   /* Bijna zwart voor maximaal contrast */
+        }
+        .welkom-blok p {                                                  /* Welkomsttekst */
+            font-size: 0.95rem;                                            /* Zelfde grootte als de uitlegteksten */
+            color: #555;                                                   /* Middengrijs */
+            line-height: 1.6;                                              /* Ruime regelafstand */
+            margin: 0;                                                     /* Geen extra marges */
+        }
     </style>
 </head>
 <body>
@@ -37,40 +86,49 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
     .then(resp => resp.text())
     .then(data => {
         const placeholder = document.getElementById('Navbar-placeholder');
-        if (placeholder) placeholder.innerHTML = data;
+        if (placeholder) placeholder.innerHTML = data;                    // Navbar injecteren als de placeholder bestaat
     });
-</script>
-
-<!-- ======================= Paginatitel ======================= -->
-<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('pageTitle').textContent = 'Export';          // Paginatitel instellen
-});
 </script>
 
 <!-- ======================= Hoofd content ======================= -->
 <main>
     <div class="container">
 
-        <!-- ======================= Uitleg ======================= -->
-        <div style="margin-bottom:15px; font-size:0.95rem; color:#555; line-height:1.5;">
-            <strong>Exporteer je stamboom</strong><br>
-            Gebruik <strong>Export CSV</strong> om je data te openen in Excel of andere spreadsheetprogramma's.<br>
-            Gebruik <strong>Export JSON</strong> om een volledige back-up te maken die je later weer kunt importeren.<br><br>
-            <strong>Over CSV opslaan:</strong><br>
-            Op Chrome of Edge (HTTPS) krijg je een "Opslaan als" dialoog om de locatie te kiezen.<br>
-            Op andere browsers wordt het bestand automatisch opgeslagen in je downloadmap.
+        <!-- ======================= Welkomstblok ======================= -->
+        <div class="welkom-blok">
+            <h1>Welkom in de Export</h1>                                  <!-- Primaire paginatitel, consistent met andere pagina's -->
+            <p>
+                Hier kun je je volledige stamboom downloaden als CSV-bestand voor gebruik in
+                Excel, of als JSON-bestand voor een volledige back-up die je later weer kunt importeren.
+            </p>
         </div>
 
-        <!-- ======================= Knoppen (stijl overgenomen van storage.html) ======================= -->
-        <div id="buttonsContainer">
-            <button id="exportJSONBtn">Export JSON</button>               <!-- Knop voor JSON-export -->
-            <button id="exportCSVBtn">Exporteer CSV</button>              <!-- Knop voor CSV-export -->
+        <!-- ======================= CSV Sectie ======================= -->
+        <div class="export-sectie">
+            <h2>Exporteer als CSV</h2>                                    <!-- Sectietitel voor CSV-export -->
+            <p>
+                Een CSV-bestand kun je openen in Excel, Google Sheets of elk ander spreadsheetprogramma.
+                Je kunt de data bekijken, aanpassen en later weer importeren via de importpagina.<br><br>
+                <strong>Op Chrome of Edge (HTTPS)</strong> krijg je een "Opslaan als" dialoog om zelf
+                de opslaglocatie te kiezen. Op andere browsers wordt het bestand automatisch
+                opgeslagen in je downloadmap.
+            </p>
+            <button id="exportCSVBtn">Exporteer CSV</button>              <!-- CSV-exportknop -->
+            <p id="exportStatus"></p>                                     <!-- Statusmelding na export (succes of fout) -->
         </div>
 
-        <!-- ======================= Statusmelding ======================= -->
-        <p id="exportStatus"></p>                                         <!-- Hier wordt de status van de export getoond -->
+        <!-- ======================= JSON Sectie ======================= -->
+        <div class="export-sectie">
+            <h2>Exporteer als JSON</h2>                                   <!-- Sectietitel voor JSON-export -->
+            <p>
+                Een JSON-bestand is een volledige back-up van je stamboom inclusief alle velden.
+                Bewaar dit bestand op een veilige plek zodat je je data nooit kwijt bent.
+            </p>
+            <button id="exportJSONBtn">Export JSON</button>               <!-- JSON-exportknop -->
+            <p class="opmerking">
+                Het bestand wordt automatisch opgeslagen in je downloadmap met de datum in de bestandsnaam.
+            </p>                                                          <!-- Kleine aanvullende opmerking specifiek voor JSON -->
+        </div>
 
     </div>
 </main>
@@ -88,11 +146,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const exportJSONBtn = document.getElementById('exportJSONBtn');       // Haal de JSON-exportknop op
 
     exportCSVBtn.addEventListener('click', function () {                  // Luister naar klik op de CSV-knop
-        window.ExportModule.exportCSV(statusEl);                          // Roep de centrale CSV-exportfunctie aan uit export.js
+        window.ExportModule.exportCSV(statusEl);                          // Roep de centrale CSV-exportfunctie aan en geef statusEl mee voor feedback
     });
 
     exportJSONBtn.addEventListener('click', function () {                 // Luister naar klik op de JSON-knop
-        window.ExportModule.exportJSON(statusEl);                         // Roep de centrale JSON-exportfunctie aan uit export.js
+        window.ExportModule.exportJSON(statusEl);                         // Roep de centrale JSON-exportfunctie aan en geef statusEl mee voor feedback
     });
 
 });
