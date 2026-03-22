@@ -5,8 +5,8 @@
    - Klikken op resultaat selecteert persoon en roept callback aan
 */
 
-/* ======================= HELPERS ======================= */ 
-function safe(val){ return val ? String(val).trim() : ''; } // Zet waarde om naar string en trim spaties
+/* ======================= HELPERS ======================= */
+const safe = window.ftSafe; // Centrale safe() uit utils.js — zet elke waarde veilig om naar getrimde string
 
 /* ======================= LiveSearch INIT  ======================= */
 function initLiveSearch(searchInput, dataset, onSelectCallback){
