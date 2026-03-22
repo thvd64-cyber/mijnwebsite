@@ -236,6 +236,9 @@ Vereist: schema.js, storage.js, export.js
 - export.js toegevoegd aan scriptlijst
 - Tabel-rendercode en reset-knop ongewijzigd (werkten al goed)
 - Inline commentaar toegevoegd op alle regels
+- Export JSON en Export CSV knoppen verwijderd — export zit nu alleen op export.html
+- CSS-stijlen voor exportknoppen verwijderd
+- export.js niet meer geladen in storage.html
 
 ---
 
