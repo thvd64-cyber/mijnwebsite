@@ -143,10 +143,12 @@ function safe(val){ return val ? String(val).trim() : ''; }
 
 
 <!-- ======================= PROJECT SCRIPTS ======================= -->
+<script src="../js/utils.js"></script>          <!-- centrale hulpfuncties: safe, formatDate, parseBirthday -->
 <script src="../js/schema.js"></script>           <!-- definieert kolom structuur -->
 <script src="../js/idGenerator.js"></script>     <!-- genereert ID bij nieuwe persoon -->
 <script src="../js/storage.js"></script>          <!-- opslag/fetch van dataset -->
 <script src="../js/LiveSearch.js"></script>       <!-- centrale Live Search module -->
+<script src="../js/relatieEngine.js"></script>  <!-- centrale relatie-berekening -->
 <script src="../js/manage.js"></script>          <!-- tabel render, add/save/refresh etc -->
 
 <!-- ======================= FOOTER ======================= -->
