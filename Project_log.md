@@ -128,15 +128,19 @@ Gebruikt door: view.js, timeline.js, manage.js
 
 ---
 
-### js/storage.js `v0.0.4` ⚠️ ongewijzigd (nog te doen)
+### js/storage.js `v1.0.0` ✅ herschreven
 ```
 Persistente opslag via localStorage, volledig schema-driven
 Exporteert: window.StamboomStorage (get, set, add, update, clear)
 Vereist: schema.js, idGenerator.js
 Gebruikt door: alle pagina's
 ```
-**Bekende aandachtspunten:**
-- Roept `window.genereerCode` aan zonder garantie dat idGenerator.js al geladen is
+**Wijzigingen t.o.v. v0.0.4:**
+- migrate() wordt niet meer bij élke get() aangeroepen — alleen bij add()
+- migrate() geeft null terug bij ongeldig record i.p.v. leeg {}
+- console.log bij laden verwijderd
+- safeParse() controleert nu ook of het resultaat een array is
+- Inline commentaar toegevoegd op elke regel
 
 ---
 
@@ -258,6 +262,13 @@ Vereist: schema.js, storage.js, export.js
 - `DeleteRow.js` en `schemaGlobal.js` verwijderd
 - `idGenerator.js` volledig herschreven (v2.0.0)
 - `create.js` en `manage.js` aangepast: lokale `genereerCode()` verwijderd
+
+### Sessie 4 — storage.js opschonen
+- `storage.js` volledig herschreven (v1.0.0)
+- migrate() alleen nog bij add(), niet meer bij elke get()
+- migrate() geeft null terug bij ongeldig record
+- console.log verwijderd
+- Inline commentaar toegevoegd
 
 ### Sessie 3 — Export centraliseren
 - `export.js` volledig herschreven als centrale module (v2.0.0)
