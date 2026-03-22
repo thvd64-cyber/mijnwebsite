@@ -159,15 +159,22 @@ Gebruikt door: home/import.html
 
 ---
 
-### js/export.js `v1.2.8` ❌ kapot (prioriteit repareren)
+### js/export.js `v2.0.0` ✅ herschreven
 ```
-CSV-export functie
-Vereist: storage.js (ONTBREEKT in home/export.html!)
-Gebruikt door: home/export.html
+Centrale export-module: CSV én JSON export voor de volledige stamboom
+Exporteert: window.ExportModule.exportCSV(statusEl), window.ExportModule.exportJSON(statusEl)
+Vereist: schema.js, storage.js
+Gebruikt door: home/export.html, stamboom/storage.html
 ```
-**Bekend probleem:**
-- `home/export.html` laadt `storage.js` en `schema.js` niet → export werkt nooit
-- Roept `get()` aan in plaats van `StamboomStorage.get()`
+**Wijzigingen t.o.v. v1.2.8:**
+- Volledige herschrijving als centrale IIFE-module
+- Beide exportfuncties (CSV én JSON) in één bestand
+- CSV gebruikt nu `StamboomStorage.get()` en `window.StamboomSchema.fields` (was `get()` met verkeerde veldnamen)
+- CSV heeft datum in bestandsnaam (bijv. "stamboom_20240312.csv")
+- CSV gebruikt `showSaveFilePicker` op moderne browsers (Chrome/Edge + HTTPS) voor "Opslaan als" dialoog
+- CSV heeft fallback naar downloadmap voor andere browsers
+- JSON heeft datum in bestandsnaam
+- Beide functies accepteren optioneel een `statusEl` voor feedback aan de gebruiker
 
 ---
 
@@ -195,6 +202,19 @@ Gebruikt door: stamboom/timeline.html
 
 ---
 
+### home/export.html `v2.0.0` ✅ herschreven
+```
+Exportpagina met CSV- en JSON-exportknoppen
+Vereist: schema.js, storage.js, export.js
+```
+**Wijzigingen t.o.v. v1.0.1:**
+- Laadt nu correct schema.js, storage.js en export.js
+- Inline exportcode volledig verwijderd → gebruikt window.ExportModule
+- Knoppen en kleurstijl overgenomen van storage.html (blauw/lichtblauw)
+- JSON-exportknop toegevoegd (was er niet)
+
+---
+
 ### js/LSD.js `v0.0.0` ❌ kapot (prioriteit repareren)
 ```
 LocalStorage beheer voor admin: bekijken, verwijderen, factory reset
@@ -203,6 +223,19 @@ Gebruikt door: Admin/LSD.html
 ```
 **Bekend probleem:**
 - `DOMContentLoaded` event listener staat twee keer geregistreerd → admin menu gedraagt zich onvoorspelbaar
+
+---
+
+### stamboom/storage.html `v2.0.0` ✅ bijgewerkt
+```
+Opslagpagina: toont alle data als doorzoekbare tabel, export en reset
+Vereist: schema.js, storage.js, export.js
+```
+**Wijzigingen t.o.v. v1.0:**
+- Inline exportcode (JSON + CSV) verwijderd → gebruikt nu window.ExportModule uit export.js
+- export.js toegevoegd aan scriptlijst
+- Tabel-rendercode en reset-knop ongewijzigd (werkten al goed)
+- Inline commentaar toegevoegd op alle regels
 
 ---
 
@@ -223,6 +256,12 @@ Gebruikt door: Admin/LSD.html
 - `idGenerator.js` volledig herschreven (v2.0.0)
 - `create.js` en `manage.js` aangepast: lokale `genereerCode()` verwijderd
 
+### Sessie 3 — Export centraliseren
+- `export.js` volledig herschreven als centrale module (v2.0.0)
+- `export.html` herschreven: laadt nu schema.js + storage.js + export.js, knoppen overgenomen van storage.html
+- `stamboom/storage.html` bijgewerkt: inline exportcode vervangen door window.ExportModule
+- Beide pagina's gebruiken nu dezelfde exportlogica
+
 ### Sessie 2b — Bugfix LiveSearch
 - `LiveSearch.js` volledig in IIFE gewikkeld (v1.1.0)
 - Oorzaak: `const safe` stond op globaal niveau en botste met `const safe` in view.js/timeline.js
@@ -241,9 +280,10 @@ Gebruikt door: Admin/LSD.html
 
 ## Volgende stappen (fase 2)
 
-- [ ] `home/export.html` repareren: `storage.js` en `schema.js` toevoegen, `get()` → `StamboomStorage.get()`
-- [ ] `js/LSD.js` repareren: dubbele `DOMContentLoaded` verwijderen
-- [ ] `js/export.js` repareren: `get()` vervangen door `StamboomStorage.get()`
+- [x] `home/export.html` gerepareerd en uitgebreid met JSON-knop
+- [x] `js/export.js` herschreven als centrale module
+- [x] `stamboom/storage.html` bijgewerkt naar centrale export.js
+- [ ] `js/LSD.js` — bewust overgeslagen (buiten scope)
 - [ ] Zoekfunctie verbeteren
 - [ ] Relaties ouder/kind/partner uitbreiden
 - [ ] Stamboomvisualisatie upgrade
