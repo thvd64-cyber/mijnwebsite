@@ -92,7 +92,7 @@
 | F3-22 | 🟡 Middel | Import preview tonen vóór opslaan                          | 📋 Open |
 | F3-23 | 🟡 Middel | GEDCOM-formaat importeren (standaard stamboomformaat)       | 📋 Open |
 
-### 3F — Overige pagina's
+### 3F — Overige pagina's ✅ F3-29 gedaan
 | ID    | Prioriteit | Taak                                                        | Status |
 |-------|-----------|-------------------------------------------------------------|--------|
 | F3-24 | 🔴 Hoog   | `stamboom/manage-en.html` repareren (mist bijna alle scripts) | 📋 Open |
@@ -100,6 +100,7 @@
 | F3-26 | 🟡 Middel | `stats.html` inline JS verplaatsen naar apart `stats.js`    | 📋 Open |
 | F3-27 | 🟡 Middel | `home/print.html` implementeren (printweergave stamboom)    | 📋 Open |
 | F3-28 | 🟢 Laag   | `schema.js` herschrijven met inline commentaar              | 📋 Open |
+| F3-29 | 🟡 Middel | `export.html` facelift: welkomstblok, CSV en JSON als aparte secties | ✅ Gedaan |
 
 ---
 
