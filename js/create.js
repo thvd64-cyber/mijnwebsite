@@ -1,73 +1,65 @@
-// ======================= js/create.js v1.0.1 =======================
-// Haal eerste letters van doopnaam, roepnaam, achternaam en geslacht (of ‘X’ als geslacht leeg is).
-// Genereer een random 3-cijferig getal tussen 100 en 999.
-// Combineer de letters en cijfers tot één string (bijv. JRDV123).
-// Retourneer deze string als unieke ID voor de persoon.
-// .1 Zorgt ervoor dat de ID 3-cijferige Date.now() variant en geschikt voor 457 miljoen unieke ID’s.
-// ==============================================================
-// ======================= CREATE.JS – lean integratie met storage.js =======================
-document.addEventListener('DOMContentLoaded', () => { // Wacht tot de volledige DOM is geladen voordat je elementen ophaalt
+// ======================= js/create.js v1.1.0 =======================
+// Verwerkt het formulier voor het aanmaken van de eerste persoon (Hoofd-ID)
+// Vereist: schema.js, idGenerator.js, storage.js (in die volgorde geladen)
+// ===================================================================
+
+document.addEventListener('DOMContentLoaded', () => {               // Wacht tot de volledige HTML geladen is voordat we DOM-elementen opzoeken
 
     // ======================= DOM ELEMENTEN =======================
-    const form = document.getElementById('persoonForm');          // Formulier waar gebruiker gegevens invult
-    const previewDiv = document.getElementById('personPreview');  // Container voor JSON preview
-    const previewContent = document.getElementById('previewContent'); // <pre> element waar preview wordt getoond
-    const confirmBtn = document.getElementById('confirmBtn');     // Knop om bevestiging te geven en data op te slaan
-    const warningMessage = document.getElementById('warningMessage'); // Div voor waarschuwingen
+    const form           = document.getElementById('persoonForm');   // Het invulformulier met alle persoonsgegevens
+    const previewDiv     = document.getElementById('personPreview'); // De sectie die de JSON-preview toont vóór opslaan
+    const previewContent = document.getElementById('previewContent');// Het <pre> element binnenin previewDiv met de JSON-tekst
+    const confirmBtn     = document.getElementById('confirmBtn');    // De knop waarmee de gebruiker de invoer bevestigt en opslaat
+    const warningMessage = document.getElementById('warningMessage');// De div voor fout- of waarschuwingsberichten aan de gebruiker
 
-    // ======================= ID GENERATOR =======================
-    function genereerCode(doopnaam, roepnaam, achternaam, geslacht) {
-        // Unieke ID: eerste letters van doopnaam, roepnaam, achternaam, geslacht, + 3 cijfers
-       const letters = (doopnaam[0] || '') + (roepnaam[0] || '') + (achternaam[0] || '') + (geslacht[0] || 'X');
-    const cijfers = Math.floor(100 + Math.random() * 900); // random 3-cijferig getal van 100 t/m 999
-    return letters + cijfers; // combineer letters + 3 cijfers
-    }
-    
     // ======================= FORM SUBMIT HANDLER =======================
-    form.addEventListener('submit', function(e){
-        e.preventDefault(); // Voorkom dat formulier pagina reloadt
+    form.addEventListener('submit', function(e) {                    // Luister naar het moment dat de gebruiker op Opslaan klikt
+        e.preventDefault();                                          // Voorkom dat de browser de pagina herlaadt bij formulier-submit
 
-        const dataset = StamboomStorage.get(); // Haal huidige dataset uit centrale storage
+        const dataset = StamboomStorage.get();                       // Haal de huidige lijst van personen op uit localStorage via storage.js
 
-        // Controleer of er al data aanwezig is
-        if(dataset.length > 0){
-            warningMessage.textContent = "Er staat al een persoon in de stamboom. Nieuwe invoer kan hier niet toegevoegd worden."; // waarschuwing tonen
-            warningMessage.style.display = 'block'; // waarschuwing zichtbaar maken
-            previewDiv.style.display = 'none';       // preview verbergen
-            return; // stop verwerking
+        if (dataset.length > 0) {                                    // Controleer of er al minstens één persoon in de stamboom staat
+            warningMessage.textContent = 'Er staat al een persoon in de stamboom. Gebruik Manage om personen toe te voegen.'; // Toon uitleg aan de gebruiker
+            warningMessage.style.display = 'block';                  // Maak het waarschuwingsblok zichtbaar (was verborgen via CSS)
+            previewDiv.style.display = 'none';                       // Verberg de preview sectie want er is niets te bevestigen
+            return;                                                  // Stop de functie hier, sla niets op
         }
 
         // ======================= FORMULIER WAARDEN OPHALEN =======================
-        const doopnaam = document.getElementById('doopnaam').value.trim(); // doopnaam
-        const roepnaam = document.getElementById('roepnaam').value.trim(); // roepnaam
-        const prefix = document.getElementById('prefix').value.trim();     // prefix
-        const achternaam = document.getElementById('achternaam').value.trim(); // achternaam
-        const geboorte = document.getElementById('geboortedatum').value;   // geboortedatum
-        const geslacht = document.getElementById('geslacht').value;        // geslacht
+        const doopnaam   = document.getElementById('doopnaam').value.trim();    // Officiële voornaam, trim verwijdert spaties voor/achter
+        const roepnaam   = document.getElementById('roepnaam').value.trim();    // Naam waarop persoon aangesproken wordt
+        const prefix     = document.getElementById('prefix').value.trim();      // Tussenvoegsel zoals 'van', 'de', 'van den'
+        const achternaam = document.getElementById('achternaam').value.trim();  // Familienaam
+        const geboorte   = document.getElementById('geboortedatum').value;      // Geboortedatum in formaat yyyy-mm-dd (HTML date input)
+        const geslacht   = document.getElementById('geslacht').value;           // Geslacht: M, V of X
 
         // ======================= NIEUWE PERSOON OBJECT =======================
         const person = {
-            ID: genereerCode(doopnaam, roepnaam, achternaam, geslacht), // unieke identifier
-            Doopnaam: doopnaam,   // doopnaam
-            Roepnaam: roepnaam,   // roepnaam
-            Prefix: prefix,       // prefix
-            Achternaam: achternaam, // achternaam
-            Geslacht: geslacht,   // geslacht
-            Geboortedatum: geboorte, // geboortedatum
-            Relatie: 'Hoofd-ID',  // automatisch hoofd
-            PartnerID: []         // start met lege partnerlijst
+            ID: window.genereerCode(                                 // Roep centrale ID-generator aan uit idGenerator.js
+                { Doopnaam: doopnaam, Roepnaam: roepnaam,           // Geef naamvelden mee zodat ID-letters kloppen
+                  Achternaam: achternaam, Geslacht: geslacht },      // Geslacht bepaalt de 4e letter in het ID
+                StamboomStorage.get()                                // Geef huidige dataset mee zodat ID uniek is
+            ),
+            Doopnaam:      doopnaam,                                 // Sla officiële voornaam op in het persoon-object
+            Roepnaam:      roepnaam,                                 // Sla roepnaam op
+            Prefix:        prefix,                                   // Sla tussenvoegsel op (mag leeg zijn)
+            Achternaam:    achternaam,                               // Sla familienaam op
+            Geslacht:      geslacht,                                 // Sla geslacht op (M / V / X)
+            Geboortedatum: geboorte,                                 // Sla geboortedatum op
+            Relatie:       'Hoofd-ID',                               // Eerste persoon is altijd de Hoofd-ID van de stamboom
+            PartnerID:     []                                        // Lege array: nog geen partner(s) gekoppeld bij aanmaken
         };
 
         // ======================= PREVIEW TONEN =======================
-        previewContent.textContent = JSON.stringify(person, null, 2); // JSON leesbaar maken in preview
-        previewDiv.style.display = 'block'; // preview zichtbaar maken
+        previewContent.textContent = JSON.stringify(person, null, 2); // Zet het persoon-object om naar leesbare JSON-tekst (2 spaties inspringing)
+        previewDiv.style.display = 'block';                          // Maak de preview sectie zichtbaar zodat gebruiker kan controleren
     });
 
     // ======================= CONFIRM BUTTON HANDLER =======================
-    confirmBtn.addEventListener('click', function(){
-        const person = JSON.parse(previewContent.textContent); // haal persoon uit preview
-        StamboomStorage.add(person); // voeg persoon toe aan centrale storage
-        window.location.href = "https://thvd64-cyber.github.io/MyFamTreeCollab/stamboom/manage.html"; // ga naar Manage pagina
+    confirmBtn.addEventListener('click', function() {                // Luister naar klik op de bevestigingsknop onder de preview
+        const person = JSON.parse(previewContent.textContent);       // Lees de JSON-tekst uit de preview terug naar een JavaScript object
+        StamboomStorage.add(person);                                 // Voeg de nieuwe persoon toe aan localStorage via storage.js
+        window.location.href = '../stamboom/manage.html';            // Stuur de gebruiker door naar de Manage pagina om verder te gaan
     });
 
-}); // einde DOMContentLoaded
+}); // Einde DOMContentLoaded — alles hierboven wordt pas uitgevoerd als de hele pagina klaar is
