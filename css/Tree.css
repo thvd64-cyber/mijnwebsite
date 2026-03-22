@@ -1,4 +1,4 @@
-/* ============ css/Tree.css v1.5.8 ================== */
+/* ============ css/Tree.css v2.0.0 ================== */
 /* ======================= ROOT VARIABLES ======================= */
 :root{
     --color-hoofd: #fff9c4;            /* licht geel voor HoofdID */
@@ -85,12 +85,9 @@
     text-align: center;         /* Center tekst in nodes */
 }
 
-/* Wrapper voor hele boom + BZBox naast elkaar */
-.container {
-    display: flex;              /* Flex horizontaal: boom + BZBox */
-    gap: 20px;                  /* Ruimte tussen treeContainer en BZBox */
-    align-items: flex-start;    /* Bovenkant uitlijnen */
-}
+/* Wrapper voor hele boom + BZBox naast elkaar.
+   Let op: de flex-layout wordt nu via .stamboom-wrapper in view.html geregeld.
+   .container hier is verwijderd om conflicten met de pagina-brede container te voorkomen. */
 
 /* Boom container */
 #treeContainer {
