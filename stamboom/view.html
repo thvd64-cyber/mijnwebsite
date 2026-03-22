@@ -1,112 +1,123 @@
-<!-- ======================= stamboom/view.html v1.5.10 ======================= -->
-<!-- added script relatieEngine.js"Centrale genealogische logica (berekent relaties zoals Hoofd, Partner, Kind, BZID) -->
-<!-- RelationColors.css" Kleurtoewijzing voor Hoofd, Ouders, Kinderen, BZID -->
+<!-- ======================= stamboom/view.html v2.0.0 =======================
+     Stamboomweergave: visualiseert relaties rondom een geselecteerde persoon
+     Wijziging v2.0.0: facelift — welkomstblok, inline stijlen naar <style>,
+                       zoekbalk in kader, paginatitel div verwijderd
+     Scripts: utils.js → schema.js → storage.js → relatieEngine.js → LiveSearch.js → view.js
+     ======================================================================= -->
 <!DOCTYPE html>
-<html lang="nl"> <!-- Document taal: Nederlands -->
-
+<html lang="nl">
 <head>
-<meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Mobiel responsive -->
-<title>MyFamTreeCollab - View</title> <!-- Pagina titel in browser -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyFamTreeCollab - Stamboom</title>
+    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/Tree.css">
+    <link rel="stylesheet" href="../css/RelationColors.css">
+    <style>
+        /* ======================= WELKOMSTBLOK ======================= */
+        .welkom-blok { margin-bottom: 20px; }
+        .welkom-blok h1 { font-size: 1.4rem; font-weight: bold; margin: 0 0 8px 0; color: #222; }
+        .welkom-blok p  { font-size: 0.95rem; color: #555; line-height: 1.6; margin: 0; }
 
-<!-- ======================= CSS ======================= -->
-<link rel="stylesheet" href="../css/style.css"> <!-- Algemene CSS -->
-<link rel="stylesheet" href="../css/Tree.css"> <!-- Specifieke CSS voor stamboom nodes -->
-<link rel="stylesheet" href="../css/RelationColors.css"> <!-- Kleurtoewijzing voor Hoofd, Ouders, Kinderen, BZID -->
+        /* ======================= ZOEKBALK ======================= */
+        .zoek-sectie {                                                     /* Kader rondom de zoekbalk */
+            margin-bottom: 20px;                                           /* Ruimte onder de zoeksectie */
+        }
+        #searchPerson {                                                    /* Het zoektekstveld */
+            width: 50%;                                                    /* Halve paginabreedte */
+            padding: 9px 12px;                                             /* Ruim klikgebied */
+            font-size: 1rem;                                               /* Leesbare tekstgrootte */
+            border: 1px solid #bbb;                                        /* Subtiele rand */
+            border-radius: 5px;                                            /* Afgeronde hoeken */
+            box-sizing: border-box;                                        /* Padding telt mee in breedte */
+        }
+        #searchPerson:focus {                                              /* Focusstijl bij klikken */
+            outline: none;                                                 /* Verwijder browser-outline */
+            border-color: #1E90FF;                                         /* Blauwe rand bij focus */
+        }
+
+        /* ======================= BOOM LAYOUT ======================= */
+        .boom-wrapper {                                                    /* Flex-container: boom links, broer/zus rechts */
+            display: flex;                                                 /* Naast elkaar */
+            gap: 20px;                                                     /* Ruimte tussen de twee kolommen */
+            align-items: flex-start;                                       /* Bovenkant uitlijnen */
+        }
+        #treeContainer { flex: 3; }                                       /* Stamboom krijgt 3/4 van de breedte */
+        .bz-kolom { flex: 1; }                                            /* Broer/zus kolom krijgt 1/4 */
+        .bz-kolom h3 {                                                    /* Titel boven de broer/zus kolom */
+            font-size: 1rem;                                               /* Leesbaar */
+            font-weight: bold;                                             /* Vetgedrukt */
+            margin: 0 0 10px 0;                                            /* Ruimte onder de titel */
+            color: #444;                                                   /* Donkergrijs */
+        }
+    </style>
 </head>
-
 <body>
 
 <!-- ======================= TopBar ======================= -->
-<div id="topbar-placeholder"></div> <!-- Placeholder voor TopBar -->
+<div id="topbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html') // Haal TopBar HTML op
-.then(resp => resp.text()) // Converteer response naar tekst
-.then(data => document.getElementById('topbar-placeholder').innerHTML = data); // Voeg TopBar toe in placeholder
+fetch('/MyFamTreeCollab/Layout/TopBar.html')
+    .then(resp => resp.text())
+    .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
 </script>
 
 <!-- ======================= Navbar ======================= -->
-<div id="Navbar-placeholder"></div> <!-- Placeholder voor Navbar -->
+<div id="Navbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // Haal Navbar HTML op
-.then(resp => resp.text()) // Converteer response naar tekst
-.then(data => {
-    const ph=document.getElementById('Navbar-placeholder'); // Haal placeholder element
-    if(ph) ph.innerHTML=data; // Voeg Navbar toe
-});
+fetch('/MyFamTreeCollab/Layout/Navbar.html')
+    .then(resp => resp.text())
+    .then(data => {
+        const ph = document.getElementById('Navbar-placeholder');
+        if (ph) ph.innerHTML = data;
+    });
 </script>
 
-<!-- ======================= Pagina Titel ======================= -->
-<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:5px;"> <!-- Inline styling voor titel -->
-View Stamboom <!-- Titel tekst -->
-</div>
+<!-- ======================= Hoofd content ======================= -->
+<main>
+    <div class="container">
 
-<!-- ======================= Introductie ======================= -->
-<section style="margin-top:10px; padding:10px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);"> <!-- Styling voor sectie -->
-<h2 style="margin-bottom:10px;">Welkom bij MyFamTreeCollab</h2> <!-- Intro kopje -->
+        <!-- ======================= Welkomstblok ======================= -->
+        <div class="welkom-blok">
+            <h1>Welkom bij Stamboom</h1>
+            <p>
+                Zoek een persoon op om de stamboom rondom hem of haar te bekijken.
+                Klik op een node om die persoon als nieuw middelpunt te kiezen.
+            </p>
+        </div>
 
-<p style="margin-bottom:5px; line-height:1.6;"> <!-- Intro paragraaf -->
-Deze omgeving is ontworpen om familiegeschiedenis centraal, overzichtelijk en veilig te beheren. <!-- Uitleg tekst -->
-Hier kan je personen bekijken, relaties analyseren en generaties structureren in een gedeeld platform. <!-- Verdere uitleg -->
-</p>
+        <!-- ======================= Zoekbalk ======================= -->
+        <div class="zoek-sectie">
+            <input type="text" id="searchPerson" placeholder="Zoek op ID, naam of geboortedatum..."> <!-- Zoekveld voor live search -->
+        </div>
 
-<ul style="margin-left:5px; line-height:1.6;"> <!-- Opsomming van functies -->
-<li>Hoofd persoon zoeken en visualisatie van familieverbanden</li> <!-- Punt 1 -->
-</ul>
-</section>
-
-<!-- ======================= Search ======================= -->
-<div style="margin-top:15px; margin-bottom:15px;"> <!-- Omgeving voor input veld -->
-    <input type="text" 
-           id="searchPerson" 
-           placeholder="Voer ID of naam in"
-           style="
-               width: calc(50% - 40px); /* 20px marge links + rechts */
-               margin: 0 20px;           /* horizontale marge */
-               height: 45px;             /* hogere input */
-               font-size: 1.2rem;        /* grotere letters */
-               padding: 5px 10px;        /* binnenruimte */
-               border: 1px solid #999;   /* lichte rand */
-               border-radius: 5px;       /* afgeronde hoeken */
-               box-sizing: border-box;   /* breedte inclusief padding/border */
-           ">
-</div>
-
-<!-- ======================= Box Broer/Zus ======================= -->
-<div class="tree-container-wrapper" style="display:flex; gap:20px;"> <!-- Flex layout: boom links, BZ rechts -->
-
-    <!-- ======================= STAMBOOM ======================= -->
-    <div id="treeContainer" style="flex:3;"> <!-- Container waarin view.js de boom nodes rendert -->
-        <!-- view.js plaatst hier Hoofd, Ouders, Kinderen -->
-    </div>
-
-    <!-- ======================= BZ KOLOM ======================= -->
-    <div style="flex:1;"> <!-- Wrapper voor titel + BZ nodes -->
-
-        <h4>Broer/Zus</h4> <!-- Titel boven BZBox -->
-
-        <div id="BZBox"> <!-- Container waarin view.js broers/zussen rendert -->
-            <!-- view.js plaatst hier BZID nodes -->
+        <!-- ======================= Boom + Broer/Zus ======================= -->
+        <div class="boom-wrapper">
+            <div id="treeContainer"></div>                                <!-- view.js rendert hier de boom: ouders, hoofd, partner, kinderen -->
+            <div class="bz-kolom">
+                <h3>Broers &amp; zussen</h3>                             <!-- Titel boven de broer/zus kolom -->
+                <div id="BZBox"></div>                                    <!-- view.js rendert hier de broer/zus nodes -->
+            </div>
         </div>
 
     </div>
+</main>
 
-</div>
+<!-- ======================= Scripts (volgorde verplicht) ======================= -->
+<script src="../js/utils.js"></script>
+<script src="../js/schema.js"></script>
+<script src="../js/storage.js"></script>
+<script src="../js/relatieEngine.js"></script>
+<script src="../js/LiveSearch.js"></script>
+<script src="../js/view.js"></script>
 
-<!-- ======================= Scripts ======================= -->
-<script src="../js/utils.js"></script>          <!-- centrale hulpfuncties: safe, formatDate, parseBirthday -->
-<script src="../js/schema.js"></script>           <!-- Schema definities voor personen -->
-<script src="../js/storage.js"></script>          <!-- Local storage functies -->
-<script src="../js/relatieEngine.js"></script>    <!-- Berekening relaties (Hoofd, Partner, Kind, BZID) -->
-<script src="../js/LiveSearch.js"></script>       <!-- Centrale Live Search module -->
-<script src="../js/view.js"></script>            <!-- Render boom + BZID; v1.6+ compatibel -->
-    
 <!-- ======================= Footer ======================= -->
-<div id="footer-placeholder"></div> <!-- Placeholder voor footer -->
+<div id="footer-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html') // Haal footer HTML op
-.then(resp => resp.text()) // Converteer naar tekst
-.then(data => document.getElementById('footer-placeholder').innerHTML = data); // Voeg footer toe
+fetch('/MyFamTreeCollab/Layout/Footer.html')
+    .then(resp => resp.text())
+    .then(data => document.getElementById('footer-placeholder').innerHTML = data);
 </script>
 
 </body>
