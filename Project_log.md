@@ -24,7 +24,7 @@ relatieEngine.js  ← vóór view.js / manage.js / timeline.js
 
 ---
 
-### js/utils.js `v1.0.0` ✅ nieuw aangemaakt
+### js/utils.js `v2.0.0` ✅ nieuw aangemaakt
 ```
 Centrale hulpfuncties voor MyFamTreeCollab
 Exporteert: window.FTUtils, window.ftSafe, window.ftFormatDate, window.ftParseBirthday
@@ -60,7 +60,7 @@ Gebruikt door: create.js, manage.js, storage.js
 
 ---
 
-### js/create.js `v1.1.0` ✅ herschreven
+### js/create.js `v2.0.0` ✅ herschreven
 ```
 Verwerkt het formulier voor aanmaken van de eerste persoon (Hoofd-ID)
 Vereist: schema.js, idGenerator.js, storage.js
@@ -73,7 +73,7 @@ Gebruikt door: home/create.html
 
 ---
 
-### js/manage.js `v1.4.0` ✅ herschreven
+### js/manage.js `v2.0.0` ✅ herschreven
 ```
 Beheerpagina: toont stamboom als bewerkbare tabel
 Exporteert: JSON en CSV download
@@ -113,7 +113,7 @@ Gebruikt door: view.js, timeline.js, manage.js
 
 ---
 
-### js/LiveSearch.js `v1.1.0` ✅ herschreven
+### js/LiveSearch.js `v2.0.0` ✅ herschreven
 ```
 Universele live-zoekmodule: filtert dataset op ID, Roepnaam, Achternaam, Geboortedatum
 Exporteert: window.liveSearch(), window.initLiveSearch()
@@ -128,7 +128,7 @@ Gebruikt door: view.js, timeline.js, manage.js
 
 ---
 
-### js/storage.js `v1.0.0` ✅ herschreven
+### js/storage.js `v2.0.0` ✅ herschreven
 ```
 Persistente opslag via localStorage, volledig schema-driven
 Exporteert: window.StamboomStorage (get, set, add, update, clear)
@@ -182,7 +182,7 @@ Gebruikt door: home/export.html, stamboom/storage.html
 
 ---
 
-### js/view.js `v1.6.2` ✅ gedeeltelijk gewijzigd
+### js/view.js `v2.0.0` ✅ gedeeltelijk gewijzigd
 ```
 Stamboomvisualisatie: rendert boom met nodes per relatietype
 Vereist: utils.js, schema.js, storage.js, relatieEngine.js, LiveSearch.js
@@ -262,6 +262,45 @@ Vereist: schema.js, storage.js, export.js
 - `DeleteRow.js` en `schemaGlobal.js` verwijderd
 - `idGenerator.js` volledig herschreven (v2.0.0)
 - `create.js` en `manage.js` aangepast: lokale `genereerCode()` verwijderd
+
+### Sessie 9 — Versienummers gestandaardiseerd naar v2.0.0
+Alle door ons aangemaakte of aangepaste bestanden starten vanaf v2.0.0.
+Bestanden bijgewerkt:
+- js/LiveSearch.js: v1.1.0 → v2.0.0
+- js/create.js: v1.1.0 → v2.0.0
+- js/manage.js: v1.4.0 → v2.0.0
+- js/storage.js: v1.0.0 → v2.0.0
+- js/utils.js: v1.0.0 → v2.0.0
+- js/view.js: v1.6.2 → v2.0.0
+- js/timeline.js: v2.2.0 → v2.0.0
+- css/Tree.css: v1.5.8 → v2.0.0
+- bronnen/template.html: v1.0.0 → v2.0.0
+- stamboom/manage.html: v1.3.20 → v2.0.0
+
+### Sessie 8 — bronnen/template.html facelift + versiecorrecties
+- `bronnen/template.html` facelift (v1.0.0): uitleg herschreven van export → template-context
+- Info-blok toegevoegd met invultips (datumformaat, geslacht, PartnerID met pipe)
+- Plaatshouder '...' in lege tabelrijen i.p.v. onzichtbare lege cellen
+- `stamboom/timeline.html` versie gecorrigeerd naar v2.0.0
+- `stamboom/stats.html` versie gecorrigeerd naar v2.0.0
+
+### Sessie 7 — Facelift alle pagina's
+- `home/import.html` facelift (v2.0.0)
+- `home/about.html` facelift (v2.0.0): automatische redirect verwijderd, binnenkort-blok
+- `home/print.html` facelift (v2.0.0): automatische redirect verwijderd, binnenkort-blok
+- `stamboom/stats.html` facelift (v1.0.0): // commentaar boven DOCTYPE verwijderd
+- `stamboom/view.html` facelift (v2.0.0)
+- `stamboom/timeline.html` facelift (v1.0.0): uitgecommentarieerde paginatitel opgeruimd
+- `stamboom/storage.html` facelift (v2.0.0): link naar exportpagina toegevoegd
+- `index.html` facelift (v2.0.0): hardcoded absolute URL vervangen door relatief pad
+
+### Sessie 6 — Create facelift
+- `create.html` facelift (v2.0.0): welkomstblok, alle inline stijlen naar `<style>` blok
+- Formulier in sectiekader met subtitel en verplichte velden gemarkeerd
+- Preview en waarschuwing als herbruikbare CSS-klassen
+- Manage-link sectie onderaan voor gebruikers met bestaande stamboom
+- Losse paginatitel div verwijderd
+- BACKLOG.md bijgewerkt: F3-30 toegevoegd en ✅
 
 ### Sessie 5 — Export facelift + backlog/project setup
 - `export.html` facelift (v2.1.0): welkomstblok, CSV en JSON als aparte secties met eigen kader
