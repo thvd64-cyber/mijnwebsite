@@ -113,15 +113,18 @@ Gebruikt door: view.js, timeline.js, manage.js
 
 ---
 
-### js/LiveSearch.js `v1.0.3` ✅ gedeeltelijk gewijzigd
+### js/LiveSearch.js `v1.1.0` ✅ herschreven
 ```
 Universele live-zoekmodule: filtert dataset op ID, Roepnaam, Achternaam, Geboortedatum
 Exporteert: window.liveSearch(), window.initLiveSearch()
 Vereist: utils.js (voor safe())
 Gebruikt door: view.js, timeline.js, manage.js
 ```
-**Wijzigingen t.o.v. origineel:**
+**Wijzigingen t.o.v. v1.0.3:**
 - Lokale `safe()` verwijderd — gebruikt nu `window.ftSafe` uit utils.js
+- Volledig in één IIFE `(function(){})()` gewikkeld — lost `Uncaught SyntaxError: Identifier 'safe' has already been declared` op
+- `initLiveSearch` en `liveSearch` zitten nu beide binnen dezelfde IIFE scope
+- Inline commentaar toegevoegd op elke regel
 
 ---
 
@@ -219,6 +222,11 @@ Gebruikt door: Admin/LSD.html
 - `DeleteRow.js` en `schemaGlobal.js` verwijderd
 - `idGenerator.js` volledig herschreven (v2.0.0)
 - `create.js` en `manage.js` aangepast: lokale `genereerCode()` verwijderd
+
+### Sessie 2b — Bugfix LiveSearch
+- `LiveSearch.js` volledig in IIFE gewikkeld (v1.1.0)
+- Oorzaak: `const safe` stond op globaal niveau en botste met `const safe` in view.js/timeline.js
+- Foutmelding was: `Uncaught SyntaxError: Identifier 'safe' has already been declared`
 
 ### Sessie 2 — Duplicatenronde
 - `utils.js` aangemaakt als centraal hulpbestand (nieuw)
