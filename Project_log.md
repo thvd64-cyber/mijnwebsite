@@ -263,6 +263,13 @@ Vereist: schema.js, storage.js, export.js
 - `idGenerator.js` volledig herschreven (v2.0.0)
 - `create.js` en `manage.js` aangepast: lokale `genereerCode()` verwijderd
 
+### Sessie 5 — Export facelift + backlog/project setup
+- `export.html` facelift (v2.1.0): welkomstblok, CSV en JSON als aparte secties met eigen kader
+- Losse "Export" paginatitel div verwijderd
+- `PROJECT.md` aangemaakt: roadmap, ADR's, mapstructuur, fasering
+- `BACKLOG.md` aangemaakt: 55 taken over 5 fasen, technische schuld, Definition of Done
+- `BACKLOG.md` bijgewerkt: F3-29 (export facelift) toegevoegd en direct ✅
+
 ### Sessie 4 — storage.js opschonen
 - `storage.js` volledig herschreven (v1.0.0)
 - migrate() alleen nog bij add(), niet meer bij elke get()
