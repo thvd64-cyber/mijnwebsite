@@ -1,155 +1,145 @@
-<!-- ======================= index.html v1.1.3 ======================= -->
+<!-- ======================= index.html v2.0.0 =======================
+     Homepagina: introductie, foto's en start-knop
+     Wijziging v2.0.0: facelift — paginatitel div verwijderd, inline stijlen
+                       naar <style>, Start Nu knop relatief pad, opmaak consistent
+     ======================================================================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
-    <title>MyFamTreeCollab - Home</title> <!-- Browser tab titel -->
-    <link rel="icon" type="img/Tree_Vorilo (5.1).png" href="img/Tree_Vorilo (5.1).png">
-    <link rel="stylesheet" href="css/style.css"> <!-- Verbindt de externe CSS -->
-
-    <!-- ======================= Inline CSS voor Foto Grid ======================= -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyFamTreeCollab - Home</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/style.css">
     <style>
-        /* ======================= Foto Grid ======================= */
-        .foto-grid {
-            display: flex;           /* Flexbox zodat foto’s naast elkaar komen */
-            flex-wrap: wrap;         /* Laat foto’s op mobiel onder elkaar vallen */
-            gap: 20px;               /* Ruimte tussen de foto’s */
-            justify-content: center; /* Centrer de rij */
+        /* ======================= FOTO GRID ======================= */
+        .foto-grid {                                                       /* Flex-container voor de foto's */
+            display: flex;                                                 /* Naast elkaar */
+            flex-wrap: wrap;                                               /* Op mobiel onder elkaar */
+            gap: 20px;                                                     /* Ruimte tussen de foto's */
+            justify-content: center;                                       /* Horizontaal centreren */
+            margin: 24px 0;                                                /* Ruimte boven en onder het grid */
         }
+        .foto-grid div {                                                   /* Eén foto-cel */
+            flex: 1 1 45%;                                                 /* Twee foto's per rij op breed scherm */
+            aspect-ratio: 4/3;                                             /* Vaste breedte-hoogteverhouding */
+            overflow: hidden;                                              /* Afbeelding wordt bijgeknipt als die groter is */
+            border: 2px solid #ddd;                                        /* Subtiele rand */
+            border-radius: 6px;                                            /* Afgeronde hoeken */
+        }
+        .foto-grid div:nth-child(2n) { border-style: dashed; }           /* Elke tweede foto krijgt een stippelrand als accent */
+        .foto-grid div img { width: 100%; height: 100%; object-fit: cover; } /* Foto vult de cel volledig */
 
-        .foto-grid div {
-            flex: 1 1 45%;           /* Twee foto’s per rij op breed scherm */
-            aspect-ratio: 4/3;       /* Zorgt voor vaste hoogte-breedte verhouding */
-            display: flex;           /* Voor centreren van de afbeelding */
-            align-items: center;     /* Verticaal centreren */
-            justify-content: center; /* Horizontaal centreren */
-            overflow: hidden;        /* Zorgt dat afbeelding binnen container blijft */
-            border: 2px solid #ccc;  /* Standaard rand */
-        }
+        @media (max-width: 768px) { .foto-grid div { flex: 1 1 100%; } } /* Op mobiel één foto per rij */
 
-        .foto-grid div:nth-child(2n) {
-            border-style: dashed;    /* Elke tweede foto krijgt dashed rand */
-        }
+        /* ======================= INTRO SECTIE ======================= */
+        .intro-sectie { margin-bottom: 32px; }                            /* Ruimte onder de introductie */
+        .intro-sectie h2 { font-size: 1.3rem; font-weight: bold; margin: 0 0 12px 0; color: #222; }
+        .intro-sectie p  { font-size: 0.95rem; color: #555; line-height: 1.7; margin: 0 0 12px 0; }
+        .intro-sectie ul { margin: 0 0 12px 20px; }                       /* Lijst met wat inspringing */
+        .intro-sectie li { font-size: 0.95rem; color: #555; line-height: 1.8; } /* Lijstitems */
 
-        .foto-grid div img {
-            width: 100%;             /* Vult container breedte */
-            height: 100%;            /* Vult container hoogte */
-            object-fit: cover;       /* Houdt verhouding en vult container */
+        /* ======================= START SECTIE ======================= */
+        .start-sectie {                                                    /* Sectie met de grote Start Nu knop */
+            text-align: center;                                            /* Alles centreren */
+            margin: 40px 0;                                                /* Ruimte boven en onder */
         }
+        .start-sectie h2 { font-size: 1.3rem; font-weight: bold; margin: 0 0 10px 0; color: #222; }
+        .start-sectie p  { font-size: 0.95rem; color: #555; margin: 0 0 20px 0; }
+        .knop-start {                                                      /* Grote groene start-knop */
+            display: inline-block;                                         /* Inline voor automatische breedte */
+            padding: 14px 32px;                                            /* Ruim klikgebied */
+            background: #4CAF50;                                           /* Groen voor 'beginnen' */
+            color: #fff;                                                   /* Witte tekst */
+            text-decoration: none;                                         /* Geen onderstreping */
+            border-radius: 8px;                                            /* Afgeronde hoeken */
+            font-size: 1.1rem;                                             /* Iets groter dan normaal */
+            font-weight: bold;                                             /* Vetgedrukt */
+            transition: background 0.2s;                                   /* Vloeiende hover overgang */
+        }
+        .knop-start:hover { background: #43a047; }                        /* Donkerder groen bij hover */
 
-        /* ======================= Mobiel aanpassing ======================= */
-        @media (max-width: 768px) {
-            .foto-grid div {
-                flex: 1 1 100%;      /* Op smalle schermen 1 foto per rij */
-            }
-        }
+        /* ======================= NIEUWS SECTIE ======================= */
+        .nieuws-sectie { margin-top: 32px; }
+        .nieuws-sectie h2 { font-size: 1.1rem; font-weight: bold; margin: 0 0 8px 0; color: #333; }
+        .nieuws-sectie p  { font-size: 0.95rem; color: #555; line-height: 1.6; margin: 0; }
     </style>
 </head>
 <body>
 
-<!-- ======================= layout/TopBar.html ======================= -->
-<div id="topbar-placeholder"></div> <!-- Container voor TopBar -->
+<!-- ======================= TopBar ======================= -->
+<div id="topbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
+fetch('/MyFamTreeCollab/Layout/TopBar.html')
     .then(resp => resp.text())
-    .then(data => {
-        document.getElementById('topbar-placeholder').innerHTML = data; // Plaats TopBar
-    });
+    .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
 </script>
 
-<!-- ======================= layout/Navbar.html ======================= -->
-<div id="Navbar-placeholder"></div> <!-- Container voor Navbar -->
+<!-- ======================= Navbar ======================= -->
+<div id="Navbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar ophalen
+fetch('/MyFamTreeCollab/Layout/Navbar.html')
     .then(resp => resp.text())
     .then(data => {
         const placeholder = document.getElementById('Navbar-placeholder');
-        if (placeholder) {
-            placeholder.innerHTML = data; // Inject Navbar
-        } else {
-            console.error('Navbar-placeholder niet gevonden');
-        }
+        if (placeholder) placeholder.innerHTML = data;
+        else console.error('Navbar-placeholder niet gevonden');
     });
 </script>
 
-<!-- ======================= Hoofd pagina ======================= -->
-<!-- ======================= Pagina Titel ======================= -->
-<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:20px;"></div> <!-- Dynamische paginatitel -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const pageTitleDiv = document.getElementById('pageTitle');
-    const path = window.location.pathname.split("/").pop();
-    let title = path.replace('.html','');
-    title = title.replace(/[-_]/g,' ').replace(/\b\w/g, c => c.toUpperCase());
-    pageTitleDiv.textContent = title;
-});
-</script>
+<!-- ======================= Hoofd content ======================= -->
+<main>
+    <div class="container">
 
-<!-- ======================= Content ======================= -->
-<main id="home" style="padding:20px;">
-    <!-- Intro sectie met bullets -->
-    <section>
-        <h2>Welkom bij MyFamTreeCollab</h2>
-        <p>
-            MyFamTreeCollab is een veilig en intuïtief platform om uw familiegeschiedenis te ontdekken, vast te leggen en te delen, terwijl u altijd de volledige controle behoudt over uw eigen brongegevens.
-        </p>
-        <ul>
-            <li><strong>Bouw en vorm uw stamboom</strong> met alle details die voor u belangrijk zijn.</li>
-            <li><strong>Beheer broninformatie volledig</strong> – alles wordt lokaal opgeslagen op uw apparaat, zodat u beslist met wie u gegevens deelt.</li>
-            <li><strong>Toon een overzichtelijke en mooie stamboom</strong> die uw familiegeschiedenis visueel tot leven brengt.</li>
-        </ul>
-        <p>
-            In de toekomst kan MyFamTreeCollab worden uitgebreid met een centrale opslagfunctie om gegevens gemakkelijker te delen, met duidelijke afspraken over kosten en beveiliging.
-        </p>
-    </section>
+        <!-- ======================= Introductie ======================= -->
+        <section class="intro-sectie">
+            <h2>Welkom bij MyFamTreeCollab</h2>
+            <p>
+                MyFamTreeCollab is een veilig en intuïtief platform om je familiegeschiedenis
+                te ontdekken, vast te leggen en te visualiseren — volledig lokaal in je browser,
+                zonder dat je gegevens je apparaat verlaten.
+            </p>
+            <ul>
+                <li><strong>Bouw je stamboom</strong> met alle details die voor jou belangrijk zijn.</li>
+                <li><strong>Beheer je data volledig</strong> — alles wordt lokaal opgeslagen, jij beslist wat je deelt.</li>
+                <li><strong>Visualiseer je familie</strong> via de stamboom- en tijdlijnweergave.</li>
+            </ul>
+        </section>
 
-    <!-- ======================= Foto's boven Start Nu ======================= -->
-    <section class="foto-grid">
-        <div>
-            <img src="img/FotoGezin1.png" alt="Foto 1">
-        </div>
-        <div>
-            <img src="img/Stats1.png" alt="Foto 2">
-        </div>
-    </section>
+        <!-- ======================= Foto's boven Start Nu ======================= -->
+        <section class="foto-grid">
+            <div><img src="img/FotoGezin1.png" alt="Gezinsfoto"></div>
+            <div><img src="img/Stats1.png"     alt="Statistieken weergave"></div>
+        </section>
 
-    <!-- ======================= Start Nu sectie met opvallende knop ======================= -->
-    <section style="text-align:center; margin:40px 0;">
-        <h2>Start uw Stamboom</h2>
-        <p>Begin vandaag nog met het vastleggen en beheren van uw familiegeschiedenis – veilig, lokaal en gebruiksvriendelijk.</p>
-        <a href="https://thvd64-cyber.github.io/MyFamTreeCollab/home/create.html" 
-           class="btn" 
-           style="background-color:#4CAF50; color:white; padding:15px 30px; font-size:1.2rem; text-decoration:none; border-radius:10px; transition:0.3s;">
-           Start Nu
-        </a>
-    </section>
+        <!-- ======================= Start Nu ======================= -->
+        <section class="start-sectie">
+            <h2>Start je stamboom</h2>
+            <p>Begin vandaag met het vastleggen van je familiegeschiedenis.</p>
+            <a href="home/create.html" class="knop-start">Start Nu</a>    <!-- Relatief pad naar create.html -->
+        </section>
 
-    <!-- ======================= Foto's onder Start Nu ======================= -->
-    <section class="foto-grid">
-        <div>
-            <img src="img/Manage1.png" alt="Foto 3">
-        </div>
-        <div>
-            <img src="img/View1.png" alt="Foto 4">
-        </div>
-    </section>
+        <!-- ======================= Foto's onder Start Nu ======================= -->
+        <section class="foto-grid">
+            <div><img src="img/Manage1.png" alt="Beheer weergave"></div>
+            <div><img src="img/View1.png"   alt="Stamboom weergave"></div>
+        </section>
 
-    <!-- ======================= Nieuws & Updates ======================= -->
-    <section>
-        <h2>Nieuws & Updates</h2>
-        <p>Bekijk de laatste functies, tips en updates om uw stamboom nog beter te beheren.</p>
-    </section>
+        <!-- ======================= Nieuws & Updates ======================= -->
+        <section class="nieuws-sectie">
+            <h2>Nieuws &amp; updates</h2>
+            <p>Bekijk de laatste functies, tips en updates om je stamboom nog beter te beheren.</p>
+        </section>
+
+    </div>
 </main>
 
 <!-- ======================= Footer ======================= -->
-<div id="footer-placeholder"></div> <!-- Container voor Footer -->
+<div id="footer-placeholder"></div>
 <script>
 fetch('/MyFamTreeCollab/Layout/Footer.html')
     .then(resp => resp.text())
-    .then(data => {
-        document.getElementById('footer-placeholder').innerHTML = data; // Plaats Footer
-    });
+    .then(data => document.getElementById('footer-placeholder').innerHTML = data);
 </script>
 
 </body>
