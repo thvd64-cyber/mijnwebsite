@@ -1,167 +1,110 @@
-<!-- ======================= home/export.html v1.0.1 ======================= -->
+<!-- ======================= home/export.html v2.0.0 =======================
+     Exportpagina: CSV en JSON download van de volledige stamboom
+     Scripts: schema.js → storage.js → export.js (verplichte volgorde)
+     ======================================================================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
-    <title>MyFamTreeCollab - Layout1</title> <!-- ⚠️ Browser tab titel -->
-     <!-- ======================= FAVICON ======================= -->
-    <link rel="icon" href="../favicon.ico" type="image/x-icon"> <!-- Tabblad icoon -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt de externe CSS voor volledige styling -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyFamTreeCollab - Export</title>
+    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* ======================= KNOP STIJLEN (overgenomen van storage.html) ======================= */
+        button          { padding:8px 12px; cursor:pointer; border:none; border-radius:4px; }
+        #exportJSONBtn  { background:#0275d8; color:#fff; }               /* Blauw voor JSON-export */
+        #exportJSONBtn:hover { background:#025aa5; }                      /* Donkerder blauw bij hover */
+        #exportCSVBtn   { background:#5bc0de; color:#fff; }               /* Lichtblauw voor CSV-export */
+        #exportCSVBtn:hover  { background:#31b0d5; }                      /* Donkerder lichtblauw bij hover */
+        #buttonsContainer { margin-bottom:10px; display:flex; gap:10px; flex-wrap:wrap; } /* Knoppen naast elkaar met ruimte ertussen */
+    </style>
 </head>
 <body>
-<!-- ======================= layout/TopBar.html ======================= -->
 
-<!-- Placeholder waar de TopBar.html inhoud wordt ingeladen -->
-<div id="topbar-placeholder"></div>  <!-- container voor TopBar content -->
-
+<!-- ======================= TopBar ======================= -->
+<div id="topbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
-    .then(resp => resp.text())                // lees de inhoud van het bestand Converteert response naar tekst
-    .then(data => {                           // werk met de opgehaalde HTML data
-        document.getElementById('topbar-placeholder').innerHTML = data;  // plaats de TopBar HTML in de placeholder
-    });
+fetch('/MyFamTreeCollab/Layout/TopBar.html')
+    .then(resp => resp.text())
+    .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
 </script>
-<!-- ======================= layout/Navbar.html ======================= -->
-<div id="Navbar-placeholder"></div> <!-- plek waar Navbar komt -->
 
+<!-- ======================= Navbar ======================= -->
+<div id="Navbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // Navbar bestand ophalen
-    .then(resp => resp.text())               // omzetten naar HTML tekst
+fetch('/MyFamTreeCollab/Layout/Navbar.html')
+    .then(resp => resp.text())
     .then(data => {
-        const placeholder = document.getElementById('Navbar-placeholder'); // placeholder ophalen
-        if (placeholder) {                   // controleren of element bestaat
-            placeholder.innerHTML = data;    // Navbar injecteren
-        } else {
-            console.error('Navbar-placeholder niet gevonden'); // Debugmelding
-        }
+        const placeholder = document.getElementById('Navbar-placeholder');
+        if (placeholder) placeholder.innerHTML = data;
     });
 </script>
 
-<!-- ======================= Hoofd pagina ======================= -->
-<!-- ======================= Pagina Titel Manueel ======================= -->
+<!-- ======================= Paginatitel ======================= -->
 <div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const pageTitleDiv = document.getElementById('pageTitle');  // Doel div
-    const title = "Export";            // ⚠️ Zelf invullen title
-    pageTitleDiv.textContent = title
-        .replace(/[-_]/g,' ')          // underscore/koppelteken → spatie
-        .replace(/\b\w/g, c => c.toUpperCase()); // eerste letter hoofdletter
+    document.getElementById('pageTitle').textContent = 'Export';          // Paginatitel instellen
 });
 </script>
-<!-- ======================= MAIN CONTENT ======================= -->
+
+<!-- ======================= Hoofd content ======================= -->
 <main>
     <div class="container">
 
-        <!-- ======================= Professionele uitleg CSV-export ======================= -->
+        <!-- ======================= Uitleg ======================= -->
         <div style="margin-bottom:15px; font-size:0.95rem; color:#555; line-height:1.5;">
-            <strong>Hoe werkt de CSV-export?</strong><br>
-            1. Het CSV-bestand kan worden geopend in Excel of andere spreadsheetprogramma's.<br>
-            2. Je kunt altijd zelf een bestandsnaam kiezen via de prompt.<br>
-            3. <strong>DuckDuckGo, Chrome of Edge (HTTPS of localhost)</strong>: je krijgt een echte “Opslaan als” dialoog, waarmee je ook de locatie van het bestand kunt kiezen.<br>
-            4. <strong>Andere browsers</strong> (Firefox, Safari, oudere versies): de locatiekeuze wordt niet ondersteund. Het bestand wordt automatisch opgeslagen in je standaard downloadmap. Een alert legt dit uit bij de export.<br>
-            5. Dit geeft maximale compatibiliteit en duidelijke feedback ongeacht je browser.
+            <strong>Exporteer je stamboom</strong><br>
+            Gebruik <strong>Export CSV</strong> om je data te openen in Excel of andere spreadsheetprogramma's.<br>
+            Gebruik <strong>Export JSON</strong> om een volledige back-up te maken die je later weer kunt importeren.<br><br>
+            <strong>Over CSV opslaan:</strong><br>
+            Op Chrome of Edge (HTTPS) krijg je een "Opslaan als" dialoog om de locatie te kiezen.<br>
+            Op andere browsers wordt het bestand automatisch opgeslagen in je downloadmap.
         </div>
 
-        <!-- ======================= Export knop ======================= -->
-        <button id="exportBtn">Exporteer CSV</button>
-        <p id="exportStatus"></p>
+        <!-- ======================= Knoppen (stijl overgenomen van storage.html) ======================= -->
+        <div id="buttonsContainer">
+            <button id="exportJSONBtn">Export JSON</button>               <!-- Knop voor JSON-export -->
+            <button id="exportCSVBtn">Exporteer CSV</button>              <!-- Knop voor CSV-export -->
+        </div>
+
+        <!-- ======================= Statusmelding ======================= -->
+        <p id="exportStatus"></p>                                         <!-- Hier wordt de status van de export getoond -->
+
     </div>
 </main>
-<!-- ======================= EXPORT JS ======================= -->
+
+<!-- ======================= Scripts (volgorde verplicht) ======================= -->
+<script src="../js/schema.js"></script>       <!-- Laad eerst het schema met veldnamen -->
+<script src="../js/storage.js"></script>      <!-- Laad dan de storage API (StamboomStorage) -->
+<script src="../js/export.js"></script>       <!-- Laad dan de centrale exportmodule (ExportModule) -->
+
 <script>
-// 1️⃣ Headers voor CSV
-const headers = ["ID","Doopnaam","Roepnaam","Prefix","Achternaam","Geslacht",
-"Geboortedatum","Geboorteplaats","Overlijdensdatum","Overlijdensplaats",
-"Vader","Moeder ID","Partner ID","Huwelijksdatum","Huwelijksplaats",
-"Opmerkingen","Huisadressen","ContactInfo","URL"];
+document.addEventListener('DOMContentLoaded', function () {
 
-// 2️⃣ Mapping naar object-properties
-const mapping = {
-    "ID":"id","Doopnaam":"doopnaam","Roepnaam":"roepnaam","Prefix":"prefix","Achternaam":"achternaam","Geslacht":"geslacht",
-    "Geboortedatum":"geboortedatum","Geboorteplaats":"geboorteplaats","Overlijdensdatum":"overlijdensdatum","Overlijdensplaats":"overlijdensplaats",
-    "Vader":"vader","Moeder ID":"moederId","Partner ID":"partnerId","Huwelijksdatum":"huwelijksdatum","Huwelijksplaats":"huwelijksplaats",
-    "Opmerkingen":"opmerkingen","Huisadressen":"huisadressen","ContactInfo":"contactInfo","URL":"url"
-};
+    const statusEl      = document.getElementById('exportStatus');        // Haal het statuselement op voor fout/succesmeldingen
+    const exportCSVBtn  = document.getElementById('exportCSVBtn');        // Haal de CSV-exportknop op
+    const exportJSONBtn = document.getElementById('exportJSONBtn');       // Haal de JSON-exportknop op
 
-// 3️⃣ CSV-veld veilig maken
-function escapeCSV(value) {
-    if (value == null) return "";
-    const str = String(value).replace(/"/g,'""');
-    return `"${str}"`;
-}
-
-// 4️⃣ Event listener op export knop
-document.getElementById("exportBtn").addEventListener("click", async function() {
-    const status = document.getElementById("exportStatus");
-    const data = JSON.parse(localStorage.getItem("stamboomData") || "[]");
-
-    if(data.length === 0) {
-        status.textContent = "⚠️ Geen personen om te exporteren.";
-        status.style.color="red";
-        return;
-    }
-
-    // 5️⃣ Standaard bestandsnaam op basis van datum
-    const now = new Date();
-    const defaultName = `stamboom_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-
-    // 6️⃣ Prompt voor bestandsnaam
-    let userFileName = prompt("Voer bestandsnaam in (zonder .csv):", defaultName);
-    if(!userFileName) userFileName = defaultName;
-    const fileName = `${userFileName}.csv`;
-
-    // 7️⃣ CSV inhoud opbouwen
-    let csvContent = headers.map(escapeCSV).join(",") + "\n";
-    data.forEach(person => {
-        const row = headers.map(header => escapeCSV(person[mapping[header]] || ""));
-        csvContent += row.join(",") + "\n";
+    exportCSVBtn.addEventListener('click', function () {                  // Luister naar klik op de CSV-knop
+        window.ExportModule.exportCSV(statusEl);                          // Roep de centrale CSV-exportfunctie aan uit export.js
     });
 
-    try {
-        // 8️⃣ Moderne Chrome/Edge met HTTPS
-        if(window.showSaveFilePicker && location.protocol==="https:") {
-            const fileHandle = await window.showSaveFilePicker({
-                suggestedName: fileName,
-                types:[{description:"CSV bestand", accept:{"text/csv":[".csv"]}}]
-            });
-            const writable = await fileHandle.createWritable();
-            await writable.write(csvContent);
-            await writable.close();
-            status.textContent = `✅ CSV succesvol geëxporteerd als ${fileName} (locatie gekozen)`;
-            status.style.color="green";
-        } else {
-            // 9️⃣ Fallback voor andere browsers
-            alert("⚠️ Deze browser ondersteunt geen locatiekeuze. Het bestand wordt opgeslagen in de downloadmap.");
-            const blob = new Blob([csvContent], {type:"text/csv"});
-            const a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(a.href);
-            status.textContent = `✅ CSV succesvol geëxporteerd als ${fileName} (downloadmap)`;
-            status.style.color="green";
-        }
-    } catch(err) {
-        console.error(err);
-        status.textContent = "❌ Export geannuleerd of mislukt.";
-        status.style.color="red";
-    }
+    exportJSONBtn.addEventListener('click', function () {                 // Luister naar klik op de JSON-knop
+        window.ExportModule.exportJSON(statusEl);                         // Roep de centrale JSON-exportfunctie aan uit export.js
+    });
+
 });
 </script>
-  <!-- ======================= layout/Footer.html ======================= -->
-<div id="footer-placeholder"></div>  <!-- Doel: container voor Footer content -->
 
+<!-- ======================= Footer ======================= -->
+<div id="footer-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html')  // pad naar de layout/Footer.html
-    .then(resp => resp.text())                // response omzetten naar leesbare HTML
-    .then(data => {                           // werk met de opgehaalde HTML
-        document.getElementById('footer-placeholder').innerHTML = data; // Footer injecteren
-    });
+fetch('/MyFamTreeCollab/Layout/Footer.html')
+    .then(resp => resp.text())
+    .then(data => document.getElementById('footer-placeholder').innerHTML = data);
 </script>
+
 </body>
 </html>
