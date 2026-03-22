@@ -19,10 +19,6 @@
     .btn-reset { background:#d9534f; color:#fff; }
     .btn-reset:hover { background:#c9302c; }
     #buttonsContainer { margin-bottom:10px; display:flex; gap:10px; flex-wrap:wrap; }
-    #exportJSONBtn { background:#0275d8; color:#fff; }
-    #exportJSONBtn:hover { background:#025aa5; }
-    #exportCSVBtn { background:#5bc0de; color:#fff; }
-    #exportCSVBtn:hover { background:#31b0d5; }
     @media(max-width:768px){ table, th, td { font-size:0.9rem; } }
     </style>
 </head>
@@ -54,8 +50,6 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
 
     <!-- ======================= KNOPPEN ======================= -->
     <div id="buttonsContainer">
-        <button id="exportJSONBtn">Export JSON</button>
-        <button id="exportCSVBtn">Export CSV</button>
         <button id="resetBtn" class="btn-reset">Reset Stamboom</button>
     </div>
 
@@ -67,7 +61,6 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
 <!-- ======================= Scripts (volgorde verplicht) ======================= -->
 <script src="../js/schema.js"></script>       <!-- Laad eerst het schema met veldnamen -->
 <script src="../js/storage.js"></script>      <!-- Laad dan de storage API (StamboomStorage) -->
-<script src="../js/export.js"></script>       <!-- Laad de centrale exportmodule (ExportModule) -->
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -80,8 +73,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const container     = document.getElementById('storageContainer');   // Container voor de datatable
     const info          = document.getElementById('storageInfo');         // Element voor versie + recordtelling
     const resetBtn      = document.getElementById('resetBtn');            // Reset-knop
-    const exportJSONBtn = document.getElementById('exportJSONBtn');       // JSON-exportknop
-    const exportCSVBtn  = document.getElementById('exportCSVBtn');        // CSV-exportknop
 
     const columns = window.StamboomSchema                                 // Haal kolomnamen op uit het centrale schema
         ? [...window.StamboomSchema.fields]                               // Gebruik de officiële veldlijst als schema.js geladen is
@@ -154,15 +145,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         applyFilters();                                                   // Render tabel direct bij laden
     }
-
-    /* ======================= EXPORT KNOPPEN → centrale export.js ======================= */
-    exportCSVBtn.addEventListener('click', function () {                  // Luister naar klik op CSV-knop
-        window.ExportModule.exportCSV();                                  // Roep centrale CSV-exportfunctie aan
-    });
-
-    exportJSONBtn.addEventListener('click', function () {                 // Luister naar klik op JSON-knop
-        window.ExportModule.exportJSON();                                 // Roep centrale JSON-exportfunctie aan
-    });
 
     /* ======================= RESET KNOP ======================= */
     resetBtn.addEventListener('click', function () {                      // Luister naar klik op reset-knop
