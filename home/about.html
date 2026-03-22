@@ -1,82 +1,95 @@
-<!-- ======================= home/about.html V1.0.0 ======================= --> 
+<!-- ======================= home/about.html v2.0.0 =======================
+     Over-pagina: tijdelijk niet beschikbaar, consistente opmaak
+     Wijziging v2.0.0: facelift — Navbar + TopBar + 'komt binnenkort' blok,
+                       geen aparte header meer, script.js verwijderd
+     ======================================================================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About - Onder Constructie</title>
+    <title>MyFamTreeCollab - Over</title>
+    <link rel="icon" href="../favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="../css/style.css">
-
-    <!-- Automatisch terug naar Home na 5 seconden -->
-    <meta http-equiv="refresh" content="5; url=/MyFamTreeCollab/">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #fdfdfd;
-            color: #333;
-            text-align: center;
+        /* ======================= BINNENKORT BLOK ======================= */
+        .binnenkort-blok {                                                 /* Centraal informatieblok */
+            max-width: 520px;                                              /* Niet te breed */
+            margin: 0 auto;                                                /* Horizontaal centreren */
+            text-align: center;                                            /* Tekst centreren */
+            padding: 48px 24px;                                            /* Ruimte rondom de inhoud */
         }
-
-        header {
-            background-color: #004080;
-            color: white;
-            padding: 1rem 2rem;
+        .binnenkort-blok .icoon {                                         /* Groot icoon boven de tekst */
+            font-size: 3rem;                                               /* Groot genoeg om op te vallen */
+            margin-bottom: 16px;                                           /* Ruimte onder het icoon */
         }
-
-        main {
-            padding: 4rem 2rem;
+        .binnenkort-blok h1 {                                             /* Primaire titel */
+            font-size: 1.4rem;                                             /* Groter dan de broodtekst */
+            font-weight: bold;                                             /* Vetgedrukt */
+            margin: 0 0 12px 0;                                            /* Ruimte onder de titel */
+            color: #222;                                                   /* Bijna zwart */
         }
-
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 1rem;
+        .binnenkort-blok p {                                              /* Uitlegtekst */
+            font-size: 0.95rem;                                            /* Leesbaar */
+            color: #555;                                                   /* Middengrijs */
+            line-height: 1.6;                                              /* Ruime regelafstand */
+            margin: 0 0 24px 0;                                            /* Ruimte onder de tekst */
         }
-
-        h2 {
-            color: #004080;
-            margin-bottom: 1rem;
+        .knop-home {                                                       /* Knop terug naar home */
+            display: inline-block;                                         /* Inline zodat het niet de volle breedte inneemt */
+            padding: 10px 24px;                                            /* Ruim klikgebied */
+            background: #1E90FF;                                           /* Blauw */
+            color: #fff;                                                   /* Witte tekst */
+            text-decoration: none;                                         /* Geen onderstreping */
+            border-radius: 5px;                                            /* Afgeronde hoeken */
+            font-size: 0.95rem;                                            /* Leesbaar */
+            font-weight: bold;                                             /* Vetgedrukt */
         }
-
-        p {
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 0.6rem 1.2rem;
-            background-color: #0080ff;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: bold;
-            transition: background 0.3s;
-        }
-
-        .btn:hover {
-            background-color: #005bb5;
-        }
+        .knop-home:hover { background: #1278d4; }                         /* Donkerder bij hover */
     </style>
 </head>
 <body>
 
-<header>
-    <h1>Mijn Website</h1>
-</header>
+<!-- ======================= TopBar ======================= -->
+<div id="topbar-placeholder"></div>
+<script>
+fetch('/MyFamTreeCollab/Layout/TopBar.html')
+    .then(resp => resp.text())
+    .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
+</script>
 
+<!-- ======================= Navbar ======================= -->
+<div id="Navbar-placeholder"></div>
+<script>
+fetch('/MyFamTreeCollab/Layout/Navbar.html')
+    .then(resp => resp.text())
+    .then(data => {
+        const placeholder = document.getElementById('Navbar-placeholder');
+        if (placeholder) placeholder.innerHTML = data;
+    });
+</script>
+
+<!-- ======================= Hoofd content ======================= -->
 <main>
-    <h1>About</h1>
-    <h2>Pagina tijdelijk niet bereikbaar</h2>
-    <p>Deze pagina is momenteel in ontwikkeling of tijdelijk niet beschikbaar.</p>
-    <p>Onze excuses voor het ongemak.</p>
-    <p>U wordt automatisch doorgestuurd naar de homepage over 5 seconden.</p>
-    <br>
-    <a href="/MyFamTreeCollab/" class="btn">Ga direct naar Home</a>
+    <div class="binnenkort-blok">
+        <div class="icoon">🌳</div>                                        <!-- Decoratief icoon passend bij de stamboom-app -->
+        <h1>Over MyFamTreeCollab</h1>
+        <p>
+            Deze pagina is momenteel in ontwikkeling.<br>
+            Binnenkort vind je hier meer informatie over het project,
+            de makers en hoe de app werkt.
+        </p>
+        <a href="/MyFamTreeCollab/" class="knop-home">Terug naar Home</a> <!-- Link terug naar de homepagina -->
+    </div>
 </main>
 
-<script src="../js/script.js"></script>
+<!-- ======================= Footer ======================= -->
+<div id="footer-placeholder"></div>
+<script>
+fetch('/MyFamTreeCollab/Layout/Footer.html')
+    .then(resp => resp.text())
+    .then(data => document.getElementById('footer-placeholder').innerHTML = data);
+</script>
+
 </body>
 </html>
-
