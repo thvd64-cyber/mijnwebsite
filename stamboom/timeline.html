@@ -1,29 +1,49 @@
-<!-- ======================= stamboom/timeline.html v0.0.6 ======================= -->
+<!-- ======================= stamboom/timeline.html v2.0.0 =======================
+     Tijdlijnpagina: visualiseert personen op een horizontale tijdas
+     Wijziging v1.0.0: facelift — welkomstblok, inline stijlen naar <style>,
+                       uitgecommentarieerde paginatitel opgeruimd
+     Scripts: utils.js → schema.js → storage.js → LiveSearch.js → relatieEngine.js → timeline.js
+     ======================================================================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="UTF-8"> <!-- UTF-8 tekencodering -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Mobiele responsiviteit -->
-<title>MyFamTreeCollab - Timeline</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyFamTreeCollab - Tijdlijn</title>
+    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/timeline.css">
+    <style>
+        /* ======================= WELKOMSTBLOK ======================= */
+        .welkom-blok { margin-bottom: 20px; }
+        .welkom-blok h1 { font-size: 1.4rem; font-weight: bold; margin: 0 0 8px 0; color: #222; }
+        .welkom-blok p  { font-size: 0.95rem; color: #555; line-height: 1.6; margin: 0; }
 
-<!-- ======================= CSS ======================= -->
-<link rel="stylesheet" href="../css/style.css"> <!-- Algemene CSS -->
-<link rel="stylesheet" href="../css/timeline.css"> <!-- NA style.css -->
-<style>
-/* ======================= TIMELINE CONTAINER ======================= */
-#timelineContainer{
-    overflow-x:auto; /* horizontaal scrollen mogelijk */
-    border:1px solid #ccc; /* licht kader rond timeline */
-    padding:20px; /* binnenruimte */
-    margin-top:20px; /* marge boven */
-}
+        /* ======================= ZOEKBALK ======================= */
+        .zoek-sectie { margin-bottom: 20px; }                             /* Ruimte onder de zoeksectie */
+        #sandboxSearch {                                                   /* Zoekveld voor persoon selectie */
+            width: 50%;                                                    /* Halve paginabreedte */
+            padding: 9px 12px;                                             /* Ruim klikgebied */
+            font-size: 1rem;                                               /* Leesbare tekstgrootte */
+            border: 1px solid #bbb;                                        /* Subtiele rand */
+            border-radius: 5px;                                            /* Afgeronde hoeken */
+            box-sizing: border-box;                                        /* Padding telt mee in breedte */
+        }
+        #sandboxSearch:focus {                                             /* Focusstijl */
+            outline: none;
+            border-color: #1E90FF;                                         /* Blauwe rand bij focus */
+        }
 
-/* ======================= LABEL TEKST ======================= */
-.timelineLabel{
-    font-size:12px; /* kleine tekst */
-    fill:#333;       /* donkergrijs */
-}
-</style>
+        /* ======================= TIJDLIJN CONTAINER ======================= */
+        #timelineContainer {                                               /* Wrapper voor de tijdlijn visualisatie */
+            overflow-x: auto;                                              /* Horizontaal scrollen als de tijdlijn breed is */
+            border: 1px solid #ddd;                                        /* Subtiele rand */
+            border-radius: 6px;                                            /* Afgeronde hoeken */
+            padding: 20px;                                                 /* Ruimte binnen het kader */
+            background: #fafafa;                                           /* Lichtgrijze achtergrond */
+            min-height: 120px;                                             /* Minimale hoogte zodat de container zichtbaar is */
+        }
+    </style>
 </head>
 <body>
 
@@ -31,85 +51,60 @@
 <div id="topbar-placeholder"></div>
 <script>
 fetch('/MyFamTreeCollab/Layout/TopBar.html')
-.then(resp => resp.text())
-.then(data => document.getElementById('topbar-placeholder').innerHTML = data);
+    .then(resp => resp.text())
+    .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
 </script>
 
 <!-- ======================= Navbar ======================= -->
 <div id="Navbar-placeholder"></div>
 <script>
 fetch('/MyFamTreeCollab/Layout/Navbar.html')
-.then(resp => resp.text())
-.then(data => { const ph=document.getElementById('Navbar-placeholder'); if(ph) ph.innerHTML=data; });
+    .then(resp => resp.text())
+    .then(data => {
+        const ph = document.getElementById('Navbar-placeholder');
+        if (ph) ph.innerHTML = data;
+    });
 </script>
 
-<!-- ======================= Pagina Titel ======================= -->
-<!-- <div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;"></div> -->
-<!-- <script> -->
-<!-- document.addEventListener('DOMContentLoaded', () => { -->
-<!--     const pageTitleDiv = document.getElementById('pageTitle');  -->
-<!--     const title = "Timeline";  -->
-<!--     pageTitleDiv.textContent = title.replace(/[-_]/g,' ').replace(/\b\w/g, c => c.toUpperCase()); -->
-<!-- }); -->
-<!-- </script> -->
- <!-- ======================= MAIN INTRO CONTENT ======================= -->
-<section style="margin-top:5px; padding:20px; background:#ffffff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);">
-    <h2 style="margin-bottom:15px;">Welkom in de Timeline</h2>
-    <p style="margin-bottom:15px; line-height:1.6;">
-        In de  TimeLine gaan we een pagina creeren waar  op een tijdslijn waar alle families to zover als er data beschikbaar is getooond worden.
+<!-- ======================= Hoofd content ======================= -->
+<main>
+    <div class="container">
+
+        <!-- ======================= Welkomstblok ======================= -->
+        <div class="welkom-blok">
+            <h1>Welkom bij Tijdlijn</h1>
+            <p>
+                Zoek een persoon op om de tijdlijn van zijn of haar familie te bekijken.
+                Personen worden geplaatst op basis van geboortedatum, gegroepeerd per generatie.
             </p>
-    <p style="margin-bottom:15px; line-height:1.6;">
-        Enkele mogelijkheden in de tijdlijn zijn:
-    </p>
-    <ul style="margin-left:20px; line-height:1.6;">
-        <li>Personen toevoegen met Live Search en popup selectie</li>
-        <li>visualizatie van personen in een familie (familie root) op een tijdslijn met verschillende niveau</li>
-    </ul>
-    <p style="margin-top:15px; line-height:1.6;">
-        Alles wat je hier ziet komt direct uit de storage en veranderd mee met veranderingen in de manage pagina.
-    </p>
-</section>
+        </div>
 
-   <!-- ======================= LIVE SEARCH BOX ======================= -->
-<div style="
-    margin: 20px 0px 20px 50px;   /* boven, rechts, onder, links van de hele container */
-    position: relative;            /* parent div voor absolute positionering van popup */
-">
-    <!-- ======================= INPUT VELD ======================= -->
-    <input type="text"
-           id="sandboxSearch"
-           placeholder="Zoek persoon (Roepnaam, Achternaam, Geboortedatum)"
-           style="
-               width: 50%;                /* breedte van input veld */
-               padding: 8px 12px;         /* binnenruimte: 8px boven/onder, 12px links/rechts */
-               font-size: 1.1rem;         /* lettergrootte */
-               border-radius: 5px;        /* licht afgeronde hoeken */
-               border: 1px solid #aaa;    /* lichte rand */
-               box-sizing: border-box;    /* padding/border inbegrepen in breedte */
-           ">
-</div>
+        <!-- ======================= Zoekbalk ======================= -->
+        <div class="zoek-sectie">
+            <input type="text" id="sandboxSearch" placeholder="Zoek op naam, ID of geboortedatum..."> <!-- Zoekveld gekoppeld aan timeline.js -->
+        </div>
 
-<!-- ======================= TIMELINE CONTAINER ======================= -->
-<div id="timelineContainer"></div> <!-- SVG timeline wordt hier geplaatst -->
-    
-<!-- ======================= SCRIPTS ======================= -->
-<script src="../js/utils.js"></script>          <!-- centrale hulpfuncties: safe, formatDate, parseBirthday -->
-<script src="../js/schema.js"></script>        <!-- Dataset schema, altijd eerst -->
-<script src="../js/storage.js"></script>       <!-- Storage functies en dataset -->
-<script src="../js/LiveSearch.js"></script>    <!-- LiveSearch module -->
+        <!-- ======================= Tijdlijn (gevuld door timeline.js) ======================= -->
+        <div id="timelineContainer"></div>                                <!-- timeline.js rendert hier de tijdlijn nodes -->
 
-<!-- ======================= RELATIE ENGINE ======================= -->
-<script src="../js/relatieEngine.js"></script> <!-- Moet vóór timeline.js, exact bestand, definieert window.RelatieEngine -->
+    </div>
+</main>
 
-<!-- ======================= TIMELINE LOGICA ======================= -->
-<script src="../js/timeline.js"></script>      <!-- Timeline rendering en LiveSearch integratie -->
+<!-- ======================= Scripts (volgorde verplicht) ======================= -->
+<script src="../js/utils.js"></script>
+<script src="../js/schema.js"></script>
+<script src="../js/storage.js"></script>
+<script src="../js/LiveSearch.js"></script>
+<script src="../js/relatieEngine.js"></script>
+<script src="../js/timeline.js"></script>
+
 <!-- ======================= Footer ======================= -->
 <div id="footer-placeholder"></div>
 <script>
 fetch('/MyFamTreeCollab/Layout/Footer.html')
-.then(resp => resp.text())
-.then(data => document.getElementById('footer-placeholder').innerHTML = data);
+    .then(resp => resp.text())
+    .then(data => document.getElementById('footer-placeholder').innerHTML = data);
 </script>
-    
+
 </body>
 </html>
