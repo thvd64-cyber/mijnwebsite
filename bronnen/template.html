@@ -1,27 +1,98 @@
-<!-- ======================= bronnen/template.html v0.0.3 ======================= -->
-<!-- Kolommen aangeapst van 19 > 14, schema geintegreerd als centale tabel -->
+<!-- ======================= bronnen/template.html v2.0.0 =======================
+     CSV Template pagina: visueel voorbeeld + download van lege CSV-template
+     Wijziging v1.0.0: facelift — welkomstblok, paginatitel div verwijderd,
+                       inline stijlen naar <style>, uitleg herschreven naar
+                       template-context (was per abuis export-uitleg)
+     Scripts: schema.js (voor dynamische kolomnamen)
+     ======================================================================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsief op mobiel/tablet/desktop -->
-    <title>MyFamTreeCollab - Template (CSV)</title> <!-- Browser tab titel -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- Verbindt externe CSS -->
-    <script src="../js/schema.js"></script> <!-- Schema v0.0.2 laden -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyFamTreeCollab - CSV Template</title>
+    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/schema.js"></script>                               <!-- Schema eerst laden zodat veldnamen beschikbaar zijn bij DOMContentLoaded -->
+    <style>
+        /* ======================= WELKOMSTBLOK ======================= */
+        .welkom-blok { margin-bottom: 24px; }
+        .welkom-blok h1 { font-size: 1.4rem; font-weight: bold; margin: 0 0 8px 0; color: #222; }
+        .welkom-blok p  { font-size: 0.95rem; color: #555; line-height: 1.6; margin: 0; }
+
+        /* ======================= TEMPLATE SECTIE ======================= */
+        .template-sectie {                                                 /* Kader rondom de tabelpreview en download */
+            border: 1px solid #ddd;                                        /* Subtiele rand */
+            border-radius: 6px;                                            /* Afgeronde hoeken */
+            padding: 24px;                                                 /* Ruimte binnen het kader */
+            margin-bottom: 20px;                                           /* Ruimte onder de sectie */
+            background: #fafafa;                                           /* Lichtgrijze achtergrond */
+        }
+        .template-sectie h2 { font-size: 1.1rem; font-weight: bold; margin: 0 0 6px 0; color: #333; }
+        .template-sectie .subtitel { font-size: 0.88rem; color: #888; margin: 0 0 16px 0; }
+
+        /* ======================= CSV TABEL PREVIEW ======================= */
+        .csv-tabel-wrapper {                                               /* Wrapper zodat de brede tabel horizontaal scrollt */
+            overflow-x: auto;                                              /* Scrollbaar als de tabel breder is dan de pagina */
+            margin-bottom: 16px;                                           /* Ruimte onder de tabel */
+        }
+        table {                                                            /* De CSV-previewtabel */
+            border-collapse: collapse;                                     /* Geen dubbele randen */
+            font-size: 0.85rem;                                            /* Klein zodat alle kolommen passen */
+            white-space: nowrap;                                           /* Kolomnamen niet afbreken */
+        }
+        th, td {                                                           /* Cel opmaak */
+            border: 1px solid #ccc;                                        /* Randen rondom elke cel */
+            padding: 6px 10px;                                             /* Ruimte binnen de cel */
+            text-align: left;                                              /* Links uitlijnen */
+        }
+        th {                                                               /* Kolomkopstijl */
+            background: #f0f0f0;                                           /* Lichtgrijs om koppen te onderscheiden */
+            font-weight: bold;                                             /* Vetgedrukt */
+            color: #333;                                                   /* Donkergrijs */
+        }
+        td { color: #aaa; font-style: italic; }                           /* Lege cellen grijs en cursief zodat duidelijk is dat ze ingevuld moeten worden */
+
+        /* ======================= DOWNLOAD KNOP ======================= */
+        .knop-download {                                                   /* Downloadknop voor de CSV-template */
+            padding: 10px 24px;                                            /* Ruim klikgebied */
+            background: #1E90FF;                                           /* Blauw als primaire actie */
+            color: #fff;                                                   /* Witte tekst */
+            border: none;                                                  /* Geen rand */
+            border-radius: 5px;                                            /* Afgeronde hoeken */
+            font-size: 0.95rem;                                            /* Leesbaar */
+            font-weight: bold;                                             /* Vetgedrukt */
+            cursor: pointer;                                               /* Handje bij hover */
+        }
+        .knop-download:hover { background: #1278d4; }                     /* Donkerder blauw bij hover */
+        #status { font-size: 0.9rem; margin-top: 10px; }                  /* Statusmelding na download */
+
+        /* ======================= INFO BLOK ======================= */
+        .info-blok {                                                       /* Blauw informatieblok met uitleg */
+            background: #eef4fb;                                           /* Lichtblauw achtergrond */
+            border-left: 4px solid #1E90FF;                                /* Blauwe linkerrand als accent */
+            border-radius: 0 6px 6px 0;                                   /* Alleen rechter hoeken afgerond */
+            padding: 14px 18px;                                            /* Ruimte binnen het blok */
+            font-size: 0.88rem;                                            /* Klein informatietekst */
+            color: #333;                                                   /* Donkergrijs */
+            line-height: 1.7;                                              /* Ruime regelafstand */
+        }
+        .info-blok strong { color: #004080; }                             /* Donkerblauw voor vetgedrukte tekst */
+    </style>
 </head>
 <body>
 
 <!-- ======================= TopBar ======================= -->
-<div id="topbar-placeholder"></div> <!-- container voor TopBar content -->
+<div id="topbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')  // Haalt TopBar HTML op
-    .then(resp => resp.text())                
+fetch('/MyFamTreeCollab/Layout/TopBar.html')
+    .then(resp => resp.text())
     .then(data => document.getElementById('topbar-placeholder').innerHTML = data)
     .catch(err => console.error('TopBar laden mislukt:', err));
 </script>
 
 <!-- ======================= Navbar ======================= -->
-<div id="Navbar-placeholder"></div> 
+<div id="Navbar-placeholder"></div>
 <script>
 fetch('/MyFamTreeCollab/Layout/Navbar.html')
     .then(resp => resp.text())
@@ -33,112 +104,119 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
     .catch(err => console.error('Navbar laden mislukt:', err));
 </script>
 
-<!-- ======================= Pagina Titel ======================= -->
-<div id="pageTitle" style="font-size:1.5rem; font-weight:bold; margin-bottom:5px;"></div>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const pageTitleDiv = document.getElementById('pageTitle');  
-    const title = "Template (CSV)";                             
-    pageTitleDiv.textContent = title
-        .replace(/[-_]/g,' ')
-        .replace(/\b\w/g, c => c.toUpperCase());
-});
-</script>
-
-<!-- ======================= MAIN CONTENT ======================= -->
+<!-- ======================= Hoofd content ======================= -->
 <main>
     <div class="container">
-        <section>
-            <h3>Voorbeeld CSV Template (voor download)</h3>
-            <p>Dit is een visueel voorbeeld van hoe de CSV eruit zal zien:</p>
-            <p style="font-style: italic; color: #555;">
-                ⚠️ Bij gebruik van deze template wordt bij <strong>import automatisch een unieke ID gegenereerd
-                op basis van <strong>Doopnaam</strong>, <strong>Roepnaam</strong>, <strong>Achternaam</strong> 
-                en <strong>Geslacht</strong>, gevolgd door 3 cijfers. Je hoeft deze kolom dus niet zelf in te vullen.
+
+        <!-- ======================= Welkomstblok ======================= -->
+        <div class="welkom-blok">
+            <h1>Welkom bij CSV Template</h1>
+            <p>
+                Download hier een lege CSV-template met de juiste kolomnamen voor MyFamTreeCollab.
+                Vul de template in met je familiegegevens en importeer hem daarna via de
+                <a href="../home/import.html">importpagina</a>.
             </p>
-
-            <!-- ======================= Dynamische CSV Tabel ======================= -->
-            <table border="1" cellpadding="4" cellspacing="0" style="margin-bottom:15px;">
-                <thead id="csvHeader"></thead> <!-- header wordt via JS gevuld -->
-                <tbody id="csvBody">
-                    <!-- 2 lege voorbeeldrijen worden via JS toegevoegd -->
-                </tbody>
-            </table>
-        </section>
-
-        <!-- ======================= Professionele uitleg CSV-export ======================= -->
-        <div style="margin-bottom:5px; font-size:0.95rem; color:#555; line-height:1.5;">
-            <strong>Hoe werkt de CSV-export?</strong><br>
-            1. CSV-bestand kan geopend worden in Excel of andere spreadsheetprogramma's.<br>
-            2. Je kunt altijd zelf een bestandsnaam kiezen via de prompt.<br>
-            3. <strong>DuckDuckGo, Chrome of Edge (HTTPS of localhost)</strong>: echte “Opslaan als” dialoog.<br>
-            4. <strong>Andere browsers</strong> (Firefox, Safari, oudere versies): locatiekeuze niet ondersteund. Alert legt uit.<br>
-            5. Maximaal compatibel en duidelijke feedback ongeacht browser.
         </div>
 
-        <button id="downloadBtn" style="margin-bottom:15px;">Download CSV Voorbeeld</button>
-        <p id="status"></p>
+        <!-- ======================= Template preview + download ======================= -->
+        <div class="template-sectie">
+            <h2>Voorbeeld van de kolomstructuur</h2>
+            <p class="subtitel">
+                De kolom <strong>ID</strong> hoef je niet in te vullen —
+                die wordt automatisch gegenereerd bij import op basis van de naamvelden.
+            </p>
+
+            <!-- Dynamische tabel gevuld door JS op basis van schema.js -->
+            <div class="csv-tabel-wrapper">
+                <table>
+                    <thead id="csvHeader"></thead>   <!-- Kolomkoppen komen hier via JS -->
+                    <tbody id="csvBody"></tbody>      <!-- Twee lege voorbeeldrijen komen hier via JS -->
+                </table>
+            </div>
+
+            <button id="downloadBtn" class="knop-download">Download CSV template</button> <!-- Start download van lege CSV -->
+            <p id="status"></p>                                           <!-- Statusmelding na download -->
+        </div>
+
+        <!-- ======================= Info blok ======================= -->
+        <div class="info-blok">
+            <strong>Tips voor het invullen van de template</strong><br>
+            Laat de <strong>ID</strong>-kolom leeg — die wordt automatisch ingevuld bij import.<br>
+            Gebruik voor datums het formaat <strong>JJJJ-MM-DD</strong> (bijv. 1954-03-12).<br>
+            Voor <strong>Geslacht</strong> gebruik je: M (man), V (vrouw) of X (anders).<br>
+            Meerdere partners in <strong>PartnerID</strong> scheid je met een <strong>|</strong> (pipe).<br>
+            Sla het bestand op als <strong>.csv</strong> vanuit Excel via "Opslaan als → CSV".
+        </div>
+
     </div>
 </main>
 
-<!-- ======================= PAGE-SPECIFIC JS ======================= -->
+<!-- ======================= Pagina-specifieke JS ======================= -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ✅ Dynamische tabel header op basis van schema.js
+    if (!window.StamboomSchema) {                                         // Controleer of schema.js correct geladen is
+        console.error('StamboomSchema niet geladen — tabel blijft leeg.');
+        return;
+    }
+
+    const velden = window.StamboomSchema.fields;                         // Haal de officiële veldnamen op uit schema.js
+
+    /* ======================= KOLOMKOPPEN INVULLEN ======================= */
     const csvHeader = document.getElementById('csvHeader');
-    if(csvHeader){
-        const tr = document.createElement('tr');
-        window.StamboomSchema.fields.forEach(field => {
-            const th = document.createElement('th');
-            th.textContent = field;
-            tr.appendChild(th);
-        });
-        csvHeader.appendChild(tr);
-    }
+    const headerRij = document.createElement('tr');                      // Maak een headerrij
+    velden.forEach(veld => {                                             // Loop door alle veldnamen
+        const th = document.createElement('th');                         // Maak een koptekstcel
+        th.textContent = veld;                                           // Vul de veldnaam in
+        headerRij.appendChild(th);                                       // Voeg de cel toe aan de rij
+    });
+    csvHeader.appendChild(headerRij);                                    // Voeg de rij toe aan de thead
 
-    // ✅ 2 lege voorbeeldrijen
+    /* ======================= LEGE VOORBEELDRIJEN INVULLEN ======================= */
     const csvBody = document.getElementById('csvBody');
-    if(csvBody){
-        for(let i=0;i<2;i++){
-            const tr = document.createElement('tr');
-            window.StamboomSchema.fields.forEach(() => {
-                const td = document.createElement('td');
-                td.innerHTML = "&nbsp;"; // lege cel
-                tr.appendChild(td);
-            });
-            csvBody.appendChild(tr);
-        }
+    for (let i = 0; i < 2; i++) {                                        // Maak twee lege voorbeeldrijen
+        const rij = document.createElement('tr');                        // Maak een tabelrij
+        velden.forEach(() => {                                           // Loop door alle velden
+            const td = document.createElement('td');                     // Maak een cel
+            td.textContent = '...';                                      // Plaatshouder tekst zodat lege cellen zichtbaar zijn
+            rij.appendChild(td);                                         // Voeg cel toe aan de rij
+        });
+        csvBody.appendChild(rij);                                        // Voeg de rij toe aan de tbody
     }
 
-    // ✅ Download CSV knop
+    /* ======================= DOWNLOAD KNOP ======================= */
     const downloadBtn = document.getElementById('downloadBtn');
-    const status = document.getElementById('status');
+    const statusEl    = document.getElementById('status');
 
-    downloadBtn.addEventListener('click', () => {
+    downloadBtn.addEventListener('click', () => {                        // Luister naar klik op de downloadknop
+        const nu = new Date();                                           // Haal de huidige datum op
+        const datumStempel =                                             // Bouw een datumstempel voor de bestandsnaam
+            nu.getFullYear() +
+            String(nu.getMonth() + 1).padStart(2, '0') +                // Maand opvullen tot 2 cijfers
+            String(nu.getDate()).padStart(2, '0');                       // Dag opvullen tot 2 cijfers
 
-        const columns = window.StamboomSchema.fields; // dynamisch uit schema
-        const emptyRow = Array(columns.length).fill("").join(",");
+        const standaardNaam = `stamboom_template_${datumStempel}`;       // Standaard bestandsnaam met datum
+        let gebruikersnaam  = prompt('Voer bestandsnaam in (zonder .csv):', standaardNaam); // Vraag gebruiker om naam
+        if (!gebruikersnaam) gebruikersnaam = standaardNaam;            // Gebruik standaardnaam als gebruiker annuleert
+        const bestandsnaam  = `${gebruikersnaam}.csv`;                   // Voeg extensie toe
 
-        const csvContent = "\uFEFF" + `${columns.join(',')}\n${emptyRow}\n${emptyRow}`; // BOM voor Excel
+        const legeRij    = Array(velden.length).fill('').join(',');      // Een lege CSV-rij met de juiste hoeveelheid komma's
+        const csvInhoud  = '\uFEFF' +                                    // BOM-teken zodat Excel de UTF-8 encoding herkent
+            velden.join(',') + '\n' +                                    // Eerste regel: kolomnamen gescheiden door komma's
+            legeRij + '\n' +                                             // Tweede regel: leeg
+            legeRij;                                                     // Derde regel: leeg
 
-        const now = new Date();
-        const defaultFileName = `stamboom_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.csv`;
+        const blob = new Blob([csvInhoud], { type: 'text/csv;charset=utf-8;' }); // Maak een downloadbaar bestand
+        const link = document.createElement('a');                        // Maak een onzichtbare downloadlink
+        link.href     = URL.createObjectURL(blob);                       // Koppel de blob-URL aan de link
+        link.download = bestandsnaam;                                    // Stel de bestandsnaam in
+        document.body.appendChild(link);                                 // Voeg de link tijdelijk toe aan de pagina
+        link.click();                                                    // Start de download
+        document.body.removeChild(link);                                 // Verwijder de link direct na klikken
+        URL.revokeObjectURL(link.href);                                  // Geef het geheugen van de blob-URL vrij
 
-        let userFileName = prompt("Voer bestandsnaam in (zonder .csv):", defaultFileName.replace(".csv",""));
-        if(!userFileName) userFileName = defaultFileName.replace(".csv",""); 
-        const fileName = `${userFileName}.csv`;
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-
-        status.textContent = "✅ CSV template succesvol gedownload! Vul de lege rijen handmatig in.";
+        statusEl.textContent = `✅ Template gedownload als ${bestandsnaam} — vul de lege rijen in en importeer via de importpagina.`;
+        statusEl.style.color = 'green';                                  // Groene statusmelding bij succes
     });
 
 });
