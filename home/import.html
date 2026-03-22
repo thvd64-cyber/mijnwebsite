@@ -1,75 +1,142 @@
-<!-- ======================= home/import.html V1.0.1 ======================= --> 
-<!DOCTYPE html> <!-- HTML5 document type -->
-<html lang="nl"> <!-- Document in het Nederlands -->
+<!-- ======================= home/import.html v2.0.0 =======================
+     Importpagina: CSV/TXT bestanden inladen in de stamboom
+     Wijziging v2.0.0: facelift — welkomstblok, inline stijlen naar <style>,
+                       bestandsselectie en knop in sectiekader
+     Scripts: schema.js → storage.js → import.js (verplichte volgorde)
+     ======================================================================= -->
+<!DOCTYPE html>
+<html lang="nl">
 <head>
-    <meta charset="UTF-8"> <!-- Tekencodering UTF-8 voor speciale karakters -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Zorgt voor responsieve weergave op mobiel/tablet -->
-    <title>MyFamTreeCollab - Import</title> <!-- Titel van de pagina in de browser tab -->
-    <link rel="stylesheet" href="../css/style.css"> <!-- Koppeling naar externe CSS voor styling -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyFamTreeCollab - Import</title>
+    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* ======================= WELKOMSTBLOK ======================= */
+        .welkom-blok { margin-bottom: 24px; }                             /* Ruimte onder het introductieblok */
+        .welkom-blok h1 { font-size: 1.4rem; font-weight: bold; margin: 0 0 8px 0; color: #222; } /* Primaire paginatitel */
+        .welkom-blok p  { font-size: 0.95rem; color: #555; line-height: 1.6; margin: 0; }         /* Welkomsttekst */
+
+        /* ======================= IMPORT SECTIE ======================= */
+        .import-sectie {                                                   /* Kader rondom de importfunctie */
+            border: 1px solid #ddd;                                        /* Subtiele rand */
+            border-radius: 6px;                                            /* Afgeronde hoeken */
+            padding: 24px;                                                 /* Ruimte binnen het kader */
+            margin-bottom: 20px;                                           /* Ruimte onder de sectie */
+            background: #fafafa;                                           /* Lichtgrijze achtergrond */
+            max-width: 560px;                                              /* Niet te breed */
+        }
+        .import-sectie h2 { font-size: 1.1rem; font-weight: bold; margin: 0 0 6px 0; color: #333; }    /* Sectietitel */
+        .import-sectie .subtitel { font-size: 0.88rem; color: #888; margin: 0 0 18px 0; }              /* Subtitel */
+        .import-sectie p  { font-size: 0.9rem; color: #555; line-height: 1.6; margin: 0 0 16px 0; }    /* Uitlegparagraaf */
+
+        /* ======================= BESTANDSSELECTIE ======================= */
+        .bestand-input {                                                   /* Stijl voor het bestandsselectieveld */
+            display: block;                                                /* Op eigen regel */
+            width: 100%;                                                   /* Volle breedte */
+            margin-bottom: 16px;                                           /* Ruimte onder het veld */
+            font-size: 0.9rem;                                             /* Leesbare grootte */
+            color: #444;                                                   /* Donkergrijs */
+        }
+
+        /* ======================= KNOP ======================= */
+        .knop-import {                                                     /* Primaire importknop */
+            padding: 10px 24px;                                            /* Ruim klikgebied */
+            background: #1E90FF;                                           /* Blauw als primaire actie */
+            color: #fff;                                                   /* Witte tekst */
+            border: none;                                                  /* Geen rand */
+            border-radius: 5px;                                            /* Afgeronde hoeken */
+            font-size: 0.95rem;                                            /* Leesbaar */
+            font-weight: bold;                                             /* Vetgedrukt */
+            cursor: pointer;                                               /* Handje bij hover */
+        }
+        .knop-import:hover { background: #1278d4; }                       /* Donkerder blauw bij hover */
+
+        /* ======================= STATUSMELDING ======================= */
+        #importStatus { font-size: 0.9rem; margin-top: 12px; }            /* Statusmelding na import */
+
+        /* ======================= INFO BLOK ======================= */
+        .info-blok {                                                       /* Grijsblauw informatieblok met tips */
+            max-width: 560px;                                              /* Zelfde breedte als de sectie */
+            background: #eef4fb;                                           /* Lichtblauw achtergrond voor informatieve toon */
+            border-left: 4px solid #1E90FF;                                /* Blauwe linkerrand als accent */
+            border-radius: 0 6px 6px 0;                                   /* Alleen rechter hoeken afgerond */
+            padding: 14px 18px;                                            /* Ruimte binnen het blok */
+            font-size: 0.88rem;                                            /* Klein informatietekst */
+            color: #333;                                                   /* Donkergrijs */
+            line-height: 1.7;                                              /* Ruime regelafstand */
+        }
+        .info-blok strong { color: #004080; }                             /* Donkerblauw voor vetgedrukte tekst in info-blok */
+    </style>
 </head>
 <body>
 
 <!-- ======================= TopBar ======================= -->
-<div id="topbar-placeholder"></div> <!-- Placeholder div waar TopBar HTML wordt ingeladen -->
+<div id="topbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html') // Laad TopBar HTML via fetch
-    .then(resp => resp.text())                 // Converteer response naar tekst
-    .then(data => document.getElementById('topbar-placeholder').innerHTML = data); // Plaats TopBar in placeholder
+fetch('/MyFamTreeCollab/Layout/TopBar.html')
+    .then(resp => resp.text())
+    .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
 </script>
 
 <!-- ======================= Navbar ======================= -->
-<div id="Navbar-placeholder"></div> <!-- Placeholder div voor navigatiebalk -->
+<div id="Navbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html') // Laad Navbar HTML via fetch
-    .then(resp => resp.text())                // Converteer response naar tekst
-    .then(data => document.getElementById('Navbar-placeholder').innerHTML = data); // Plaats Navbar in placeholder
+fetch('/MyFamTreeCollab/Layout/Navbar.html')
+    .then(resp => resp.text())
+    .then(data => {
+        const placeholder = document.getElementById('Navbar-placeholder');
+        if (placeholder) placeholder.innerHTML = data;
+    });
 </script>
 
-<!-- ======================= Pagina Titel ======================= -->
-<div id="pageTitle" style="font-size:1.5rem;font-weight:bold;margin-bottom:15px;">Import</div> <!-- Titel sectie met inline styling -->
+<!-- ======================= Hoofd content ======================= -->
+<main>
+    <div class="container">
 
-<!-- ======================= MAIN ======================= -->
-<main> <!-- Hoofd content van de pagina -->
-    <div class="container"> <!-- Container voor centrale content, geeft padding en layout -->
-
-        <!-- ======================= Professionele uitleg CSV-import ======================= -->
-        <div style="margin-bottom:15px; font-size:0.95rem; color:#555; line-height:1.5;">
-            <strong>Hoe werkt de CSV-import?</strong><br>
-            1. Je kunt een CSV-bestand importeren dat is geëxporteerd uit deze applicatie of een correct opgemaakte stamboom CSV.<br>
-            2. Alleen CSV-bestanden worden ondersteund. Andere formaten worden niet ingelezen.<br>
-            3. De import zal bestaande stamboomgegevens **overschrijven** of **toevoegen**, afhankelijk van de implementatie van je import.js.<br>
-            4. Het laden gebeurt **lokaal in je browser**; er wordt niets online verstuurd, dus je gegevens blijven privé.<br>
-            5. Browserverschillen:<br>
-            &nbsp;&nbsp;- DuckDuckGo, Chrome, Edge en moderne browsers ondersteunen grote bestanden en geven meestal directe feedback bij fouten.<br>
-            &nbsp;&nbsp;- In oudere browsers kan de performance beperkt zijn bij zeer grote CSV-bestanden.
+        <!-- ======================= Welkomstblok ======================= -->
+        <div class="welkom-blok">
+            <h1>Welkom bij Import</h1>
+            <p>
+                Laad een bestaand CSV-bestand in om je stamboomdata te importeren.
+                Nieuwe personen worden toegevoegd aan de bestaande stamboom.
+            </p>
         </div>
 
-        <!-- ======================= File select + Import knop ======================= -->
-      <input type="file" id="importFile" accept=".csv" 
-       style="display:block; margin-bottom:20px; width:100%;"> <!-- 
-       display:block → zorgt dat de file input op een aparte regel staat 
-       margin-bottom:20px → vergroot de afstand tussen de file input en de knop
-       width:100% → maakt de file input breed genoeg zodat lange bestandsnamen zichtbaar zijn 
-        -->
-        <button id="importBtn">Importeer CSV</button> <!-- Knop voor het starten van de CSV-import -->
+        <!-- ======================= Import sectie ======================= -->
+        <div class="import-sectie">
+            <h2>Selecteer een bestand</h2>
+            <p class="subtitel">Ondersteunde formaten: .csv en .txt</p>
 
-        <!-- ======================= Statusmelding ======================= -->
-        <p id="importStatus"></p> <!-- Hier wordt status van de import weergegeven (succes of fout) -->
+            <input type="file" id="importFile" accept=".csv,.txt" class="bestand-input"> <!-- Bestandsselectie -->
+            <button id="importBtn" class="knop-import">Importeer CSV</button>            <!-- Importknop -->
+            <p id="importStatus"></p>                                                    <!-- Statusmelding verschijnt hier na import -->
+        </div>
+
+        <!-- ======================= Info blok ======================= -->
+        <div class="info-blok">
+            <strong>Wat moet je weten over de import?</strong><br>
+            Het bestand moet de juiste kolomnamen hebben. Gebruik de CSV-template als startpunt.<br>
+            Komma, puntkomma en tab worden automatisch herkend als kolomscheider.<br>
+            Bestaande personen worden niet overschreven — nieuwe rijen worden toegevoegd.<br>
+            Je gegevens verlaten je browser nooit: alles wordt lokaal verwerkt.
+        </div>
 
     </div>
 </main>
 
-<!-- ======================= Import Script ======================= -->
-<script src="../js/schema.js"></script> <!-- Definieert StamboomSchema -->
-<script src="../js/storage.js"></script> <!-- Definieert StamboomStorage -->
-<script src="../js/import.js"></script> <!-- Laad het ../js/import.js script dat CSV uitleest en opslaat -->
+<!-- ======================= Scripts (volgorde verplicht) ======================= -->
+<script src="../js/schema.js"></script>      <!-- Laad eerst het schema met veldnamen -->
+<script src="../js/storage.js"></script>     <!-- Laad dan de storage API (StamboomStorage) -->
+<script src="../js/import.js"></script>      <!-- Laad als laatste de importlogica -->
 
 <!-- ======================= Footer ======================= -->
-<div id="footer-placeholder"></div> <!-- Placeholder div voor footer -->
+<div id="footer-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html') // Laad footer HTML via fetch
-    .then(resp => resp.text())                 // Converteer response naar tekst
-    .then(data => document.getElementById('footer-placeholder').innerHTML = data); // Plaats footer in placeholder
+fetch('/MyFamTreeCollab/Layout/Footer.html')
+    .then(resp => resp.text())
+    .then(data => document.getElementById('footer-placeholder').innerHTML = data);
 </script>
 
 </body>
