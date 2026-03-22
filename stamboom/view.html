@@ -38,18 +38,21 @@
         }
 
         /* ======================= BOOM LAYOUT ======================= */
-        .boom-wrapper {                                                    /* Flex-container: boom links, broer/zus rechts */
-            display: flex;                                                 /* Naast elkaar */
-            gap: 20px;                                                     /* Ruimte tussen de twee kolommen */
+        /* Tree.css beheert de flex-layout van treeContainer en BZBox.   */
+        /* Hier overschrijven we alleen de .container uit Tree.css zodat */
+        /* de stamboom-wrapper NIET de page-container class gebruikt.    */
+        .stamboom-wrapper {                                               /* Buitenste wrapper: bevat treeContainer + BZBox naast elkaar */
+            display: flex;                                                 /* Twee containers naast elkaar */
+            gap: 20px;                                                     /* Ruimte tussen de stamboom en de broer/zus kolom */
             align-items: flex-start;                                       /* Bovenkant uitlijnen */
+            margin-top: 4px;                                               /* Klein beetje ruimte onder de zoekbalk */
         }
-        #treeContainer { flex: 3; }                                       /* Stamboom krijgt 3/4 van de breedte */
-        .bz-kolom { flex: 1; }                                            /* Broer/zus kolom krijgt 1/4 */
-        .bz-kolom h3 {                                                    /* Titel boven de broer/zus kolom */
-            font-size: 1rem;                                               /* Leesbaar */
+        .bz-kolom-titel {                                                 /* Titel boven de broer/zus container */
+            font-size: 0.95rem;                                            /* Leesbaar */
             font-weight: bold;                                             /* Vetgedrukt */
-            margin: 0 0 10px 0;                                            /* Ruimte onder de titel */
+            margin: 0 0 8px 0;                                             /* Ruimte onder de titel */
             color: #444;                                                   /* Donkergrijs */
+            padding: 0 2px;                                                /* Klein beetje ruimte links */
         }
     </style>
 </head>
@@ -92,13 +95,18 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
             <input type="text" id="searchPerson" placeholder="Zoek op ID, naam of geboortedatum..."> <!-- Zoekveld voor live search -->
         </div>
 
-        <!-- ======================= Boom + Broer/Zus ======================= -->
-        <div class="boom-wrapper">
-            <div id="treeContainer"></div>                                <!-- view.js rendert hier de boom: ouders, hoofd, partner, kinderen -->
-            <div class="bz-kolom">
-                <h3>Broers &amp; zussen</h3>                             <!-- Titel boven de broer/zus kolom -->
-                <div id="BZBox"></div>                                    <!-- view.js rendert hier de broer/zus nodes -->
+        <!-- ======================= Boom + Broer/Zus naast elkaar ======================= -->
+        <div class="stamboom-wrapper">
+
+            <!-- Linker container: hoofdpersoon, ouders, partner, kinderen -->
+            <div id="treeContainer"></div>                                <!-- view.js rendert hier ouders, hoofd, partner en kinderen -->
+
+            <!-- Rechter container: broers en zussen -->
+            <div>
+                <p class="bz-kolom-titel">Broers &amp; zussen</p>        <!-- Titel boven de broer/zus container -->
+                <div id="BZBox"></div>                                    <!-- view.js rendert hier de BZID nodes en hun partners -->
             </div>
+
         </div>
 
     </div>
