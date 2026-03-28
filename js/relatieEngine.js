@@ -1,4 +1,4 @@
-/* ======================= js/relatieEngine.js v2.2.0 =======================
+/* ======================= js/relatieEngine.js v2.3.0 =======================
    Centrale relatie-berekening voor MyFamTreeCollab
    Berekent alle familierelaties rond een geselecteerde hoofdpersoon
    Exporteert: window.RelatieEngine.computeRelaties(data, hoofdId)
@@ -6,11 +6,15 @@
    Vereist: utils.js (voor safe()) — moet eerder geladen zijn in HTML
    Gebruikt door: view.js, timeline.js, manage.js
 
+   Wijziging v2.3.0 t.o.v. v2.2.0:
+   - KindPartnerID verwijderd — bestaat niet in de specificatie, partners van
+     kinderen worden per pagina opgezocht via k.PartnerID
+   - Sortering onbekende geboortedatum gecorrigeerd: new Date(0) → new Date(9999,0)
+     zodat personen zonder datum écht achteraan komen (niet tussen 1970-personen)
+
    Wijziging v2.2.0 t.o.v. v2.1.0:
    - Secundaire sortering toegevoegd: binnen elke relatiegroep oud → jong
-     op basis van Geboortedatum. Personen zonder datum komen achteraan.
-     Geldt voor alle consumers (manage, view, timeline) — sortering hoeft
-     niet meer per pagina geïmplementeerd te worden.
+     op basis van Geboortedatum. Geldt voor manage, view en timeline.
 
    Wijziging v2.1.0 t.o.v. v2.0.0:
    - Kind-classificatie volledig herschreven zodat zowel vader als moeder
@@ -126,15 +130,6 @@
             })
             .map(p => safe(p.ID));
 
-        /* ======================= PARTNERS VAN KINDEREN ======================= */
-
-        const KindPartnerID = alleKinderen
-            .map(id => {
-                const k = data.find(p => safe(p.ID) === id);
-                return (k && safe(k.PartnerID)) ? safe(k.PartnerID) : null;
-            })
-            .filter(Boolean);
-
         /* ======================= PARTNERS VAN BROERS/ZUSSEN ======================= */
 
         const BZPartnerID = BZID
@@ -154,24 +149,23 @@
                 clone.Relatie   = '';
                 clone._priority = 99;
 
-                if      (pid === sid)                    { clone.Relatie = 'HoofdID';       clone._priority = 1;   }
-                else if (pid === VHoofdID)               { clone.Relatie = 'VHoofdID';      clone._priority = 0;   }
-                else if (pid === MHoofdID)               { clone.Relatie = 'MHoofdID';      clone._priority = 0;   }
-                else if (pid === PHoofdID)               { clone.Relatie = 'PHoofdID';      clone._priority = 2;   }
-                else if (KindID.includes(pid))           { clone.Relatie = 'KindID';        clone._priority = 3;   }
-                else if (HKindID.includes(pid))          { clone.Relatie = 'HKindID';       clone._priority = 3;   }
-                else if (PHKindID.includes(pid))         { clone.Relatie = 'PHKindID';      clone._priority = 3;   }
-                else if (KindPartnerID.includes(pid))    { clone.Relatie = 'KindPartnerID'; clone._priority = 3.5; }
-                else if (BZID.includes(pid))             { clone.Relatie = 'BZID';          clone._priority = 4;   }
-                else if (BZPartnerID.includes(pid))      { clone.Relatie = 'BZPartnerID';   clone._priority = 4.5; }
+                if      (pid === sid)                    { clone.Relatie = 'HoofdID';  clone._priority = 1;   }
+                else if (pid === VHoofdID)               { clone.Relatie = 'VHoofdID'; clone._priority = 0;   }
+                else if (pid === MHoofdID)               { clone.Relatie = 'MHoofdID'; clone._priority = 0;   }
+                else if (pid === PHoofdID)               { clone.Relatie = 'PHoofdID'; clone._priority = 2;   }
+                else if (KindID.includes(pid))           { clone.Relatie = 'KindID';   clone._priority = 3;   }
+                else if (HKindID.includes(pid))          { clone.Relatie = 'HKindID';  clone._priority = 3;   }
+                else if (PHKindID.includes(pid))         { clone.Relatie = 'PHKindID'; clone._priority = 3;   }
+                else if (BZID.includes(pid))             { clone.Relatie = 'BZID';     clone._priority = 4;   }
+                else if (BZPartnerID.includes(pid))      { clone.Relatie = 'BZPartnerID'; clone._priority = 4.5; }
 
                 return clone;
             })
             .sort((a, b) => {
-                if (a._priority !== b._priority) return a._priority - b._priority; // Primair: op relatievolgorde
-                const da = a.Geboortedatum ? new Date(a.Geboortedatum) : new Date(0); // Geboortedatum A (0 = onbekend → achteraan)
-                const db = b.Geboortedatum ? new Date(b.Geboortedatum) : new Date(0); // Geboortedatum B
-                return da - db;                                            // Secundair: oud → jong binnen dezelfde relatiegroep
+                if (a._priority !== b._priority) return a._priority - b._priority;          // Primair: op relatievolgorde
+                const da = a.Geboortedatum ? new Date(a.Geboortedatum) : new Date(9999, 0); // Onbekend datum → achteraan
+                const db = b.Geboortedatum ? new Date(b.Geboortedatum) : new Date(9999, 0); // Onbekend datum → achteraan
+                return da - db;                                                              // Secundair: oud → jong
             });
     }
 
