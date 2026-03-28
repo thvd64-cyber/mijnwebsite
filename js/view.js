@@ -1,6 +1,7 @@
-// ======================= js/view.js v1.6.2 =======================
+// ======================= js/view.js v1.6.4 =======================
 // Boom rendering + Live search >> in LiveSearch.js + optimezed code structure
 // Relatie logica komt nu uit externe relatieEngine.js en partner kind voor BZID verwijderd
+// Wijziging v1.6.4: lokale sortering verwijderd — relatieEngine.js sorteert nu centraal
 
 (function(){
 'use strict'; // Dwingt strikte JavaScript modus af (voorkomt stille fouten)
@@ -151,13 +152,10 @@ function buildTree(rootID){
     if(parents.children.length>0) treeBox.prepend(parents);
 
     // =======================
-// KINDEREN (gesorteerd van oudste naar jongste) + partner
+// KINDEREN + partner (volgorde via relatieEngine.js: oud → jong)
 // =======================
 let children = dataRel.filter(d => ['KindID','HKindID','PHKindID'].includes(d.Relatie)); 
-// Filter alle kinderen
-
-// Sorteer kinderen van oudste naar jongste geboortedatum
-children.sort((a, b) => parseBirthday(a.Geboortedatum) - parseBirthday(b.Geboortedatum));
+// Filter alle kinderen — gesorteerd door relatieEngine.js (oud → jong)
 
 if(children.length > 0){ 
     const kidsWrap = document.createElement('div'); 
@@ -181,10 +179,10 @@ if(children.length > 0){
 }
 
     // =======================
-    // BROER / ZUS (gesorteerd van oudste naar jongste)
+    // BROER / ZUS (volgorde via relatieEngine.js: oud → jong)
     // =======================
     let bzNodes = dataRel.filter(d => d.Relatie === 'BZID'); 
-    bzNodes.sort((a, b) => parseBirthday(a.Geboortedatum) - parseBirthday(b.Geboortedatum));
+    // Gesorteerd door relatieEngine.js (oud → jong)
 
     bzNodes.forEach(b => {
 
