@@ -1,15 +1,17 @@
-/* ======================= js/manage.js v2.2.0 =======================
+/* ======================= js/manage.js v2.3.0 =======================
    Beheerpagina: toont stamboom als tabel, live search, add/save/refresh
    Vereist: schema.js, idGenerator.js, storage.js, LiveSearch.js, relatieEngine.js
 
+   Wijziging v2.3.0:
+   - KindPartnerID en BZPartnerID vervangen door één uniforme relatienaam 'Partner'
+     Partners zijn directe eigenschappen van een persoon (persoon.PartnerID),
+     geen aparte relatiecode nodig
+
    Wijziging v2.2.0:
    - Kindpartner en BZpartner opzoeken via dataset (niet via relatieEngine)
-     zodat partners zichtbaar zijn ook zonder KindPartnerID in de engine
-   - safe() toegevoegd aan BZPartnerID matching
 
    Wijziging v2.1.0:
-   - KindID filter uitgebreid naar HKindID en PHKindID (waren onzichtbaar)
-   - safe() toegevoegd aan KindPartnerID matching
+   - KindID filter uitgebreid naar HKindID en PHKindID
    - Labels HKindID → 'Kind (hoofd)', PHKindID → 'Kind (partner)'
    =================================================================== */
 
@@ -116,7 +118,7 @@
                 renderQueue.push(k);                                       // Voeg het kind toe aan de queue
                 if (safe(k.PartnerID)) {                                   // Controleer of kind een partner heeft
                     const kp = dataset.find(p => safe(p.ID) === safe(k.PartnerID)); // Zoek partner rechtstreeks in dataset
-                    if (kp) renderQueue.push({ ...kp, Relatie: 'PartnerID' }); // Voeg partner toe met neutraal relatielabel
+                    if (kp) renderQueue.push({ ...kp, Relatie: 'Partner' }); // Partner direct na kind
                 }
             });
 
@@ -126,7 +128,7 @@
                 renderQueue.push(s);                                       // Voeg de broer/zus toe aan de queue
                 if (safe(s.PartnerID)) {                                   // Controleer of broer/zus een partner heeft
                     const bzP = dataset.find(p => safe(p.ID) === safe(s.PartnerID)); // Zoek partner rechtstreeks in dataset
-                    if (bzP) renderQueue.push({ ...bzP, Relatie: 'BZPartnerID' }); // Voeg partner toe met relatielabel
+                    if (bzP) renderQueue.push({ ...bzP, Relatie: 'Partner' }); // Partner direct na broer/zus
                 }
             });
 
@@ -138,15 +140,14 @@
             let relatieLabel = '';                                         // Begin met leeg label
             switch (p.Relatie) {
                 case 'VHoofdID':
-                case 'MHoofdID':      relatieLabel = 'Ouder';    break;   // Vader of moeder = Ouder
+                case 'MHoofdID':      relatieLabel = 'Ouder';     break;   // Vader of moeder = Ouder
                 case 'PHoofdID':
-                case 'KindPartnerID':
-                case 'BZPartnerID':   relatieLabel = 'Partner';  break;   // Alle partnertypen = Partner
-                case 'BZID':          relatieLabel = 'Broer/Zus';break;   // Broer of zus
-                case 'HoofdID':       relatieLabel = 'Hoofd';    break;   // Geselecteerde hoofdpersoon
-                case 'KindID':        relatieLabel = 'Kind';        break;   // Kind van hoofd én partner
-                case 'HKindID':       relatieLabel = 'Kind (hoofd)'; break;  // Kind van alleen de hoofdpersoon
-                case 'PHKindID':      relatieLabel = 'Kind (partner)';break; // Kind van alleen de partner
+                case 'Partner':       relatieLabel = 'Partner';   break;   // Alle partners = Partner
+                case 'BZID':          relatieLabel = 'Broer/Zus'; break;   // Broer of zus
+                case 'HoofdID':       relatieLabel = 'Hoofd';     break;   // Geselecteerde hoofdpersoon
+                case 'KindID':        relatieLabel = 'Kind';           break; // Kind van hoofd én partner
+                case 'HKindID':       relatieLabel = 'Kind (hoofd)';   break; // Kind van alleen de hoofdpersoon
+                case 'PHKindID':      relatieLabel = 'Kind (partner)'; break; // Kind van alleen de partner
                 default:              relatieLabel = p.Relatie || '-';    // Onbekend type: toon de code zelf of streepje
             }
 
