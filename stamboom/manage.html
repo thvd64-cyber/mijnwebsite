@@ -1,8 +1,7 @@
-<!-- ======================= stamboom/manage.html v2.0.0 =======================
+<!-- ======================= stamboom/manage.html v2.1.0 =======================
      Beheerpagina: stamboom bewerken als tabel met live search
-     Wijziging v2.1.0: facelift — nieuwe layout, zoekbalk en knoppen consistent
-                       met view.html/timeline.html/export.html, welkomstblok,
-                       inline body stijlen naar <style>, safe() inline verwijderd
+     Wijziging v2.1.0: RelationColors.css geladen, hover verwijderd,
+                       hardcoded kleuren vervangen door CSS-variabelen
      Scripts: utils.js → schema.js → idGenerator.js → storage.js → LiveSearch.js
               → relatieEngine.js → manage.js (verplichte volgorde)
      ======================================================================= -->
@@ -14,6 +13,7 @@
     <title>MyFamTreeCollab - Manage</title>
     <link rel="icon" href="../favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/RelationColors.css">
     <style>
         /* ======================= WELKOMSTBLOK ======================= */
         .welkom-blok { margin-bottom: 20px; }                             /* Ruimte onder het introductieblok */
@@ -86,16 +86,18 @@
         }
 
         /* ======================= RELATIE RIJKLEUREN ======================= */
-        .HoofdID        { background: #fffde7; font-weight: 600; }        /* Lichtgeel voor de hoofdpersoon */
-        .VHoofdID,
-        .MHoofdID       { background: #e8f5e9; font-weight: 500; }        /* Lichtgroen voor vader en moeder */
-        .PHoofdID       { background: #f3e5f5; font-style: italic; }      /* Lichtpaars voor partner van hoofd */
-        .KindID         { background: #e3f2fd; }                          /* Lichtblauw voor kinderen */
-        .HKindID        { background: #eef7fe; }                          /* Iets lichter blauw voor kind alleen via hoofd */
-        .PHKindID       { background: #f7fbff; }                          /* Zeer licht blauw voor kind alleen via partner */
-        .KindPartnerID  { background: #d0ebff; font-style: italic; }      /* Lichtblauw-grijs voor partner van kind */
-        .BZID           { background: #fff3e0; font-weight: 500; }        /* Lichtoranje voor broers en zussen */
-        .BZPartnerID    { background: #fbe9e7; font-style: italic; }      /* Lichtroze voor partner van broer/zus */
+        /* Kleuren komen uit RelationColors.css via CSS-variabelen.         */
+        /* Hier alleen typografie-overrides — geen achtergrondkleuren.      */
+        tr.HoofdID   td { background: var(--color-hoofd);         font-weight: 500; }
+        tr.VHoofdID  td,
+        tr.MHoofdID  td { background: var(--color-vader);         }
+        tr.PHoofdID  td { background: var(--color-partner-hoofd); font-style: italic; }
+        tr.KindID    td { background: var(--color-KindID);        opacity: 0.85; }
+        tr.HKindID   td { background: var(--color-HKindID);       }
+        tr.PHKindID  td { background: var(--color-PHKindID);      }
+        tr.KindPartnerID td { background: var(--color-partner);   font-style: italic; }
+        tr.BZID      td { background: var(--color-bz);            }
+        tr.BZPartnerID   td { background: var(--color-partner);   font-style: italic; }
     </style>
 </head>
 <body>
