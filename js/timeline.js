@@ -1,400 +1,494 @@
-/* ======================= js/timeline.js v2.1.0 =======================
+/* ======================= js/timeline.js v2.2.0 =======================
  * Canvas-based family timeline renderer
- * Draws every person as a horizontal life bar on a shared time axis.
- * Bars are grouped by generation relative to the selected root person.
  *
- * Dependencies (must be loaded before this file):
+ * Wijzigingen v2.2.0 t.o.v. v2.1.1:
+ *  obs.1  Tijdas dynamisch: HoofdID.geboortejaar ±200 jaar, 10-jaar ticks, horizontale scroll
+ *  obs.2  Connectors starten aan balkrand (barEndX), niet balkcentrum — gaan niet meer door nodes
+ *  obs.3  Geboorte- én overlijdensjaar boven balk (links resp. rechts van balk)
+ *  obs.4  Datumparser: dd-mmm-jjjj + jjjj-mmm-dd + vraagtekens → afronden naar beneden (197?→1970)
+ *  obs.5  Layout: koppel-groepen — partner als directe sub-rij onder persoon
+ *  obs.6  Kleuren conform RelationColors.css v1.0.1
+ *  obs.7  KindID / HKindID / MHKindID / PHKindID elk eigen kleur
+ *  obs.8  Gen-labels als HTML-overlay links van canvas (altijd zichtbaar, nooit geclipped)
+ *  obs.9  Kinderen genest: kind → partner → kleinkinderen (recursief), herhaalt per kind
+ *  MHKindID toegevoegd voor kind via moeder-als-hoofd (relatieEngine v2.1.0)
+ *
+ * Dependencies (verified):
  *   utils.js         -> window.ftSafe, window.ftParseBirthday, window.ftFormatDate
- *   schema.js        -> window.StamboomSchema
- *   storage.js       -> window.StamboomStorage
- *   LiveSearch.js    -> window.liveSearch(options), window.initLiveSearch(input, dataset, cb)
+ *   storage.js       -> window.StamboomStorage.get()
+ *   LiveSearch.js    -> window.initLiveSearch(inputEl, dataset, cb) — cb krijgt persoon.ID string
  *   relatieEngine.js -> window.RelatieEngine.computeRelaties(data, hoofdId)
+ *     Relatie-waarden: HoofdID, VHoofdID, MHoofdID, PHoofdID,
+ *                      KindID, HKindID, MHKindID, PHKindID, KindPartnerID, BZID, BZPartnerID
+ *   Persoon veldnamen: VaderID, MoederID, PartnerID
  *
- * LiveSearch API (initLiveSearch):
- *   initLiveSearch(searchInput, dataset, onSelectCallback)
- *   - onSelectCallback receives person.ID (string), NOT the full person object
- *
- * RelatieEngine API (computeRelaties):
- *   - Returns array of person clones with added .Relatie string and ._priority number
- *   - .Relatie values: 'HoofdID','VHoofdID','MHoofdID','PHoofdID',
- *                      'KindID','HKindID','PHKindID','KindPartnerID',
- *                      'BZID','BZPartnerID'
- *   - Person fields for parents: VaderID / MoederID (NOT VHoofdID / MHoofdID)
- *   - Person field for partner:  PartnerID
- *
- * Exports: nothing (self-contained IIFE)
- * Version: v2.1.0
+ * Version: v2.2.0
  * ===================================================================== */
 
 (function () {
-    'use strict'; // Strict mode prevents silent errors
+    'use strict';
 
     /* ------------------------------------------------------------------
      * SECTION 1 — DOM REFERENCES
      * ------------------------------------------------------------------ */
-    const container   = document.getElementById('timelineContainer');   // Outer wrapper (position:relative)
-    const canvas      = document.getElementById('timelineCanvas');      // The <canvas> element
+    const container   = document.getElementById('timelineContainer');  // Outer wrapper, position:relative
+    const canvas      = document.getElementById('timelineCanvas');     // <canvas> element
     const placeholder = document.getElementById('timelinePlaceholder'); // "Zoek een persoon" message
-    const tooltip     = document.getElementById('timelineTooltip');     // Hover tooltip div
-    const searchInput = document.getElementById('sandboxSearch');       // Live search input
+    const tooltip     = document.getElementById('timelineTooltip');    // Hover tooltip div
+    const searchInput = document.getElementById('sandboxSearch');      // Live search input
 
     /* ------------------------------------------------------------------
-     * SECTION 2 — CANVAS CONSTANTS
-     * All pixel measurements that define the layout grid.
+     * SECTION 2 — LAYOUT CONSTANTS
      * ------------------------------------------------------------------ */
-    const MIN_YEAR       = 1800; // Left edge of the time axis
-    const ROW_H          = 32;   // Height of one person row in pixels
-    const ROW_GAP        = 6;    // Vertical gap between rows
-    const LEFT_PAD       = 140;  // Left margin reserved for generation labels
-    const RIGHT_PAD      = 24;   // Right margin after the time axis
-    const TICK_AREA_H    = 40;   // Height of the top tick/label strip
-    const GEN_LABEL_PAD  = 8;    // Top padding before a generation label
-    const GEN_BOTTOM_PAD = 12;   // Bottom padding after the last row in a block
-    const GEN_SEP_H      = 1;    // Height of the thin separator line between generations
-    const BAR_H          = 18;   // Height of a life bar within its row
-    const RADIUS         = 4;    // Corner radius for solid bars
-    const DEFAULT_SPAN   = 50;   // Assumed lifespan when death date is unknown
-    const TICK_INTERVAL  = 25;   // Years between tick marks on the time axis
-    const UNKNOWN_BAR_W  = 60;   // Fixed pixel width for persons with unknown birth year
+    const ROW_H         = 28;   // Height of one person row in pixels
+    const ROW_GAP       = 4;    // Gap between rows within the same couple-group
+    const GROUP_GAP     = 14;   // Gap between couple-groups (visual separator)
+    const LEFT_PAD      = 0;    // No left pad on canvas — gen labels live in HTML overlay
+    const RIGHT_PAD     = 32;   // Right margin after time axis end
+    const TICK_AREA_H   = 40;   // Height reserved for the time axis at the top
+    const BAR_H         = 16;   // Height of a life bar
+    const RADIUS        = 3;    // Corner radius for bars
+    const DEFAULT_SPAN  = 50;   // Assumed lifespan (years) when death date is unknown
+    const TICK_INTERVAL = 10;   // Years between tick marks on the axis (obs.1)
+    const UNKNOWN_BAR_W = 80;   // Fixed pixel width for bars with unknown birth date
+    const LABEL_COL_W   = 150;  // Width of the HTML gen-label column (obs.8)
+    const MIN_PX_YEAR   = 5;    // Minimum pixels per year (prevents bars collapsing)
+    const SECTION_H     = 20;   // Height of a section header row
 
     /* ------------------------------------------------------------------
-     * SECTION 3 — COLOUR PALETTE
-     * Matches TIMELINE_DEV.docx section 2.3.
+     * SECTION 3 — COLOUR PALETTE  (obs.6 + obs.7)
+     * Aligned with RelationColors.css v1.0.1
      * ------------------------------------------------------------------ */
     const COLOR = {
-        parent:     '#2d7d46', // Green  — parents and ancestors
-        root:       '#d4a017', // Amber  — the selected root person (gen 0)
-        partner:    '#888888', // Grey   — partners at any generation
-        child:      '#3a78b5', // Blue   — children and grandchildren
-        sibling:    '#c05a1f', // Orange — siblings of the root person
-        today:      '#ee0055', // Red    — vertical "today" dashed line
-        tick:       '#999999', // Light grey — tick marks and axis line
-        genLabel:   '#555555', // Medium grey — generation label text
-        genSep:     '#dddddd', // Very light grey — separator between generation blocks
-        barText:    '#ffffff', // White  — name text inside bars
-        birthLabel: '#444444', // Dark grey — birth year label above bar
-        unknown:    '#bbbbbb', // Light grey — fill for unknown-birth bars
-        unknownTxt: '#666666', // Medium grey — "?" and label on unknown bars
-        connLine:   '#aaaaaa', // Grey   — parent→child connector lines
+        HoofdID:       '#c8960c', // Amber  — HoofdID (--color-hoofd feel, canvas-visible)
+        PHoofdID:      '#7b56c2', // Purple — PHoofdID (--color-partner-hoofd darkened)
+        VHoofdID:      '#2d7d46', // Green  — VHoofdID (--color-vader darkened for canvas)
+        MHoofdID:      '#2d7d46', // Green  — MHoofdID same as vader per CSS
+        KindID:        '#2196f3', // Blue   — KindID exact match --color-KindID
+        HKindID:       '#64b5f6', // Sky    — HKindID (#90caf9 darkened for readability)
+        MHKindID:      '#64b5f6', // Sky    — MHKindID same as HKindID (kind via moeder)
+        PHKindID:      '#aac8ef', // Light  — PHKindID (--color-PHKindID, use dark text)
+        KindPartnerID: '#9e9e9e', // Grey   — partner van kind (--color-partner)
+        BZID:          '#c8741a', // Orange — BZID (--color-bz darkened for canvas)
+        BZPartnerID:   '#9e9e9e', // Grey   — partner van broer/zus
+        today:         '#ee0055', // Red    — vertical today dashed line
+        tick:          '#bbbbbb', // Light grey — tick marks
+        barText:       '#ffffff', // White  — text on most bars
+        barTextDark:   '#1a1a1a', // Dark   — text on light bars (PHKindID)
+        birthLabel:    '#666666', // Grey   — year labels above bars
+        unknown:       '#cccccc', // Light  — unknown-birth bar fill
+        unknownText:   '#666666', // Grey   — "?" on unknown bars
+        connLine:      '#cccccc', // Light grey — parent→child connectors
+        sectionText:   '#888888', // Grey   — section header text
     };
 
     /* ------------------------------------------------------------------
      * SECTION 4 — STATE
      * ------------------------------------------------------------------ */
-    let dataset  = [];   // Full person array from localStorage
-    let rootId   = null; // Currently selected root person ID
-    let hitRects = [];   // Array of { x, y, w, h, entry } for mouse hit detection
-    const TODAY  = new Date().getFullYear(); // Current year — evaluated once at load
+    let dataset    = [];
+    let rootId     = null;
+    let hitRects   = [];
+    let dynMinYear = 1800;  // Updated per root person (obs.1)
+    let dynMaxYear = new Date().getFullYear();
+    const TODAY    = new Date().getFullYear();
 
     /* ------------------------------------------------------------------
-     * SECTION 5 — UTILITY HELPERS
-     * Thin wrappers that delegate to window.ft* from utils.js.
+     * SECTION 5 — DATE UTILITIES  (obs.4)
+     * Extends utils.js with:
+     *   - dd-mmm-yyyy  ("12-jan-1954")
+     *   - yyyy-mmm-dd  ("1954-jan-12")
+     *   - Question marks replaced by 0 before parsing (round down)
      * ------------------------------------------------------------------ */
 
-    // Returns a trimmed string, never null/undefined
-    function safe(val) {
-        return window.ftSafe(val); // Delegate to utils.js
+    // Replaces every '?' in a string with '0' (round down rule)
+    function resolveQ(s) {
+        return String(s).replace(/\?/g, '0');
     }
 
-    // Parses a date string and returns the 4-digit year as a Number, or null
+    // Returns 4-digit year from a date string, or null if unparseable
     function parseYear(dateStr) {
-        if (!dateStr) return null;                         // No input
-        const d = window.ftParseBirthday(dateStr);        // utils.js returns a Date object
-        if (!d || isNaN(d.getTime())) return null;        // Unparseable
-        const y = d.getFullYear();
-        return (y < 1 || y > TODAY + 5) ? null : y;       // Sanity-check range
+        if (!dateStr) return null;
+        const d = resolveQ(String(dateStr).trim());
+
+        // dd-mmm-yyyy  e.g. "12-jan-1954" or "12-januari-1954"
+        const dmyA = d.match(/^(\d{1,2})[-/\s]([a-zA-Z]+)[-/\s](\d{4})$/);
+        if (dmyA) {
+            const yr = parseInt(dmyA[3], 10);
+            return (yr >= 100 && yr <= TODAY + 5) ? yr : null;
+        }
+
+        // yyyy-mmm-dd  e.g. "1954-jan-12"
+        const ymdA = d.match(/^(\d{4})[-/\s]([a-zA-Z]+)[-/\s](\d{1,2})$/);
+        if (ymdA) {
+            const yr = parseInt(ymdA[1], 10);
+            return (yr >= 100 && yr <= TODAY + 5) ? yr : null;
+        }
+
+        // yyyy only  e.g. "1970" (after resolveQ: "197?" → "1970")
+        const yOnly = d.match(/^(\d{4})$/);
+        if (yOnly) {
+            const yr = parseInt(yOnly[1], 10);
+            return (yr >= 100 && yr <= TODAY + 5) ? yr : null;
+        }
+
+        // All other formats: delegate to utils.js
+        try {
+            const obj = window.ftParseBirthday(d);
+            if (!obj || isNaN(obj.getTime())) return null;
+            const yr = obj.getFullYear();
+            return (yr >= 100 && yr <= TODAY + 5) ? yr : null;
+        } catch (e) {
+            return null;
+        }
     }
 
-    // Formats a date string for tooltip display (e.g. "12 jan 1954")
+    // Formats a date string for tooltip, resolving question marks first
     function fmtDate(dateStr) {
         if (!dateStr) return '—';
-        return window.ftFormatDate(dateStr);               // Delegate to utils.js
+        const resolved = resolveQ(String(dateStr).trim());
+        return window.ftFormatDate ? window.ftFormatDate(resolved) : resolved;
     }
 
-    // Finds a person object by ID in the current dataset
+    /* ------------------------------------------------------------------
+     * SECTION 6 — UTILITY HELPERS
+     * ------------------------------------------------------------------ */
+
+    function safe(val) { return window.ftSafe(val); }
+
     function findPerson(id) {
         const sid = safe(id);
         if (!sid) return null;
         return dataset.find(p => safe(p.ID) === sid) || null;
     }
 
-    // Builds a display name from Roepnaam + Prefix + Achternaam
     function displayName(p) {
         return [safe(p.Roepnaam), safe(p.Prefix), safe(p.Achternaam)]
             .filter(Boolean).join(' ');
     }
 
+    // Light-colored bars need dark text to stay readable
+    function needsDarkText(relatie) {
+        return relatie === 'PHKindID';
+    }
+
     /* ------------------------------------------------------------------
-     * SECTION 6 — TIME AXIS MATH
-     * yearToX converts a calendar year to an X pixel coordinate.
-     * timeW = canvas.width - LEFT_PAD - RIGHT_PAD
+     * SECTION 7 — TIME AXIS MATH  (obs.1)
+     * Uses dynMinYear / dynMaxYear, set per root person.
      * ------------------------------------------------------------------ */
     function yearToX(year, timeW) {
-        const ratio = (year - MIN_YEAR) / (TODAY - MIN_YEAR); // 0.0 = MIN_YEAR, 1.0 = TODAY
-        return LEFT_PAD + ratio * timeW;                       // Scale to pixel space
+        const ratio = (year - dynMinYear) / (dynMaxYear - dynMinYear);
+        return LEFT_PAD + ratio * timeW;
     }
 
     /* ------------------------------------------------------------------
-     * SECTION 7 — GENERATION BUILDER
-     * Calls relatieEngine to classify relatives, then groups them into
-     * generation blocks for the renderer.
-     *
-     * Field name note:
-     *   The raw person object uses VaderID / MoederID / PartnerID.
-     *   relatieEngine produces .Relatie labels 'VHoofdID' / 'MHoofdID' etc.
-     *   When traversing the family tree manually (grandparents, grandchildren)
-     *   we always read the raw VaderID / MoederID / PartnerID fields.
-     *
-     * Returns: [ { gen, label, rows: [entry, ...] }, ... ]
-     *   entry = { person, color, genNum, isRoot, isUnknown, birthYear, deathYear, isDead }
+     * SECTION 8 — DYNAMIC YEAR RANGE  (obs.1)
      * ------------------------------------------------------------------ */
-    function buildGenerations(rootPerson) {
-        // Get all relatives with their .Relatie label from the engine
+    function setDynamicRange(rootPerson) {
+        const rb = parseYear(rootPerson.Geboortedatum);
+        if (rb) {
+            dynMinYear = rb - 200;                       // 200 years before root birth
+            dynMaxYear = Math.max(rb + 200, TODAY);      // 200 years after, at least today
+        } else {
+            // Fallback: span from earliest known birth in dataset to today
+            const years = dataset.map(p => parseYear(p.Geboortedatum)).filter(Boolean);
+            dynMinYear  = years.length ? Math.min(...years) - 10 : TODAY - 200;
+            dynMaxYear  = TODAY;
+        }
+    }
+
+    /* ------------------------------------------------------------------
+     * SECTION 9 — ROW BUILDER  (obs.5 + obs.9)
+     *
+     * Produces a flat array of render rows with couple-group nesting:
+     *   Ancestors (gen -3 .. -1):  flat per generation, person then partner
+     *   Gen 0:   HoofdID → partner → siblings (each with partner)
+     *   Gen +1:  each child → partner → grandchildren (each with partner, recursively)
+     *
+     * Row shape: { entry, indentLevel, sectionLabel }
+     * Entry shape: { person, relatie, color, birthYear, deathYear, isDead, isUnknown, isRoot }
+     * ------------------------------------------------------------------ */
+    function buildRows(rootPerson) {
         const relaties = window.RelatieEngine.computeRelaties(dataset, safe(rootPerson.ID));
 
-        const seen    = new Set(); // Tracks IDs already added to avoid duplicates
-        const entries = [];        // Flat list of all entries before grouping
+        const seen = new Set();
+        const rows = [];
 
-        // Adds a person to entries if they exist and haven't been added yet
-        function addEntry(id, color, genNum) {
-            const sid = safe(id);
-            if (!sid || seen.has(sid)) return; // Empty or duplicate
-            const p = findPerson(sid);
-            if (!p) return;                    // Not in the dataset
-            seen.add(sid);
-            entries.push({ person: p, color, genNum });
+        // Build an enriched entry for one person
+        function makeEntry(person, relatie) {
+            const by = parseYear(person.Geboortedatum);
+            const dy = parseYear(person.Overlijdensdatum);
+            return {
+                person,
+                relatie,
+                color:     COLOR[relatie] || COLOR.unknown,
+                birthYear: by,
+                deathYear: dy,
+                isDead:    dy !== null,
+                isUnknown: by === null,
+                isRoot:    safe(person.ID) === safe(rootPerson.ID),
+            };
         }
 
-        /* ---- GEN 0: root ---- */
-        addEntry(rootPerson.ID, COLOR.root, 0);
+        // Add one row; returns true if added, false if duplicate / not found
+        function addRow(id, relatie, indentLevel, sectionLabel) {
+            const sid = safe(id);
+            if (!sid || seen.has(sid)) return false;
+            const p = findPerson(sid);
+            if (!p) return false;
+            seen.add(sid);
+            rows.push({ entry: makeEntry(p, relatie), indentLevel, sectionLabel });
+            return true;
+        }
 
-        /* ---- GEN 0: partner of root ---- */
-        relaties
-            .filter(r => safe(r.Relatie) === 'PHoofdID')
-            .forEach(r => addEntry(r.ID, COLOR.partner, 0));
+        // Add a person + their partner as a sub-row
+        function addWithPartner(id, relatie, indentLevel, sectionLabel) {
+            const added = addRow(id, relatie, indentLevel, sectionLabel);
+            if (!added) return;
+            const p = findPerson(id);
+            if (p && safe(p.PartnerID)) {
+                addRow(p.PartnerID, 'PHoofdID', indentLevel + 1, null);
+            }
+        }
 
-        /* ---- GEN 0: siblings + their partners ---- */
+        /* ---- Ancestor generations (gen -3 .. -1) ---- */
+        // Walk upward: collect parent IDs level by level
+        function addAncestorLevel(parentIds, sectionLabel) {
+            const nextLevel = [];
+            parentIds.forEach(pid => {
+                const parent = findPerson(pid);
+                if (!parent) return;
+                // Choose colour: gen -1 uses VHoofdID/MHoofdID, higher gens use VHoofdID
+                const rootFatherId = safe(rootPerson.VaderID);
+                const isRootParent = sectionLabel === 'Ouders  (gen −1)';
+                const relatie = isRootParent
+                    ? (safe(parent.ID) === rootFatherId ? 'VHoofdID' : 'MHoofdID')
+                    : 'VHoofdID';
+                addWithPartner(pid, relatie, 0, sectionLabel);
+                // Collect this person's parents for the next level
+                [safe(parent.VaderID), safe(parent.MoederID)]
+                    .filter(id => id && !seen.has(id))
+                    .forEach(id => nextLevel.push(id));
+            });
+            return [...new Set(nextLevel)];
+        }
+
+        const gen1 = [safe(rootPerson.VaderID), safe(rootPerson.MoederID)].filter(Boolean);
+        const gen2 = addAncestorLevel(gen1, 'Ouders  (gen −1)');
+        const gen3 = addAncestorLevel(gen2, 'Grootouders  (gen −2)');
+        addAncestorLevel(gen3, 'Betovergrootouders  (gen −3)');
+
+        /* ---- Gen 0: root + partner + siblings ---- */
+        addRow(rootPerson.ID, 'HoofdID', 0, 'Hoofdpersoon  (gen 0)');
+        // Partner of root directly below root (obs.5)
+        if (safe(rootPerson.PartnerID)) {
+            addRow(rootPerson.PartnerID, 'PHoofdID', 1, null);
+        }
+
+        // Siblings (sorted by birth year, unknown last), each with partner sub-row
         relaties
             .filter(r => safe(r.Relatie) === 'BZID')
+            .sort((a, b) => (parseYear(a.Geboortedatum) || 9999) - (parseYear(b.Geboortedatum) || 9999))
             .forEach(r => {
-                addEntry(r.ID, COLOR.sibling, 0);
-                const sib = findPerson(r.ID);                  // Read raw PartnerID from the sibling
-                if (sib && safe(sib.PartnerID)) addEntry(sib.PartnerID, COLOR.partner, 0);
+                addRow(r.ID, 'BZID', 0, null);
+                const sib = findPerson(r.ID);
+                if (sib && safe(sib.PartnerID)) addRow(sib.PartnerID, 'BZPartnerID', 1, null);
             });
 
-        /* ---- GEN -1: parents (read raw VaderID / MoederID from root) ---- */
-        const fatherID = safe(rootPerson.VaderID);  // Raw field on the person object
-        const motherID = safe(rootPerson.MoederID); // Raw field on the person object
+        /* ---- Gen +1 and +2: children recursively (obs.9) ---- */
+        const childRelaties = new Set(['KindID', 'HKindID', 'MHKindID', 'PHKindID']);
 
-        [fatherID, motherID].filter(Boolean).forEach(pid => {
-            addEntry(pid, COLOR.parent, -1);
-            const parent = findPerson(pid);
-            if (!parent) return;
-            if (safe(parent.PartnerID)) addEntry(parent.PartnerID, COLOR.partner, -1);
+        const rootChildren = relaties
+            .filter(r => childRelaties.has(safe(r.Relatie)))
+            .sort((a, b) => (parseYear(a.Geboortedatum) || 9999) - (parseYear(b.Geboortedatum) || 9999));
+
+        // Recursive: child → partner sub-row → grandchildren (each recursive)
+        function addChildGroup(childId, childRelatie, indentLevel, sectionLabel) {
+            const added = addRow(childId, childRelatie, indentLevel, sectionLabel);
+            if (!added) return;
+
+            const child = findPerson(childId);
+            if (!child) return;
+
+            // Partner directly below child (obs.5)
+            const partnerId = safe(child.PartnerID);
+            if (partnerId) addRow(partnerId, 'KindPartnerID', indentLevel + 1, null);
+
+            // Grandchildren: persons whose VaderID or MoederID = this child
+            const grandchildren = dataset
+                .filter(p => safe(p.VaderID) === safe(childId) || safe(p.MoederID) === safe(childId))
+                .sort((a, b) => (parseYear(a.Geboortedatum) || 9999) - (parseYear(b.Geboortedatum) || 9999));
+
+            grandchildren.forEach(gc => {
+                if (seen.has(safe(gc.ID))) return;
+                // Determine grandchild relation type
+                const gcVader  = safe(gc.VaderID);
+                const gcMoeder = safe(gc.MoederID);
+                let gcRelatie = 'KindID';
+                if (gcVader === safe(childId) && gcMoeder === partnerId && partnerId) {
+                    gcRelatie = 'KindID';
+                } else if (gcVader === safe(childId)) {
+                    gcRelatie = 'HKindID';
+                } else if (gcMoeder === safe(childId)) {
+                    gcRelatie = 'MHKindID';
+                } else if (partnerId && (gcVader === partnerId || gcMoeder === partnerId)) {
+                    gcRelatie = 'PHKindID';
+                }
+                addChildGroup(safe(gc.ID), gcRelatie, indentLevel + 1, null);
+            });
+        }
+
+        rootChildren.forEach((r, idx) => {
+            addChildGroup(safe(r.ID), safe(r.Relatie), 0, idx === 0 ? 'Kinderen  (gen +1 / +2)' : null);
         });
 
-        /* ---- GEN -2: grandparents (parents of each gen -1 parent) ---- */
-        [fatherID, motherID].filter(Boolean).forEach(pid => {
-            const parent = findPerson(pid);
-            if (!parent) return;
-            [safe(parent.VaderID), safe(parent.MoederID)].filter(Boolean).forEach(gpId => {
-                addEntry(gpId, COLOR.parent, -2);
-                const gp = findPerson(gpId);
-                if (gp && safe(gp.PartnerID)) addEntry(gp.PartnerID, COLOR.partner, -2);
-            });
-        });
-
-        /* ---- GEN -3: great-grandparents (parents of each gen -2 person) ---- */
-        entries
-            .filter(e => e.genNum === -2 && e.color === COLOR.parent)
-            .forEach(e => {
-                [safe(e.person.VaderID), safe(e.person.MoederID)].filter(Boolean).forEach(ggpId => {
-                    addEntry(ggpId, COLOR.parent, -3);
-                    const ggp = findPerson(ggpId);
-                    if (ggp && safe(ggp.PartnerID)) addEntry(ggp.PartnerID, COLOR.partner, -3);
-                });
-            });
-
-        /* ---- GEN +1: children + their partners ---- */
-        relaties
-            .filter(r => ['KindID', 'HKindID', 'PHKindID'].includes(safe(r.Relatie)))
-            .forEach(r => {
-                addEntry(r.ID, COLOR.child, 1);
-                const child = findPerson(r.ID);
-                if (child && safe(child.PartnerID)) addEntry(child.PartnerID, COLOR.partner, 1);
-            });
-
-        /* ---- GEN +2: grandchildren (persons whose VaderID/MoederID = a gen+1 child) ---- */
-        entries
-            .filter(e => e.genNum === 1 && e.color === COLOR.child)
-            .forEach(e => {
-                const childId = safe(e.person.ID);
-                dataset.forEach(p => {
-                    if (safe(p.VaderID) === childId || safe(p.MoederID) === childId) {
-                        addEntry(p.ID, COLOR.child, 2);
-                        const gc = findPerson(p.ID);
-                        if (gc && safe(gc.PartnerID)) addEntry(gc.PartnerID, COLOR.partner, 2);
-                    }
-                });
-            });
-
-        /* ---- Enrich entries with parsed date info ---- */
-        entries.forEach(e => {
-            const by = parseYear(e.person.Geboortedatum);
-            const dy = parseYear(e.person.Overlijdensdatum);
-            e.birthYear  = by;             // null = unknown
-            e.deathYear  = dy;             // null = alive or unknown
-            e.isDead     = !!dy;           // true if death year is known
-            e.isUnknown  = (by === null);  // true = question-mark bar
-            e.isRoot     = (safe(e.person.ID) === safe(rootPerson.ID));
-        });
-
-        /* ---- Group into ordered generation blocks ---- */
-        const genOrder  = [-3, -2, -1, 0, 1, 2];
-        const genLabels = {
-            '-3': 'Betovergrootouders (gen −3)',
-            '-2': 'Grootouders (gen −2)',
-            '-1': 'Ouders (gen −1)',
-             '0': 'Hoofdpersoon & broers/zussen (gen 0)',
-             '1': 'Kinderen (gen +1)',
-             '2': 'Kleinkinderen (gen +2)',
-        };
-
-        const blocks = [];
-        genOrder.forEach(g => {
-            const rows = entries.filter(e => e.genNum === g);
-            if (rows.length === 0) return; // Skip empty generations
-            rows.sort((a, b) => {          // Sort by birth year; unknown birth sorts last
-                if (a.birthYear === null && b.birthYear === null) return 0;
-                if (a.birthYear === null) return 1;
-                if (b.birthYear === null) return -1;
-                return a.birthYear - b.birthYear;
-            });
-            blocks.push({ gen: g, label: genLabels[String(g)], rows });
-        });
-
-        return blocks;
+        return rows;
     }
 
     /* ------------------------------------------------------------------
-     * SECTION 8 — CANVAS RENDERER
-     * Two-pass rendering:
-     *   Pass 1 — time axis, generation labels, life bars
-     *   Pass 2 — parent→child connector lines (drawn on top of bars)
-     *   Pass 3 — today line (drawn last, on top of everything)
+     * SECTION 10 — CANVAS RENDERER
+     * Two geometry passes: first compute all Y positions, then draw.
+     * Third pass draws connectors (needs all barPositions).
      * ------------------------------------------------------------------ */
-    function renderCanvas(blocks) {
-        if (!blocks || blocks.length === 0) return;
+    function renderCanvas(rows) {
+        if (!rows || rows.length === 0) return;
 
-        const timeW = canvas.width - LEFT_PAD - RIGHT_PAD; // Drawable horizontal span
+        /* ---- Step 1: compute canvas dimensions ---- */
+        let totalH = TICK_AREA_H;
+        let prevLabel = null;
+        rows.forEach((row, i) => {
+            if (row.sectionLabel && row.sectionLabel !== prevLabel) {
+                totalH += SECTION_H;
+                prevLabel = row.sectionLabel;
+            }
+            totalH += ROW_H;
+            const nextRow = rows[i + 1];
+            totalH += (!nextRow || nextRow.indentLevel === 0) ? GROUP_GAP : ROW_GAP;
+        });
+        totalH += 20; // Bottom padding
 
-        /* ---- Calculate canvas height ---- */
-        const genBlockH = blocks.reduce((acc, b) =>
-            acc + GEN_LABEL_PAD + 16
-                + (b.rows.length * (ROW_H + ROW_GAP))
-                + GEN_BOTTOM_PAD + GEN_SEP_H, 0);
-        canvas.height = TICK_AREA_H + genBlockH + 20;
+        // Canvas width based on year span and available space
+        const yearSpan  = dynMaxYear - dynMinYear;
+        const available = Math.max(container.clientWidth - LABEL_COL_W - RIGHT_PAD, 600);
+        const pxPerYear = Math.max(available / yearSpan, MIN_PX_YEAR);
+        const timeW     = yearSpan * pxPerYear;
+
+        canvas.height = totalH;
+        canvas.width  = LEFT_PAD + timeW + RIGHT_PAD;
 
         const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // Wipe previous frame
-        hitRects = [];                                     // Reset hit detection
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        /* ---- Pass 1a: time axis ---- */
+        hitRects = [];
+        const barPositions = {}; // id -> { barX, barEndX, barCY }
+
+        /* ---- Step 2: time axis ---- */
         drawTimeAxis(ctx, timeW);
 
-        /* ---- Pass 1b: generation blocks + bar positions ---- */
-        let curY = TICK_AREA_H;          // Y cursor starts below tick strip
-        const barPositions = {};          // id -> { cx, cy } for connector lines
+        /* ---- Step 3: rows ---- */
+        let curY     = TICK_AREA_H;
+        prevLabel    = null;
 
-        blocks.forEach(block => {
-            // Separator line between generation groups
-            ctx.fillStyle = COLOR.genSep;
-            ctx.fillRect(0, curY, canvas.width, GEN_SEP_H);
-            curY += GEN_SEP_H;
+        rows.forEach((row, i) => {
+            // Section header
+            if (row.sectionLabel && row.sectionLabel !== prevLabel) {
+                ctx.fillStyle    = COLOR.sectionText;
+                ctx.font         = 'bold 10px sans-serif';
+                ctx.textBaseline = 'middle';
+                ctx.textAlign    = 'left';
+                ctx.fillText(row.sectionLabel, LEFT_PAD + 4, curY + SECTION_H / 2);
+                curY     += SECTION_H;
+                prevLabel = row.sectionLabel;
+            }
 
-            // Generation label
-            curY += GEN_LABEL_PAD;
-            ctx.fillStyle    = COLOR.genLabel;
-            ctx.font         = 'bold 11px sans-serif';
-            ctx.textBaseline = 'top';
-            ctx.fillText(block.label, 8, curY);
-            curY += 16;
+            const rowY  = curY;
+            const barY  = rowY + (ROW_H - BAR_H) / 2;   // Vertically centred bar
+            const barCY = barY + BAR_H / 2;               // Bar vertical centre
+            const indentPx = row.indentLevel * 18;        // Horizontal indent for sub-rows
 
-            // Person rows
-            block.rows.forEach(entry => {
-                const rowY  = curY;
-                const barY  = rowY + (ROW_H - BAR_H) / 2;  // Vertically centred bar
-                const barCY = barY + BAR_H / 2;              // Centre y of bar
+            if (row.entry.isUnknown) {
+                drawUnknownBar(ctx, barY, barCY, row.entry, indentPx);
+                barPositions[safe(row.entry.person.ID)] = {
+                    barX:    LEFT_PAD + indentPx + 4,
+                    barEndX: LEFT_PAD + indentPx + 4 + UNKNOWN_BAR_W,
+                    barCY,
+                };
+            } else {
+                const bx = yearToX(row.entry.birthYear, timeW);
+                const endYear   = row.entry.isDead
+                    ? row.entry.deathYear
+                    : Math.min(row.entry.birthYear + DEFAULT_SPAN, TODAY);
+                const solidEndX = yearToX(Math.min(endYear, dynMaxYear), timeW);
+                drawLifeBar(ctx, barY, barCY, row.entry, timeW, indentPx);
+                barPositions[safe(row.entry.person.ID)] = {
+                    barX:    bx,
+                    barEndX: Math.max(solidEndX, bx + 4),
+                    barCY,
+                };
+            }
 
-                if (entry.isUnknown) {
-                    drawUnknownBar(ctx, barY, entry);
-                    barPositions[safe(entry.person.ID)] = { cx: LEFT_PAD + 4, cy: barCY };
-                } else {
-                    drawLifeBar(ctx, barY, barCY, entry, timeW);
-                    barPositions[safe(entry.person.ID)] = {
-                        cx: yearToX(entry.birthYear, timeW),
-                        cy: barCY,
-                    };
-                }
+            hitRects.push({ x: 0, y: rowY, w: canvas.width, h: ROW_H, entry: row.entry });
 
-                // Register row as hit area spanning full canvas width
-                hitRects.push({ x: 0, y: rowY, w: canvas.width, h: ROW_H, entry });
-                curY += ROW_H + ROW_GAP;
-            });
-
-            curY += GEN_BOTTOM_PAD;
+            const nextRow = rows[i + 1];
+            curY += ROW_H + ((!nextRow || nextRow.indentLevel === 0) ? GROUP_GAP : ROW_GAP);
         });
 
-        /* ---- Pass 2: connector lines ---- */
-        const allEntries = blocks.flatMap(b => b.rows);
-        allEntries.forEach(entry => {
-            const p = entry.person;
+        /* ---- Step 4: connector lines (obs.2) ---- */
+        rows.forEach(row => {
+            const p = row.entry.person;
             [safe(p.VaderID), safe(p.MoederID)].forEach(parentId => {
                 if (!parentId) return;
-                const childPos  = barPositions[safe(p.ID)];
-                const parentPos = barPositions[parentId];
-                if (!childPos || !parentPos) return; // One party not visible
-                drawConnector(ctx, parentPos, childPos);
+                const cp = barPositions[safe(p.ID)];
+                const pp = barPositions[parentId];
+                if (!cp || !pp) return;
+                drawConnector(ctx, pp, cp);
             });
         });
 
-        /* ---- Pass 3: today line on top ---- */
+        /* ---- Step 5: today line on top of everything ---- */
         drawTodayLine(ctx, timeW);
+
+        /* ---- Step 6: update HTML gen-label overlay (obs.8) ---- */
+        updateGenLabels(rows);
     }
 
     /* ------------------------------------------------------------------
-     * SECTION 9 — DRAW HELPERS
+     * SECTION 11 — INDIVIDUAL DRAW FUNCTIONS
      * ------------------------------------------------------------------ */
 
-    // Time axis: baseline + tick marks + year labels
     function drawTimeAxis(ctx, timeW) {
+        // Baseline
         ctx.strokeStyle = COLOR.tick;
-        ctx.lineWidth   = 1;
+        ctx.lineWidth   = 0.5;
         ctx.beginPath();
         ctx.moveTo(LEFT_PAD, TICK_AREA_H - 4);
         ctx.lineTo(LEFT_PAD + timeW, TICK_AREA_H - 4);
         ctx.stroke();
 
+        ctx.font         = '9px sans-serif';
         ctx.textAlign    = 'center';
         ctx.textBaseline = 'bottom';
-        const firstTick = Math.ceil(MIN_YEAR / TICK_INTERVAL) * TICK_INTERVAL;
-        for (let y = firstTick; y <= TODAY; y += TICK_INTERVAL) {
-            const x = yearToX(y, timeW);
+
+        const firstTick = Math.ceil(dynMinYear / TICK_INTERVAL) * TICK_INTERVAL;
+        for (let y = firstTick; y <= dynMaxYear; y += TICK_INTERVAL) {
+            const x        = yearToX(y, timeW);
+            const isMajor  = y % 50 === 0;  // Taller tick every 50 years
+            const isMinor  = y % 25 === 0;  // Label every 25 years
             ctx.strokeStyle = COLOR.tick;
-            ctx.lineWidth   = 0.5;
+            ctx.lineWidth   = isMajor ? 1 : 0.5;
             ctx.beginPath();
             ctx.moveTo(x, TICK_AREA_H - 4);
-            ctx.lineTo(x, TICK_AREA_H - 10);
+            ctx.lineTo(x, TICK_AREA_H - (isMajor ? 14 : 8));
             ctx.stroke();
-            ctx.fillStyle = COLOR.tick;
-            ctx.font      = '10px sans-serif';
-            ctx.fillText(String(y), x, TICK_AREA_H - 12);
+            if (isMinor || isMajor) {
+                ctx.fillStyle = COLOR.tick;
+                ctx.fillText(String(y), x, TICK_AREA_H - 16);
+            }
         }
     }
 
-    // Red dashed vertical today line spanning full canvas height
     function drawTodayLine(ctx, timeW) {
         const x = yearToX(TODAY, timeW);
+        if (x < LEFT_PAD || x > LEFT_PAD + timeW) return; // Out of visible range
         ctx.save();
         ctx.strokeStyle = COLOR.today;
         ctx.lineWidth   = 1.5;
@@ -406,27 +500,27 @@
         ctx.restore();
     }
 
-    // Solid life bar for a person with a known birth year
-    function drawLifeBar(ctx, barY, barCY, entry, timeW) {
-        const { person, color, birthYear, deathYear, isDead } = entry;
+    function drawLifeBar(ctx, barY, barCY, entry, timeW, indentPx) {
+        const { person, relatie, color, birthYear, deathYear, isDead } = entry;
 
-        const startX    = yearToX(birthYear, timeW);
-        const endYear   = isDead ? deathYear : Math.min(birthYear + DEFAULT_SPAN, TODAY);
-        const solidEndX = yearToX(Math.min(endYear, TODAY), timeW);
-        const solidW    = Math.max(solidEndX - startX, 4); // Minimum 4px visibility
+        const startX     = Math.max(yearToX(birthYear, timeW), LEFT_PAD + indentPx);
+        const endYear    = isDead ? deathYear : Math.min(birthYear + DEFAULT_SPAN, TODAY);
+        const clampEnd   = Math.min(endYear, dynMaxYear);
+        const solidEndX  = yearToX(clampEnd, timeW);
+        const solidW     = Math.max(solidEndX - startX, 4); // At least 4px
 
-        // Solid filled bar
+        // Solid bar
         ctx.fillStyle = color;
         roundedRect(ctx, startX, barY, solidW, BAR_H, RADIUS);
         ctx.fill();
 
         // Dotted extension to TODAY for living persons
         if (!isDead) {
-            const todayX = yearToX(TODAY, timeW);
+            const todayX = yearToX(Math.min(TODAY, dynMaxYear), timeW);
             if (todayX > solidEndX + 2) {
                 ctx.save();
                 ctx.strokeStyle = color;
-                ctx.lineWidth   = 2;
+                ctx.lineWidth   = 1.5;
                 ctx.setLineDash([3, 3]);
                 ctx.beginPath();
                 ctx.moveTo(solidEndX, barCY);
@@ -436,103 +530,101 @@
             }
         }
 
-        // Birth year label above bar
+        // Birth year label above left edge of bar (obs.3)
         ctx.fillStyle    = COLOR.birthLabel;
-        ctx.font         = '10px sans-serif';
+        ctx.font         = '9px sans-serif';
         ctx.textAlign    = 'left';
         ctx.textBaseline = 'bottom';
-        ctx.fillText(String(birthYear), startX, barY - 1);
+        if (birthYear) ctx.fillText(String(birthYear), startX, barY - 1);
 
-        // Name inside bar
-        drawBarLabel(ctx, displayName(person), startX, barY, solidW);
+        // Death year label above right edge of bar (obs.3)
+        if (isDead && deathYear) {
+            ctx.textAlign = 'right';
+            ctx.fillText(String(deathYear), solidEndX, barY - 1);
+        }
 
-        // Amber triangle above bar for the root person
+        // Name inside bar (white or dark depending on bar lightness)
+        drawBarLabel(ctx, displayName(person), startX, barY, solidW, needsDarkText(relatie));
+
+        // Amber triangle above root person's bar as anchor
         if (entry.isRoot) drawRootIndicator(ctx, startX + solidW / 2, barY);
     }
 
-    // Grey fixed-width bar with "?" for persons without a birth date
-    function drawUnknownBar(ctx, barY, entry) {
-        const barX = LEFT_PAD + 4;
-
+    function drawUnknownBar(ctx, barY, barCY, entry, indentPx) {
+        const barX = LEFT_PAD + indentPx + 4;
         ctx.fillStyle = COLOR.unknown;
         roundedRect(ctx, barX, barY, UNKNOWN_BAR_W, BAR_H, RADIUS);
         ctx.fill();
-
-        ctx.fillStyle    = COLOR.unknownTxt;
-        ctx.font         = 'bold 11px sans-serif';
+        // "?" glyph
+        ctx.fillStyle    = COLOR.unknownText;
+        ctx.font         = 'bold 10px sans-serif';
         ctx.textAlign    = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('?', barX + 12, barY + BAR_H / 2);
-
-        ctx.fillStyle    = COLOR.unknownTxt;
-        ctx.font         = '10px sans-serif';
-        ctx.textAlign    = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(
-            clipText(ctx, displayName(entry.person), UNKNOWN_BAR_W - 20),
-            barX + 20, barY + BAR_H / 2
-        );
+        ctx.fillText('?', barX + 10, barY + BAR_H / 2);
+        // Name beside "?"
+        ctx.font      = '9px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(clipText(ctx, displayName(entry.person), UNKNOWN_BAR_W - 18), barX + 18, barY + BAR_H / 2);
     }
 
-    // White name text inside a bar, clipped with "…" if it doesn't fit
-    function drawBarLabel(ctx, name, barX, barY, barW) {
-        const padding = 6;
-        const maxW    = barW - padding * 2;
-        if (maxW < 10) return; // Bar too narrow for any text
-
-        ctx.fillStyle    = COLOR.barText;
-        ctx.font         = '10px sans-serif';
+    function drawBarLabel(ctx, name, barX, barY, barW, darkText) {
+        const pad  = 5;
+        const maxW = barW - pad * 2;
+        if (maxW < 8) return;
+        ctx.fillStyle    = darkText ? COLOR.barTextDark : COLOR.barText;
+        ctx.font         = '9px sans-serif';
         ctx.textAlign    = 'left';
         ctx.textBaseline = 'middle';
-        ctx.fillText(clipText(ctx, name, maxW), barX + padding, barY + BAR_H / 2);
+        ctx.fillText(clipText(ctx, name, maxW), barX + pad, barY + BAR_H / 2);
     }
 
-    // Truncates text to fit within maxW, appending "…" as needed
     function clipText(ctx, text, maxW) {
         if (ctx.measureText(text).width <= maxW) return text;
         let t = text;
-        while (t.length > 0 && ctx.measureText(t + '…').width > maxW) {
-            t = t.slice(0, -1);
-        }
+        while (t.length > 0 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1);
         return t + '…';
     }
 
-    // Small amber upward triangle above the root person's bar
     function drawRootIndicator(ctx, cx, barY) {
-        ctx.fillStyle = COLOR.root;
+        ctx.fillStyle = COLOR.HoofdID;
         ctx.beginPath();
-        ctx.moveTo(cx,     barY - 6);
-        ctx.lineTo(cx - 5, barY - 1);
-        ctx.lineTo(cx + 5, barY - 1);
+        ctx.moveTo(cx,     barY - 5);
+        ctx.lineTo(cx - 4, barY - 1);
+        ctx.lineTo(cx + 4, barY - 1);
         ctx.closePath();
         ctx.fill();
     }
 
-    // L-shaped dashed connector from parent bar centre to child bar centre
+    // L-shaped connector: from RIGHT edge of parent bar to LEFT edge of child bar (obs.2)
     function drawConnector(ctx, parentPos, childPos) {
+        const px = parentPos.barEndX; // Right edge of parent bar (not birth point)
+        const py = parentPos.barCY;
+        const cx = childPos.barX;    // Birth (left) edge of child bar
+        const cy = childPos.barCY;
+
+        if (px >= cx - 2) return;    // Parent bar overlaps or extends past child — skip
+
         ctx.save();
         ctx.strokeStyle = COLOR.connLine;
-        ctx.lineWidth   = 1;
-        ctx.setLineDash([3, 3]);
+        ctx.lineWidth   = 0.8;
+        ctx.setLineDash([2, 3]);
         ctx.beginPath();
-        ctx.moveTo(parentPos.cx, parentPos.cy); // Start at parent
-        ctx.lineTo(childPos.cx,  parentPos.cy); // Horizontal leg
-        ctx.lineTo(childPos.cx,  childPos.cy);  // Vertical leg to child
+        ctx.moveTo(px, py);          // Start at right edge of parent bar
+        ctx.lineTo(cx, py);          // Horizontal to child birth year
+        ctx.lineTo(cx, cy);          // Vertical down to child bar centre
         ctx.stroke();
-
-        // Small downward arrowhead at the child end
+        // Arrowhead
         ctx.setLineDash([]);
         ctx.fillStyle = COLOR.connLine;
         ctx.beginPath();
-        ctx.moveTo(childPos.cx,     childPos.cy - 4);
-        ctx.lineTo(childPos.cx - 3, childPos.cy - 9);
-        ctx.lineTo(childPos.cx + 3, childPos.cy - 9);
+        ctx.moveTo(cx,     cy - 3);
+        ctx.lineTo(cx - 3, cy - 7);
+        ctx.lineTo(cx + 3, cy - 7);
         ctx.closePath();
         ctx.fill();
         ctx.restore();
     }
 
-    // Builds a filled rounded-rectangle path (caller must call ctx.fill())
     function roundedRect(ctx, x, y, w, h, r) {
         const rr = Math.min(r, w / 2, h / 2);
         ctx.beginPath();
@@ -543,16 +635,72 @@
         ctx.arcTo(x + w, y + h, x + w - rr, y + h, rr);
         ctx.lineTo(x + rr, y + h);
         ctx.arcTo(x,     y + h, x,     y + h - rr, rr);
-        ctx.lineTo(x, y + rr);
+        ctx.lineTo(x,     y + rr);
         ctx.arcTo(x,     y,     x + rr, y,          rr);
         ctx.closePath();
     }
 
     /* ------------------------------------------------------------------
-     * SECTION 10 — HIT DETECTION & TOOLTIP
+     * SECTION 12 — HTML GEN-LABEL OVERLAY  (obs.8)
+     * Mirrors the Y positions from renderCanvas into absolutely-positioned
+     * div elements left of the canvas scroll area. Always visible.
+     * ------------------------------------------------------------------ */
+    function updateGenLabels(rows) {
+        const old = document.getElementById('tlGenLabels');
+        if (old) old.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'tlGenLabels';
+        Object.assign(overlay.style, {
+            position:       'absolute',
+            left:           '0',
+            top:            '0',
+            width:          LABEL_COL_W + 'px',
+            pointerEvents:  'none',
+            zIndex:         '10',
+            background:     'rgba(248,248,248,0.95)',
+            borderRight:    '1px solid #e0e0e0',
+            fontFamily:     'sans-serif',
+            fontSize:       '10px',
+            color:          '#666',
+            overflow:       'hidden',
+        });
+
+        let curY     = TICK_AREA_H;
+        let prevLabel = null;
+
+        rows.forEach((row, i) => {
+            if (row.sectionLabel && row.sectionLabel !== prevLabel) {
+                const lbl = document.createElement('div');
+                Object.assign(lbl.style, {
+                    position:     'absolute',
+                    top:          curY + 'px',
+                    left:         '6px',
+                    right:        '4px',
+                    height:       SECTION_H + 'px',
+                    lineHeight:   SECTION_H + 'px',
+                    fontWeight:   'bold',
+                    whiteSpace:   'nowrap',
+                    overflow:     'hidden',
+                    textOverflow: 'ellipsis',
+                });
+                lbl.textContent = row.sectionLabel;
+                overlay.appendChild(lbl);
+                curY     += SECTION_H;
+                prevLabel = row.sectionLabel;
+            }
+            const nextRow = rows[i + 1];
+            curY += ROW_H + ((!nextRow || nextRow.indentLevel === 0) ? GROUP_GAP : ROW_GAP);
+        });
+
+        overlay.style.height = (curY + 20) + 'px';
+        container.appendChild(overlay);
+    }
+
+    /* ------------------------------------------------------------------
+     * SECTION 13 — HIT DETECTION & TOOLTIP
      * ------------------------------------------------------------------ */
 
-    // Returns the hitRect entry under (mx, my) in canvas coordinates, or null
     function getHitAt(mx, my) {
         for (let i = hitRects.length - 1; i >= 0; i--) {
             const r = hitRects[i];
@@ -561,139 +709,109 @@
         return null;
     }
 
-    // Builds the multi-line tooltip text for one entry
     function buildTooltipText(entry) {
         const p    = entry.person;
-        const name = displayName(p) || '(geen naam)';
-        const id   = safe(p.ID) || '—';
-        const geb  = fmtDate(p.Geboortedatum);
+        const LABELS = {
+            HoofdID:'Hoofdpersoon', VHoofdID:'Vader', MHoofdID:'Moeder',
+            PHoofdID:'Partner', KindID:'Kind', HKindID:'Kind (via hoofd)',
+            MHKindID:'Kind (via hoofd)', PHKindID:'Kind (via partner)',
+            KindPartnerID:'Partner van kind', BZID:'Broer/Zus', BZPartnerID:'Partner broer/zus',
+        };
+        const rel   = LABELS[entry.relatie] || entry.relatie || '—';
+        const name  = displayName(p) || '(geen naam)';
+        const id    = safe(p.ID) || '—';
+        const geb   = fmtDate(p.Geboortedatum);
         const overl = p.Overlijdensdatum ? fmtDate(p.Overlijdensdatum) : 'nog in leven';
-
-        let lifespan = '';
-        if (entry.birthYear && entry.deathYear) {
-            lifespan = `\nLeeftijd: ${entry.deathYear - entry.birthYear} jaar`;
-        } else if (entry.birthYear && !entry.isDead) {
-            lifespan = `\nLeeftijd: ~${TODAY - entry.birthYear} jaar`;
-        }
-
-        return `${name}\nID: ${id}\nGeboren: ${geb}\nOverleden: ${overl}${lifespan}`;
+        let life = '';
+        if (entry.birthYear && entry.deathYear) life = `\nLeeftijd: ${entry.deathYear - entry.birthYear} jaar`;
+        else if (entry.birthYear) life = `\nLeeftijd: ~${TODAY - entry.birthYear} jaar`;
+        return `${name}  [${rel}]\nID: ${id}\nGeboren: ${geb}\nOverleden: ${overl}${life}`;
     }
 
-    // Mousemove: position + show/hide tooltip
-    canvas.addEventListener('mousemove', function (e) {
-        const rect  = canvas.getBoundingClientRect();
-        const scaleX = canvas.width  / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const mx = (e.clientX - rect.left) * scaleX;
-        const my = (e.clientY - rect.top)  * scaleY;
+    function canvasCoords(e) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            mx: (e.clientX - rect.left) * (canvas.width  / rect.width),
+            my: (e.clientY - rect.top)  * (canvas.height / rect.height),
+        };
+    }
 
+    canvas.addEventListener('mousemove', function (e) {
+        const { mx, my } = canvasCoords(e);
         const hit = getHitAt(mx, my);
         if (hit) {
             canvas.style.cursor   = 'pointer';
             tooltip.style.display = 'block';
             tooltip.textContent   = buildTooltipText(hit.entry);
-
-            const tipW = 200;
-            const offsetX = e.offsetX + 14;
-            tooltip.style.left = (offsetX + tipW > container.clientWidth)
-                ? (e.offsetX - tipW - 8) + 'px'
-                : offsetX + 'px';
-            tooltip.style.top  = (e.offsetY - 10) + 'px';
+            const tipW    = tooltip.offsetWidth || 220;
+            const flipL   = (e.offsetX + tipW + 20 > container.clientWidth);
+            tooltip.style.left = (flipL ? e.offsetX - tipW - 8 : e.offsetX + 14) + 'px';
+            tooltip.style.top  = Math.max(e.offsetY - 10, 0) + 'px';
         } else {
             canvas.style.cursor   = 'default';
             tooltip.style.display = 'none';
         }
     });
 
-    // Mouseleave: always hide tooltip
     canvas.addEventListener('mouseleave', function () {
         tooltip.style.display = 'none';
         canvas.style.cursor   = 'default';
     });
 
-    // Click: select clicked person as new root
     canvas.addEventListener('click', function (e) {
-        const rect  = canvas.getBoundingClientRect();
-        const scaleX = canvas.width  / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const mx = (e.clientX - rect.left) * scaleX;
-        const my = (e.clientY - rect.top)  * scaleY;
-
+        const { mx, my } = canvasCoords(e);
         const hit = getHitAt(mx, my);
         if (hit) {
-            rootId = safe(hit.entry.person.ID); // New root = clicked person
+            rootId            = safe(hit.entry.person.ID);
+            searchInput.value = '';
             draw();
         }
     });
 
     /* ------------------------------------------------------------------
-     * SECTION 11 — CANVAS SIZING
-     * ------------------------------------------------------------------ */
-    function sizeCanvas() {
-        canvas.width = Math.max(container.clientWidth - 2, 800); // Min 800px wide
-    }
-
-    /* ------------------------------------------------------------------
-     * SECTION 12 — MAIN DRAW FUNCTION
+     * SECTION 14 — MAIN DRAW + PLACEHOLDER
      * ------------------------------------------------------------------ */
     function draw() {
         if (!rootId) return;
-
         const root = findPerson(rootId);
-        if (!root) { showPlaceholder('Persoon niet gevonden in de dataset.'); return; }
+        if (!root) { showPlaceholder('Persoon niet gevonden.'); return; }
 
-        const blocks = buildGenerations(root);
-        if (blocks.length === 0) { showPlaceholder('Geen familieleden gevonden.'); return; }
+        setDynamicRange(root);     // Set dynMinYear / dynMaxYear for this root
+
+        const rows = buildRows(root);
+        if (rows.length === 0) { showPlaceholder('Geen familieleden gevonden.'); return; }
 
         placeholder.style.display = 'none';
         canvas.style.display      = 'block';
-        sizeCanvas();
-        renderCanvas(blocks);
+        renderCanvas(rows);
     }
 
-    /* ------------------------------------------------------------------
-     * SECTION 13 — PLACEHOLDER
-     * ------------------------------------------------------------------ */
     function showPlaceholder(msg) {
         canvas.style.display      = 'none';
         placeholder.style.display = 'block';
         placeholder.textContent   = msg;
-    }
-
-    /* ------------------------------------------------------------------
-     * SECTION 14 — LIVE SEARCH WIRING
-     * Real signature: initLiveSearch(inputEl, dataset, callback)
-     * Callback receives person.ID as a string — resolve via findPerson().
-     * ------------------------------------------------------------------ */
-    function wireSearch() {
-        window.initLiveSearch(
-            searchInput,   // HTMLInputElement
-            dataset,       // Array of person objects
-            function (personId) {              // Called with ID string on selection
-                const p = findPerson(personId);
-                if (!p) return;
-                rootId = safe(p.ID);           // Set new root
-                searchInput.value = '';        // Clear search field
-                draw();
-            }
-        );
+        const old = document.getElementById('tlGenLabels');
+        if (old) old.remove();
     }
 
     /* ------------------------------------------------------------------
      * SECTION 15 — INIT
      * ------------------------------------------------------------------ */
     function init() {
-        dataset = window.StamboomStorage.get() || []; // Load from localStorage
+        dataset = window.StamboomStorage.get() || [];
 
-        wireSearch(); // Attach live search
+        // initLiveSearch(inputEl, dataset, cb) — cb receives persoon.ID string (verified)
+        window.initLiveSearch(searchInput, dataset, function (selectedId) {
+            rootId = safe(selectedId);
+            draw();
+        });
 
-        // Auto-select the only person when dataset has exactly one entry
+        // Auto-select if only one person in dataset
         if (dataset.length === 1) {
             rootId = safe(dataset[0].ID);
             draw();
         }
 
-        // Redraw on window resize to keep canvas width in sync
         window.addEventListener('resize', function () {
             if (rootId) draw();
         });
