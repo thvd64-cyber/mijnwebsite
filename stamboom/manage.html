@@ -1,7 +1,6 @@
-<!-- ======================= stamboom/manage.html v2.1.0 =======================
+<!-- ======================= stamboom/manage.html v2.2.0 =======================
      Beheerpagina: stamboom bewerken als tabel met live search
-     Wijziging v2.1.0: RelationColors.css geladen, hover verwijderd,
-                       hardcoded kleuren vervangen door CSS-variabelen
+     Wijziging v2.2.0: KindPartnerID + BZPartnerID CSS vervangen door Partner
      Scripts: utils.js → schema.js → idGenerator.js → storage.js → LiveSearch.js
               → relatieEngine.js → manage.js (verplichte volgorde)
      ======================================================================= -->
@@ -95,9 +94,8 @@
         tr.KindID    td { background: var(--color-KindID);        opacity: 0.85; }
         tr.HKindID   td { background: var(--color-HKindID);       }
         tr.PHKindID  td { background: var(--color-PHKindID);      }
-        tr.KindPartnerID td { background: var(--color-partner);   font-style: italic; }
+        tr.Partner       td { background: var(--color-partner);   font-style: italic; }
         tr.BZID      td { background: var(--color-bz);            }
-        tr.BZPartnerID   td { background: var(--color-partner);   font-style: italic; }
     </style>
 </head>
 <body>
