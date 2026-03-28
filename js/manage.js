@@ -1,7 +1,12 @@
-/* ======================= js/manage.js v1.4.0 =======================
+/* ======================= js/manage.js v2.1.0 =======================
    Beheerpagina: toont stamboom als tabel, live search, add/save/refresh
    Exporteert: JSON en CSV download
-   Vereist: schema.js, idGenerator.js, storage.js, LiveSearch.js
+   Vereist: schema.js, idGenerator.js, storage.js, LiveSearch.js, relatieEngine.js
+
+   Wijziging v2.1.0:
+   - KindID filter uitgebreid naar HKindID en PHKindID (waren onzichtbaar)
+   - safe() toegevoegd aan KindPartnerID matching (voorkwam null-mismatch)
+   - Labels HKindID → 'Kind (hoofd)', PHKindID → 'Kind (partner)'
    =================================================================== */
 
 (function () {                                                              // Zelfuitvoerende functie: alle variabelen blijven lokaal, geen globale vervuiling
@@ -102,11 +107,11 @@
             .forEach(p => renderQueue.push(p));                            // Voeg partner toe na hoofd
 
         contextData
-            .filter(p => p.Relatie === 'KindID')                          // Loop door alle kinderen
+            .filter(p => ['KindID', 'HKindID', 'PHKindID'].includes(p.Relatie)) // Alle drie kindscenario's meenemen
             .forEach(k => {
                 renderQueue.push(k);                                       // Voeg het kind toe aan de queue
                 const kp = contextData.find(                              // Zoek de partner van dit kind op
-                    p => p.Relatie === 'KindPartnerID' && p.ID === k.PartnerID
+                    p => p.Relatie === 'KindPartnerID' && safe(p.ID) === safe(k.PartnerID) // safe() voorkomt null/spatie mismatch
                 );
                 if (kp) renderQueue.push(kp);                             // Voeg de partner van het kind direct na het kind toe
             });
@@ -135,7 +140,9 @@
                 case 'BZPartnerID':   relatieLabel = 'Partner';  break;   // Alle partnertypen = Partner
                 case 'BZID':          relatieLabel = 'Broer/Zus';break;   // Broer of zus
                 case 'HoofdID':       relatieLabel = 'Hoofd';    break;   // Geselecteerde hoofdpersoon
-                case 'KindID':        relatieLabel = 'Kind';     break;   // Kind van hoofd
+                case 'KindID':        relatieLabel = 'Kind';        break;   // Kind van hoofd én partner
+                case 'HKindID':       relatieLabel = 'Kind (hoofd)'; break;  // Kind van alleen de hoofdpersoon
+                case 'PHKindID':      relatieLabel = 'Kind (partner)';break; // Kind van alleen de partner
                 default:              relatieLabel = p.Relatie || '-';    // Onbekend type: toon de code zelf of streepje
             }
 
