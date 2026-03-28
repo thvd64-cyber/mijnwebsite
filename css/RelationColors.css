@@ -1,32 +1,40 @@
-/* ======================= css/RelationColors.css v1.0.1 ======================= */
-/* Kleuren voor HoofdID, ouders, kinderen, partners, en BZID */
-/*  KindID, HKindID en PHKindID ipv kind1, 2 en 3 */
+/* ======================= css/RelationColors.css v1.0.2 ======================= */
+/* Kleuren voor HoofdID, ouders, kinderen, partners, en BZID                    */
+/* Wijziging v1.0.2: MHKindID toegevoegd (kind via MoederID=HoofdID)            */
+/*   gebruikt zelfde kleur als HKindID — kind van alleen de hoofdpersoon        */
+
 /* ======================= ROOT VARIABLES ======================= */
-:root{
-    --color-hoofd: #fff9c4;            /* licht geel voor HoofdID */
-    --color-partner-hoofd: #d1c4e9;    /* licht paars voor PHoofdID */
-    --color-vader: #e8f5e9;            /* licht groen voor VHoofdID */
-    --color-moeder: #e8f5e9;           /* licht groen voor MHoofdID */
-    --color-KindID: #2196f3;        /* blauw, scenario 1 relatie = HoofdID + PHoofdID */
-    --color-HKindID: #90caf9;       /* sky blauw, scenario 2 relatie = HoofdID */
-    --color-PHKindID: #bbdefb;      /* licht blauw, scenario 3 relatie = PHoofdID */
-    --color-partner: #d7d7d7;          /* lichtgrijs voor partner van kind/BZ */
-    --color-bz: #FFEAD5;               /* licht oranje voor BZID */
+:root {
+    --color-hoofd:          #fff9c4;   /* licht geel  — HoofdID */
+    --color-partner-hoofd:  #d1c4e9;   /* licht paars — PHoofdID */
+    --color-vader:          #e8f5e9;   /* licht groen — VHoofdID */
+    --color-moeder:         #e8f5e9;   /* licht groen — MHoofdID */
+    --color-KindID:         #2196f3;   /* blauw       — scenario 1: kind van HoofdID + PHoofdID */
+    --color-HKindID:        #90caf9;   /* sky blauw   — scenario 2a: kind via VaderID=HoofdID */
+    --color-MHKindID:       #90caf9;   /* sky blauw   — scenario 2b: kind via MoederID=HoofdID (v1.0.2) */
+    --color-PHKindID:       #bbdefb;   /* licht blauw — scenario 3: kind van alleen PHoofdID */
+    --color-partner:        #d7d7d7;   /* lichtgrijs  — partner van kind / BZID */
+    --color-bz:             #FFEAD5;   /* licht oranje — BZID */
 }
 
 /* ======================= Hoofd + Partner ======================= */
-.tree-node.HoofdID { background-color: var(--color-hoofd); }
+.tree-node.HoofdID  { background-color: var(--color-hoofd); }
 .tree-node.PHoofdID { background-color: var(--color-partner-hoofd); }
 
 /* ======================= Ouders ======================= */
 .tree-node.VHoofdID { background-color: var(--color-vader); }
 .tree-node.MHoofdID { background-color: var(--color-moeder); }
 
-/* ======================= Kinderen  ======================= */
-.tree-node.KindID { background-color: var(--color-KindID); }
-.tree-node.HKindID { background-color: var(--color-HKindID); }
+/* ======================= Kinderen (3 scenario's + nieuw MHKindID) ======================= */
+.tree-node.KindID   { background-color: var(--color-KindID); }
+.tree-node.HKindID  { background-color: var(--color-HKindID); }
+.tree-node.MHKindID { background-color: var(--color-MHKindID); }  /* v1.0.2 */
 .tree-node.PHKindID { background-color: var(--color-PHKindID); }
 
-/* =======================  Broers/Zussen (BZID) + partner (PBZID) ======================= */
-.tree-node.BZID { background-color: var(--color-bz); }
-.tree-node.PBZID { background-color: var(--color-partner); }
+/* ======================= Broers/Zussen + partner ======================= */
+.tree-node.BZID     { background-color: var(--color-bz); }
+.tree-node.PBZID    { background-color: var(--color-partner); }
+
+/* ======================= Partners van kinderen ======================= */
+.tree-node.KindPartnerID { background-color: var(--color-partner); }
+.tree-node.BZPartnerID   { background-color: var(--color-partner); }
