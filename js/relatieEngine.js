@@ -1,10 +1,16 @@
-/* ======================= js/relatieEngine.js v2.1.0 =======================
+/* ======================= js/relatieEngine.js v2.2.0 =======================
    Centrale relatie-berekening voor MyFamTreeCollab
    Berekent alle familierelaties rond een geselecteerde hoofdpersoon
    Exporteert: window.RelatieEngine.computeRelaties(data, hoofdId)
 
    Vereist: utils.js (voor safe()) — moet eerder geladen zijn in HTML
    Gebruikt door: view.js, timeline.js, manage.js
+
+   Wijziging v2.2.0 t.o.v. v2.1.0:
+   - Secundaire sortering toegevoegd: binnen elke relatiegroep oud → jong
+     op basis van Geboortedatum. Personen zonder datum komen achteraan.
+     Geldt voor alle consumers (manage, view, timeline) — sortering hoeft
+     niet meer per pagina geïmplementeerd te worden.
 
    Wijziging v2.1.0 t.o.v. v2.0.0:
    - Kind-classificatie volledig herschreven zodat zowel vader als moeder
@@ -161,7 +167,12 @@
 
                 return clone;
             })
-            .sort((a, b) => a._priority - b._priority);
+            .sort((a, b) => {
+                if (a._priority !== b._priority) return a._priority - b._priority; // Primair: op relatievolgorde
+                const da = a.Geboortedatum ? new Date(a.Geboortedatum) : new Date(0); // Geboortedatum A (0 = onbekend → achteraan)
+                const db = b.Geboortedatum ? new Date(b.Geboortedatum) : new Date(0); // Geboortedatum B
+                return da - db;                                            // Secundair: oud → jong binnen dezelfde relatiegroep
+            });
     }
 
     /* ======================= EXPORTEER ======================= */
