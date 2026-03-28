@@ -1,11 +1,15 @@
-/* ======================= js/manage.js v2.1.0 =======================
+/* ======================= js/manage.js v2.2.0 =======================
    Beheerpagina: toont stamboom als tabel, live search, add/save/refresh
-   Exporteert: JSON en CSV download
    Vereist: schema.js, idGenerator.js, storage.js, LiveSearch.js, relatieEngine.js
+
+   Wijziging v2.2.0:
+   - Kindpartner en BZpartner opzoeken via dataset (niet via relatieEngine)
+     zodat partners zichtbaar zijn ook zonder KindPartnerID in de engine
+   - safe() toegevoegd aan BZPartnerID matching
 
    Wijziging v2.1.0:
    - KindID filter uitgebreid naar HKindID en PHKindID (waren onzichtbaar)
-   - safe() toegevoegd aan KindPartnerID matching (voorkwam null-mismatch)
+   - safe() toegevoegd aan KindPartnerID matching
    - Labels HKindID → 'Kind (hoofd)', PHKindID → 'Kind (partner)'
    =================================================================== */
 
@@ -110,20 +114,20 @@
             .filter(p => ['KindID', 'HKindID', 'PHKindID'].includes(p.Relatie)) // Alle drie kindscenario's meenemen
             .forEach(k => {
                 renderQueue.push(k);                                       // Voeg het kind toe aan de queue
-                const kp = contextData.find(                              // Zoek de partner van dit kind op
-                    p => p.Relatie === 'KindPartnerID' && safe(p.ID) === safe(k.PartnerID) // safe() voorkomt null/spatie mismatch
-                );
-                if (kp) renderQueue.push(kp);                             // Voeg de partner van het kind direct na het kind toe
+                if (safe(k.PartnerID)) {                                   // Controleer of kind een partner heeft
+                    const kp = dataset.find(p => safe(p.ID) === safe(k.PartnerID)); // Zoek partner rechtstreeks in dataset
+                    if (kp) renderQueue.push({ ...kp, Relatie: 'PartnerID' }); // Voeg partner toe met neutraal relatielabel
+                }
             });
 
         contextData
             .filter(p => p.Relatie === 'BZID')                            // Loop door alle broers/zussen
             .forEach(s => {
                 renderQueue.push(s);                                       // Voeg de broer/zus toe aan de queue
-                const bzP = contextData.find(                             // Zoek de partner van deze broer/zus
-                    p => p.Relatie === 'BZPartnerID' && p.ID === s.PartnerID
-                );
-                if (bzP) renderQueue.push(bzP);                           // Voeg de partner direct na de broer/zus toe
+                if (safe(s.PartnerID)) {                                   // Controleer of broer/zus een partner heeft
+                    const bzP = dataset.find(p => safe(p.ID) === safe(s.PartnerID)); // Zoek partner rechtstreeks in dataset
+                    if (bzP) renderQueue.push({ ...bzP, Relatie: 'BZPartnerID' }); // Voeg partner toe met relatielabel
+                }
             });
 
         // Bouw voor elke persoon in de queue een tabelrij
