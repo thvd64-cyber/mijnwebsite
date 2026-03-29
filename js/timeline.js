@@ -1,5 +1,14 @@
-/* ======================= js/timeline.js v2.2.0 =======================
+/* ======================= js/timeline.js v2.3.0 =======================
  * Canvas-based family timeline renderer
+ *
+ * Wijzigingen v2.3.0 t.o.v. v2.2.0:
+ *  obs.10 Generatievolgorde herschreven: gen −3 bovenaan, gen 0 midden, gen +3 onderaan
+ *         Ancestors worden nu verzameld (niet direct toegevoegd) en daarna top-down
+ *         ingevoegd: betovergrootouders → grootouders → ouders → hoofdpersoon → kinderen
+ *  obs.11 Sectielabels per generatielaag: "gen −3", "gen −2", "gen −1", "gen 0",
+ *         "gen +1", "gen +2", "gen +3" — consistent en uitbreidbaar
+ *  obs.12 addAncestorLevel() refactored: verzamelt eerst alle generaties, dan top-down invoegen
+ *  obs.13 Kleinkinderen (gen +2) en achterkleinkinderen (gen +3) krijgen eigen sectielabel
  *
  * Wijzigingen v2.2.0 t.o.v. v2.1.1:
  *  obs.1  Tijdas dynamisch: HoofdID.geboortejaar ±200 jaar, 10-jaar ticks, horizontale scroll
@@ -22,7 +31,7 @@
  *                      KindID, HKindID, MHKindID, PHKindID, KindPartnerID, BZID, BZPartnerID
  *   Persoon veldnamen: VaderID, MoederID, PartnerID
  *
- * Version: v2.2.0
+ * Version: v2.3.0
  * ===================================================================== */
 
 (function () {
@@ -197,12 +206,20 @@
     }
 
     /* ------------------------------------------------------------------
-     * SECTION 9 — ROW BUILDER  (obs.5 + obs.9)
+     * SECTION 9 — ROW BUILDER  (obs.5 + obs.9 + obs.10 + obs.11)
      *
-     * Produces a flat array of render rows with couple-group nesting:
-     *   Ancestors (gen -3 .. -1):  flat per generation, person then partner
-     *   Gen 0:   HoofdID → partner → siblings (each with partner)
-     *   Gen +1:  each child → partner → grandchildren (each with partner, recursively)
+     * Produces a flat array of render rows in top-down generational order:
+     *   gen −3  Betovergrootouders  (each with partner sub-row)
+     *   gen −2  Grootouders         (each with partner sub-row)
+     *   gen −1  Ouders              (each with partner sub-row)
+     *   gen  0  Hoofdpersoon + partner + broers/zussen (each with partner)
+     *   gen +1  Kinderen            (each with partner sub-row)
+     *   gen +2  Kleinkinderen       (each with partner sub-row)
+     *   gen +3  Achterkleinkinderen (each with partner sub-row)
+     *
+     * Strategy for ancestors (obs.12):
+     *   1. Walk upward from root to collect gen arrays WITHOUT adding rows yet
+     *   2. Reverse (so gen −3 is index 0) and add rows top-down with correct labels
      *
      * Row shape: { entry, indentLevel, sectionLabel }
      * Entry shape: { person, relatie, color, birthYear, deathYear, isDead, isUnknown, isRoot }
@@ -210,101 +227,157 @@
     function buildRows(rootPerson) {
         const relaties = window.RelatieEngine.computeRelaties(dataset, safe(rootPerson.ID));
 
-        const seen = new Set();
-        const rows = [];
+        const seen = new Set();  // Tracks IDs already added to prevent duplicates
+        const rows = [];         // Final flat row array — filled top-down
 
-        // Build an enriched entry for one person
+        /* ---- Helper: build enriched entry object for one person ---- */
         function makeEntry(person, relatie) {
-            const by = parseYear(person.Geboortedatum);
-            const dy = parseYear(person.Overlijdensdatum);
+            const by = parseYear(person.Geboortedatum);   // Birth year (null if unknown)
+            const dy = parseYear(person.Overlijdensdatum); // Death year (null if alive/unknown)
             return {
                 person,
                 relatie,
-                color:     COLOR[relatie] || COLOR.unknown,
+                color:     COLOR[relatie] || COLOR.unknown, // Bar colour from palette
                 birthYear: by,
                 deathYear: dy,
-                isDead:    dy !== null,
-                isUnknown: by === null,
-                isRoot:    safe(person.ID) === safe(rootPerson.ID),
+                isDead:    dy !== null,                     // True if death year is known
+                isUnknown: by === null,                     // True if birth year is unknown
+                isRoot:    safe(person.ID) === safe(rootPerson.ID), // Marks root person
             };
         }
 
-        // Add one row; returns true if added, false if duplicate / not found
+        /* ---- Helper: add one row, skip duplicates and missing persons ---- */
         function addRow(id, relatie, indentLevel, sectionLabel) {
             const sid = safe(id);
-            if (!sid || seen.has(sid)) return false;
+            if (!sid || seen.has(sid)) return false;       // Skip if empty or already added
             const p = findPerson(sid);
-            if (!p) return false;
+            if (!p) return false;                          // Skip if person not in dataset
             seen.add(sid);
             rows.push({ entry: makeEntry(p, relatie), indentLevel, sectionLabel });
             return true;
         }
 
-        // Add a person + their partner as a sub-row
+        /* ---- Helper: add person + optional partner as indented sub-row ---- */
         function addWithPartner(id, relatie, indentLevel, sectionLabel) {
             const added = addRow(id, relatie, indentLevel, sectionLabel);
             if (!added) return;
             const p = findPerson(id);
             if (p && safe(p.PartnerID)) {
-                addRow(p.PartnerID, 'PHoofdID', indentLevel + 1, null);
+                addRow(p.PartnerID, 'PHoofdID', indentLevel + 1, null); // Partner one level deeper
             }
         }
 
-        /* ---- Ancestor generations (gen -3 .. -1) ---- */
-        // Walk upward: collect parent IDs level by level
-        function addAncestorLevel(parentIds, sectionLabel) {
+        /* ---- Step 1: collect ancestor generations bottom-up (obs.12) ----
+         * We walk upward WITHOUT adding rows, just collecting IDs per level.
+         * Result: genLevels[0] = gen -1 (parents), [1] = gen -2, [2] = gen -3, …
+         * ---------------------------------------------------------------- */
+        const genLevels = [];  // Array of arrays: index 0 = gen -1, 1 = gen -2, etc.
+        const rootFatherId = safe(rootPerson.VaderID);
+        const rootMotherId = safe(rootPerson.MoederID);
+
+        let currentLevel = [rootFatherId, rootMotherId].filter(Boolean);  // Gen -1 IDs
+        while (currentLevel.length > 0 && genLevels.length < 3) {        // Max 3 ancestor levels
+            genLevels.push(currentLevel);                                  // Store this level
             const nextLevel = [];
-            parentIds.forEach(pid => {
+            currentLevel.forEach(pid => {
+                const p = findPerson(pid);
+                if (!p) return;
+                [safe(p.VaderID), safe(p.MoederID)]
+                    .filter(id => id && !nextLevel.includes(id))
+                    .forEach(id => nextLevel.push(id));                    // Collect parents of this level
+            });
+            currentLevel = [...new Set(nextLevel)];                        // Deduplicate
+        }
+
+        /* ---- Step 2: add ancestors top-down (gen -3 first) ---- */
+        // genLevels is [gen-1, gen-2, gen-3], so reverse to get [gen-3, gen-2, gen-1]
+        const sectionNames = {
+            0: 'gen −1  Ouders',                   // Index after reversing: distance from root
+            1: 'gen −2  Grootouders',
+            2: 'gen −3  Betovergrootouders',
+        };
+
+        const ancestorLevels = [...genLevels].reverse();  // Now index 0 = gen -3 (oldest)
+        ancestorLevels.forEach((levelIds, idx) => {
+            // Distance from root = total levels minus current index
+            // e.g. 3 levels total, idx=0 → distance=3 → gen -3
+            const distance    = genLevels.length - idx;                         // 3, 2, or 1
+            const sectionKey  = distance - 1;                                   // Maps to sectionNames
+            const label       = sectionNames[sectionKey] || `gen −${distance}`; // Fallback label
+            const isRootParent = distance === 1;                                 // True for gen -1 only
+
+            // Track whether label has been used for first person in this level
+            let firstInLevel = true;
+
+            levelIds.forEach(pid => {
+                if (seen.has(pid)) return;                                       // Skip duplicates
                 const parent = findPerson(pid);
                 if (!parent) return;
-                // Choose colour: gen -1 uses VHoofdID/MHoofdID, higher gens use VHoofdID
-                const rootFatherId = safe(rootPerson.VaderID);
-                const isRootParent = sectionLabel === 'Ouders  (gen −1)';
-                const relatie = isRootParent
-                    ? (safe(parent.ID) === rootFatherId ? 'VHoofdID' : 'MHoofdID')
-                    : 'VHoofdID';
-                addWithPartner(pid, relatie, 0, sectionLabel);
-                // Collect this person's parents for the next level
-                [safe(parent.VaderID), safe(parent.MoederID)]
-                    .filter(id => id && !seen.has(id))
-                    .forEach(id => nextLevel.push(id));
-            });
-            return [...new Set(nextLevel)];
-        }
 
-        const gen1 = [safe(rootPerson.VaderID), safe(rootPerson.MoederID)].filter(Boolean);
-        const gen2 = addAncestorLevel(gen1, 'Ouders  (gen −1)');
-        const gen3 = addAncestorLevel(gen2, 'Grootouders  (gen −2)');
-        addAncestorLevel(gen3, 'Betovergrootouders  (gen −3)');
+                // Gen -1: distinguish vader (VHoofdID) from moeder (MHoofdID)
+                // Higher gens: use VHoofdID for all ancestor colours
+                let relatie;
+                if (isRootParent) {
+                    relatie = safe(parent.ID) === rootFatherId ? 'VHoofdID' : 'MHoofdID';
+                } else {
+                    relatie = 'VHoofdID';                                        // Ancestor colour
+                }
+
+                // Only first person in each level gets the section header label
+                addWithPartner(pid, relatie, 0, firstInLevel ? label : null);
+                firstInLevel = false;
+            });
+        });
 
         /* ---- Gen 0: root + partner + siblings ---- */
-        addRow(rootPerson.ID, 'HoofdID', 0, 'Hoofdpersoon  (gen 0)');
-        // Partner of root directly below root (obs.5)
+        addRow(rootPerson.ID, 'HoofdID', 0, 'gen 0  Hoofdpersoon');  // Root person row
         if (safe(rootPerson.PartnerID)) {
-            addRow(rootPerson.PartnerID, 'PHoofdID', 1, null);
+            addRow(rootPerson.PartnerID, 'PHoofdID', 1, null);        // Partner directly below root (obs.5)
         }
 
-        // Siblings (sorted by birth year, unknown last), each with partner sub-row
+        // Siblings sorted by birth year (unknown birth last), each with partner sub-row
         relaties
             .filter(r => safe(r.Relatie) === 'BZID')
             .sort((a, b) => (parseYear(a.Geboortedatum) || 9999) - (parseYear(b.Geboortedatum) || 9999))
             .forEach(r => {
-                addRow(r.ID, 'BZID', 0, null);
+                addRow(r.ID, 'BZID', 0, null);                        // Sibling row (no extra label)
                 const sib = findPerson(r.ID);
                 if (sib && safe(sib.PartnerID)) addRow(sib.PartnerID, 'BZPartnerID', 1, null);
             });
 
-        /* ---- Gen +1 and +2: children recursively (obs.9) ---- */
+        /* ---- Gen +1 / +2 / +3: children recursively (obs.9 + obs.13) ----
+         * addChildGroup recurses depth-first:
+         *   child (gen+1) → partner → grandchild (gen+2) → partner → great-grandchild (gen+3)
+         * Each depth level gets a unique sectionLabel on its first appearance.
+         * ----------------------------------------------------------------- */
         const childRelaties = new Set(['KindID', 'HKindID', 'MHKindID', 'PHKindID']);
+
+        // Tracks which descendant gen labels have already been emitted
+        const descendantLabelShown = {};
 
         const rootChildren = relaties
             .filter(r => childRelaties.has(safe(r.Relatie)))
             .sort((a, b) => (parseYear(a.Geboortedatum) || 9999) - (parseYear(b.Geboortedatum) || 9999));
 
-        // Recursive: child → partner sub-row → grandchildren (each recursive)
-        function addChildGroup(childId, childRelatie, indentLevel, sectionLabel) {
+        // Section labels for descendant depths (depth 1 = gen+1, 2 = gen+2, 3 = gen+3)
+        const descendantLabels = {
+            1: 'gen +1  Kinderen',
+            2: 'gen +2  Kleinkinderen',
+            3: 'gen +3  Achterkleinkinderen',
+        };
+
+        // Recursive: adds child row, then partner, then all grandchildren (obs.9)
+        function addChildGroup(childId, childRelatie, indentLevel, depth) {
+            // Determine section label: only emit once per descendant generation
+            const labelKey = depth;
+            let sectionLabel = null;
+            if (!descendantLabelShown[labelKey]) {
+                sectionLabel = descendantLabels[depth] || `gen +${depth}`;  // Fallback for deep gens
+                descendantLabelShown[labelKey] = true;                       // Mark as shown
+            }
+
             const added = addRow(childId, childRelatie, indentLevel, sectionLabel);
-            if (!added) return;
+            if (!added) return;                                              // Already seen or not found
 
             const child = findPerson(childId);
             if (!child) return;
@@ -313,32 +386,34 @@
             const partnerId = safe(child.PartnerID);
             if (partnerId) addRow(partnerId, 'KindPartnerID', indentLevel + 1, null);
 
-            // Grandchildren: persons whose VaderID or MoederID = this child
-            const grandchildren = dataset
+            // Find all children of this person (grandchildren of root, etc.)
+            const descendants = dataset
                 .filter(p => safe(p.VaderID) === safe(childId) || safe(p.MoederID) === safe(childId))
                 .sort((a, b) => (parseYear(a.Geboortedatum) || 9999) - (parseYear(b.Geboortedatum) || 9999));
 
-            grandchildren.forEach(gc => {
+            descendants.forEach(gc => {
                 if (seen.has(safe(gc.ID))) return;
-                // Determine grandchild relation type
+                // Determine descendant relation type based on parentage
                 const gcVader  = safe(gc.VaderID);
                 const gcMoeder = safe(gc.MoederID);
-                let gcRelatie = 'KindID';
+                let gcRelatie  = 'KindID';
                 if (gcVader === safe(childId) && gcMoeder === partnerId && partnerId) {
-                    gcRelatie = 'KindID';
+                    gcRelatie = 'KindID';        // Both parents are in our tree
                 } else if (gcVader === safe(childId)) {
-                    gcRelatie = 'HKindID';
+                    gcRelatie = 'HKindID';       // Only via vader
                 } else if (gcMoeder === safe(childId)) {
-                    gcRelatie = 'MHKindID';
+                    gcRelatie = 'MHKindID';      // Only via moeder
                 } else if (partnerId && (gcVader === partnerId || gcMoeder === partnerId)) {
-                    gcRelatie = 'PHKindID';
+                    gcRelatie = 'PHKindID';      // Via partner of child
                 }
-                addChildGroup(safe(gc.ID), gcRelatie, indentLevel + 1, null);
+                // Recurse one depth level deeper (obs.13)
+                addChildGroup(safe(gc.ID), gcRelatie, indentLevel + 1, depth + 1);
             });
         }
 
-        rootChildren.forEach((r, idx) => {
-            addChildGroup(safe(r.ID), safe(r.Relatie), 0, idx === 0 ? 'Kinderen  (gen +1 / +2)' : null);
+        // Add all direct children of root person (gen +1)
+        rootChildren.forEach(r => {
+            addChildGroup(safe(r.ID), safe(r.Relatie), 0, 1);
         });
 
         return rows;
@@ -641,9 +716,10 @@
     }
 
     /* ------------------------------------------------------------------
-     * SECTION 12 — HTML GEN-LABEL OVERLAY  (obs.8)
+     * SECTION 12 — HTML GEN-LABEL OVERLAY  (obs.8 + obs.11)
      * Mirrors the Y positions from renderCanvas into absolutely-positioned
      * div elements left of the canvas scroll area. Always visible.
+     * Section labels now follow format: "gen −3  Betovergrootouders" etc.
      * ------------------------------------------------------------------ */
     function updateGenLabels(rows) {
         const old = document.getElementById('tlGenLabels');
