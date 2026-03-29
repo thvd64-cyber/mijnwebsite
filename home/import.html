@@ -1,8 +1,9 @@
-<!-- ======================= home/import.html v2.0.0 =======================
+<!-- ======================= home/import.html v2.0.1 =======================
      Importpagina: CSV/TXT bestanden inladen in de stamboom
      Wijziging v2.0.0: facelift — welkomstblok, inline stijlen naar <style>,
                        bestandsselectie en knop in sectiekader
      Scripts: schema.js → storage.js → import.js (verplichte volgorde)
+     Favicon / App-icoon toegevoegd
      ======================================================================= -->
 <!DOCTYPE html>
 <html lang="nl">
@@ -10,9 +11,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyFamTreeCollab - Import</title>
-    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+
+    <!-- ===== Favicon / App-icoon ===== -->
+    <link rel="icon" type="image/x-icon" href="/MyFamTreeCollab/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/MyFamTreeCollab/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/MyFamTreeCollab/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/MyFamTreeCollab/favicon-192x192.png">
+
     <link rel="stylesheet" href="../css/style.css">
     <style>
+        /* ======================= WELKOMSTBLOK ======================= */
         /* ======================= WELKOMSTBLOK ======================= */
         .welkom-blok { margin-bottom: 24px; }                             /* Ruimte onder het introductieblok */
         .welkom-blok h1 { font-size: 1.4rem; font-weight: bold; margin: 0 0 8px 0; color: #222; } /* Primaire paginatitel */
