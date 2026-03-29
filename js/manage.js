@@ -145,9 +145,9 @@
                 case 'Partner':       relatieLabel = 'Partner';   break;   // Alle partners = Partner
                 case 'BZID':          relatieLabel = 'Broer/Zus'; break;   // Broer of zus
                 case 'HoofdID':       relatieLabel = 'Hoofd';     break;   // Geselecteerde hoofdpersoon
-                case 'KindID':        relatieLabel = 'Kind';           break; // Kind van hoofd én partner
-                case 'HKindID':       relatieLabel = 'Kind (hoofd)';   break; // Kind van alleen de hoofdpersoon
-                case 'PHKindID':      relatieLabel = 'Kind (partner)'; break; // Kind van alleen de partner
+                case 'KindID':        relatieLabel = 'Kind';      break; // Kind van hoofd én partner
+                case 'HKindID':       relatieLabel = 'Kind';      break;        // Kind van alleen de hoofdpersoon
+                case 'PHKindID':      relatieLabel = 'Kind';      break;        // Kind van alleen de partner
                 default:              relatieLabel = p.Relatie || '-';    // Onbekend type: toon de code zelf of streepje
             }
 
