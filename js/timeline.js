@@ -1,7 +1,10 @@
-/* ======================= js/timeline.js v2.3.1 =======================
+/* ======================= js/timeline.js v2.3.2 =======================
  * Canvas-based family timeline renderer
  *
- * Wijzigingen v2.3.0 t.o.v. v2.2.0:
+ * Wijzigingen v2.3.2 t.o.v. v2.3.1:
+ *  Versienummer verhoogd — geen functionele wijzigingen
+ *
+ * Wijzigingen v2.3.1 t.o.v. v2.3.0:
  *  obs.10 Generatievolgorde: gen −3 bovenaan → gen 0 → gen +3 onderaan
  *  obs.11 Sectielabels per generatielaag: "gen −3" t/m "gen +3"
  *  obs.12 Datumparser vereenvoudigd: delegeert volledig aan ftParseBirthday() (utils.js v2.0.0+)
@@ -25,7 +28,7 @@
  *   relatieEngine.js -> window.RelatieEngine.computeRelaties(data, hoofdId)
  *   Persoon veldnamen: VaderID, MoederID, PartnerID
  *
- * Version: v2.3.0
+ * Version: v2.3.2
  * ===================================================================== */
 
 (function () {
