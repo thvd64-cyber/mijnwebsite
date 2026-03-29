@@ -224,41 +224,58 @@
             }
         }
 
-        /* ---- Ancestor generations (gen -3 .. -1) ---- */
-        // Walk upward: collect parent IDs level by level
-        function addAncestorLevel(parentIds, sectionLabel) {
+        /* ---- Ancestor generations: verzamel bottom-up, voeg top-down in ---- */
+        // Walk upward WITHOUT adding rows — collect IDs per generation first
+        const rootFatherId = safe(rootPerson.VaderID);
+        const rootMotherId = safe(rootPerson.MoederID);
+
+        const genLevels = [];  // Index 0 = gen -1, 1 = gen -2, 2 = gen -3
+        let currentLevel = [rootFatherId, rootMotherId].filter(Boolean);
+        while (currentLevel.length > 0 && genLevels.length < 3) {
+            genLevels.push(currentLevel);
             const nextLevel = [];
-            parentIds.forEach(pid => {
-                const parent = findPerson(pid);
-                if (!parent) return;
-                // Choose colour: gen -1 uses VHoofdID/MHoofdID, higher gens use VHoofdID
-                const rootFatherId = safe(rootPerson.VaderID);
-                const isRootParent = sectionLabel === 'Ouders  (gen −1)';
-                const relatie = isRootParent
-                    ? (safe(parent.ID) === rootFatherId ? 'VHoofdID' : 'MHoofdID')
-                    : 'VHoofdID';
-                addWithPartner(pid, relatie, 0, sectionLabel);
-                // Collect this person's parents for the next level
-                [safe(parent.VaderID), safe(parent.MoederID)]
-                    .filter(id => id && !seen.has(id))
+            currentLevel.forEach(pid => {
+                const p = findPerson(pid);
+                if (!p) return;
+                [safe(p.VaderID), safe(p.MoederID)]
+                    .filter(id => id && !nextLevel.includes(id))
                     .forEach(id => nextLevel.push(id));
             });
-            return [...new Set(nextLevel)];
+            currentLevel = [...new Set(nextLevel)];
         }
 
-        const gen1 = [safe(rootPerson.VaderID), safe(rootPerson.MoederID)].filter(Boolean);
-        const gen2 = addAncestorLevel(gen1, 'Ouders  (gen −1)');
-        const gen3 = addAncestorLevel(gen2, 'Grootouders  (gen −2)');
-        addAncestorLevel(gen3, 'Betovergrootouders  (gen −3)');
+        // Section labels per distance from root
+        const ancestorLabels = {
+            1: 'gen −1  Ouders',
+            2: 'gen −2  Grootouders',
+            3: 'gen −3  Betovergrootouders',
+        };
+
+        // Reverse so oldest generation (gen -3) is added first (top of canvas)
+        [...genLevels].reverse().forEach((levelIds, idx) => {
+            const distance  = genLevels.length - idx;                          // 3, 2, or 1
+            const label     = ancestorLabels[distance] || `gen −${distance}`;
+            const isGen1    = distance === 1;                                   // Only gen -1 uses VHoofdID/MHoofdID distinction
+            let firstInLevel = true;
+            levelIds.forEach(pid => {
+                if (seen.has(pid)) return;
+                const parent = findPerson(pid);
+                if (!parent) return;
+                const relatie = isGen1
+                    ? (safe(parent.ID) === rootFatherId ? 'VHoofdID' : 'MHoofdID')
+                    : 'VHoofdID';
+                addWithPartner(pid, relatie, 0, firstInLevel ? label : null);  // Label only on first of each level
+                firstInLevel = false;
+            });
+        });
 
         /* ---- Gen 0: root + partner + siblings ---- */
-        addRow(rootPerson.ID, 'HoofdID', 0, 'Hoofdpersoon  (gen 0)');
-        // Partner of root directly below root (obs.5)
+        addRow(rootPerson.ID, 'HoofdID', 0, 'gen 0  Hoofdpersoon');
         if (safe(rootPerson.PartnerID)) {
             addRow(rootPerson.PartnerID, 'PHoofdID', 1, null);
         }
 
-        // Siblings (sorted by birth year, unknown last), each with partner sub-row
+        // Siblings sorted by birth year, each with partner sub-row
         relaties
             .filter(r => safe(r.Relatie) === 'BZID')
             .sort((a, b) => (parseYear(a.Geboortedatum) || 9999) - (parseYear(b.Geboortedatum) || 9999))
@@ -268,51 +285,55 @@
                 if (sib && safe(sib.PartnerID)) addRow(sib.PartnerID, 'BZPartnerID', 1, null);
             });
 
-        /* ---- Gen +1 and +2: children recursively (obs.9) ---- */
+        /* ---- Gen +1 / +2 / +3: children recursively ---- */
         const childRelaties = new Set(['KindID', 'HKindID', 'MHKindID', 'PHKindID']);
 
         const rootChildren = relaties
             .filter(r => childRelaties.has(safe(r.Relatie)))
             .sort((a, b) => (parseYear(a.Geboortedatum) || 9999) - (parseYear(b.Geboortedatum) || 9999));
 
-        // Recursive: child → partner sub-row → grandchildren (each recursive)
-        function addChildGroup(childId, childRelatie, indentLevel, sectionLabel) {
+        const descendantLabels = {
+            1: 'gen +1  Kinderen',
+            2: 'gen +2  Kleinkinderen',
+            3: 'gen +3  Achterkleinkinderen',
+        };
+        const descendantLabelShown = {};
+
+        function addChildGroup(childId, childRelatie, indentLevel, depth) {
+            let sectionLabel = null;
+            if (!descendantLabelShown[depth]) {
+                sectionLabel = descendantLabels[depth] || `gen +${depth}`;
+                descendantLabelShown[depth] = true;
+            }
+
             const added = addRow(childId, childRelatie, indentLevel, sectionLabel);
             if (!added) return;
 
             const child = findPerson(childId);
             if (!child) return;
 
-            // Partner directly below child (obs.5)
             const partnerId = safe(child.PartnerID);
             if (partnerId) addRow(partnerId, 'KindPartnerID', indentLevel + 1, null);
 
-            // Grandchildren: persons whose VaderID or MoederID = this child
-            const grandchildren = dataset
+            const descendants = dataset
                 .filter(p => safe(p.VaderID) === safe(childId) || safe(p.MoederID) === safe(childId))
                 .sort((a, b) => (parseYear(a.Geboortedatum) || 9999) - (parseYear(b.Geboortedatum) || 9999));
 
-            grandchildren.forEach(gc => {
+            descendants.forEach(gc => {
                 if (seen.has(safe(gc.ID))) return;
-                // Determine grandchild relation type
                 const gcVader  = safe(gc.VaderID);
                 const gcMoeder = safe(gc.MoederID);
-                let gcRelatie = 'KindID';
-                if (gcVader === safe(childId) && gcMoeder === partnerId && partnerId) {
-                    gcRelatie = 'KindID';
-                } else if (gcVader === safe(childId)) {
-                    gcRelatie = 'HKindID';
-                } else if (gcMoeder === safe(childId)) {
-                    gcRelatie = 'MHKindID';
-                } else if (partnerId && (gcVader === partnerId || gcMoeder === partnerId)) {
-                    gcRelatie = 'PHKindID';
-                }
-                addChildGroup(safe(gc.ID), gcRelatie, indentLevel + 1, null);
+                let gcRelatie  = 'KindID';
+                if (gcVader === safe(childId) && gcMoeder === partnerId && partnerId) gcRelatie = 'KindID';
+                else if (gcVader === safe(childId))  gcRelatie = 'HKindID';
+                else if (gcMoeder === safe(childId)) gcRelatie = 'MHKindID';
+                else if (partnerId && (gcVader === partnerId || gcMoeder === partnerId)) gcRelatie = 'PHKindID';
+                addChildGroup(safe(gc.ID), gcRelatie, indentLevel + 1, depth + 1);
             });
         }
 
-        rootChildren.forEach((r, idx) => {
-            addChildGroup(safe(r.ID), safe(r.Relatie), 0, idx === 0 ? 'Kinderen  (gen +1 / +2)' : null);
+        rootChildren.forEach(r => {
+            addChildGroup(safe(r.ID), safe(r.Relatie), 0, 1);
         });
 
         return rows;
