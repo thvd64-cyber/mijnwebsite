@@ -1,34 +1,31 @@
-/* ======================= js/timeline.js v2.3.2 =======================
+/* ======================= js/timeline.js v2.3.3 =======================
  * Canvas-based family timeline renderer
  *
- * Wijzigingen v2.3.2 t.o.v. v2.3.1:
- *  Versienummer verhoogd — geen functionele wijzigingen
+ * Wijzigingen v2.3.0 t.o.v. v2.2.0:
+ *  - Jaren naast de balk op balkcenterhoogte: jjjj [ naam ] jjjj
+ *  - Gen -3 t/m 0: layout ongewijzigd
+ *  - Gen +1 en verder: alle balkjes flat op tijdlijn (geen inspringing)
+ *    Volgorde per familie-unit: kind → partner → kinderen van kind (recursief)
+ *  - Kleuren per generatieniveau:
+ *      +1 = #2196f3 (blauw)
+ *      +2 = #00897b (teal)
+ *      +3 = #33a895 (teal 20% lichter)
+ *      +4 = #66bfac, +5 = #99d5c3 ... (telkens 20% lichter)
+ *      Partner = altijd #9e9e9e grijs
+ *  - Scheidingslijn alleen tussen blokken -3 t/m 0
+ *  - Linkerkolom: gen-label op Y van eerste persoon van die generatie
+ *    Volledige reeks van laagste t/m hoogste aanwezige generatie
  *
- * Wijzigingen v2.3.1 t.o.v. v2.3.0:
- *  obs.10 Generatievolgorde: gen −3 bovenaan → gen 0 → gen +3 onderaan
- *  obs.11 Sectielabels per generatielaag: "gen −3" t/m "gen +3"
- *  obs.12 Datumparser vereenvoudigd: delegeert volledig aan ftParseBirthday() (utils.js v2.0.0+)
- *         Geen dubbele logica meer — vraagtekens en alle notaties afgehandeld door utils.js
- *
- * Wijzigingen v2.2.0 t.o.v. v2.1.1:
- *  obs.1  Tijdas dynamisch: HoofdID.geboortejaar ±200 jaar, 10-jaar ticks, horizontale scroll
- *  obs.2  Connectors starten aan balkrand (barEndX), niet balkcentrum
- *  obs.3  Geboorte- én overlijdensjaar boven balk
- *  obs.4  Datumparser initieel (vervangen door obs.12)
- *  obs.5  Layout: koppel-groepen — partner als directe sub-rij onder persoon
- *  obs.6  Kleuren conform RelationColors.css v1.0.1
- *  obs.7  KindID / HKindID / MHKindID / PHKindID elk eigen kleur
- *  obs.8  Gen-labels als HTML-overlay links van canvas
- *  obs.9  Kinderen genest: kind → partner → kleinkinderen (recursief)
- *
- * Dependencies:
- *   utils.js v2.0.0+ -> window.ftSafe, window.ftParseBirthday, window.ftFormatDate
+ * Dependencies (verified):
+ *   utils.js         -> window.ftSafe, window.ftParseBirthday, window.ftFormatDate
  *   storage.js       -> window.StamboomStorage.get()
- *   LiveSearch.js    -> window.initLiveSearch(inputEl, dataset, cb)
- *   relatieEngine.js -> window.RelatieEngine.computeRelaties(data, hoofdId)
+ *   LiveSearch.js    -> window.initLiveSearch(inputEl, dataset, cb) — cb krijgt persoon.ID string
+ *   relatieEngine.js -> window.RelatieEngine.computeRelaties(data, hoofdId) v2.3.0
+ *     Relatie-waarden: HoofdID, VHoofdID, MHoofdID, PHoofdID,
+ *                      KindID, HKindID, PHKindID, BZID, BZPartnerID
  *   Persoon veldnamen: VaderID, MoederID, PartnerID
  *
- * Version: v2.3.2
+ * Version: v2.3.0
  * ===================================================================== */
 
 (function () {
@@ -37,56 +34,71 @@
     /* ------------------------------------------------------------------
      * SECTION 1 — DOM REFERENCES
      * ------------------------------------------------------------------ */
-    const container   = document.getElementById('timelineContainer');  // Outer wrapper, position:relative
-    const canvas      = document.getElementById('timelineCanvas');     // <canvas> element
-    const placeholder = document.getElementById('timelinePlaceholder'); // "Zoek een persoon" message
-    const tooltip     = document.getElementById('timelineTooltip');    // Hover tooltip div
-    const searchInput = document.getElementById('sandboxSearch');      // Live search input
+    const container   = document.getElementById('timelineContainer');
+    const canvas      = document.getElementById('timelineCanvas');
+    const placeholder = document.getElementById('timelinePlaceholder');
+    const tooltip     = document.getElementById('timelineTooltip');
+    const searchInput = document.getElementById('sandboxSearch');
 
     /* ------------------------------------------------------------------
      * SECTION 2 — LAYOUT CONSTANTS
      * ------------------------------------------------------------------ */
-    const ROW_H         = 28;   // Height of one person row in pixels
-    const ROW_GAP       = 4;    // Gap between rows within the same couple-group
-    const GROUP_GAP     = 14;   // Gap between couple-groups (visual separator)
-    const LEFT_PAD      = 0;    // No left pad on canvas — gen labels live in HTML overlay
-    const RIGHT_PAD     = 32;   // Right margin after time axis end
-    const TICK_AREA_H   = 40;   // Height reserved for the time axis at the top
-    const BAR_H         = 16;   // Height of a life bar
-    const RADIUS        = 3;    // Corner radius for bars
-    const DEFAULT_SPAN  = 50;   // Assumed lifespan (years) when death date is unknown
-    const TICK_INTERVAL = 10;   // Years between tick marks on the axis (obs.1)
-    const UNKNOWN_BAR_W = 80;   // Fixed pixel width for bars with unknown birth date
-    const LABEL_COL_W   = 150;  // Width of the HTML gen-label column (obs.8)
-    const MIN_PX_YEAR   = 5;    // Minimum pixels per year (prevents bars collapsing)
-    const SECTION_H     = 20;   // Height of a section header row
+    const ROW_H        = 28;   // Height of one person row in pixels
+    const ROW_GAP      = 4;    // Gap between rows within same family unit
+    const GROUP_GAP    = 12;   // Gap between family units (after last member)
+    const RIGHT_PAD    = 32;   // Right margin after time axis end
+    const TICK_AREA_H  = 40;   // Height reserved for time axis at top
+    const BAR_H        = 16;   // Height of a life bar
+    const RADIUS       = 3;    // Corner radius for bars
+    const DEFAULT_SPAN = 50;   // Assumed lifespan when death date unknown
+    const TICK_INTERVAL= 10;   // Years between tick marks
+    const UNKNOWN_BAR_W= 60;   // Width for bars with unknown birth date
+    const LABEL_COL_W  = 155;  // Width of HTML gen-label column (left of canvas)
+    const MIN_PX_YEAR  = 5;    // Minimum pixels per year
+    const SECTION_H    = 20;   // Height of section header row (gen -3 t/m 0)
+    const YEAR_PAD     = 5;    // Pixels between year text and bar edge
 
     /* ------------------------------------------------------------------
-     * SECTION 3 — COLOUR PALETTE  (obs.6 + obs.7)
-     * Aligned with RelationColors.css v1.0.1
+     * SECTION 3 — COLOUR PALETTE
+     * Gen -3..0: conform RelationColors.css
+     * Gen +1..: per generatieniveau, teal wordt 20% lichter per stap
      * ------------------------------------------------------------------ */
     const COLOR = {
-        HoofdID:       '#c8960c', // Amber  — HoofdID (--color-hoofd feel, canvas-visible)
-        PHoofdID:      '#7b56c2', // Purple — PHoofdID (--color-partner-hoofd darkened)
-        VHoofdID:      '#2d7d46', // Green  — VHoofdID (--color-vader darkened for canvas)
-        MHoofdID:      '#2d7d46', // Green  — MHoofdID same as vader per CSS
-        KindID:        '#2196f3', // Blue   — KindID exact match --color-KindID
-        HKindID:       '#64b5f6', // Sky    — HKindID (#90caf9 darkened for readability)
-        MHKindID:      '#64b5f6', // Sky    — MHKindID same as HKindID (kind via moeder)
-        PHKindID:      '#aac8ef', // Light  — PHKindID (--color-PHKindID, use dark text)
-        KindPartnerID: '#9e9e9e', // Grey   — partner van kind (--color-partner)
-        BZID:          '#c8741a', // Orange — BZID (--color-bz darkened for canvas)
-        BZPartnerID:   '#9e9e9e', // Grey   — partner van broer/zus
-        today:         '#ee0055', // Red    — vertical today dashed line
-        tick:          '#bbbbbb', // Light grey — tick marks
-        barText:       '#ffffff', // White  — text on most bars
-        barTextDark:   '#1a1a1a', // Dark   — text on light bars (PHKindID)
-        birthLabel:    '#666666', // Grey   — year labels above bars
-        unknown:       '#cccccc', // Light  — unknown-birth bar fill
-        unknownText:   '#666666', // Grey   — "?" on unknown bars
-        connLine:      '#cccccc', // Light grey — parent→child connectors
-        sectionText:   '#888888', // Grey   — section header text
+        HoofdID:      '#c8960c', // Amber
+        PHoofdID:     '#7b56c2', // Purple
+        VHoofdID:     '#2d7d46', // Green
+        MHoofdID:     '#2d7d46', // Green
+        BZID:         '#c8741a', // Orange
+        BZPartnerID:  '#9e9e9e', // Grey
+        partner:      '#9e9e9e', // Grey — partners at any generation
+        today:        '#ee0055', // Red dashed line
+        tick:         '#bbbbbb', // Tick marks
+        barText:      '#ffffff', // White text on most bars
+        barTextDark:  '#1a1a1a', // Dark text on light bars
+        birthLabel:   '#555555', // Year labels beside bars
+        unknown:      '#cccccc', // Unknown-birth bar fill
+        unknownText:  '#666666', // "?" text
+        connLine:     '#cccccc', // Parent-child connectors
+        genSep:       '#e8e8e8', // Section separator (gen -3..0 only)
+        sectionText:  '#888888', // Section header text
     };
+
+    // Returns bar colour for a descendant at a given generation depth (1-based)
+    // +1 = blauw, +2 = teal, +3+ = teal lichter per stap (20% per level)
+    function descendantColor(genDepth) {
+        if (genDepth <= 1) return '#2196f3';          // +1: blauw
+        if (genDepth === 2) return '#00897b';         // +2: teal
+
+        // +3 and beyond: teal lightened by 20% per extra generation step
+        // Lightening formula: blend toward white by 20% per step
+        // Base teal RGB: 0, 137, 123
+        const steps  = genDepth - 2;                 // Steps beyond +2
+        const factor = Math.min(steps * 0.20, 0.80); // Max 80% lighter
+        const r = Math.round(0   + (255 - 0)   * factor);
+        const g = Math.round(137 + (255 - 137) * factor);
+        const b = Math.round(123 + (255 - 123) * factor);
+        return `rgb(${r},${g},${b})`;
+    }
 
     /* ------------------------------------------------------------------
      * SECTION 4 — STATE
@@ -94,33 +106,57 @@
     let dataset    = [];
     let rootId     = null;
     let hitRects   = [];
-    let dynMinYear = 1800;  // Updated per root person (obs.1)
+    let dynMinYear = 1800;
     let dynMaxYear = new Date().getFullYear();
     const TODAY    = new Date().getFullYear();
 
     /* ------------------------------------------------------------------
      * SECTION 5 — DATE UTILITIES
-     * Delegeert volledig aan window.ftParseBirthday() (utils.js v2.0.0+)
-     * Geen dubbele logica — utils.js is de enige bron van waarheid.
+     * Handles: dd-mmm-yyyy, yyyy-mmm-dd, question marks → 0 (round down)
      * ------------------------------------------------------------------ */
 
-    // Returns 4-digit year from a date string, or null if unparseable
-    function parseYear(dateStr) {
-        if (!dateStr) return null;
-        try {
-            const d = window.ftParseBirthday(String(dateStr).trim());     // Delegeer aan utils.js
-            if (!d || isNaN(d.getTime())) return null;                    // Ongeldige datum → null
-            const yr = d.getFullYear();
-            return (yr >= 100 && yr <= TODAY + 5) ? yr : null;            // Sanity check op jaarrange
-        } catch (e) {
-            return null;                                                   // Onverwachte fout → null
-        }
+    function resolveQ(s) {
+        return String(s).replace(/\?/g, '0');          // "197?" → "1970"
     }
 
-    // Formats a date string for tooltip display via utils.js
+    function parseYear(dateStr) {
+        if (!dateStr) return null;
+        const d = resolveQ(String(dateStr).trim());
+
+        // dd-mmm-yyyy  e.g. "12-jan-1954"
+        const dmyA = d.match(/^(\d{1,2})[-/\s]([a-zA-Z]+)[-/\s](\d{4})$/);
+        if (dmyA) {
+            const yr = parseInt(dmyA[3], 10);
+            return (yr >= 100 && yr <= TODAY + 5) ? yr : null;
+        }
+
+        // yyyy-mmm-dd  e.g. "1954-jan-12"
+        const ymdA = d.match(/^(\d{4})[-/\s]([a-zA-Z]+)[-/\s](\d{1,2})$/);
+        if (ymdA) {
+            const yr = parseInt(ymdA[1], 10);
+            return (yr >= 100 && yr <= TODAY + 5) ? yr : null;
+        }
+
+        // yyyy only
+        const yOnly = d.match(/^(\d{4})$/);
+        if (yOnly) {
+            const yr = parseInt(yOnly[1], 10);
+            return (yr >= 100 && yr <= TODAY + 5) ? yr : null;
+        }
+
+        // Delegate to utils.js
+        try {
+            const obj = window.ftParseBirthday(d);
+            if (!obj || isNaN(obj.getTime())) return null;
+            const yr = obj.getFullYear();
+            return (yr >= 100 && yr <= TODAY + 5) ? yr : null;
+        } catch (e) { return null; }
+    }
+
     function fmtDate(dateStr) {
         if (!dateStr) return '—';
-        return window.ftFormatDate ? window.ftFormatDate(String(dateStr).trim()) : String(dateStr).trim();
+        const r = resolveQ(String(dateStr).trim());
+        return window.ftFormatDate ? window.ftFormatDate(r) : r;
     }
 
     /* ------------------------------------------------------------------
@@ -140,30 +176,33 @@
             .filter(Boolean).join(' ');
     }
 
-    // Light-colored bars need dark text to stay readable
-    function needsDarkText(relatie) {
-        return relatie === 'PHKindID';
+    // True if bar needs dark text (light background colors)
+    function needsDarkText(hexOrRgb) {
+        // Simple luminance check: light teal variants need dark text
+        if (!hexOrRgb) return false;
+        const rgb = hexOrRgb.match(/\d+/g);
+        if (!rgb) return false;
+        const lum = (parseInt(rgb[0]) * 299 + parseInt(rgb[1]) * 587 + parseInt(rgb[2]) * 114) / 1000;
+        return lum > 160; // Threshold: bright colors get dark text
     }
 
     /* ------------------------------------------------------------------
-     * SECTION 7 — TIME AXIS MATH  (obs.1)
-     * Uses dynMinYear / dynMaxYear, set per root person.
+     * SECTION 7 — TIME AXIS MATH
      * ------------------------------------------------------------------ */
     function yearToX(year, timeW) {
         const ratio = (year - dynMinYear) / (dynMaxYear - dynMinYear);
-        return LEFT_PAD + ratio * timeW;
+        return ratio * timeW; // No LEFT_PAD — canvas starts at x=0
     }
 
     /* ------------------------------------------------------------------
-     * SECTION 8 — DYNAMIC YEAR RANGE  (obs.1)
+     * SECTION 8 — DYNAMIC YEAR RANGE
      * ------------------------------------------------------------------ */
     function setDynamicRange(rootPerson) {
         const rb = parseYear(rootPerson.Geboortedatum);
         if (rb) {
-            dynMinYear = rb - 200;                       // 200 years before root birth
-            dynMaxYear = Math.max(rb + 200, TODAY);      // 200 years after, at least today
+            dynMinYear = rb - 200;
+            dynMaxYear = Math.max(rb + 200, TODAY);
         } else {
-            // Fallback: span from earliest known birth in dataset to today
             const years = dataset.map(p => parseYear(p.Geboortedatum)).filter(Boolean);
             dynMinYear  = years.length ? Math.min(...years) - 10 : TODAY - 200;
             dynMaxYear  = TODAY;
@@ -171,15 +210,27 @@
     }
 
     /* ------------------------------------------------------------------
-     * SECTION 9 — ROW BUILDER  (obs.5 + obs.9)
+     * SECTION 9 — ROW BUILDER
      *
-     * Produces a flat array of render rows with couple-group nesting:
-     *   Ancestors (gen -3 .. -1):  flat per generation, person then partner
-     *   Gen 0:   HoofdID → partner → siblings (each with partner)
-     *   Gen +1:  each child → partner → grandchildren (each with partner, recursively)
+     * Produces a flat array of render rows:
      *
-     * Row shape: { entry, indentLevel, sectionLabel }
-     * Entry shape: { person, relatie, color, birthYear, deathYear, isDead, isUnknown, isRoot }
+     * Gen -3 .. 0: unchanged from v2.2.0
+     *   Ancestors in generation blocks with section separators
+     *   Gen 0: HoofdID → partner → siblings (each with partner)
+     *
+     * Gen +1 and beyond: flat on timeline, per family unit
+     *   For each child of current person (sorted by birth):
+     *     child row (genDepth = distance from gen 0)
+     *     partner row
+     *     recursively: children of child (genDepth+1)
+     *       their partner
+     *       their children (genDepth+2) ...
+     *
+     * Row shape:
+     *   { entry, isDescendant, genDepth, genNum, sectionLabel, isLastInUnit }
+     *
+     * Entry shape:
+     *   { person, relatie, color, birthYear, deathYear, isDead, isUnknown, isRoot }
      * ------------------------------------------------------------------ */
     function buildRows(rootPerson) {
         const relaties = window.RelatieEngine.computeRelaties(dataset, safe(rootPerson.ID));
@@ -187,14 +238,13 @@
         const seen = new Set();
         const rows = [];
 
-        // Build an enriched entry for one person
-        function makeEntry(person, relatie) {
+        function makeEntry(person, relatie, color) {
             const by = parseYear(person.Geboortedatum);
             const dy = parseYear(person.Overlijdensdatum);
             return {
                 person,
                 relatie,
-                color:     COLOR[relatie] || COLOR.unknown,
+                color,
                 birthYear: by,
                 deathYear: dy,
                 isDead:    dy !== null,
@@ -203,172 +253,169 @@
             };
         }
 
-        // Add one row; returns true if added, false if duplicate / not found
-        function addRow(id, relatie, indentLevel, sectionLabel) {
+        function addRow(id, relatie, color, genNum, isDescendant, genDepth, sectionLabel, isLastInUnit) {
             const sid = safe(id);
             if (!sid || seen.has(sid)) return false;
             const p = findPerson(sid);
             if (!p) return false;
             seen.add(sid);
-            rows.push({ entry: makeEntry(p, relatie), indentLevel, sectionLabel });
+            rows.push({
+                entry:        makeEntry(p, relatie, color),
+                isDescendant, // true for gen +1 and beyond
+                genDepth,     // 1=child, 2=grandchild, etc. (0 for ancestors)
+                genNum,       // Actual generation number relative to root
+                sectionLabel, // Section header text (or null)
+                isLastInUnit, // true if last row before GROUP_GAP
+            });
             return true;
         }
 
-        // Add a person + their partner as a sub-row
-        function addWithPartner(id, relatie, indentLevel, sectionLabel) {
-            const added = addRow(id, relatie, indentLevel, sectionLabel);
-            if (!added) return;
-            const p = findPerson(id);
-            if (p && safe(p.PartnerID)) {
-                addRow(p.PartnerID, 'PHoofdID', indentLevel + 1, null);
-            }
-        }
-
-        /* ---- Ancestor generations: verzamel bottom-up, voeg top-down in ---- */
-        // Walk upward WITHOUT adding rows — collect IDs per generation first
-        const rootFatherId = safe(rootPerson.VaderID);
-        const rootMotherId = safe(rootPerson.MoederID);
-
-        const genLevels = [];  // Index 0 = gen -1, 1 = gen -2, 2 = gen -3
-        let currentLevel = [rootFatherId, rootMotherId].filter(Boolean);
-        while (currentLevel.length > 0 && genLevels.length < 3) {
-            genLevels.push(currentLevel);
+        /* ---- Ancestor generations (gen -3 .. -1) ---- */
+        function addAncestorLevel(parentIds, sectionLabel) {
             const nextLevel = [];
-            currentLevel.forEach(pid => {
-                const p = findPerson(pid);
-                if (!p) return;
-                [safe(p.VaderID), safe(p.MoederID)]
-                    .filter(id => id && !nextLevel.includes(id))
-                    .forEach(id => nextLevel.push(id));
-            });
-            currentLevel = [...new Set(nextLevel)];
-        }
-
-        // Section labels per distance from root
-        const ancestorLabels = {
-            1: 'gen −1  Ouders',
-            2: 'gen −2  Grootouders',
-            3: 'gen −3  Betovergrootouders',
-        };
-
-        // Reverse so oldest generation (gen -3) is added first (top of canvas)
-        [...genLevels].reverse().forEach((levelIds, idx) => {
-            const distance  = genLevels.length - idx;                          // 3, 2, or 1
-            const label     = ancestorLabels[distance] || `gen −${distance}`;
-            const isGen1    = distance === 1;                                   // Only gen -1 uses VHoofdID/MHoofdID distinction
-            let firstInLevel = true;
-            levelIds.forEach(pid => {
-                if (seen.has(pid)) return;
+            parentIds.forEach(pid => {
                 const parent = findPerson(pid);
                 if (!parent) return;
-                const relatie = isGen1
+                const rootFatherId = safe(rootPerson.VaderID);
+                const isGen1       = sectionLabel === 'Ouders  (gen −1)';
+                const relatie      = isGen1
                     ? (safe(parent.ID) === rootFatherId ? 'VHoofdID' : 'MHoofdID')
                     : 'VHoofdID';
-                addWithPartner(pid, relatie, 0, firstInLevel ? label : null);  // Label only on first of each level
-                firstInLevel = false;
+                const color = COLOR[relatie];
+                addRow(pid, relatie, color, null, false, 0, sectionLabel, false);
+                // Partner of ancestor
+                if (safe(parent.PartnerID)) {
+                    addRow(parent.PartnerID, 'PHoofdID', COLOR.PHoofdID, null, false, 0, null, false);
+                }
+                [safe(parent.VaderID), safe(parent.MoederID)]
+                    .filter(id => id && !seen.has(id))
+                    .forEach(id => nextLevel.push(id));
             });
-        });
-
-        /* ---- Gen 0: root + partner + siblings ---- */
-        addRow(rootPerson.ID, 'HoofdID', 0, 'gen 0  Hoofdpersoon');
-        if (safe(rootPerson.PartnerID)) {
-            addRow(rootPerson.PartnerID, 'PHoofdID', 1, null);
+            return [...new Set(nextLevel)];
         }
 
-        // Siblings sorted by birth year, each with partner sub-row
+        const gen1 = [safe(rootPerson.VaderID), safe(rootPerson.MoederID)].filter(Boolean);
+        const gen2 = addAncestorLevel(gen1, 'Ouders  (gen −1)');
+        const gen3 = addAncestorLevel(gen2, 'Grootouders  (gen −2)');
+        addAncestorLevel(gen3, 'Betovergrootouders  (gen −3)');
+
+        /* ---- Gen 0: root + partner + siblings ---- */
+        addRow(rootPerson.ID, 'HoofdID', COLOR.HoofdID, 0, false, 0, 'Hoofdpersoon  (gen 0)', false);
+
+        if (safe(rootPerson.PartnerID)) {
+            addRow(rootPerson.PartnerID, 'PHoofdID', COLOR.PHoofdID, 0, false, 0, null, false);
+        }
+
+        // Siblings sorted by birth year
         relaties
             .filter(r => safe(r.Relatie) === 'BZID')
             .sort((a, b) => (parseYear(a.Geboortedatum) || 9999) - (parseYear(b.Geboortedatum) || 9999))
             .forEach(r => {
-                addRow(r.ID, 'BZID', 0, null);
+                addRow(r.ID, 'BZID', COLOR.BZID, 0, false, 0, null, false);
                 const sib = findPerson(r.ID);
-                if (sib && safe(sib.PartnerID)) addRow(sib.PartnerID, 'BZPartnerID', 1, null);
+                if (sib && safe(sib.PartnerID)) {
+                    addRow(sib.PartnerID, 'BZPartnerID', COLOR.BZPartnerID, 0, false, 0, null, false);
+                }
             });
 
-        /* ---- Gen +1 / +2 / +3: children recursively ---- */
-        const childRelaties = new Set(['KindID', 'HKindID', 'MHKindID', 'PHKindID']);
+        /* ---- Gen +1 and beyond: recursive family units ---- */
+        const childRelaties = new Set(['KindID', 'HKindID', 'PHKindID']);
 
+        // Direct children of root from relatieEngine
         const rootChildren = relaties
             .filter(r => childRelaties.has(safe(r.Relatie)))
             .sort((a, b) => (parseYear(a.Geboortedatum) || 9999) - (parseYear(b.Geboortedatum) || 9999));
 
-        const descendantLabels = {
-            1: 'gen +1  Kinderen',
-            2: 'gen +2  Kleinkinderen',
-            3: 'gen +3  Achterkleinkinderen',
-        };
-        const descendantLabelShown = {};
+        // Track which gen labels we've already shown (for left column)
+        const shownGenLabels = new Set();
 
-        function addChildGroup(childId, childRelatie, indentLevel, depth) {
-            let sectionLabel = null;
-            if (!descendantLabelShown[depth]) {
-                sectionLabel = descendantLabels[depth] || `gen +${depth}`;
-                descendantLabelShown[depth] = true;
+        // Returns the section label for a generation depth, shown only once
+        function genLabel(depth) {
+            const genNum = depth;
+            if (shownGenLabels.has(genNum)) return null;
+            shownGenLabels.add(genNum);
+            const names = ['', 'Kinderen', 'Kleinkinderen', 'Achterkleinkinderen',
+                           'Betachterkleinkinderen', 'Verdere nakomelingen'];
+            const name = names[genNum] || `Gen +${genNum}`;
+            return `${name}  (gen +${genNum})`;
+        }
+
+        // Recursive: add child → partner → grandchildren → their partners → ...
+        function addDescendantGroup(personId, genDepth) {
+            const person = findPerson(personId);
+            if (!person || seen.has(safe(personId))) return;
+
+            const color   = descendantColor(genDepth);      // Colour by generation depth
+            const label   = genLabel(genDepth);             // Section label (first of this gen only)
+            const genNum  = genDepth;                       // Relative generation number
+
+            addRow(safe(personId), 'KindID', color, genNum, true, genDepth, label, false);
+
+            // Partner directly after child
+            const partnerId = safe(person.PartnerID);
+            if (partnerId) {
+                addRow(partnerId, 'PHoofdID', COLOR.partner, genNum, true, genDepth, null, false);
             }
 
-            const added = addRow(childId, childRelatie, indentLevel, sectionLabel);
-            if (!added) return;
-
-            const child = findPerson(childId);
-            if (!child) return;
-
-            const partnerId = safe(child.PartnerID);
-            if (partnerId) addRow(partnerId, 'KindPartnerID', indentLevel + 1, null);
-
-            const descendants = dataset
-                .filter(p => safe(p.VaderID) === safe(childId) || safe(p.MoederID) === safe(childId))
+            // Children of this person, sorted by birth year
+            const children = dataset
+                .filter(p => {
+                    const v = safe(p.VaderID);
+                    const m = safe(p.MoederID);
+                    return v === safe(personId) || m === safe(personId);
+                })
                 .sort((a, b) => (parseYear(a.Geboortedatum) || 9999) - (parseYear(b.Geboortedatum) || 9999));
 
-            descendants.forEach(gc => {
-                if (seen.has(safe(gc.ID))) return;
-                const gcVader  = safe(gc.VaderID);
-                const gcMoeder = safe(gc.MoederID);
-                let gcRelatie  = 'KindID';
-                if (gcVader === safe(childId) && gcMoeder === partnerId && partnerId) gcRelatie = 'KindID';
-                else if (gcVader === safe(childId))  gcRelatie = 'HKindID';
-                else if (gcMoeder === safe(childId)) gcRelatie = 'MHKindID';
-                else if (partnerId && (gcVader === partnerId || gcMoeder === partnerId)) gcRelatie = 'PHKindID';
-                addChildGroup(safe(gc.ID), gcRelatie, indentLevel + 1, depth + 1);
+            children.forEach(child => {
+                if (!seen.has(safe(child.ID))) {
+                    addDescendantGroup(safe(child.ID), genDepth + 1);
+                }
             });
         }
 
-        rootChildren.forEach(r => {
-            addChildGroup(safe(r.ID), safe(r.Relatie), 0, 1);
+        // Add all root children, each starting a family unit
+        rootChildren.forEach((r, idx) => {
+            const isLast = (idx === rootChildren.length - 1);
+            addDescendantGroup(safe(r.ID), 1);
+            // Mark last row of this family unit for GROUP_GAP spacing
+            if (!isLast && rows.length > 0) {
+                rows[rows.length - 1].isLastInUnit = true;
+            }
         });
+
+        // Mark very last row as last in unit too
+        if (rows.length > 0) rows[rows.length - 1].isLastInUnit = true;
 
         return rows;
     }
 
     /* ------------------------------------------------------------------
      * SECTION 10 — CANVAS RENDERER
-     * Two geometry passes: first compute all Y positions, then draw.
-     * Third pass draws connectors (needs all barPositions).
      * ------------------------------------------------------------------ */
     function renderCanvas(rows) {
         if (!rows || rows.length === 0) return;
 
-        /* ---- Step 1: compute canvas dimensions ---- */
-        let totalH = TICK_AREA_H;
+        /* ---- Compute canvas height ---- */
+        let totalH    = TICK_AREA_H;
         let prevLabel = null;
         rows.forEach((row, i) => {
             if (row.sectionLabel && row.sectionLabel !== prevLabel) {
-                totalH += SECTION_H;
+                totalH   += SECTION_H;
                 prevLabel = row.sectionLabel;
             }
             totalH += ROW_H;
-            const nextRow = rows[i + 1];
-            totalH += (!nextRow || nextRow.indentLevel === 0) ? GROUP_GAP : ROW_GAP;
+            totalH += row.isLastInUnit ? GROUP_GAP : ROW_GAP;
         });
-        totalH += 20; // Bottom padding
+        totalH += 20;
 
-        // Canvas width based on year span and available space
+        /* ---- Compute canvas width ---- */
         const yearSpan  = dynMaxYear - dynMinYear;
-        const available = Math.max(container.clientWidth - LABEL_COL_W - RIGHT_PAD, 600);
+        const available = Math.max(container.clientWidth - LABEL_COL_W - RIGHT_PAD, 400);
         const pxPerYear = Math.max(available / yearSpan, MIN_PX_YEAR);
         const timeW     = yearSpan * pxPerYear;
 
         canvas.height = totalH;
-        canvas.width  = LEFT_PAD + timeW + RIGHT_PAD;
+        canvas.width  = timeW + RIGHT_PAD;
 
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -376,58 +423,72 @@
         hitRects = [];
         const barPositions = {}; // id -> { barX, barEndX, barCY }
 
-        /* ---- Step 2: time axis ---- */
+        /* ---- Pass 1: time axis ---- */
         drawTimeAxis(ctx, timeW);
 
-        /* ---- Step 3: rows ---- */
+        /* ---- Pass 2: rows ---- */
         let curY     = TICK_AREA_H;
         prevLabel    = null;
 
+        // Track first Y per genNum for left column labels
+        const genLabelY = {}; // genNum -> Y pixel
+
         rows.forEach((row, i) => {
-            // Section header
+            // Section separator line (gen -3..0 only, not descendants)
+            if (row.sectionLabel && row.sectionLabel !== prevLabel && !row.isDescendant) {
+                ctx.fillStyle = COLOR.genSep;
+                ctx.fillRect(0, curY, canvas.width, 1);
+                curY     += 1;
+            }
+
+            // Section header text on canvas (small, grey)
             if (row.sectionLabel && row.sectionLabel !== prevLabel) {
-                ctx.fillStyle    = COLOR.sectionText;
-                ctx.font         = 'bold 10px sans-serif';
-                ctx.textBaseline = 'middle';
-                ctx.textAlign    = 'left';
-                ctx.fillText(row.sectionLabel, LEFT_PAD + 4, curY + SECTION_H / 2);
+                // Record Y for left column label
+                const gn = row.isDescendant ? row.genDepth : row.genNum;
+                if (gn !== null && gn !== undefined && !(gn in genLabelY)) {
+                    genLabelY[gn] = curY;
+                }
                 curY     += SECTION_H;
                 prevLabel = row.sectionLabel;
             }
 
+            // Record genLabelY for rows without explicit section label
+            const gn = row.isDescendant ? row.genDepth : row.genNum;
+            if (gn !== null && gn !== undefined && !(gn in genLabelY)) {
+                genLabelY[gn] = curY;
+            }
+
             const rowY  = curY;
-            const barY  = rowY + (ROW_H - BAR_H) / 2;   // Vertically centred bar
-            const barCY = barY + BAR_H / 2;               // Bar vertical centre
-            const indentPx = row.indentLevel * 18;        // Horizontal indent for sub-rows
+            const barY  = rowY + (ROW_H - BAR_H) / 2;
+            const barCY = barY + BAR_H / 2;
 
             if (row.entry.isUnknown) {
-                drawUnknownBar(ctx, barY, barCY, row.entry, indentPx);
+                drawUnknownBar(ctx, barY, barCY, row.entry);
                 barPositions[safe(row.entry.person.ID)] = {
-                    barX:    LEFT_PAD + indentPx + 4,
-                    barEndX: LEFT_PAD + indentPx + 4 + UNKNOWN_BAR_W,
+                    barX:    4,
+                    barEndX: 4 + UNKNOWN_BAR_W,
                     barCY,
                 };
             } else {
-                const bx = yearToX(row.entry.birthYear, timeW);
-                const endYear   = row.entry.isDead
+                drawLifeBar(ctx, barY, barCY, row.entry, timeW);
+                const bx     = yearToX(row.entry.birthYear, timeW);
+                const endYr  = row.entry.isDead
                     ? row.entry.deathYear
                     : Math.min(row.entry.birthYear + DEFAULT_SPAN, TODAY);
-                const solidEndX = yearToX(Math.min(endYear, dynMaxYear), timeW);
-                drawLifeBar(ctx, barY, barCY, row.entry, timeW, indentPx);
+                const ex     = yearToX(Math.min(endYr, dynMaxYear), timeW);
                 barPositions[safe(row.entry.person.ID)] = {
                     barX:    bx,
-                    barEndX: Math.max(solidEndX, bx + 4),
+                    barEndX: Math.max(ex, bx + 4),
                     barCY,
                 };
             }
 
             hitRects.push({ x: 0, y: rowY, w: canvas.width, h: ROW_H, entry: row.entry });
 
-            const nextRow = rows[i + 1];
-            curY += ROW_H + ((!nextRow || nextRow.indentLevel === 0) ? GROUP_GAP : ROW_GAP);
+            curY += ROW_H + (row.isLastInUnit ? GROUP_GAP : ROW_GAP);
         });
 
-        /* ---- Step 4: connector lines (obs.2) ---- */
+        /* ---- Pass 3: connectors ---- */
         rows.forEach(row => {
             const p = row.entry.person;
             [safe(p.VaderID), safe(p.MoederID)].forEach(parentId => {
@@ -439,24 +500,23 @@
             });
         });
 
-        /* ---- Step 5: today line on top of everything ---- */
+        /* ---- Pass 4: today line ---- */
         drawTodayLine(ctx, timeW);
 
-        /* ---- Step 6: update HTML gen-label overlay (obs.8) ---- */
-        updateGenLabels(rows);
+        /* ---- Pass 5: update HTML gen-label overlay ---- */
+        updateGenLabels(rows, genLabelY, totalH);
     }
 
     /* ------------------------------------------------------------------
-     * SECTION 11 — INDIVIDUAL DRAW FUNCTIONS
+     * SECTION 11 — DRAW FUNCTIONS
      * ------------------------------------------------------------------ */
 
     function drawTimeAxis(ctx, timeW) {
-        // Baseline
         ctx.strokeStyle = COLOR.tick;
         ctx.lineWidth   = 0.5;
         ctx.beginPath();
-        ctx.moveTo(LEFT_PAD, TICK_AREA_H - 4);
-        ctx.lineTo(LEFT_PAD + timeW, TICK_AREA_H - 4);
+        ctx.moveTo(0, TICK_AREA_H - 4);
+        ctx.lineTo(timeW, TICK_AREA_H - 4);
         ctx.stroke();
 
         ctx.font         = '9px sans-serif';
@@ -465,16 +525,15 @@
 
         const firstTick = Math.ceil(dynMinYear / TICK_INTERVAL) * TICK_INTERVAL;
         for (let y = firstTick; y <= dynMaxYear; y += TICK_INTERVAL) {
-            const x        = yearToX(y, timeW);
-            const isMajor  = y % 50 === 0;  // Taller tick every 50 years
-            const isMinor  = y % 25 === 0;  // Label every 25 years
+            const x       = yearToX(y, timeW);
+            const isMajor = y % 50 === 0;
             ctx.strokeStyle = COLOR.tick;
             ctx.lineWidth   = isMajor ? 1 : 0.5;
             ctx.beginPath();
             ctx.moveTo(x, TICK_AREA_H - 4);
             ctx.lineTo(x, TICK_AREA_H - (isMajor ? 14 : 8));
             ctx.stroke();
-            if (isMinor || isMajor) {
+            if (y % 25 === 0) {
                 ctx.fillStyle = COLOR.tick;
                 ctx.fillText(String(y), x, TICK_AREA_H - 16);
             }
@@ -483,7 +542,7 @@
 
     function drawTodayLine(ctx, timeW) {
         const x = yearToX(TODAY, timeW);
-        if (x < LEFT_PAD || x > LEFT_PAD + timeW) return; // Out of visible range
+        if (x < 0 || x > timeW) return;
         ctx.save();
         ctx.strokeStyle = COLOR.today;
         ctx.lineWidth   = 1.5;
@@ -495,21 +554,20 @@
         ctx.restore();
     }
 
-    function drawLifeBar(ctx, barY, barCY, entry, timeW, indentPx) {
-        const { person, relatie, color, birthYear, deathYear, isDead } = entry;
+    function drawLifeBar(ctx, barY, barCY, entry, timeW) {
+        const { person, color, birthYear, deathYear, isDead } = entry;
 
-        const startX     = Math.max(yearToX(birthYear, timeW), LEFT_PAD + indentPx);
-        const endYear    = isDead ? deathYear : Math.min(birthYear + DEFAULT_SPAN, TODAY);
-        const clampEnd   = Math.min(endYear, dynMaxYear);
-        const solidEndX  = yearToX(clampEnd, timeW);
-        const solidW     = Math.max(solidEndX - startX, 4); // At least 4px
+        const startX    = yearToX(birthYear, timeW);
+        const endYear   = isDead ? deathYear : Math.min(birthYear + DEFAULT_SPAN, TODAY);
+        const solidEndX = yearToX(Math.min(endYear, dynMaxYear), timeW);
+        const solidW    = Math.max(solidEndX - startX, 4);
 
         // Solid bar
         ctx.fillStyle = color;
         roundedRect(ctx, startX, barY, solidW, BAR_H, RADIUS);
         ctx.fill();
 
-        // Dotted extension to TODAY for living persons
+        // Dotted extension for living persons
         if (!isDead) {
             const todayX = yearToX(Math.min(TODAY, dynMaxYear), timeW);
             if (todayX > solidEndX + 2) {
@@ -525,41 +583,42 @@
             }
         }
 
-        // Birth year label above left edge of bar (obs.3)
+        // Birth year LEFT of bar — same height as bar centre (obs: jjjj [ naam ] jjjj)
         ctx.fillStyle    = COLOR.birthLabel;
         ctx.font         = '9px sans-serif';
-        ctx.textAlign    = 'left';
-        ctx.textBaseline = 'bottom';
-        if (birthYear) ctx.fillText(String(birthYear), startX, barY - 1);
-
-        // Death year label above right edge of bar (obs.3)
-        if (isDead && deathYear) {
-            ctx.textAlign = 'right';
-            ctx.fillText(String(deathYear), solidEndX, barY - 1);
+        ctx.textAlign    = 'right';
+        ctx.textBaseline = 'middle';
+        if (birthYear) {
+            ctx.fillText(String(birthYear), startX - YEAR_PAD, barCY);
         }
 
-        // Name inside bar (white or dark depending on bar lightness)
-        drawBarLabel(ctx, displayName(person), startX, barY, solidW, needsDarkText(relatie));
+        // Death year RIGHT of bar — same height as bar centre
+        if (isDead && deathYear) {
+            ctx.textAlign = 'left';
+            ctx.fillText(String(deathYear), solidEndX + YEAR_PAD, barCY);
+        }
 
-        // Amber triangle above root person's bar as anchor
+        // Name inside bar
+        const dark = needsDarkText(color);
+        drawBarLabel(ctx, displayName(person), startX, barY, solidW, dark);
+
+        // Root indicator
         if (entry.isRoot) drawRootIndicator(ctx, startX + solidW / 2, barY);
     }
 
-    function drawUnknownBar(ctx, barY, barCY, entry, indentPx) {
-        const barX = LEFT_PAD + indentPx + 4;
+    function drawUnknownBar(ctx, barY, barCY, entry) {
+        const barX = 4;
         ctx.fillStyle = COLOR.unknown;
         roundedRect(ctx, barX, barY, UNKNOWN_BAR_W, BAR_H, RADIUS);
         ctx.fill();
-        // "?" glyph
         ctx.fillStyle    = COLOR.unknownText;
         ctx.font         = 'bold 10px sans-serif';
         ctx.textAlign    = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('?', barX + 10, barY + BAR_H / 2);
-        // Name beside "?"
+        ctx.fillText('?', barX + 10, barCY);
         ctx.font      = '9px sans-serif';
         ctx.textAlign = 'left';
-        ctx.fillText(clipText(ctx, displayName(entry.person), UNKNOWN_BAR_W - 18), barX + 18, barY + BAR_H / 2);
+        ctx.fillText(clipText(ctx, displayName(entry.person), UNKNOWN_BAR_W - 18), barX + 18, barCY);
     }
 
     function drawBarLabel(ctx, name, barX, barY, barW, darkText) {
@@ -590,25 +649,23 @@
         ctx.fill();
     }
 
-    // L-shaped connector: from RIGHT edge of parent bar to LEFT edge of child bar (obs.2)
+    // L-shaped connector from right edge of parent bar to birth point of child bar
     function drawConnector(ctx, parentPos, childPos) {
-        const px = parentPos.barEndX; // Right edge of parent bar (not birth point)
+        const px = parentPos.barEndX;
         const py = parentPos.barCY;
-        const cx = childPos.barX;    // Birth (left) edge of child bar
+        const cx = childPos.barX;
         const cy = childPos.barCY;
-
-        if (px >= cx - 2) return;    // Parent bar overlaps or extends past child — skip
+        if (px >= cx - 2) return; // Skip if bars overlap
 
         ctx.save();
         ctx.strokeStyle = COLOR.connLine;
         ctx.lineWidth   = 0.8;
         ctx.setLineDash([2, 3]);
         ctx.beginPath();
-        ctx.moveTo(px, py);          // Start at right edge of parent bar
-        ctx.lineTo(cx, py);          // Horizontal to child birth year
-        ctx.lineTo(cx, cy);          // Vertical down to child bar centre
+        ctx.moveTo(px, py);
+        ctx.lineTo(cx, py);
+        ctx.lineTo(cx, cy);
         ctx.stroke();
-        // Arrowhead
         ctx.setLineDash([]);
         ctx.fillStyle = COLOR.connLine;
         ctx.beginPath();
@@ -636,59 +693,65 @@
     }
 
     /* ------------------------------------------------------------------
-     * SECTION 12 — HTML GEN-LABEL OVERLAY  (obs.8)
-     * Mirrors the Y positions from renderCanvas into absolutely-positioned
-     * div elements left of the canvas scroll area. Always visible.
+     * SECTION 12 — HTML GEN-LABEL OVERLAY
+     * One column left of canvas. For gen -3..0: section labels at their Y.
+     * For gen +1..: one label per generatieniveau at first occurrence Y.
      * ------------------------------------------------------------------ */
-    function updateGenLabels(rows) {
+    function updateGenLabels(rows, genLabelY, totalH) {
         const old = document.getElementById('tlGenLabels');
         if (old) old.remove();
 
         const overlay = document.createElement('div');
         overlay.id = 'tlGenLabels';
         Object.assign(overlay.style, {
-            position:       'absolute',
-            left:           '0',
-            top:            '0',
-            width:          LABEL_COL_W + 'px',
-            pointerEvents:  'none',
-            zIndex:         '10',
-            background:     'rgba(248,248,248,0.95)',
-            borderRight:    '1px solid #e0e0e0',
-            fontFamily:     'sans-serif',
-            fontSize:       '10px',
-            color:          '#666',
-            overflow:       'hidden',
+            position:      'absolute',
+            left:          '0',
+            top:           '0',
+            width:         LABEL_COL_W + 'px',
+            height:        totalH + 'px',
+            pointerEvents: 'none',
+            zIndex:        '10',
+            background:    'rgba(248,248,248,0.95)',
+            borderRight:   '1px solid #e0e0e0',
+            fontFamily:    'sans-serif',
+            fontSize:      '10px',
+            color:         '#666',
+            overflow:      'hidden',
         });
 
-        let curY     = TICK_AREA_H;
-        let prevLabel = null;
+        // Collect unique labels per row to place in overlay
+        const placed    = new Set();
+        let   prevLabel = null;
 
-        rows.forEach((row, i) => {
-            if (row.sectionLabel && row.sectionLabel !== prevLabel) {
-                const lbl = document.createElement('div');
-                Object.assign(lbl.style, {
-                    position:     'absolute',
-                    top:          curY + 'px',
-                    left:         '6px',
-                    right:        '4px',
-                    height:       SECTION_H + 'px',
-                    lineHeight:   SECTION_H + 'px',
-                    fontWeight:   'bold',
-                    whiteSpace:   'nowrap',
-                    overflow:     'hidden',
-                    textOverflow: 'ellipsis',
-                });
-                lbl.textContent = row.sectionLabel;
-                overlay.appendChild(lbl);
-                curY     += SECTION_H;
-                prevLabel = row.sectionLabel;
-            }
-            const nextRow = rows[i + 1];
-            curY += ROW_H + ((!nextRow || nextRow.indentLevel === 0) ? GROUP_GAP : ROW_GAP);
+        rows.forEach(row => {
+            if (!row.sectionLabel || row.sectionLabel === prevLabel) return;
+            prevLabel = row.sectionLabel;
+            if (placed.has(row.sectionLabel)) return;
+            placed.add(row.sectionLabel);
+
+            // Find Y from genLabelY map
+            const gn = row.isDescendant ? row.genDepth : row.genNum;
+            const y  = (gn !== null && gn !== undefined && genLabelY[gn] !== undefined)
+                ? genLabelY[gn]
+                : 0;
+
+            const lbl = document.createElement('div');
+            Object.assign(lbl.style, {
+                position:     'absolute',
+                top:          y + 'px',
+                left:         '5px',
+                right:        '4px',
+                height:       SECTION_H + 'px',
+                lineHeight:   SECTION_H + 'px',
+                fontWeight:   'bold',
+                whiteSpace:   'nowrap',
+                overflow:     'hidden',
+                textOverflow: 'ellipsis',
+            });
+            lbl.textContent = row.sectionLabel;
+            overlay.appendChild(lbl);
         });
 
-        overlay.style.height = (curY + 20) + 'px';
         container.appendChild(overlay);
     }
 
@@ -706,16 +769,15 @@
 
     function buildTooltipText(entry) {
         const p    = entry.person;
-        const LABELS = {
+        const LBLS = {
             HoofdID:'Hoofdpersoon', VHoofdID:'Vader', MHoofdID:'Moeder',
-            PHoofdID:'Partner', KindID:'Kind', HKindID:'Kind (via hoofd)',
-            MHKindID:'Kind (via hoofd)', PHKindID:'Kind (via partner)',
-            KindPartnerID:'Partner van kind', BZID:'Broer/Zus', BZPartnerID:'Partner broer/zus',
+            PHoofdID:'Partner', KindID:'Kind', HKindID:'Kind (hoofd)',
+            PHKindID:'Kind (partner)', BZID:'Broer/Zus', BZPartnerID:'Partner broer/zus',
         };
-        const rel   = LABELS[entry.relatie] || entry.relatie || '—';
-        const name  = displayName(p) || '(geen naam)';
-        const id    = safe(p.ID) || '—';
-        const geb   = fmtDate(p.Geboortedatum);
+        const rel  = LBLS[entry.relatie] || entry.relatie || '—';
+        const name = displayName(p) || '(geen naam)';
+        const id   = safe(p.ID) || '—';
+        const geb  = fmtDate(p.Geboortedatum);
         const overl = p.Overlijdensdatum ? fmtDate(p.Overlijdensdatum) : 'nog in leven';
         let life = '';
         if (entry.birthYear && entry.deathYear) life = `\nLeeftijd: ${entry.deathYear - entry.birthYear} jaar`;
@@ -738,8 +800,8 @@
             canvas.style.cursor   = 'pointer';
             tooltip.style.display = 'block';
             tooltip.textContent   = buildTooltipText(hit.entry);
-            const tipW    = tooltip.offsetWidth || 220;
-            const flipL   = (e.offsetX + tipW + 20 > container.clientWidth);
+            const tipW  = tooltip.offsetWidth || 220;
+            const flipL = (e.offsetX + tipW + 20 > container.clientWidth);
             tooltip.style.left = (flipL ? e.offsetX - tipW - 8 : e.offsetX + 14) + 'px';
             tooltip.style.top  = Math.max(e.offsetY - 10, 0) + 'px';
         } else {
@@ -771,7 +833,7 @@
         const root = findPerson(rootId);
         if (!root) { showPlaceholder('Persoon niet gevonden.'); return; }
 
-        setDynamicRange(root);     // Set dynMinYear / dynMaxYear for this root
+        setDynamicRange(root);
 
         const rows = buildRows(root);
         if (rows.length === 0) { showPlaceholder('Geen familieleden gevonden.'); return; }
@@ -795,13 +857,11 @@
     function init() {
         dataset = window.StamboomStorage.get() || [];
 
-        // initLiveSearch(inputEl, dataset, cb) — cb receives persoon.ID string (verified)
         window.initLiveSearch(searchInput, dataset, function (selectedId) {
             rootId = safe(selectedId);
             draw();
         });
 
-        // Auto-select if only one person in dataset
         if (dataset.length === 1) {
             rootId = safe(dataset[0].ID);
             draw();
