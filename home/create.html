@@ -1,8 +1,9 @@
-<!-- ======================= home/create.html v2.0.0 =======================
+<!-- ======================= home/create.html v2.0.1 =======================
      Aanmaken eerste persoon (Hoofd-ID) van de stamboom
      Wijziging v2.0.0: facelift — welkomstblok, inline stijlen naar <style>,
                        formulier in sectiekader, consistente opmaak met export.html
      Scripts: schema.js → idGenerator.js → storage.js → create.js
+     v2.0.1 Login
      ======================================================================= -->
 <!DOCTYPE html>
 <html lang="nl">
@@ -172,6 +173,9 @@
         .knop-manage:hover { background: #43a047; }                       /* Donkerder groen bij hover */
     </style>
 </head>
+     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+     <script src="/js/auth.js"></script>
+     <script src="/js/topbar.js"></script>
 <body>
 
 <!-- ======================= TopBar ======================= -->
