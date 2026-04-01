@@ -1,20 +1,24 @@
-<!-- ======================= Layout/TopBar.html v0.2 ======================= -->
-<div class="topbar-wrapper" style="background-color:#f8f9fa; width:100%;"> 
-    <!-- Wrapper zorgt dat de achtergrond 100% breed is -->
-
+<!-- ======================= Layout/TopBar.html v0.3 ======================= -->
+<!-- Change v0.3: id="top-auth" slot vervangt statische Login link          -->
+<!--              Wordt dynamisch gevuld door topbar.js                      -->
+<!--              Supabase SDK + auth.js + topbar.js laden op elke pagina    -->
+<div class="topbar-wrapper" style="background-color:#f8f9fa; width:100%;">
     <div class="topbar" style="color:#000000; padding:10px 20px; font-family:Arial, sans-serif; display:flex; align-items:center; justify-content:space-between; max-width:1200px; margin:0 auto; position:relative;">
-        
-        <!-- ======================= Links ======================= -->
+
+        <!-- Links: auth widget — gevuld door topbar.js -->
         <div class="top-left" style="margin-left:10px;">
-            <a href="#" style="color:#000000; text-decoration:none;">Login</a>
+            <div id="top-auth">
+                <!-- Fallback: zichtbaar vóór topbar.js initialiseert -->
+                <button onclick="TopBarAuth && TopBarAuth.openModal()" style="color:#000000; background:none; border:none; cursor:pointer; font-family:Arial,sans-serif; font-size:0.9rem; padding:0;">Login</button>
+            </div>
         </div>
 
-        <!-- ======================= Midden ======================= -->
+        <!-- Midden: merknaam -->
         <div class="top-center" style="position:absolute; left:50%; transform:translateX(-50%);">
             <span style="color:#000000; font-weight:bold;">MyFamTreeCollab</span>
         </div>
 
-        <!-- ======================= Rechts ======================= -->
+        <!-- Rechts: taalwisseling -->
         <div class="top-right" style="margin-right:10px;">
             <a href="#" class="lang-link" data-lang="nl" style="color:#000000; text-decoration:none;">NL</a> |
             <a href="#" class="lang-link" data-lang="en" style="color:#000000; text-decoration:none;">EN</a>
