@@ -1,111 +1,134 @@
-<!-- ======================= stamboom/manage.html v2.2.0 =======================
+<!-- ======================= stamboom/manage.html v2.2.1 =======================
      Beheerpagina: stamboom bewerken als tabel met live search
-     Wijziging v2.2.0: KindPartnerID + BZPartnerID CSS vervangen door Partner
+
+     Wijziging v2.3.0:
+     - Horizontale scroll toegevoegd via wrapper (zelfde principe als template.html)
+     - white-space: nowrap toegevoegd zodat tabel breedte behoudt (v2.2.1)
+     - Geen impact op bestaande JS functionaliteit
+
      Scripts: utils.js → schema.js → idGenerator.js → storage.js → LiveSearch.js
               → relatieEngine.js → manage.js (verplichte volgorde)
      ======================================================================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8"> <!-- Tekenset -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive scaling -->
     <title>MyFamTreeCollab - Manage</title>
-    <link rel="icon" href="../favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/RelationColors.css">
+
+    <link rel="icon" href="../favicon.ico" type="image/x-icon"> <!-- Favicon -->
+    <link rel="stylesheet" href="../css/style.css"> <!-- Algemene styles -->
+    <link rel="stylesheet" href="../css/RelationColors.css"> <!-- Relatiekleuren -->
+
     <style>
+
         /* ======================= WELKOMSTBLOK ======================= */
-        .welkom-blok { margin-bottom: 20px; }                             /* Ruimte onder het introductieblok */
+        .welkom-blok { margin-bottom: 20px; } /* Ruimte onder blok */
         .welkom-blok h1 { font-size: 1.4rem; font-weight: bold; margin: 0 0 8px 0; color: #222; }
         .welkom-blok p  { font-size: 0.95rem; color: #555; line-height: 1.6; margin: 0; }
 
         /* ======================= ZOEKBALK ======================= */
-        .zoek-sectie { margin-bottom: 16px; }                             /* Ruimte onder de zoeksectie */
-        #searchPerson {                                                    /* Zoekveld — zelfde stijl als view.html en timeline.html */
-            width: 50%;                                                    /* Halve paginabreedte */
-            padding: 9px 12px;                                             /* Zelfde als view/timeline */
-            font-size: 1rem;                                               /* Zelfde als view/timeline */
-            border: 1px solid #bbb;                                        /* Zelfde als view/timeline */
-            border-radius: 5px;                                            /* Afgeronde hoeken */
-            box-sizing: border-box;                                        /* Padding telt mee in breedte */
+        .zoek-sectie { margin-bottom: 16px; }
+        #searchPerson {
+            width: 50%; /* Halve breedte */
+            padding: 9px 12px;
+            font-size: 1rem;
+            border: 1px solid #bbb;
+            border-radius: 5px;
+            box-sizing: border-box;
         }
-        #searchPerson:focus {                                              /* Focusstijl bij klikken */
-            outline: none;                                                 /* Verwijder browser-outline */
-            border-color: #1E90FF;                                         /* Blauwe rand bij focus */
+        #searchPerson:focus {
+            outline: none;
+            border-color: #1E90FF;
         }
 
-        /* ======================= KNOPPEN BALK ======================= */
-        .knoppen-balk {                                                    /* Rij met actieknoppen */
-            display: flex;                                                 /* Naast elkaar */
-            gap: 10px;                                                     /* Ruimte tussen de knoppen */
-            flex-wrap: wrap;                                               /* Op mobiel onder elkaar */
-            margin-bottom: 16px;                                           /* Ruimte onder de knoppenbalk */
+        /* ======================= KNOPPEN ======================= */
+        .knoppen-balk {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
         }
-        .knoppen-balk button {                                            /* Basisstijl voor alle knoppen in de balk */
-            padding: 9px 18px;                                             /* Zelfde als export.html */
-            font-size: 0.95rem;                                            /* Zelfde als export.html */
-            font-weight: bold;                                             /* Vetgedrukt */
-            border: none;                                                  /* Geen rand */
-            border-radius: 5px;                                            /* Afgeronde hoeken */
-            cursor: pointer;                                               /* Handje bij hover */
+        .knoppen-balk button {
+            padding: 9px 18px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
-        #refreshBtn    { background: #6c757d; color: #fff; }              /* Grijs voor neutrale refresh-actie */
-        #refreshBtn:hover    { background: #5a6268; }                     /* Donkerder grijs bij hover */
-        #addBtn        { background: #28a745; color: #fff; }              /* Groen voor toevoegen */
-        #addBtn:hover        { background: #218838; }                     /* Donkerder groen bij hover */
-        #saveBtn       { background: #1E90FF; color: #fff; }              /* Blauw voor opslaan — primaire actie */
-        #saveBtn:hover       { background: #1278d4; }                     /* Donkerder blauw bij hover */
+        #refreshBtn { background: #6c757d; color: #fff; }
+        #refreshBtn:hover { background: #5a6268; }
+
+        #addBtn { background: #28a745; color: #fff; }
+        #addBtn:hover { background: #218838; }
+
+        #saveBtn { background: #1E90FF; color: #fff; }
+        #saveBtn:hover { background: #1278d4; }
+
+        /* ======================= SCROLL WRAPPER (NIEUW) ======================= */
+        .manage-tabel-wrapper {
+            overflow-x: auto;              /* 🔥 Activeert horizontale scroll */
+            margin-bottom: 16px;           /* Ruimte onder tabel */
+        }
 
         /* ======================= TABEL ======================= */
-        #manageTable {                                                     /* De beheertabel */
-            width: 100%;                                                   /* Volledige breedte */
-            border-collapse: collapse;                                     /* Geen dubbele randen */
-            margin-top: 4px;                                               /* Klein beetje ruimte boven de tabel */
-            background: transparent;                                       /* Transparante achtergrond */
-        }
-        th, td {                                                           /* Celstijl */
-            border: 1px solid #ddd;                                        /* Subtiele rand */
-            padding: 6px 8px;                                              /* Ruimte binnen de cel */
-            text-align: left;                                              /* Links uitlijnen */
-            vertical-align: top;                                           /* Bovenkant uitlijnen */
-            font-size: 0.9rem;                                             /* Iets kleiner voor compacte tabel */
-        }
-        th { background: #f4f4f4; font-weight: bold; color: #333; }      /* Kolomkopstijl */
-
-        /* ======================= TEXTAREA IN CEL ======================= */
-        #manageTable td textarea {                                        /* Bewerkbare cellen als textarea */
-            background: transparent;                                       /* Transparant zodat de rijkleur zichtbaar blijft */
-            border: none;                                                  /* Geen extra rand bovenop de celrand */
-            width: 100%;                                                   /* Vul de volledige celbreedte */
-            box-sizing: border-box;                                        /* Padding telt mee in breedte */
-            resize: vertical;                                              /* Alleen verticaal schalen toegestaan */
-            font-family: inherit;                                          /* Zelfde lettertype als de rest van de pagina */
-            font-size: 0.9rem;                                             /* Zelfde grootte als de tabelcellen */
-            padding: 2px 4px;                                              /* Klein beetje ruimte binnen de textarea */
+        #manageTable {
+            width: 100%;                  /* Basisbreedte */
+            border-collapse: collapse;    /* Geen dubbele randen */
+            margin-top: 4px;
+            background: transparent;
+            white-space: nowrap;          /* 🔥 Voorkomt afbreken → forceert scroll */
         }
 
-        /* ======================= RELATIE RIJKLEUREN ======================= */
-        /* Kleuren komen uit RelationColors.css via CSS-variabelen.         */
-        /* Hier alleen typografie-overrides — geen achtergrondkleuren.      */
-        tr.HoofdID   td { background: var(--color-hoofd);         font-weight: 500; }
-        tr.VHoofdID  td,
-        tr.MHoofdID  td { background: var(--color-vader);         }
-        tr.PHoofdID  td { background: var(--color-partner-hoofd); font-style: italic; }
-        tr.KindID    td { background: var(--color-KindID);        opacity: 0.85; }
-        tr.HKindID   td { background: var(--color-HKindID);       }
-        tr.PHKindID  td { background: var(--color-PHKindID);      }
-        tr.Partner       td { background: var(--color-partner);   font-style: italic; }
-        tr.BZID      td { background: var(--color-bz);            }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px 8px;
+            text-align: left;
+            vertical-align: top;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: #f4f4f4;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* ======================= TEXTAREA ======================= */
+        #manageTable td textarea {
+            background: transparent;
+            border: none;
+            width: 100%;
+            box-sizing: border-box;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 0.9rem;
+            padding: 2px 4px;
+        }
+
+        /* ======================= RELATIE KLEUREN ======================= */
+        tr.HoofdID td { background: var(--color-hoofd); font-weight: 500; }
+        tr.VHoofdID td,
+        tr.MHoofdID td { background: var(--color-vader); }
+        tr.PHoofdID td { background: var(--color-partner-hoofd); font-style: italic; }
+        tr.KindID td { background: var(--color-KindID); opacity: 0.85; }
+        tr.HKindID td { background: var(--color-HKindID); }
+        tr.PHKindID td { background: var(--color-PHKindID); }
+        tr.Partner td { background: var(--color-partner); font-style: italic; }
+        tr.BZID td { background: var(--color-bz); }
+
     </style>
 </head>
+
 <body>
 
 <!-- ======================= TopBar ======================= -->
 <div id="topbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')
-    .then(resp => resp.text())
-    .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
+fetch('/MyFamTreeCollab/Layout/TopBar.html') // Haal TopBar HTML op
+    .then(resp => resp.text()) // Zet response om naar tekst
+    .then(data => document.getElementById('topbar-placeholder').innerHTML = data); // Injecteer in DOM
 </script>
 
 <!-- ======================= Navbar ======================= -->
@@ -114,56 +137,54 @@ fetch('/MyFamTreeCollab/Layout/TopBar.html')
 fetch('/MyFamTreeCollab/Layout/Navbar.html')
     .then(resp => resp.text())
     .then(data => {
-        const ph = document.getElementById('Navbar-placeholder');
-        if (ph) ph.innerHTML = data;
+        const ph = document.getElementById('Navbar-placeholder'); // Zoek placeholder
+        if (ph) ph.innerHTML = data; // Plaats navbar
     });
 </script>
 
-<!-- ======================= Hoofd content ======================= -->
+<!-- ======================= MAIN ======================= -->
 <main>
     <div class="container">
 
-        <!-- ======================= Welkomstblok ======================= -->
+        <!-- ======================= WELKOM ======================= -->
         <div class="welkom-blok">
             <h1>Welkom bij je stamboom Manager</h1>
-            <p>
-                Zoek een persoon op om de stamboom rondom hem of haar te beheren.
-                Gebruik de knoppen om rijen toe te voegen of op te slaan. </p>
-                 </p> Voor exporteren ga je naar de <a href="../home/export.html">export-pagina</a>.
-            </p>
+            <p>Zoek een persoon op om de stamboom te beheren.</p>
         </div>
 
-        <!-- ======================= Zoekbalk ======================= -->
+        <!-- ======================= ZOEK ======================= -->
         <div class="zoek-sectie">
-            <input type="text" id="searchPerson" placeholder="Zoek op ID, naam of geboortedatum..."> <!-- Live search — zelfde stijl als view en timeline -->
+            <input type="text" id="searchPerson" placeholder="Zoek op ID, naam of geboortedatum...">
         </div>
 
-        <!-- ======================= Knoppen balk ======================= -->
+        <!-- ======================= KNOPPEN ======================= -->
         <div class="knoppen-balk">
-            <button id="refreshBtn">Vernieuwen</button>                   <!-- Herlaadt de tabel vanuit localStorage -->
-            <button id="addBtn">+ Toevoegen</button>                      <!-- Voegt een lege nieuwe rij toe aan de tabel -->
-            <button id="saveBtn">Opslaan</button>                         <!-- Slaat alle wijzigingen op naar localStorage -->
+            <button id="refreshBtn">Vernieuwen</button>
+            <button id="addBtn">+ Toevoegen</button>
+            <button id="saveBtn">Opslaan</button>
         </div>
 
-        <!-- ======================= Beheertabel ======================= -->
-        <table id="manageTable">
-            <thead><tr></tr></thead>                                       <!-- Kolomkoppen worden door manage.js ingevuld -->
-            <tbody></tbody>                                                <!-- Tabelrijen worden door manage.js ingevuld -->
-        </table>
+        <!-- ======================= TABEL MET WRAPPER ======================= -->
+        <div class="manage-tabel-wrapper"> <!-- 🔥 Scroll container -->
+            <table id="manageTable">
+                <thead><tr></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
 
     </div>
 </main>
 
-<!-- ======================= Scripts (volgorde verplicht) ======================= -->
-<script src="../js/utils.js"></script>          <!-- Centrale hulpfuncties: safe, formatDate, parseBirthday -->
-<script src="../js/schema.js"></script>          <!-- Definieert kolomstructuur -->
-<script src="../js/idGenerator.js"></script>     <!-- Genereert ID bij nieuwe persoon -->
-<script src="../js/storage.js"></script>         <!-- Opslag/fetch van dataset -->
-<script src="../js/LiveSearch.js"></script>      <!-- Centrale live search module -->
-<script src="../js/relatieEngine.js"></script>   <!-- Centrale relatie-berekening -->
-<script src="../js/manage.js"></script>          <!-- Tabel render, add/save/refresh etc -->
+<!-- ======================= SCRIPTS ======================= -->
+<script src="../js/utils.js"></script>
+<script src="../js/schema.js"></script>
+<script src="../js/idGenerator.js"></script>
+<script src="../js/storage.js"></script>
+<script src="../js/LiveSearch.js"></script>
+<script src="../js/relatieEngine.js"></script>
+<script src="../js/manage.js"></script>
 
-<!-- ======================= Footer ======================= -->
+<!-- ======================= FOOTER ======================= -->
 <div id="footer-placeholder"></div>
 <script>
 fetch('/MyFamTreeCollab/Layout/Footer.html')
