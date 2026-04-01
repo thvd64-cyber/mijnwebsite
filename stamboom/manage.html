@@ -118,6 +118,23 @@
         tr.Partner td { background: var(--color-partner); font-style: italic; }
         tr.BZID td { background: var(--color-bz); }
 
+        /* ======================= STICKY HEADER ======================= */
+        #manageTable thead th {
+            position: sticky;     /* 🔥 Plakt header aan bovenkant */
+            top: 0;               /* Bovenste positie */
+            z-index: 10;          /* Zorgt dat header boven de cellen blijft */
+            background: #f4f4f4;  /* Behoud huidige header kleur */
+        }
+
+        /* ======================= STICKY EERSTE KOLOM ======================= */
+        #manageTable th:first-child,
+        #manageTable td:first-child {
+            position: sticky;      /* 🔥 Plakt eerste kolom */
+            left: 0;               /* Plakt aan linkerkant */
+            z-index: 5;            /* Onder header, boven rijen */
+            background: inherit;   /* Behoud bestaande achtergrondkleur (rij of kolom) */
+        }
+
     </style>
 </head>
 
