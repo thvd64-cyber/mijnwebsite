@@ -49,9 +49,6 @@
         .knop-home:hover { background: #1278d4; }                         /* Donkerder bij hover */
     </style>
 </head>
-     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-     <script src="/js/auth.js"></script>
-     <script src="/js/topbar.js"></script>
 <body>
 
 <!-- ======================= TopBar ======================= -->
@@ -64,6 +61,12 @@ fetch('/MyFamTreeCollab/Layout/TopBar.html')
 
 <!-- ======================= Navbar ======================= -->
 <div id="Navbar-placeholder"></div>
+     
+<!-- Scripts: Supabase + auth ALTIJD vóór topbar.js -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/auth.js"></script>
+     
 <script>
 fetch('/MyFamTreeCollab/Layout/Navbar.html')
     .then(resp => resp.text())
