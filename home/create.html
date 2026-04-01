@@ -2,8 +2,11 @@
      Aanmaken eerste persoon (Hoofd-ID) van de stamboom
      Wijziging v2.0.0: facelift — welkomstblok, inline stijlen naar <style>,
                        formulier in sectiekader, consistente opmaak met export.html
-     Scripts: schema.js → idGenerator.js → storage.js → create.js
-     v2.0.1 Login
+     Wijziging v2.0.1: Supabase auth + TopBar login modal
+     Scripts laadvolgorde: supabase → utils.js → auth.js →
+                           [TopBar fetch → topbar.js] → schema.js →
+                           idGenerator.js → storage.js → create.js
+     Login toegevoegd
      ======================================================================= -->
 <!DOCTYPE html>
 <html lang="nl">
@@ -15,162 +18,162 @@
     <link rel="stylesheet" href="../css/style.css">
     <style>
         /* ======================= WELKOMSTBLOK ======================= */
-        .welkom-blok {                                                     /* Introductieblok bovenaan, consistent met export.html */
-            margin-bottom: 24px;                                           /* Ruimte tussen welkomstblok en formuliersectie */
+        .welkom-blok {
+            margin-bottom: 24px;
         }
-        .welkom-blok h1 {                                                 /* Primaire paginatitel */
-            font-size: 1.4rem;                                             /* Groter dan sectietitels */
-            font-weight: bold;                                             /* Vetgedrukt als primaire koptekst */
-            margin: 0 0 8px 0;                                             /* Geen bovenmarge, 8px onder de titel */
-            color: #222;                                                   /* Bijna zwart voor maximaal contrast */
+        .welkom-blok h1 {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin: 0 0 8px 0;
+            color: #222;
         }
-        .welkom-blok p {                                                  /* Welkomsttekst */
-            font-size: 0.95rem;                                            /* Iets kleiner dan standaard */
-            color: #555;                                                   /* Middengrijs */
-            line-height: 1.6;                                              /* Ruime regelafstand */
-            margin: 0;                                                     /* Geen extra marges */
+        .welkom-blok p {
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.6;
+            margin: 0;
         }
 
         /* ======================= FORMULIER SECTIE ======================= */
-        .formulier-sectie {                                               /* Kader rondom het invulformulier */
-            border: 1px solid #ddd;                                        /* Subtiele rand */
-            border-radius: 6px;                                            /* Licht afgeronde hoeken */
-            padding: 24px;                                                 /* Ruimte binnen het kader */
-            margin-bottom: 20px;                                           /* Ruimte onder de sectie */
-            background: #fafafa;                                           /* Lichtgrijze achtergrond */
-            max-width: 560px;                                              /* Niet te breed: formulier is compacter zo */
+        .formulier-sectie {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 24px;
+            margin-bottom: 20px;
+            background: #fafafa;
+            max-width: 560px;
         }
-        .formulier-sectie h2 {                                            /* Sectietitel boven het formulier */
-            font-size: 1.1rem;                                             /* Iets groter dan de broodtekst */
-            font-weight: bold;                                             /* Vetgedrukt */
-            margin: 0 0 6px 0;                                             /* Kleine ruimte onder de titel */
-            color: #333;                                                   /* Donkergrijs */
+        .formulier-sectie h2 {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin: 0 0 6px 0;
+            color: #333;
         }
-        .formulier-sectie .subtitel {                                     /* Korte uitleg onder de sectietitel */
-            font-size: 0.88rem;                                            /* Kleiner dan de broodtekst */
-            color: #888;                                                   /* Lichtgrijs: duidelijk secundair */
-            margin: 0 0 20px 0;                                            /* Ruimte tussen subtitel en formuliervelden */
+        .formulier-sectie .subtitel {
+            font-size: 0.88rem;
+            color: #888;
+            margin: 0 0 20px 0;
         }
 
         /* ======================= FORMULIER VELDEN ======================= */
-        .veld-rij {                                                        /* Horizontale rij met twee velden naast elkaar */
-            display: flex;                                                 /* Flex zodat de velden naast elkaar staan */
-            gap: 12px;                                                     /* Ruimte tussen de twee velden in een rij */
-            margin-bottom: 14px;                                           /* Ruimte onder elke rij */
+        .veld-rij {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 14px;
         }
-        .veld {                                                            /* Eén invoerveld met label */
-            flex: 1;                                                       /* Beide velden krijgen gelijke breedte */
-            display: flex;                                                 /* Flex zodat label boven input staat */
-            flex-direction: column;                                        /* Label boven, input eronder */
-            gap: 4px;                                                      /* Kleine ruimte tussen label en input */
+        .veld {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
-        .veld label {                                                      /* Label boven een invoerveld */
-            font-size: 0.88rem;                                            /* Klein maar leesbaar */
-            font-weight: bold;                                             /* Vetgedrukt zodat het duidelijk een label is */
-            color: #444;                                                   /* Donkergrijs */
+        .veld label {
+            font-size: 0.88rem;
+            font-weight: bold;
+            color: #444;
         }
-        .veld input,                                                       /* Stijl voor tekst- en datuminvoervelden */
-        .veld select {                                                     /* Stijl voor keuzelijsten */
-            padding: 7px 9px;                                              /* Ruim klikgebied binnen het veld */
-            border: 1px solid #ccc;                                        /* Subtiele rand */
-            border-radius: 4px;                                            /* Licht afgeronde hoeken */
-            font-size: 0.95rem;                                            /* Leesbare tekstgrootte */
-            background: #fff;                                              /* Witte achtergrond zodat het veld uitspringt */
-            width: 100%;                                                   /* Vul de volledige breedte van het .veld element */
-            box-sizing: border-box;                                        /* Padding telt mee in de breedte, geen overflow */
+        .veld input,
+        .veld select {
+            padding: 7px 9px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            background: #fff;
+            width: 100%;
+            box-sizing: border-box;
         }
-        .veld input:focus,                                                 /* Focusstijl bij klikken op een invoerveld */
+        .veld input:focus,
         .veld select:focus {
-            outline: none;                                                 /* Verwijder de standaard browser outline */
-            border-color: #1E90FF;                                         /* Blauwe rand bij focus zodat duidelijk is welk veld actief is */
+            outline: none;
+            border-color: #1E90FF;
         }
 
         /* ======================= KNOPPEN ======================= */
-        .knop-opslaan {                                                    /* Primaire opslaan-knop */
-            padding: 10px 24px;                                            /* Ruim klikgebied */
-            background: #1E90FF;                                           /* Blauw als primaire actie-kleur */
-            color: #fff;                                                   /* Witte tekst op blauwe achtergrond */
-            border: none;                                                  /* Geen rand */
-            border-radius: 5px;                                            /* Afgeronde hoeken */
-            font-size: 0.95rem;                                            /* Leesbaar */
-            font-weight: bold;                                             /* Vetgedrukt zodat het als actie opvalt */
-            cursor: pointer;                                               /* Handje bij hover */
-            margin-top: 6px;                                               /* Klein beetje ruimte boven de knop */
-        }
-        .knop-opslaan:hover { background: #1278d4; }                      /* Iets donkerder blauw bij hover */
-
-        .knop-bevestigen {                                                 /* Bevestigingsknop in de preview-sectie */
-            padding: 10px 24px;                                            /* Zelfde afmetingen als de opslaan-knop */
-            background: #28a745;                                           /* Groen voor bevestigen/doorgaan */
-            color: #fff;                                                   /* Witte tekst */
+        .knop-opslaan {
+            padding: 10px 24px;
+            background: #1E90FF;
+            color: #fff;
             border: none;
             border-radius: 5px;
             font-size: 0.95rem;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 12px;                                              /* Ruimte boven de bevestigingsknop */
+            margin-top: 6px;
         }
-        .knop-bevestigen:hover { background: #218838; }                   /* Donkerder groen bij hover */
+        .knop-opslaan:hover { background: #1278d4; }
+
+        .knop-bevestigen {
+            padding: 10px 24px;
+            background: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        .knop-bevestigen:hover { background: #218838; }
 
         /* ======================= PREVIEW SECTIE ======================= */
-        .preview-sectie {                                                  /* Kader met de JSON-preview voor bevestiging */
-            display: none;                                                 /* Standaard verborgen — wordt zichtbaar na invullen formulier */
-            border: 1px solid #ddd;                                        /* Subtiele rand */
-            border-radius: 6px;                                            /* Afgeronde hoeken */
-            padding: 20px 24px;                                            /* Ruimte binnen het kader */
-            margin-bottom: 20px;                                           /* Ruimte onder de sectie */
-            background: #fafafa;                                           /* Lichtgrijze achtergrond */
-            max-width: 560px;                                              /* Zelfde breedte als het formulier */
+        .preview-sectie {
+            display: none;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            background: #fafafa;
+            max-width: 560px;
         }
-        .preview-sectie h2 {                                              /* Titel van de preview-sectie */
+        .preview-sectie h2 {
             font-size: 1.1rem;
             font-weight: bold;
             margin: 0 0 12px 0;
             color: #333;
         }
-        .preview-sectie pre {                                             /* De JSON-preview tekst */
-            background: #f0f0f0;                                           /* Lichtgrijs blok voor code-uitstraling */
-            border-radius: 4px;                                            /* Afgeronde hoeken */
-            padding: 12px;                                                 /* Ruimte binnen het codeblok */
-            font-size: 0.85rem;                                            /* Klein maar leesbaar als code */
-            overflow-x: auto;                                              /* Horizontale scroll als de JSON breed is */
-            white-space: pre-wrap;                                         /* Lange regels worden afgebroken */
+        .preview-sectie pre {
+            background: #f0f0f0;
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
         }
 
         /* ======================= WAARSCHUWING ======================= */
-        .waarschuwing {                                                    /* Gele waarschuwingsbalk bij al bestaande data */
-            display: none;                                                 /* Standaard verborgen */
-            max-width: 560px;                                              /* Zelfde breedte als het formulier */
-            margin-bottom: 16px;                                           /* Ruimte onder de waarschuwing */
-            padding: 12px 16px;                                            /* Ruimte binnen de balk */
-            background: #fff3cd;                                           /* Lichtgeel voor een waarschuwing */
-            color: #856404;                                                /* Donkergeel-bruin voor leesbaarheid op gele achtergrond */
-            border-radius: 5px;                                            /* Afgeronde hoeken */
-            border: 1px solid #ffeeba;                                     /* Gele rand passend bij de achtergrond */
-            font-size: 0.9rem;                                             /* Iets kleiner dan de broodtekst */
+        .waarschuwing {
+            display: none;
+            max-width: 560px;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            background: #fff3cd;
+            color: #856404;
+            border-radius: 5px;
+            border: 1px solid #ffeeba;
+            font-size: 0.9rem;
         }
 
         /* ======================= MANAGE LINK ======================= */
-        .manage-link {                                                     /* Sectie met de link naar de Manage pagina */
-            margin-bottom: 20px;                                           /* Ruimte onder de link-sectie */
-            max-width: 560px;                                              /* Zelfde breedte als het formulier */
+        .manage-link {
+            margin-bottom: 20px;
+            max-width: 560px;
         }
-        .manage-link p {                                                  /* Uitlegzin boven de Manage-knop */
-            font-size: 0.9rem;                                             /* Iets kleiner */
-            color: #555;                                                   /* Middengrijs */
-            margin: 0 0 10px 0;                                            /* Ruimte onder de tekst */
+        .manage-link p {
+            font-size: 0.9rem;
+            color: #555;
+            margin: 0 0 10px 0;
         }
-        .knop-manage {                                                     /* Groene knop naar de Manage pagina */
-            display: inline-block;                                         /* Inline zodat de knop niet de volle breedte inneemt */
-            padding: 10px 20px;                                            /* Ruim klikgebied */
-            background: #4CAF50;                                           /* Groen voor navigatie naar de volgende stap */
-            color: #fff;                                                   /* Witte tekst */
-            text-decoration: none;                                         /* Geen onderstreping want het is een link */
-            border-radius: 5px;                                            /* Afgeronde hoeken */
-            font-size: 0.95rem;                                            /* Leesbaar */
-            font-weight: bold;                                             /* Vetgedrukt */
+        .knop-manage {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 0.95rem;
+            font-weight: bold;
         }
-        .knop-manage:hover { background: #43a047; }                       /* Donkerder groen bij hover */
+        .knop-manage:hover { background: #43a047; }
     </style>
 </head>
 <body>
@@ -181,78 +184,52 @@
 <!-- ======================= Navbar ======================= -->
 <div id="navbar-placeholder"></div>
 
-<!-- Scripts: Supabase + auth ALTIJD vóór topbar.js -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="../js/utils.js"></script>
-<script src="../js/auth.js"></script>
-
-<script>
-    // TopBar laden via fetch, DAN topbar.js initialiseren
-    fetch('/MyFamTreeCollab/Layout/TopBar.html')
-        .then(resp => resp.text())
-        .then(data => {
-            document.getElementById('topbar-placeholder').innerHTML = data;
-            // TopBar HTML staat nu in de DOM — nu pas topbar.js laden
-            const script = document.createElement('script');
-            script.src = '/js/topbar.js';
-            document.body.appendChild(script);
-        });
-
-    // Navbar apart laden
-    fetch('/MyFamTreeCollab/Layout/Navbar.html')
-        .then(resp => resp.text())
-        .then(data => document.getElementById('navbar-placeholder').innerHTML = data);
-</script>
-
-<!-- Pagina-specifiek script altijd als laatste -->
-<script src="/js/[pagina].js"></script>
-
 <!-- ======================= Hoofd content ======================= -->
 <main>
     <div class="container">
 
         <!-- ======================= Welkomstblok ======================= -->
         <div class="welkom-blok">
-            <h1>Welkom bij je Nieuwe Stamboom</h1>                           <!-- Primaire paginatitel, consistent met andere pagina's -->
+            <h1>Welkom bij je Nieuwe Stamboom</h1>
             <p>
                 Hier maak je de eerste persoon aan in je stamboom, de <strong>Hoofd-ID</strong>.
-                Daarna kun je op de <strong>Manage</strong>-pagina familie leden toevoegen en relaties leggen.
+                Daarna kun je op de <strong>Manage</strong>-pagina familieleden toevoegen en relaties leggen.
             </p>
         </div>
 
         <!-- ======================= Waarschuwing (verborgen tot nodig) ======================= -->
-        <div id="warningMessage" class="waarschuwing"></div>              <!-- Wordt zichtbaar als er al data in de stamboom zit -->
+        <div id="warningMessage" class="waarschuwing"></div>
 
         <!-- ======================= Formulier sectie ======================= -->
         <div class="formulier-sectie">
-            <h2>Vul de gegevens in</h2>                                   <!-- Sectietitel boven het formulier -->
-            <p class="subtitel">Alle velden zijn optioneel behalve Roepnaam en Achternaam.</p> <!-- Korte instructie -->
+            <h2>Vul de gegevens in</h2>
+            <p class="subtitel">Alle velden zijn optioneel behalve Roepnaam en Achternaam.</p>
 
-            <form id="persoonForm">                                       <!-- Formulier voor het aanmaken van de eerste persoon -->
+            <form id="persoonForm">
 
-                <div class="veld-rij">                                    <!-- Eerste rij: Doopnaam en Roepnaam naast elkaar -->
+                <div class="veld-rij">
                     <div class="veld">
                         <label for="doopnaam">Doopnaam</label>
                         <input type="text" id="doopnaam" name="doopnaam" placeholder="Officiële voornaam">
                     </div>
                     <div class="veld">
-                        <label for="roepnaam">Roepnaam <span style="color:#c00;">*</span></label> <!-- Asterisk voor verplicht veld -->
+                        <label for="roepnaam">Roepnaam <span style="color:#c00;">*</span></label>
                         <input type="text" id="roepnaam" name="roepnaam" placeholder="Naam waarop geroepen">
                     </div>
                 </div>
 
-                <div class="veld-rij">                                    <!-- Tweede rij: Prefix en Achternaam naast elkaar -->
+                <div class="veld-rij">
                     <div class="veld">
                         <label for="prefix">Prefix</label>
                         <input type="text" id="prefix" name="prefix" placeholder="van, de, van den...">
                     </div>
                     <div class="veld">
-                        <label for="achternaam">Achternaam <span style="color:#c00;">*</span></label> <!-- Verplicht veld -->
+                        <label for="achternaam">Achternaam <span style="color:#c00;">*</span></label>
                         <input type="text" id="achternaam" name="achternaam" placeholder="Familienaam">
                     </div>
                 </div>
 
-                <div class="veld-rij">                                    <!-- Derde rij: Geboortedatum en Geslacht naast elkaar -->
+                <div class="veld-rij">
                     <div class="veld">
                         <label for="geboortedatum">Geboortedatum</label>
                         <input type="date" id="geboortedatum" name="geboortedatum">
@@ -260,7 +237,7 @@
                     <div class="veld">
                         <label for="geslacht">Geslacht</label>
                         <select id="geslacht" name="geslacht">
-                            <option value="">Selecteer...</option>        <!-- Lege standaardoptie -->
+                            <option value="">Selecteer...</option>
                             <option value="M">Man</option>
                             <option value="V">Vrouw</option>
                             <option value="X">Anders / Non-binair</option>
@@ -268,24 +245,24 @@
                     </div>
                 </div>
 
-                <button type="submit" class="knop-opslaan">Opslaan</button> <!-- Formulier indienen en preview tonen -->
+                <button type="submit" class="knop-opslaan">Opslaan</button>
 
             </form>
         </div>
 
-        <!-- ======================= Preview sectie (verborgen tot formulier ingevuld) ======================= -->
+        <!-- ======================= Preview sectie ======================= -->
         <div id="personPreview" class="preview-sectie">
-            <h2>Bevestig de gegevens</h2>                                 <!-- Titel boven de JSON-preview -->
-            <pre id="previewContent"></pre>                               <!-- JSON-weergave van de ingevulde persoon -->
+            <h2>Bevestig de gegevens</h2>
+            <pre id="previewContent"></pre>
             <button id="confirmBtn" class="knop-bevestigen">
-                Bevestigen &amp; ga naar Manage                           <!-- & als HTML-entiteit voor correcte weergave -->
+                Bevestigen &amp; ga naar Manage
             </button>
         </div>
 
-        <!-- ======================= Link naar Manage (voor bestaande stambomen) ======================= -->
+        <!-- ======================= Link naar Manage ======================= -->
         <div class="manage-link">
             <p>Heb je al een stamboom? Ga direct naar de beheerpagina.</p>
-            <a href="../stamboom/manage.html" class="knop-manage">        <!-- Relatief pad naar manage.html -->
+            <a href="../stamboom/manage.html" class="knop-manage">
                 Ga naar Manage
             </a>
         </div>
@@ -293,19 +270,55 @@
     </div>
 </main>
 
-<!-- ======================= Scripts (volgorde verplicht) ======================= -->
-<script src="../js/schema.js"></script>          <!-- Laad eerst het schema met veldnamen -->
-<script src="../js/idGenerator.js"></script>     <!-- Laad dan de ID-generator -->
-<script src="../js/storage.js"></script>         <!-- Laad dan de storage API (StamboomStorage) -->
-<script src="../js/create.js"></script>          <!-- Laad als laatste de create-logica -->
-
 <!-- ======================= Footer ======================= -->
 <div id="footer-placeholder"></div>
+
+<!-- =============================================================
+     SCRIPTS — volgorde is verplicht:
+     1. Supabase SDK        — vereist door auth.js
+     2. utils.js            — vereist door alle andere modules
+     3. auth.js             — vereist door topbar.js
+     4. TopBar fetch        — laadt TopBar HTML, daarna topbar.js
+     5. Navbar fetch        — onafhankelijk, mag parallel
+     6. Pagina-scripts      — altijd als laatste
+     ============================================================= -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html')
-    .then(resp => resp.text())
-    .then(data => document.getElementById('footer-placeholder').innerHTML = data);
+    // Stap 1: TopBar HTML laden, daarna PAS topbar.js injecteren
+    // Dit garandeert dat #top-auth in de DOM zit vóór topbar.js initialiseert
+    fetch('/MyFamTreeCollab/Layout/TopBar.html')
+        .then(resp => resp.text())
+        .then(function(data) {
+            document.getElementById('topbar-placeholder').innerHTML = data;
+            // #top-auth bestaat nu — veilig om topbar.js te laden
+            var s = document.createElement('script');
+            s.src = '../js/topbar.js';
+            document.body.appendChild(s);
+        });
+
+    // Stap 2: Navbar laden — geen auth-afhankelijkheid, mag parallel
+    fetch('/MyFamTreeCollab/Layout/Navbar.html')
+        .then(resp => resp.text())
+        .then(function(data) {
+            document.getElementById('navbar-placeholder').innerHTML = data;
+        });
+
+    // Stap 3: Footer laden
+    fetch('/MyFamTreeCollab/Layout/Footer.html')
+        .then(resp => resp.text())
+        .then(function(data) {
+            document.getElementById('footer-placeholder').innerHTML = data;
+        });
 </script>
+
+<!-- Pagina-specifieke scripts: schema → idGenerator → storage → create -->
+<script src="../js/schema.js"></script>
+<script src="../js/idGenerator.js"></script>
+<script src="../js/storage.js"></script>
+<script src="../js/create.js"></script>
 
 </body>
 </html>
