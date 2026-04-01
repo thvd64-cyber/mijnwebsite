@@ -1,65 +1,111 @@
-<!-- ======================= stamboom/storage.html v2.0.0 =======================
+<!-- ======================= stamboom/storage.html v2.0.1 =======================
      Opslagpagina: bekijk en filter alle opgeslagen data, reset stamboom
-     Wijziging v2.0.0: facelift — welkomstblok, paginatitel div verwijderd,
-                       main-container → container klasse, inline stijlen naar <style>
+
+     Wijziging v2.1.0:
+     - Scroll-wrapper toegevoegd rond dynamische tabel (v2.0.1)
+     - overflow-x + nowrap toegepast (zoals template.html)
+     - JS aangepast zodat wrapper correct blijft bij re-render
+
      Scripts: schema.js → storage.js (verplichte volgorde)
      ======================================================================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8"> <!-- Tekenset -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
     <title>MyFamTreeCollab - Opslag</title>
+
     <link rel="icon" href="../favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="../css/style.css">
+
     <style>
+
         /* ======================= WELKOMSTBLOK ======================= */
         .welkom-blok { margin-bottom: 20px; }
         .welkom-blok h1 { font-size: 1.4rem; font-weight: bold; margin: 0 0 8px 0; color: #222; }
         .welkom-blok p  { font-size: 0.95rem; color: #555; line-height: 1.6; margin: 0; }
 
         /* ======================= ACTIE BALK ======================= */
-        .actie-balk {                                                      /* Balk met knop en info boven de tabel */
-            display: flex;                                                 /* Knop en info naast elkaar */
-            align-items: center;                                           /* Verticaal uitlijnen */
-            gap: 16px;                                                     /* Ruimte tussen knop en info */
-            margin-bottom: 16px;                                           /* Ruimte onder de balk */
-            flex-wrap: wrap;                                               /* Op mobiel onder elkaar */
+        .actie-balk {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
         }
-        .storage-info {                                                    /* Versie + recordtelling */
-            font-size: 0.88rem;                                            /* Klein maar leesbaar */
-            color: #666;                                                   /* Grijs voor secundaire info */
+
+        .storage-info {
+            font-size: 0.88rem;
+            color: #666;
         }
 
         /* ======================= RESET KNOP ======================= */
-        .btn-reset {                                                       /* Rode verwijderknop */
-            padding: 8px 16px;                                             /* Klikgebied */
-            background: #d9534f;                                           /* Rood voor destructieve actie */
-            color: #fff;                                                   /* Witte tekst */
-            border: none;                                                  /* Geen rand */
-            border-radius: 4px;                                            /* Afgeronde hoeken */
-            font-size: 0.9rem;                                             /* Leesbaar */
-            font-weight: bold;                                             /* Vetgedrukt */
-            cursor: pointer;                                               /* Handje bij hover */
+        .btn-reset {
+            padding: 8px 16px;
+            background: #d9534f;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
         }
-        .btn-reset:hover { background: #c9302c; }                         /* Donkerder rood bij hover */
+        .btn-reset:hover { background: #c9302c; }
+
+        /* ======================= SCROLL WRAPPER ======================= */
+        .storage-tabel-wrapper {
+            overflow-x: auto;              /* 🔥 Activeert horizontale scroll */
+            margin-top: 10px;              /* Ruimte boven tabel */
+        }
 
         /* ======================= TABEL ======================= */
-        table { border-collapse: collapse; width: 100%; margin-top: 4px; font-size: 0.9rem; } /* Volledige breedte tabel */
-        th, td { border: 1px solid #ddd; padding: 7px 10px; text-align: left; }               /* Cel opmaak */
-        th { background: #f4f4f4; font-weight: bold; color: #333; }                           /* Kolomkop achtergrond */
-        th input { width: 95%; padding: 3px 5px; font-size: 0.85rem; border: 1px solid #ccc; border-radius: 3px; } /* Filterinput */
-        .empty { font-style: italic; color: #888; padding: 20px 0; }                          /* Lege staat melding */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 4px;
+            font-size: 0.9rem;
+            white-space: nowrap;           /* 🔥 Forceert breedte → scroll */
+        }
 
-        @media (max-width: 768px) { table, th, td { font-size: 0.82rem; } }                  /* Kleinere tekst op mobiel */
+        th, td {
+            border: 1px solid #ddd;
+            padding: 7px 10px;
+            text-align: left;
+        }
+
+        th {
+            background: #f4f4f4;
+            font-weight: bold;
+            color: #333;
+        }
+
+        th input {
+            width: 95%;
+            padding: 3px 5px;
+            font-size: 0.85rem;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        .empty {
+            font-style: italic;
+            color: #888;
+            padding: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            table, th, td { font-size: 0.82rem; }
+        }
+
     </style>
 </head>
+
 <body>
 
 <!-- ======================= TopBar ======================= -->
 <div id="topbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')
+fetch('/MyFamTreeCollab/Layout/TopBar.html') // Laad topbar
     .then(resp => resp.text())
     .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
 </script>
@@ -67,72 +113,75 @@ fetch('/MyFamTreeCollab/Layout/TopBar.html')
 <!-- ======================= Navbar ======================= -->
 <div id="Navbar-placeholder"></div>
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html')
+fetch('/MyFamTreeCollab/Layout/Navbar.html') // Laad navbar
     .then(resp => resp.text())
     .then(data => document.getElementById('Navbar-placeholder').innerHTML = data);
 </script>
 
-<!-- ======================= Hoofd content ======================= -->
+<!-- ======================= MAIN ======================= -->
 <main>
     <div class="container">
 
-        <!-- ======================= Welkomstblok ======================= -->
+        <!-- ======================= WELKOM ======================= -->
         <div class="welkom-blok">
             <h1>Welkom bij je stamboom Opslag</h1>
-            <p>
-                Bekijk en filter alle opgeslagen personen in je stamboom.
-                Gebruik de filterrij om snel te zoeken binnen de data. <p>
-                <p> Via de <a href="../home/export.html">export-pagina</a> kun je je data downloaden.
-            </p>
+            <p>Bekijk en filter alle opgeslagen personen.</p>
         </div>
 
-        <!-- ======================= Actie balk ======================= -->
+        <!-- ======================= ACTIE BALK ======================= -->
         <div class="actie-balk">
-            <button id="resetBtn" class="btn-reset">Reset stamboom</button> <!-- Verwijdert alle data na bevestiging -->
-            <span class="storage-info" id="storageInfo"></span>             <!-- Versie en recordtelling verschijnen hier -->
+            <button id="resetBtn" class="btn-reset">Reset stamboom</button>
+            <span class="storage-info" id="storageInfo"></span>
         </div>
 
-        <!-- ======================= Datatable (gevuld door JS) ======================= -->
-        <div id="storageContainer"></div>                                   <!-- JS bouwt hier de filterbare tabel -->
+        <!-- ======================= CONTAINER ======================= -->
+        <div id="storageContainer"></div> <!-- JS injecteert hier wrapper + tabel -->
 
     </div>
 </main>
 
-<!-- ======================= Scripts (volgorde verplicht) ======================= -->
-<script src="../js/schema.js"></script>       <!-- Laad eerst het schema met veldnamen -->
-<script src="../js/storage.js"></script>      <!-- Laad dan de storage API (StamboomStorage) -->
+<!-- ======================= SCRIPTS ======================= -->
+<script src="../js/schema.js"></script>
+<script src="../js/storage.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    if (typeof StamboomStorage === 'undefined') {                         // Controleer of storage.js correct geladen is
+    if (typeof StamboomStorage === 'undefined') {
         console.error('StamboomStorage niet geladen!');
         return;
     }
 
-    const container = document.getElementById('storageContainer');        // Container voor de datatable
-    const info      = document.getElementById('storageInfo');             // Element voor versie + recordtelling
-    const resetBtn  = document.getElementById('resetBtn');                // Reset-knop
+    const container = document.getElementById('storageContainer');
+    const info      = document.getElementById('storageInfo');
+    const resetBtn  = document.getElementById('resetBtn');
 
-    const columns = window.StamboomSchema                                 // Haal kolomnamen op uit het centrale schema
+    const columns = window.StamboomSchema
         ? [...window.StamboomSchema.fields]
         : [];
 
-    /* ======================= TABEL RENDEREN ======================= */
+    /* ======================= TABEL RENDER ======================= */
     function renderTable() {
-        const data = StamboomStorage.get();                               // Haal de volledige dataset op uit localStorage
-        container.innerHTML = '';                                         // Leeg de container voor een nieuwe render
-        info.innerHTML = `Versie: ${StamboomStorage.version} &nbsp;|&nbsp; ${data.length} records`; // Toon versie en aantal
 
-        if (!data.length) {                                               // Geen data aanwezig
+        const data = StamboomStorage.get();
+        container.innerHTML = ''; // Reset container
+
+        info.innerHTML = `Versie: ${StamboomStorage.version} | ${data.length} records`;
+
+        if (!data.length) {
             container.innerHTML = '<p class="empty">Geen data gevonden in localStorage.</p>';
             return;
         }
 
-        const table  = document.createElement('table');
+        /* ======================= WRAPPER MAKEN ======================= */
+        const wrapper = document.createElement('div');        // Maak scroll container
+        wrapper.className = 'storage-tabel-wrapper';          // Koppel CSS
+
+        const table  = document.createElement('table');       // Maak tabel
         const thead  = document.createElement('thead');
 
-        const headerRow = document.createElement('tr');                  // Rij met kolomtitels
+        /* ======================= HEADER ======================= */
+        const headerRow = document.createElement('tr');
         columns.forEach(col => {
             const th = document.createElement('th');
             th.textContent = col;
@@ -140,64 +189,88 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         thead.appendChild(headerRow);
 
-        const filterRow = document.createElement('tr');                  // Rij met filterinputs
-        const filters   = {};
+        /* ======================= FILTER RIJ ======================= */
+        const filterRow = document.createElement('tr');
+        const filters = {};
+
         columns.forEach(col => {
-            const th    = document.createElement('th');
+            const th = document.createElement('th');
             const input = document.createElement('input');
-            input.type        = 'text';
+
+            input.type = 'text';
             input.placeholder = 'Filter...';
+
             input.addEventListener('input', function () {
-                filters[col] = this.value.toLowerCase();
-                applyFilters();
+                filters[col] = this.value.toLowerCase(); // Bewaar filter
+                applyFilters();                          // Herfilter
             });
+
             th.appendChild(input);
             filterRow.appendChild(th);
         });
+
         thead.appendChild(filterRow);
         table.appendChild(thead);
 
         const tbody = document.createElement('tbody');
         table.appendChild(tbody);
-        container.appendChild(table);
 
+        wrapper.appendChild(table);      // 🔥 Tabel in wrapper
+        container.appendChild(wrapper); // 🔥 Wrapper in DOM
+
+        /* ======================= FILTER LOGICA ======================= */
         function applyFilters() {
+
             tbody.innerHTML = '';
-            const fragment  = document.createDocumentFragment();
+            const fragment = document.createDocumentFragment();
+
             const gefilterd = data.filter(persoon =>
                 columns.every(col => {
                     if (!filters[col]) return true;
-                    return (persoon[col] ?? '').toString().toLowerCase().includes(filters[col]);
+                    return (persoon[col] ?? '')
+                        .toString()
+                        .toLowerCase()
+                        .includes(filters[col]);
                 })
             );
+
             gefilterd.forEach(persoon => {
                 const rij = document.createElement('tr');
+
                 columns.forEach(col => {
                     const td = document.createElement('td');
                     td.textContent = persoon[col] ?? '';
                     rij.appendChild(td);
                 });
+
                 fragment.appendChild(rij);
             });
+
             tbody.appendChild(fragment);
         }
-        applyFilters();
+
+        applyFilters(); // Initieel renderen
     }
 
-    /* ======================= RESET KNOP ======================= */
+    /* ======================= RESET ======================= */
     resetBtn.addEventListener('click', function () {
-        if (!StamboomStorage.get().length) return;                        // Niets te resetten als er geen data is
-        const bevestiging = '⚠️ WAARSCHUWING ⚠️\n\nAlle stamboomdata wordt definitief verwijderd.\nMaak eerst een export via de exportpagina.\nKlik OK om te bevestigen.';
-        if (!confirm(bevestiging)) return;                                // Stop als gebruiker annuleert
-        StamboomStorage.clear();                                          // Verwijder alle data
-        renderTable();                                                    // Herrender de lege tabel
+
+        if (!StamboomStorage.get().length) return;
+
+        const bevestiging =
+            '⚠️ WAARSCHUWING ⚠️\n\nAlle data wordt verwijderd.\nMaak eerst een export.\nKlik OK om te bevestigen.';
+
+        if (!confirm(bevestiging)) return;
+
+        StamboomStorage.clear();
+        renderTable();
     });
 
-    renderTable();                                                        // Render tabel bij paginaladen
+    renderTable(); // Eerste render
 });
 </script>
 
-<!-- ======================= Footer ======================= -->
+<!-- ======================= FOOTER ======================= -->
 <div id="footer-placeholder"></div>
 <script>
 fetch('/MyFamTreeCollab/Layout/Footer.html')
