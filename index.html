@@ -2,8 +2,9 @@
      Homepagina: introductie, foto's en start-knop
      Wijziging v2.0.0: facelift — paginatitel div verwijderd, inline stijlen
                        naar <style>, Start Nu knop relatief pad, opmaak consistent
-     Favicon / App-icoon toegevoegd 
-     login toegevoegd
+     Wijziging v2.0.1: Favicon / App-icoon toegevoegd
+     Wijziging v2.0.2: Supabase auth + TopBar login modal — scripts samengevoegd
+                       onderaan body, topbar.js via createElement na TopBar fetch
      ======================================================================= -->
 <!DOCTYPE html>
 <html lang="nl">
@@ -13,94 +14,74 @@
     <title>MyFamTreeCollab - Home</title>
 
     <!-- ===== Favicon / App-icoon ===== -->
-     <link rel="icon" type="image/x-icon" href="/MyFamTreeCollab/favicon.ico">
-     <link rel="icon" type="image/png" sizes="32x32" href="/MyFamTreeCollab/favicon-32x32.png">
-     <link rel="apple-touch-icon" sizes="180x180" href="/MyFamTreeCollab/apple-touch-icon.png">          
-     <link rel="icon" type="image/png" sizes="192x192" href="/MyFamTreeCollab/favicon-192x192.png">     
+    <link rel="icon" type="image/x-icon" href="/MyFamTreeCollab/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/MyFamTreeCollab/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/MyFamTreeCollab/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/MyFamTreeCollab/favicon-192x192.png">
 
     <link rel="stylesheet" href="css/style.css">
     <style>
 
         /* ======================= FOTO GRID ======================= */
-        .foto-grid {                                                       /* Flex-container voor de foto's */
-            display: flex;                                                 /* Naast elkaar */
-            flex-wrap: wrap;                                               /* Op mobiel onder elkaar */
-            gap: 20px;                                                     /* Ruimte tussen de foto's */
-            justify-content: center;                                       /* Horizontaal centreren */
-            margin: 24px 0;                                                /* Ruimte boven en onder het grid */
+        .foto-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin: 24px 0;
         }
-        .foto-grid div {                                                   /* Eén foto-cel */
-            flex: 1 1 45%;                                                 /* Twee foto's per rij op breed scherm */
-            aspect-ratio: 4/3;                                             /* Vaste breedte-hoogteverhouding */
-            overflow: hidden;                                              /* Afbeelding wordt bijgeknipt als die groter is */
-            border: 2px solid #ddd;                                        /* Subtiele rand */
-            border-radius: 6px;                                            /* Afgeronde hoeken */
+        .foto-grid div {
+            flex: 1 1 45%;
+            aspect-ratio: 4/3;
+            overflow: hidden;
+            border: 2px solid #ddd;
+            border-radius: 6px;
         }
-        .foto-grid div:nth-child(2n) { border-style: dashed; }           /* Elke tweede foto krijgt een stippelrand als accent */
-        .foto-grid div img { width: 100%; height: 100%; object-fit: cover; } /* Foto vult de cel volledig */
+        .foto-grid div:nth-child(2n) { border-style: dashed; }
+        .foto-grid div img { width: 100%; height: 100%; object-fit: cover; }
 
-        @media (max-width: 768px) { .foto-grid div { flex: 1 1 100%; } } /* Op mobiel één foto per rij */
+        @media (max-width: 768px) { .foto-grid div { flex: 1 1 100%; } }
 
         /* ======================= INTRO SECTIE ======================= */
-        .intro-sectie { margin-bottom: 32px; }                            /* Ruimte onder de introductie */
+        .intro-sectie { margin-bottom: 32px; }
         .intro-sectie h2 { font-size: 1.3rem; font-weight: bold; margin: 0 0 12px 0; color: #222; }
         .intro-sectie p  { font-size: 0.95rem; color: #555; line-height: 1.7; margin: 0 0 12px 0; }
-        .intro-sectie ul { margin: 0 0 12px 20px; }                       /* Lijst met wat inspringing */
-        .intro-sectie li { font-size: 0.95rem; color: #555; line-height: 1.8; } /* Lijstitems */
+        .intro-sectie ul { margin: 0 0 12px 20px; }
+        .intro-sectie li { font-size: 0.95rem; color: #555; line-height: 1.8; }
 
         /* ======================= START SECTIE ======================= */
-        .start-sectie {                                                    /* Sectie met de grote Start Nu knop */
-            text-align: center;                                            /* Alles centreren */
-            margin: 40px 0;                                                /* Ruimte boven en onder */
+        .start-sectie {
+            text-align: center;
+            margin: 40px 0;
         }
         .start-sectie h2 { font-size: 1.3rem; font-weight: bold; margin: 0 0 10px 0; color: #222; }
         .start-sectie p  { font-size: 0.95rem; color: #555; margin: 0 0 20px 0; }
-        .knop-start {                                                      /* Grote groene start-knop */
-            display: inline-block;                                         /* Inline voor automatische breedte */
-            padding: 14px 32px;                                            /* Ruim klikgebied */
-            background: #4CAF50;                                           /* Groen voor 'beginnen' */
-            color: #fff;                                                   /* Witte tekst */
-            text-decoration: none;                                         /* Geen onderstreping */
-            border-radius: 8px;                                            /* Afgeronde hoeken */
-            font-size: 1.1rem;                                             /* Iets groter dan normaal */
-            font-weight: bold;                                             /* Vetgedrukt */
-            transition: background 0.2s;                                   /* Vloeiende hover overgang */
+        .knop-start {
+            display: inline-block;
+            padding: 14px 32px;
+            background: #4CAF50;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: background 0.2s;
         }
-        .knop-start:hover { background: #43a047; }                        /* Donkerder groen bij hover */
+        .knop-start:hover { background: #43a047; }
 
         /* ======================= NIEUWS SECTIE ======================= */
         .nieuws-sectie { margin-top: 32px; }
         .nieuws-sectie h2 { font-size: 1.1rem; font-weight: bold; margin: 0 0 8px 0; color: #333; }
         .nieuws-sectie p  { font-size: 0.95rem; color: #555; line-height: 1.6; margin: 0; }
     </style>
-</head>     
+</head>
 <body>
 
 <!-- ======================= TopBar ======================= -->
 <div id="topbar-placeholder"></div>
-<script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')
-    .then(resp => resp.text())
-    .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
-</script>
 
 <!-- ======================= Navbar ======================= -->
-<div id="Navbar-placeholder"></div>
-
-<!-- Scripts: Supabase + auth ALTIJD vóór topbar.js -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/js/utils.js"></script>
-<script src="/js/auth.js"></script>
-     
-<script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html')
-    .then(resp => resp.text())
-    .then(data => {
-        const placeholder = document.getElementById('Navbar-placeholder');
-        if (placeholder) placeholder.innerHTML = data;
-        else console.error('Navbar-placeholder niet gevonden');
-    });
-</script>
+<div id="navbar-placeholder"></div>
 
 <!-- ======================= Hoofd content ======================= -->
 <main>
@@ -116,7 +97,7 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
             </p>
             <ul>
                 <li><strong>Bouw je stamboom</strong> met alle details die voor jou belangrijk zijn.</li>
-                <li><strong>Beheer je data volledig</strong> alles wordt lokaal opgeslagen, jij beslist wat je deelt.</li>
+                <li><strong>Beheer je data volledig</strong> — alles wordt lokaal opgeslagen, jij beslist wat je deelt.</li>
                 <li><strong>Visualiseer je familie</strong> via de stamboom- en tijdlijnweergave.</li>
             </ul>
         </section>
@@ -131,7 +112,7 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
         <section class="start-sectie">
             <h2>Start je stamboom</h2>
             <p>Begin vandaag met het vastleggen van je familiegeschiedenis.</p>
-            <a href="home/create.html" class="knop-start">Start Nu</a>    <! Relatief pad naar create.html -->
+            <a href="home/create.html" class="knop-start">Start Nu</a>
         </section>
 
         <!-- ======================= Foto's onder Start Nu ======================= -->
@@ -151,11 +132,47 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
 
 <!-- ======================= Footer ======================= -->
 <div id="footer-placeholder"></div>
+
+<!-- =============================================================
+     SCRIPTS — volgorde verplicht:
+     1. Supabase SDK        — vereist door auth.js
+     2. utils.js            — vereist door alle andere modules
+     3. auth.js             — vereist door topbar.js
+     4. TopBar fetch        — laadt HTML, daarna pas topbar.js
+     5. Navbar + Footer     — onafhankelijk, mag parallel
+     index.html staat in root — paden beginnen met /js/ niet ../js/
+     ============================================================= -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/auth.js"></script>
+
 <script>
-fetch('/MyFamTreeCollab/Layout/Footer.html')
-    .then(resp => resp.text())
-    .then(data => document.getElementById('footer-placeholder').innerHTML = data);
+    // TopBar laden — topbar.js pas injecteren nadat #top-auth in de DOM zit
+    fetch('/MyFamTreeCollab/Layout/TopBar.html')
+        .then(resp => resp.text())
+        .then(function(data) {
+            document.getElementById('topbar-placeholder').innerHTML = data;
+            var s = document.createElement('script');
+            s.src = '/js/topbar.js';
+            document.body.appendChild(s);
+        });
+
+    // Navbar laden — geen auth-afhankelijkheid
+    fetch('/MyFamTreeCollab/Layout/Navbar.html')
+        .then(resp => resp.text())
+        .then(function(data) {
+            document.getElementById('navbar-placeholder').innerHTML = data;
+        });
+
+    // Footer laden
+    fetch('/MyFamTreeCollab/Layout/Footer.html')
+        .then(resp => resp.text())
+        .then(function(data) {
+            document.getElementById('footer-placeholder').innerHTML = data;
+        });
 </script>
+
+<!-- index.html heeft geen pagina-specifieke scripts nodig -->
 
 </body>
 </html>
