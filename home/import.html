@@ -1,9 +1,10 @@
-<!-- ======================= home/import.html v2.0.1 =======================
+<!-- ======================= home/import.html v2.0.2 =======================
      Importpagina: CSV/TXT bestanden inladen in de stamboom
      Wijziging v2.0.0: facelift — welkomstblok, inline stijlen naar <style>,
                        bestandsselectie en knop in sectiekader
      Scripts: schema.js → storage.js → import.js (verplichte volgorde)
      Favicon / App-icoon toegevoegd
+     v2.0.2 Login toegevoegd
      ======================================================================= -->
 <!DOCTYPE html>
 <html lang="nl">
@@ -78,6 +79,9 @@
         .info-blok strong { color: #004080; }                             /* Donkerblauw voor vetgedrukte tekst in info-blok */
     </style>
 </head>
+     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+     <script src="/js/auth.js"></script>
+     <script src="/js/topbar.js"></script>
 <body>
 
 <!-- ======================= TopBar ======================= -->
