@@ -1,7 +1,8 @@
-<!-- ======================= home/export.html v2.1.0 =======================
+<!-- ======================= home/export.html v2.1.1 =======================
      Exportpagina: CSV en JSON download van de volledige stamboom
      Wijziging v2.1.0: nieuwe opmaak — welkomstblok, CSV en JSON als aparte secties
      Scripts: schema.js → storage.js → export.js (verplichte volgorde)
+     v2.1.1 Login toegevoegd
      ======================================================================= -->
 <!DOCTYPE html>
 <html lang="nl">
@@ -69,6 +70,9 @@
         }
     </style>
 </head>
+     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+     <script src="/js/auth.js"></script>
+     <script src="/js/topbar.js"></script>
 <body>
 
 <!-- ======================= TopBar ======================= -->
