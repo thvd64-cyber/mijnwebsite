@@ -73,10 +73,7 @@
         .nieuws-sectie h2 { font-size: 1.1rem; font-weight: bold; margin: 0 0 8px 0; color: #333; }
         .nieuws-sectie p  { font-size: 0.95rem; color: #555; line-height: 1.6; margin: 0; }
     </style>
-</head>
-     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-     <script src="/js/auth.js"></script>
-     <script src="/js/topbar.js"></script>
+</head>     
 <body>
 
 <!-- ======================= TopBar ======================= -->
@@ -89,6 +86,12 @@ fetch('/MyFamTreeCollab/Layout/TopBar.html')
 
 <!-- ======================= Navbar ======================= -->
 <div id="Navbar-placeholder"></div>
+
+<!-- Scripts: Supabase + auth ALTIJD vóór topbar.js -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/auth.js"></script>
+     
 <script>
 fetch('/MyFamTreeCollab/Layout/Navbar.html')
     .then(resp => resp.text())
