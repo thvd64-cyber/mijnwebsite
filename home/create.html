@@ -177,28 +177,35 @@
 
 <!-- ======================= TopBar ======================= -->
 <div id="topbar-placeholder"></div>
-<script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')
-    .then(resp => resp.text())
-    .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
-</script>
 
 <!-- ======================= Navbar ======================= -->
-<div id="Navbar-placeholder"></div>
-     
+<div id="navbar-placeholder"></div>
+
 <!-- Scripts: Supabase + auth ALTIJD vóór topbar.js -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/js/utils.js"></script>
 <script src="/js/auth.js"></script>
-     
+
 <script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html')
-    .then(resp => resp.text())
-    .then(data => {
-        const placeholder = document.getElementById('Navbar-placeholder');
-        if (placeholder) placeholder.innerHTML = data;                    // Navbar injecteren als de placeholder bestaat
-    });
+    // TopBar laden via fetch, DAN topbar.js initialiseren
+    fetch('/MyFamTreeCollab/Layout/TopBar.html')
+        .then(resp => resp.text())
+        .then(data => {
+            document.getElementById('topbar-placeholder').innerHTML = data;
+            // TopBar HTML staat nu in de DOM — nu pas topbar.js laden
+            const script = document.createElement('script');
+            script.src = '/js/topbar.js';
+            document.body.appendChild(script);
+        });
+
+    // Navbar apart laden
+    fetch('/MyFamTreeCollab/Layout/Navbar.html')
+        .then(resp => resp.text())
+        .then(data => document.getElementById('navbar-placeholder').innerHTML = data);
 </script>
+
+<!-- Pagina-specifiek script altijd als laatste -->
+<script src="/js/[pagina].js"></script>
 
 <!-- ======================= Hoofd content ======================= -->
 <main>
