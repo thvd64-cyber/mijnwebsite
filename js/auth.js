@@ -1,33 +1,33 @@
 // =============================================================================
 // auth.js — Supabase Authentication Module
-// MyFamTreeCollab v2.0.0
+// MyFamTreeCollab v2.1.0
 // -----------------------------------------------------------------------------
-// Handles user registration, login, logout and session management.
+// Handles registration, login, logout, session management and user profiles.
 // Exposes window.AuthModule for use across all pages.
 //
-// Dependencies: Supabase JS SDK (loaded via CDN in HTML before this script)
-// Load order:   utils.js → auth.js → [page].js
+// Dependencies: Supabase JS SDK (loaded via CDN before this script)
+// Load order:   utils.js → auth.js → topbar.js → [pagina].js
 // =============================================================================
 
 (function () {
   "use strict";
 
   // ---------------------------------------------------------------------------
-  // CONFIGURATION — replace these two values with your own Supabase project
+  // CONFIGURATION — vul hier je eigen Supabase gegevens in
   // ---------------------------------------------------------------------------
-  const SUPABASE_URL  = "https://xpufzrjncivyzyukwcmn.supabase.co";   // bv. https://xyzxyz.supabase.co
-  const SUPABASE_ANON = "sb_publishable_4Pg_TkSymTbA-uX29z0Zaw_d1A1c5lE";        // de lange 'anon public' sleutel
+  const SUPABASE_URL  = "JOUW_SUPABASE_URL_HIER";
+  const SUPABASE_ANON = "JOUW_ANON_KEY_HIER";
 
   // ---------------------------------------------------------------------------
-  // Supabase client — initialised once, reused everywhere
+  // Supabase client — eenmalig aangemaakt, overal hergebruikt
   // ---------------------------------------------------------------------------
   const _client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
   // ---------------------------------------------------------------------------
-  // Internal helper: normalise Supabase error into a readable string
+  // _errMsg(error)
+  // Vertaalt Supabase foutmeldingen naar leesbaar Nederlands
   // ---------------------------------------------------------------------------
   function _errMsg(error) {
-    // Return a human-readable Dutch error message where possible
     if (!error) return null;
     const msg = error.message || "Onbekende fout";
     if (msg.includes("Invalid login credentials")) return "E-mailadres of wachtwoord onjuist.";
@@ -38,25 +38,35 @@
   }
 
   // ---------------------------------------------------------------------------
-  // register(email, password)
-  // Creates a new Supabase Auth user.
-  // Returns { user, error } — error is null on success.
+  // register(email, password, username)
+  // Maakt een nieuw account aan. Username wordt via metadata doorgegeven
+  // aan de database trigger die het opslaat in de profiles tabel.
+  // Returns { user, error }
   // ---------------------------------------------------------------------------
-  async function register(email, password) {
-    // Validate inputs before sending to Supabase
-    if (!email || !password) return { user: null, error: "Vul e-mailadres en wachtwoord in." };
+  async function register(email, password, username) {
+    if (!email || !password || !username) {
+      return { user: null, error: "Vul alle velden in." };
+    }
+    if (username.trim().length < 2) {
+      return { user: null, error: "Gebruikersnaam moet minimaal 2 tekens bevatten." };
+    }
 
-    const { data, error } = await _client.auth.signUp({ email, password });
+    const { data, error } = await _client.auth.signUp({
+      email,
+      password,
+      options: {
+        // Username in metadata — database trigger leest dit uit
+        data: { username: username.trim() }
+      }
+    });
 
     if (error) return { user: null, error: _errMsg(error) };
-
-    // data.user is set immediately; session may be null until email is confirmed
     return { user: data.user, error: null };
   }
 
   // ---------------------------------------------------------------------------
   // login(email, password)
-  // Signs in an existing user and stores session in localStorage automatically.
+  // Logt een bestaande gebruiker in. Sessie wordt automatisch opgeslagen.
   // Returns { user, error }
   // ---------------------------------------------------------------------------
   async function login(email, password) {
@@ -65,14 +75,13 @@
     const { data, error } = await _client.auth.signInWithPassword({ email, password });
 
     if (error) return { user: null, error: _errMsg(error) };
-
     return { user: data.user, error: null };
   }
 
   // ---------------------------------------------------------------------------
   // logout()
-  // Signs out the current user and clears the Supabase session.
-  // Returns { error } — error is null on success.
+  // Logt de huidige gebruiker uit en wist de sessie.
+  // Returns { error }
   // ---------------------------------------------------------------------------
   async function logout() {
     const { error } = await _client.auth.signOut();
@@ -81,8 +90,7 @@
 
   // ---------------------------------------------------------------------------
   // getSession()
-  // Returns the current session object, or null if not logged in.
-  // Use this on page load to check whether a user is authenticated.
+  // Geeft het huidige sessie-object terug, of null als niet ingelogd.
   // ---------------------------------------------------------------------------
   async function getSession() {
     const { data } = await _client.auth.getSession();
@@ -91,8 +99,7 @@
 
   // ---------------------------------------------------------------------------
   // getUser()
-  // Returns the current user object, or null if not logged in.
-  // Shortcut around getSession().user for convenience.
+  // Geeft het huidige gebruikersobject terug, of null als niet ingelogd.
   // ---------------------------------------------------------------------------
   async function getUser() {
     const session = await getSession();
@@ -100,10 +107,48 @@
   }
 
   // ---------------------------------------------------------------------------
+  // getProfile()
+  // Haalt username en avatar_id op uit de profiles tabel.
+  // Returns { profile, error }
+  // ---------------------------------------------------------------------------
+  async function getProfile() {
+    const user = await getUser();
+    if (!user) return { profile: null, error: "Niet ingelogd." };
+
+    const { data, error } = await _client
+      .from("profiles")
+      .select("username, avatar_id")
+      .eq("id", user.id)
+      .single();
+
+    if (error) return { profile: null, error: _errMsg(error) };
+    return { profile: data, error: null };
+  }
+
+  // ---------------------------------------------------------------------------
+  // updateUsername(username)
+  // Past de gebruikersnaam aan in de profiles tabel.
+  // Returns { error }
+  // ---------------------------------------------------------------------------
+  async function updateUsername(username) {
+    const user = await getUser();
+    if (!user) return { error: "Niet ingelogd." };
+    if (!username || username.trim().length < 2) {
+      return { error: "Gebruikersnaam moet minimaal 2 tekens bevatten." };
+    }
+
+    const { error } = await _client
+      .from("profiles")
+      .update({ username: username.trim() })
+      .eq("id", user.id);
+
+    return { error: _errMsg(error) };
+  }
+
+  // ---------------------------------------------------------------------------
   // onAuthChange(callback)
-  // Subscribes to auth state changes (login, logout, token refresh).
-  // callback receives (event, session) — event is 'SIGNED_IN' or 'SIGNED_OUT'.
-  // Use this in the navbar to reactively update the UI.
+  // Abonneert op auth-statuswijzigingen (login, logout, token refresh).
+  // callback ontvangt (event, session)
   // ---------------------------------------------------------------------------
   function onAuthChange(callback) {
     _client.auth.onAuthStateChange((event, session) => {
@@ -113,23 +158,25 @@
 
   // ---------------------------------------------------------------------------
   // getClient()
-  // Returns the raw Supabase client for use in other modules (e.g. cloudSync.js)
+  // Geeft de ruwe Supabase client terug voor gebruik in andere modules.
   // ---------------------------------------------------------------------------
   function getClient() {
     return _client;
   }
 
   // ---------------------------------------------------------------------------
-  // Public API
+  // Publieke API
   // ---------------------------------------------------------------------------
   window.AuthModule = {
-    register,     // (email, password) → { user, error }
-    login,        // (email, password) → { user, error }
-    logout,       // ()                → { error }
-    getSession,   // ()                → session | null
-    getUser,      // ()                → user | null
-    onAuthChange, // (callback)        → unsubscribe fn
-    getClient,    // ()                → supabase client
+    register,       // (email, password, username) → { user, error }
+    login,          // (email, password)            → { user, error }
+    logout,         // ()                           → { error }
+    getSession,     // ()                           → session | null
+    getUser,        // ()                           → user | null
+    getProfile,     // ()                           → { profile, error }
+    updateUsername, // (username)                   → { error }
+    onAuthChange,   // (callback)                   → void
+    getClient,      // ()                           → supabase client
   };
 
 })();
