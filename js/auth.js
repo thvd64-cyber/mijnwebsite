@@ -15,7 +15,7 @@
   // ---------------------------------------------------------------------------
   // CONFIGURATION — replace these two values with your own Supabase project
   // ---------------------------------------------------------------------------
-  const SUPABASE_URL  = "JOUW_SUPABASE_URL_HIER";   // bv. https://xyzxyz.supabase.co
+  const SUPABASE_URL  = "https://xpufzrjncivyzyukwcmn.supabase.co";   // bv. https://xyzxyz.supabase.co
   const SUPABASE_ANON = "sb_publishable_4Pg_TkSymTbA-uX29z0Zaw_d1A1c5lE";        // de lange 'anon public' sleutel
 
   // ---------------------------------------------------------------------------
