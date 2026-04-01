@@ -1,4 +1,4 @@
-/* ======================= js/timeline.js v2.3.3 =======================
+/* ======================= js/timeline.js v2.3.4 =======================
  * Canvas-based family timeline renderer
  *
  * Wijzigingen v2.3.0 t.o.v. v2.2.0:
@@ -25,7 +25,14 @@
  *                      KindID, HKindID, PHKindID, BZID, BZPartnerID
  *   Persoon veldnamen: VaderID, MoederID, PartnerID
  *
- * Version: v2.3.0
+ * Wijzigingen v2.3.1 t.o.v. v2.3.0:
+ *  - Bug fix: ancestor volgorde was -1,-2,-3 (wrong) → nu -3,-2,-1,0 (correct)
+ *  - Bug fix: genNum was null voor alle ancestors → linkerkolom labels overlapten
+ *    Nu: genNum = -1, -2, -3 zodat genLabelY unieke keys heeft per generatie
+ *  - addAncestorLevel vervangen door collectAncestorLevel (buffer-aanpak):
+ *    eerst verzamelen, dan in juiste volgorde aan rows[] toevoegen
+ *
+ * Version: v2.3.1
  * ===================================================================== */
 
 (function () {
@@ -270,34 +277,71 @@
             return true;
         }
 
-        /* ---- Ancestor generations (gen -3 .. -1) ---- */
-        function addAncestorLevel(parentIds, sectionLabel) {
-            const nextLevel = [];
+        /* ---- Ancestor generations (gen -3 .. -1) ----
+         * Fix v2.3.1: ancestors collected into separate buffers first,
+         * then added in correct order: -3 → -2 → -1 (oldest first).
+         * genNum is now set correctly (-1, -2, -3) so genLabelY keys are unique.
+         * Previously: addAncestorLevel pushed directly → order was -1, -2, -3 (wrong).
+         * ---- */
+
+        // Collects rows for one ancestor level into a buffer (does NOT push to rows yet)
+        function collectAncestorLevel(parentIds, sectionLabel, genNum) {
+            const buffer    = []; // Rows for this level, added to rows[] later
+            const nextLevel = []; // Parent IDs for the level above
+
             parentIds.forEach(pid => {
                 const parent = findPerson(pid);
-                if (!parent) return;
+                if (!parent || seen.has(safe(pid))) return;
+                seen.add(safe(pid));
+
                 const rootFatherId = safe(rootPerson.VaderID);
-                const isGen1       = sectionLabel === 'Ouders  (gen −1)';
+                const isGen1       = genNum === -1;
                 const relatie      = isGen1
                     ? (safe(parent.ID) === rootFatherId ? 'VHoofdID' : 'MHoofdID')
                     : 'VHoofdID';
                 const color = COLOR[relatie];
-                addRow(pid, relatie, color, null, false, 0, sectionLabel, false);
-                // Partner of ancestor
-                if (safe(parent.PartnerID)) {
-                    addRow(parent.PartnerID, 'PHoofdID', COLOR.PHoofdID, null, false, 0, null, false);
+
+                // Push person row into buffer
+                buffer.push({ id: pid, relatie, color, genNum, sectionLabel });
+
+                // Partner immediately after person
+                const partnerId = safe(parent.PartnerID);
+                if (partnerId && !seen.has(partnerId)) {
+                    seen.add(partnerId);
+                    buffer.push({ id: partnerId, relatie: 'PHoofdID', color: COLOR.PHoofdID, genNum, sectionLabel: null });
                 }
+
+                // Collect parents of this person for level above
                 [safe(parent.VaderID), safe(parent.MoederID)]
                     .filter(id => id && !seen.has(id))
                     .forEach(id => nextLevel.push(id));
             });
-            return [...new Set(nextLevel)];
+
+            return { buffer, nextLevel: [...new Set(nextLevel)] };
         }
 
-        const gen1 = [safe(rootPerson.VaderID), safe(rootPerson.MoederID)].filter(Boolean);
-        const gen2 = addAncestorLevel(gen1, 'Ouders  (gen −1)');
-        const gen3 = addAncestorLevel(gen2, 'Grootouders  (gen −2)');
-        addAncestorLevel(gen3, 'Betovergrootouders  (gen −3)');
+        // Step 1: collect all three levels (traversing upward)
+        const gen1Ids = [safe(rootPerson.VaderID), safe(rootPerson.MoederID)].filter(Boolean);
+        const col1    = collectAncestorLevel(gen1Ids, 'Ouders  (gen −1)',              -1);
+        const col2    = collectAncestorLevel(col1.nextLevel, 'Grootouders  (gen −2)',   -2);
+        const col3    = collectAncestorLevel(col2.nextLevel, 'Betovergrootouders  (gen −3)', -3);
+
+        // Step 2: push buffers in correct order: -3 first, then -2, then -1
+        // This ensures the canvas renders oldest generation at the top.
+        [col3.buffer, col2.buffer, col1.buffer].forEach(buffer => {
+            buffer.forEach(item => {
+                const p = findPerson(item.id);
+                if (!p) return;
+                rows.push({
+                    entry:        makeEntry(p, item.relatie, item.color),
+                    isDescendant: false,
+                    genDepth:     0,
+                    genNum:       item.genNum,       // Correct: -3, -2 or -1
+                    sectionLabel: item.sectionLabel,
+                    isLastInUnit: false,
+                });
+            });
+        });
 
         /* ---- Gen 0: root + partner + siblings ---- */
         addRow(rootPerson.ID, 'HoofdID', COLOR.HoofdID, 0, false, 0, 'Hoofdpersoon  (gen 0)', false);
