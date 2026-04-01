@@ -25,121 +25,121 @@
 
         /* ======================= WELKOMSTBLOK ======================= */
         .welkom-blok { margin-bottom: 20px; } /* Ruimte onder blok */
-        .welkom-blok h1 { font-size: 1.4rem; font-weight: bold; margin: 0 0 8px 0; color: #222; }
-        .welkom-blok p  { font-size: 0.95rem; color: #555; line-height: 1.6; margin: 0; }
+        .welkom-blok h1 { font-size: 1.4rem; font-weight: bold; margin: 0 0 8px 0; color: #222; } /* Titel */
+        .welkom-blok p  { font-size: 0.95rem; color: #555; line-height: 1.6; margin: 0; } /* Tekst */
 
         /* ======================= ZOEKBALK ======================= */
-        .zoek-sectie { margin-bottom: 16px; }
+        .zoek-sectie { margin-bottom: 16px; } /* Ruimte onder zoek */
         #searchPerson {
             width: 50%; /* Halve breedte */
-            padding: 9px 12px;
-            font-size: 1rem;
-            border: 1px solid #bbb;
-            border-radius: 5px;
-            box-sizing: border-box;
+            padding: 9px 12px; /* Binnenruimte */
+            font-size: 1rem; /* Tekstgrootte */
+            border: 1px solid #bbb; /* Randkleur */
+            border-radius: 5px; /* Hoeken afgerond */
+            box-sizing: border-box; /* Inclusief padding in breedte */
         }
         #searchPerson:focus {
-            outline: none;
-            border-color: #1E90FF;
+            outline: none; /* Geen focus outline */
+            border-color: #1E90FF; /* Blauwe rand bij focus */
         }
 
         /* ======================= KNOPPEN ======================= */
         .knoppen-balk {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 16px;
+            display: flex; /* Flex layout */
+            gap: 10px; /* Ruimte tussen knoppen */
+            flex-wrap: wrap; /* Mobiel onder elkaar */
+            margin-bottom: 16px; /* Ruimte onder knoppen */
         }
         .knoppen-balk button {
-            padding: 9px 18px;
-            font-size: 0.95rem;
-            font-weight: bold;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            padding: 9px 18px; /* Klikgebied */
+            font-size: 0.95rem; /* Tekstgrootte */
+            font-weight: bold; /* Vetgedrukt */
+            border: none; /* Geen rand */
+            border-radius: 5px; /* Hoeken afgerond */
+            cursor: pointer; /* Handje bij hover */
         }
-        #refreshBtn { background: #6c757d; color: #fff; }
-        #refreshBtn:hover { background: #5a6268; }
+        #refreshBtn { background: #6c757d; color: #fff; } /* Grijs refresh */
+        #refreshBtn:hover { background: #5a6268; } /* Donkerder grijs */
 
-        #addBtn { background: #28a745; color: #fff; }
-        #addBtn:hover { background: #218838; }
+        #addBtn { background: #28a745; color: #fff; } /* Groen toevoegen */
+        #addBtn:hover { background: #218838; } /* Donkerder groen */
 
-        #saveBtn { background: #1E90FF; color: #fff; }
-        #saveBtn:hover { background: #1278d4; }
+        #saveBtn { background: #1E90FF; color: #fff; } /* Blauw opslaan */
+        #saveBtn:hover { background: #1278d4; } /* Donkerder blauw */
 
-        /* ======================= SCROLL WRAPPER (NIEUW) ======================= */
+        /* ======================= SCROLL WRAPPER ======================= */
         .manage-tabel-wrapper {
-            overflow-x: auto;              /* 🔥 Activeert horizontale scroll */
-            margin-bottom: 16px;           /* Ruimte onder tabel */
+            overflow-x: auto; /* Horizontale scroll */
+            margin-bottom: 16px; /* Ruimte onder tabel */
         }
 
         /* ======================= TABEL ======================= */
         #manageTable {
-            width: 100%;                  /* Basisbreedte */
-            border-collapse: collapse;    /* Geen dubbele randen */
-            margin-top: 4px;
-            background: transparent;
-            white-space: nowrap;          /* 🔥 Voorkomt afbreken → forceert scroll */
+            width: 100%; /* Volledige breedte */
+            border-collapse: collapse; /* Geen dubbele randen */
+            margin-top: 4px; /* Ruimte boven tabel */
+            background: transparent; /* Transparante achtergrond */
+            white-space: nowrap; /* Forceer scroll, geen wrapping */
         }
 
         th, td {
-            border: 1px solid #ddd;
-            padding: 6px 8px;
-            text-align: left;
-            vertical-align: top;
-            font-size: 0.9rem;
+            border: 1px solid #ddd; /* Randkleur */
+            padding: 6px 8px; /* Binnenruimte */
+            text-align: left; /* Links uitlijnen */
+            vertical-align: top; /* Verticale uitlijning */
+            font-size: 0.9rem; /* Tekstgrootte */
         }
 
         th {
-            background: #f4f4f4;
-            font-weight: bold;
-            color: #333;
+            font-weight: bold; /* Vet */
+            color: #333; /* Tekstkleur */
         }
 
-         /* ======================= STICKY HEADER (MANAGE) ======================= */
-#manageTable thead th {
-    position: sticky;        /* Blijft plakken bij scroll */
-    top: 0;                  /* Vast aan bovenkant wrapper */
-    background: #f4f4f4;     /* Nodig anders zie je content erdoor */
-    z-index: 3;              /* Boven cellen */
-}
+        /* ======================= STICKY HEADER ======================= */
+        #manageTable thead th {
+            position: sticky;        /* Blijft plakken bij scroll */
+            top: 0;                  /* Vast aan bovenkant wrapper */
+            background: inherit;     /* Houd relation colors of default zichtbaar */
+            z-index: 3;              /* Boven cellen */
+        }
 
-/* ======================= STICKY FIRST COLUMN ======================= */
-#manageTable th:first-child,
-#manageTable td:first-child {
-    position: sticky;        /* Blijft staan bij horizontale scroll */
-    left: 0;                 /* Vast links */
-    background: #fff;        /* Achtergrond verplicht */
-    z-index: 2;              /* Onder header maar boven cellen */
-}
+        /* ======================= STICKY FIRST COLUMN ======================= */
+        #manageTable th:first-child,
+        #manageTable td:first-child {
+            position: sticky;        /* Blijft staan bij horizontale scroll */
+            left: 0;                 /* Vast links */
+            background: inherit;     /* Relation colors blijven zichtbaar */
+            z-index: 2;              /* Onder header, boven andere cellen */
+        }
 
-/* ======================= FIX OVERLAP HEADER + FIRST COLUMN ======================= */
-#manageTable thead th:first-child {
-    z-index: 4;              /* Hoogste laag zodat hoek correct blijft */
-}
-         
+        /* ======================= HOEK CEL HEADER + EERSTE KOL ======================= */
+        #manageTable thead th:first-child {
+            z-index: 4;              /* Hoogste laag zodat hoek correct blijft */
+            background: inherit;     /* Houd kleuren zichtbaar */
+        }
+
         /* ======================= TEXTAREA ======================= */
         #manageTable td textarea {
-            background: transparent;
-            border: none;
-            width: 100%;
-            box-sizing: border-box;
-            resize: vertical;
-            font-family: inherit;
-            font-size: 0.9rem;
-            padding: 2px 4px;
+            background: transparent; /* Geen extra achtergrond */
+            border: none; /* Geen rand */
+            width: 100%; /* Volledige celbreedte */
+            box-sizing: border-box; /* Inclusief padding */
+            resize: vertical; /* Alleen verticaal resize */
+            font-family: inherit; /* Zelfde lettertype */
+            font-size: 0.9rem; /* Tekstgrootte */
+            padding: 2px 4px; /* Binnenruimte */
         }
 
         /* ======================= RELATIE KLEUREN ======================= */
-        tr.HoofdID td { background: var(--color-hoofd); font-weight: 500; }
+        tr.HoofdID td { background: var(--color-hoofd); font-weight: 500; } /* HoofdID kleur */
         tr.VHoofdID td,
-        tr.MHoofdID td { background: var(--color-vader); }
-        tr.PHoofdID td { background: var(--color-partner-hoofd); font-style: italic; }
-        tr.KindID td { background: var(--color-KindID); opacity: 0.85; }
-        tr.HKindID td { background: var(--color-HKindID); }
-        tr.PHKindID td { background: var(--color-PHKindID); }
-        tr.Partner td { background: var(--color-partner); font-style: italic; }
-        tr.BZID td { background: var(--color-bz); }
+        tr.MHoofdID td { background: var(--color-vader); } /* Vader/Moeder kleur */
+        tr.PHoofdID td { background: var(--color-partner-hoofd); font-style: italic; } /* Partner HoofdID */
+        tr.KindID td { background: var(--color-KindID); opacity: 0.85; } /* KindID */
+        tr.HKindID td { background: var(--color-HKindID); } /* HKindID */
+        tr.PHKindID td { background: var(--color-PHKindID); } /* PHKindID */
+        tr.Partner td { background: var(--color-partner); font-style: italic; } /* Partner */
+        tr.BZID td { background: var(--color-bz); } /* BZID */
 
     </style>
 </head>
@@ -158,8 +158,8 @@ fetch('/MyFamTreeCollab/Layout/TopBar.html') // Haal TopBar HTML op
 <div id="Navbar-placeholder"></div>
 <script>
 fetch('/MyFamTreeCollab/Layout/Navbar.html')
-    .then(resp => resp.text())
-    .then(data => {
+    .then(resp => resp.text()) // Haal navbar op
+    .then(data => { 
         const ph = document.getElementById('Navbar-placeholder'); // Zoek placeholder
         if (ph) ph.innerHTML = data; // Plaats navbar
     });
@@ -188,7 +188,7 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
         </div>
 
         <!-- ======================= TABEL MET WRAPPER ======================= -->
-        <div class="manage-tabel-wrapper"> <!-- 🔥 Scroll container -->
+        <div class="manage-tabel-wrapper"> <!-- Scroll container -->
             <table id="manageTable">
                 <thead><tr></tr></thead>
                 <tbody></tbody>
