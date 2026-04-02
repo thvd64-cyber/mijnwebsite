@@ -44,7 +44,7 @@
             color: #888;                                                   /* Lichtgrijs zodat het duidelijk secundair is */
             margin-top: 10px;                                              /* Ruimte boven de opmerking */
         }
-        button {                                                           /* Basisstijl voor alle knoppen op deze pagina */
+        #exportCSVBtn, #exportJSONBtn {                                                           /* Basisstijl voor alle knoppen op deze pagina */
             padding: 9px 18px;                                             /* Ruim klikgebied */
             cursor: pointer;                                               /* Handje bij hover zodat duidelijk is dat het klikbaar is */
             border: none;                                                  /* Geen rand: de achtergrondkleur geeft al genoeg definitie */
@@ -79,29 +79,11 @@
 <body>
 
 <!-- ======================= TopBar ======================= -->
-<div id="topbar-placeholder"></div>
-<script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')
-    .then(resp => resp.text())
-    .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
-</script>
+
 
 <!-- ======================= Navbar ======================= -->
 <div id="Navbar-placeholder"></div>
-     
-<!-- Scripts: Supabase + auth ALTIJD vóór topbar.js -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/js/utils.js"></script>
-<script src="/js/auth.js"></script>
-
-<script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html')
-    .then(resp => resp.text())
-    .then(data => {
-        const placeholder = document.getElementById('Navbar-placeholder');
-        if (placeholder) placeholder.innerHTML = data;                    // Navbar injecteren als de placeholder bestaat
-    });
-</script>
+  
 
 <!-- ======================= Hoofd content ======================= -->
 <main>
