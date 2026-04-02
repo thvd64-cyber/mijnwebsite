@@ -1,8 +1,10 @@
-<!-- ======================= home/export.html v2.1.1 =======================
+<!-- ======================= home/export.html v2.1.2 =======================
      Exportpagina: CSV en JSON download van de volledige stamboom
      Wijziging v2.1.0: nieuwe opmaak — welkomstblok, CSV en JSON als aparte secties
      Scripts: schema.js → storage.js → export.js (verplichte volgorde)
-     v2.1.1 Login +Favicon / App-icoon toegevoegd
+     v2.1.1: Login + Favicon / App-icoon toegevoegd
+     v2.1.2: bugfix — ontbrekende <div id="topbar-placeholder"> toegevoegd,
+             navbar placeholder ID mismatch opgelost (Navbar-placeholder → navbar-placeholder)
      ======================================================================= -->
 <!DOCTYPE html>
 <html lang="nl">
@@ -10,7 +12,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyFamTreeCollab - Export</title>
-        
+
     <!-- ===== Favicon / App-icoon ===== -->
     <link rel="icon" type="image/x-icon" href="/MyFamTreeCollab/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/MyFamTreeCollab/favicon-32x32.png">
@@ -44,7 +46,7 @@
             color: #888;                                                   /* Lichtgrijs zodat het duidelijk secundair is */
             margin-top: 10px;                                              /* Ruimte boven de opmerking */
         }
-        #exportCSVBtn, #exportJSONBtn {                                                           /* Basisstijl voor alle knoppen op deze pagina */
+        #exportCSVBtn, #exportJSONBtn {                                   /* Basisstijl voor alle knoppen op deze pagina */
             padding: 9px 18px;                                             /* Ruim klikgebied */
             cursor: pointer;                                               /* Handje bij hover zodat duidelijk is dat het klikbaar is */
             border: none;                                                  /* Geen rand: de achtergrondkleur geeft al genoeg definitie */
@@ -52,11 +54,11 @@
             font-size: 0.95rem;                                            /* Zelfde grootte als de uitlegtekst */
             font-weight: bold;                                             /* Vetgedrukt zodat de actie duidelijk is */
         }
-        #exportCSVBtn  { background: #5bc0de; color: #fff; }              /* Lichtblauw voor CSV — vertrouwde kleur voor spreadsheet-export */
-        #exportCSVBtn:hover  { background: #31b0d5; }                     /* Donkerder lichtblauw bij hover */
-        #exportJSONBtn { background: #0275d8; color: #fff; }              /* Donkerblauw voor JSON — back-up heeft wat meer gewicht */
+        #exportCSVBtn       { background: #5bc0de; color: #fff; }         /* Lichtblauw voor CSV — vertrouwde kleur voor spreadsheet-export */
+        #exportCSVBtn:hover { background: #31b0d5; }                      /* Donkerder lichtblauw bij hover */
+        #exportJSONBtn       { background: #0275d8; color: #fff; }        /* Donkerblauw voor JSON — back-up heeft wat meer gewicht */
         #exportJSONBtn:hover { background: #025aa5; }                     /* Donkerder blauw bij hover */
-        #exportStatus  { font-size: 0.9rem; margin-top: 8px; }            /* Statusmelding onder de knoppen: klein en subtiel */
+        #exportStatus        { font-size: 0.9rem; margin-top: 8px; }      /* Statusmelding onder de knoppen: klein en subtiel */
 
         /* ======================= WELKOMSTBLOK ======================= */
         .welkom-blok {                                                     /* Introductieblok bovenaan de pagina */
@@ -79,11 +81,10 @@
 <body>
 
 <!-- ======================= TopBar ======================= -->
-
+<div id="topbar-placeholder"></div>  <!-- Was aanwezig als commentaar maar ontbrak als div — hersteld in v2.1.2 -->
 
 <!-- ======================= Navbar ======================= -->
-<div id="Navbar-placeholder"></div>
-  
+<div id="navbar-placeholder"></div>  <!-- ID gecorrigeerd: was "Navbar-placeholder" (hoofdletter N), script zocht "navbar-placeholder" -->
 
 <!-- ======================= Hoofd content ======================= -->
 <main>
@@ -138,11 +139,12 @@
      3. auth.js             — vereist door topbar.js
      4. TopBar fetch        — laadt TopBar HTML, daarna topbar.js
      5. Navbar fetch        — onafhankelijk, mag parallel
-     6. Pagina-scripts      — altijd als laatste
+     6. Footer fetch        — onafhankelijk
+     7. Pagina-scripts      — altijd als laatste
      ============================================================= -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="../js/utils.js"></script>
-<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>   <!-- Eerste: hulpfuncties (safe, formatDate, parseBirthday) -->
+<script src="../js/auth.js"></script>    <!-- Auth module — vereist Supabase SDK + utils.js -->
 
 <script>
     // Stap 1: TopBar HTML laden, daarna PAS topbar.js injecteren
@@ -150,32 +152,31 @@
     fetch('/MyFamTreeCollab/Layout/TopBar.html')
         .then(resp => resp.text())
         .then(function(data) {
-            document.getElementById('topbar-placeholder').innerHTML = data;
-            // #top-auth bestaat nu — veilig om topbar.js te laden
-            var s = document.createElement('script');
-            s.src = '../js/topbar.js';
-            document.body.appendChild(s);
+            document.getElementById('topbar-placeholder').innerHTML = data; // Injecteer TopBar HTML
+            var s = document.createElement('script'); // Maak script-element aan
+            s.src = '../js/topbar.js';                // Wijs topbar.js toe
+            document.body.appendChild(s);             // Voeg toe aan DOM — initialiseert nu veilig
         });
 
     // Stap 2: Navbar laden — geen auth-afhankelijkheid, mag parallel
     fetch('/MyFamTreeCollab/Layout/Navbar.html')
         .then(resp => resp.text())
         .then(function(data) {
-            document.getElementById('navbar-placeholder').innerHTML = data;
+            document.getElementById('navbar-placeholder').innerHTML = data; // Let op: kleine 'n' — komt overeen met div-ID hierboven
         });
 
     // Stap 3: Footer laden
     fetch('/MyFamTreeCollab/Layout/Footer.html')
         .then(resp => resp.text())
         .then(function(data) {
-            document.getElementById('footer-placeholder').innerHTML = data;
+            document.getElementById('footer-placeholder').innerHTML = data; // Injecteer footer HTML
         });
 </script>
-     
-<!-- ======================= Scripts (volgorde verplicht) ======================= -->
-<script src="../js/schema.js"></script>       <!-- Laad eerst het schema met veldnamen -->
-<script src="../js/storage.js"></script>      <!-- Laad dan de storage API (StamboomStorage) -->
-<script src="../js/export.js"></script>       <!-- Laad dan de centrale exportmodule (ExportModule) -->
+
+<!-- Pagina-specifieke scripts — verplichte laadvolgorde -->
+<script src="../js/schema.js"></script>   <!-- Veldnamen en CSV-parsing -->
+<script src="../js/storage.js"></script>  <!-- localStorage API -->
+<script src="../js/export.js"></script>   <!-- Centrale exportmodule (ExportModule) -->
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
