@@ -1,11 +1,15 @@
-<!-- ======================= stamboom/manage.html v2.2.2 =======================
+<!-- ======================= stamboom/manage.html v2.2.3 =======================
      Beheerpagina: stamboom bewerken als tabel met live search
 
      Wijziging v2.2.0:
      - Horizontale scroll toegevoegd via wrapper (zelfde principe als template.html)
      - white-space: nowrap toegevoegd zodat tabel breedte behoudt (v2.2.1)
      - Geen impact op bestaande JS functionaliteit
-     - v2.2.2 login + Favicon / App-icoon
+     - v2.2.2: login + Favicon / App-icoon
+     - v2.2.3: bugfix — ontbrekende CSS-links toegevoegd (style.css, Tree.css,
+               RelationColors.css), navbar placeholder ID mismatch opgelost
+               (Navbar-placeholder → consistente schrijfwijze), dubbele utils.js
+               import verwijderd.
 
      Scripts: utils.js → schema.js → idGenerator.js → storage.js → LiveSearch.js
               → relatieEngine.js → manage.js (verplichte volgorde)
@@ -17,13 +21,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive scaling -->
     <title>MyFamTreeCollab - Manage</title>
 
-       <!-- ===== Favicon / App-icoon ===== -->
+    <!-- ===== Favicon / App-icoon ===== -->
     <link rel="icon" type="image/x-icon" href="/MyFamTreeCollab/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/MyFamTreeCollab/favicon-32x32.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/MyFamTreeCollab/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/MyFamTreeCollab/favicon-192x192.png">
 
-     <style>
+    <!-- ===== Globale stijlen — volgorde is verplicht ===== -->
+    <link rel="stylesheet" href="../css/style.css">           <!-- Basisstijlen + .container -->
+    <link rel="stylesheet" href="../css/Tree.css">            <!-- Stamboom layout -->
+    <link rel="stylesheet" href="../css/RelationColors.css">  <!-- CSS-variabelen voor relatiekleurencodes -->
+
+    <style>
         /* ======================= WELKOMSTBLOK ======================= */
         .welkom-blok { margin-bottom: 20px; } /* Ruimte onder blok */
         .welkom-blok h1 { font-size: 1.4rem; font-weight: bold; margin: 0 0 8px 0; color: #222; }
@@ -68,9 +77,9 @@
         #saveBtn { background: #1E90FF; color: #fff; }
         #saveBtn:hover { background: #1278d4; }
 
-        /* ======================= SCROLL WRAPPER (NIEUW) ======================= */
+        /* ======================= SCROLL WRAPPER ======================= */
         .manage-tabel-wrapper {
-            overflow-x: auto;              /* 🔥 Activeert horizontale scroll */
+            overflow-x: auto;              /* Activeert horizontale scroll */
             margin-bottom: 16px;           /* Ruimte onder tabel */
         }
 
@@ -80,7 +89,7 @@
             border-collapse: collapse;    /* Geen dubbele randen */
             margin-top: 4px;
             background: transparent;
-            white-space: nowrap;          /* 🔥 Voorkomt afbreken → forceert scroll */
+            white-space: nowrap;          /* Voorkomt afbreken → forceert scroll */
         }
 
         th, td {
@@ -92,7 +101,7 @@
         }
 
         th {
-            background: #f4f4f4;
+            background: #f4f4f4;          /* Lichtgrijs — vereist RelationColors.css + style.css */
             font-weight: bold;
             color: #333;
         }
@@ -110,37 +119,25 @@
         }
 
         /* ======================= RELATIE KLEUREN ======================= */
-        tr.HoofdID td { background: var(--color-hoofd); font-weight: 500; }
+        /* Vereisen CSS-variabelen uit RelationColors.css               */
+        tr.HoofdID td  { background: var(--color-hoofd); font-weight: 500; }
         tr.VHoofdID td,
         tr.MHoofdID td { background: var(--color-vader); }
         tr.PHoofdID td { background: var(--color-partner-hoofd); font-style: italic; }
-        tr.KindID td { background: var(--color-KindID); opacity: 0.85; }
-        tr.HKindID td { background: var(--color-HKindID); }
+        tr.KindID td   { background: var(--color-KindID); opacity: 0.85; }
+        tr.HKindID td  { background: var(--color-HKindID); }
         tr.PHKindID td { background: var(--color-PHKindID); }
-        tr.Partner td { background: var(--color-partner); font-style: italic; }
-        tr.BZID td { background: var(--color-bz); }
+        tr.Partner td  { background: var(--color-partner); font-style: italic; }
+        tr.BZID td     { background: var(--color-bz); }
     </style>
 </head>
 <body>
 
 <!-- ======================= TopBar ======================= -->
 <div id="topbar-placeholder"></div>
-<script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html') // Haal TopBar HTML op
-    .then(resp => resp.text()) // Zet response om naar tekst
-    .then(data => document.getElementById('topbar-placeholder').innerHTML = data); // Injecteer in DOM
-</script>
 
 <!-- ======================= Navbar ======================= -->
-<div id="Navbar-placeholder"></div>
-<script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html')
-    .then(resp => resp.text())
-    .then(data => {
-        const ph = document.getElementById('Navbar-placeholder'); // Zoek placeholder
-        if (ph) ph.innerHTML = data; // Plaats navbar
-    });
-</script>
+<div id="navbar-placeholder"></div>
 
 <!-- ======================= MAIN ======================= -->
 <main>
@@ -165,7 +162,7 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
         </div>
 
         <!-- ======================= TABEL MET WRAPPER ======================= -->
-        <div class="manage-tabel-wrapper"> <!-- 🔥 Scroll container -->
+        <div class="manage-tabel-wrapper"> <!-- Scroll container -->
             <table id="manageTable">
                 <thead><tr></tr></thead>
                 <tbody></tbody>
@@ -185,11 +182,12 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
      3. auth.js             — vereist door topbar.js
      4. TopBar fetch        — laadt TopBar HTML, daarna topbar.js
      5. Navbar fetch        — onafhankelijk, mag parallel
-     6. Pagina-scripts      — altijd als laatste
+     6. Footer fetch        — onafhankelijk
+     7. Pagina-scripts      — altijd als laatste (volgorde verplicht)
      ============================================================= -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="../js/utils.js"></script>
-<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>   <!-- Eerste: hulpfuncties (safe, formatDate, parseBirthday) -->
+<script src="../js/auth.js"></script>    <!-- Auth module — vereist Supabase SDK + utils.js -->
 
 <script>
     // Stap 1: TopBar HTML laden, daarna PAS topbar.js injecteren
@@ -197,36 +195,34 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
     fetch('/MyFamTreeCollab/Layout/TopBar.html')
         .then(resp => resp.text())
         .then(function(data) {
-            document.getElementById('topbar-placeholder').innerHTML = data;
-            // #top-auth bestaat nu — veilig om topbar.js te laden
-            var s = document.createElement('script');
-            s.src = '../js/topbar.js';
-            document.body.appendChild(s);
+            document.getElementById('topbar-placeholder').innerHTML = data; // Injecteer TopBar HTML
+            var s = document.createElement('script'); // Maak script-element aan
+            s.src = '../js/topbar.js';                // Wijs topbar.js toe
+            document.body.appendChild(s);             // Voeg toe aan DOM — initialiseert nu veilig
         });
 
     // Stap 2: Navbar laden — geen auth-afhankelijkheid, mag parallel
     fetch('/MyFamTreeCollab/Layout/Navbar.html')
         .then(resp => resp.text())
         .then(function(data) {
-            document.getElementById('navbar-placeholder').innerHTML = data;
+            document.getElementById('navbar-placeholder').innerHTML = data; // Let op: kleine 'n' — komt overeen met div-ID hierboven
         });
 
     // Stap 3: Footer laden
     fetch('/MyFamTreeCollab/Layout/Footer.html')
         .then(resp => resp.text())
         .then(function(data) {
-            document.getElementById('footer-placeholder').innerHTML = data;
+            document.getElementById('footer-placeholder').innerHTML = data; // Injecteer footer HTML
         });
 </script>
 
-<!-- Pagina-specifieke scripts: utils > schema > idGenerator > storage > LiveSearch > relatieEngine > manage -->
-<script src="../js/utils.js"></script>
-<script src="../js/schema.js"></script>
-<script src="../js/idGenerator.js"></script>
-<script src="../js/storage.js"></script>
-<script src="../js/LiveSearch.js"></script>
-<script src="../js/relatieEngine.js"></script>
-<script src="../js/manage.js"></script>
+<!-- Pagina-specifieke scripts — verplichte laadvolgorde -->
+<script src="../js/schema.js"></script>        <!-- Veldnamen en CSV-parsing -->
+<script src="../js/idGenerator.js"></script>   <!-- ID-generatie voor nieuwe rijen -->
+<script src="../js/storage.js"></script>       <!-- localStorage API -->
+<script src="../js/LiveSearch.js"></script>    <!-- Zoekfunctie -->
+<script src="../js/relatieEngine.js"></script> <!-- Familierelaties berekenen -->
+<script src="../js/manage.js"></script>        <!-- Pagina-logica — altijd als laatste -->
 
 </body>
 </html>
