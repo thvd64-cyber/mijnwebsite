@@ -2,7 +2,7 @@
    Beheerpagina: toont stamboom als tabel, live search, add/save/refresh
    Vereist: schema.js, idGenerator.js, storage.js, LiveSearch.js, relatieEngine.js
    Wijziging v2.3.1:
-   - voeg rij delete knop toe 
+   - voeg rij delete actie toe 
    Wijziging v2.3.0:
    - KindPartnerID en BZPartnerID vervangen door één uniforme relatienaam 'Partner'
      Partners zijn directe eigenschappen van een persoon (persoon.PartnerID),
@@ -155,7 +155,31 @@
 
             COLUMNS.forEach(col => {                                       // Loop door elke kolomdefinitie om de tabelcel aan te maken
                 const td = document.createElement('td');                  // Maak een nieuwe tabelcel
+                  
+               if (col.key === 'Acties') {
+                    // 🔥 NIEUW: Delete knop per rij
+                    const btn = document.createElement('button');
+                    btn.textContent = '🗑️';
+                    btn.title = 'Verwijder rij';
 
+                    btn.addEventListener('click', () => {
+                        if (!confirm('Weet je zeker dat je deze rij wilt verwijderen?')) return;
+
+                        const id = safe(p.ID);
+
+                        if (id) {
+                            // Verwijder uit dataset
+                            dataset = dataset.filter(x => safe(x.ID) !== id);
+                            StamboomStorage.set(dataset);
+                        }
+
+                        // Verwijder rij direct uit DOM (snelle UI feedback)
+                        tr.remove();
+                    });
+
+                    td.appendChild(btn);
+                }
+               
                 if (col.key === 'Relatie') {                               // Speciale behandeling voor de Relatie-kolom
                     td.textContent = relatieLabel;                         // Toon het leesbare Nederlandse label
                 } else if (col.readonly) {                                 // Alleen-lezen kolom (zoals ID)
@@ -203,8 +227,16 @@
         COLUMNS.forEach(col => {                                           // Loop door elke kolomdefinitie
             const td = document.createElement('td');                      // Maak een cel per kolom
 
-            if (col.readonly) {                                            // Alleen-lezen kolommen (Relatie, ID)
-                td.textContent = '';                                       // Leeg laten: wordt ingevuld na opslaan
+             if (col.key === 'Acties') {
+                // 🔥 NIEUW: delete knop ook voor NIEUWE rij (zonder ID)
+                const btn = document.createElement('button');
+                btn.textContent = '🗑️';
+                btn.title = 'Verwijder rij';
+                btn.addEventListener('click', () => tr.remove()); // alleen uit DOM verwijderen
+                td.appendChild(btn);
+            }
+            else if (col.readonly) {
+                td.textContent = '';                            // Leeg laten: wordt ingevuld na opslaan
             } else {
                 const ta = document.createElement('textarea');             // Bewerkbare kolom krijgt een textarea
                 ta.value          = '';                                    // Begin leeg
