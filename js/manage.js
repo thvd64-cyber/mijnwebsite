@@ -2,7 +2,7 @@
    Beheerpagina: toont stamboom als tabel, live search, add/save/refresh
    Vereist: schema.js, idGenerator.js, storage.js, LiveSearch.js, relatieEngine.js
    Wijziging v2.3.1:
-   - voeg rij delete actie toe 
+   - voeg rij delete actie toe en render aangepast
    Wijziging v2.3.0:
    - KindPartnerID en BZPartnerID vervangen door één uniforme relatienaam 'Partner'
      Partners zijn directe eigenschappen van een persoon (persoon.PartnerID),
@@ -157,15 +157,15 @@
                 const td = document.createElement('td');                  // Maak een nieuwe tabelcel
                   
                if (col.key === 'Acties') {
-                    // 🔥 NIEUW: Delete knop per rij
+                    //  Delete knop per rij
                     const btn = document.createElement('button');
                     btn.textContent = '🗑️';
                     btn.title = 'Verwijder rij';
 
                     btn.addEventListener('click', () => {
                         if (!confirm('Weet je zeker dat je deze rij wilt verwijderen?')) return;
-
-                        const id = safe(p.ID);
+                         // Gebruik ID of originele ID voor afgeleide objecten
+                         const id = safe(p.ID) || safe(p._origID);
 
                         if (id) {
                             // Verwijder uit dataset
