@@ -1,15 +1,14 @@
-/* ======================= js/manage.js v2.3.0 =======================
+/* ======================= js/manage.js v2.3.1 =======================
    Beheerpagina: toont stamboom als tabel, live search, add/save/refresh
    Vereist: schema.js, idGenerator.js, storage.js, LiveSearch.js, relatieEngine.js
-
+   Wijziging v2.3.1:
+   - voeg rij delete knop toe 
    Wijziging v2.3.0:
    - KindPartnerID en BZPartnerID vervangen door één uniforme relatienaam 'Partner'
      Partners zijn directe eigenschappen van een persoon (persoon.PartnerID),
      geen aparte relatiecode nodig
-
    Wijziging v2.2.0:
    - Kindpartner en BZpartner opzoeken via dataset (niet via relatieEngine)
-
    Wijziging v2.1.0:
    - KindID filter uitgebreid naar HKindID en PHKindID
    - Labels HKindID → 'Kind (hoofd)', PHKindID → 'Kind (partner)'
@@ -23,7 +22,8 @@
 
     /* ======================= KOLOMMEN DEFINITIE ======================= */
     const COLUMNS = [                                                       // Array die alle tabelkolommen definieert met naam en bewerkbaarheid
-        { key: 'Relatie',           readonly: true  },                      // Relatie t.o.v. hoofdpersoon, automatisch berekend, niet bewerkbaar
+       { key: 'Acties',             readonly: true },                      // 🗑️ UI kolom voor delete (nog zonder functionaliteit) 
+       { key: 'Relatie',           readonly: true  },                      // Relatie t.o.v. hoofdpersoon, automatisch berekend, niet bewerkbaar
         { key: 'ID',                readonly: true  },                      // Uniek persoons-ID, gegenereerd door idGenerator.js, niet bewerkbaar
         { key: 'Doopnaam',          readonly: false },                      // Officiële voornaam, gebruiker kan dit aanpassen
         { key: 'Roepnaam',          readonly: false },                      // Roepnaam / gebruikelijke naam, bewerkbaar
