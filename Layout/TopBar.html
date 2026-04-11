@@ -1,14 +1,13 @@
-<!-- ======================= Layout/TopBar.html v0.3 ======================= -->
-<!-- Change v0.3: id="top-auth" slot vervangt statische Login link          -->
-<!--              Wordt dynamisch gevuld door topbar.js                      -->
-<!--              Supabase SDK + auth.js + topbar.js laden op elke pagina    -->
+<!-- ======================= Layout/TopBar.html v0.4 ======================= -->
+<!-- Wijziging v0.3: id="top-auth" slot vervangt statische Login link        -->
+<!-- Wijziging v0.4: Ko-fi knop toegevoegd rechts naast taalwisseling        -->
 <div class="topbar-wrapper" style="background-color:#f8f9fa; width:100%;">
     <div class="topbar" style="color:#000000; padding:10px 20px; font-family:Arial, sans-serif; display:flex; align-items:center; justify-content:space-between; max-width:1200px; margin:0 auto; position:relative;">
 
         <!-- Links: auth widget — gevuld door topbar.js -->
         <div class="top-left" style="margin-left:10px;">
             <div id="top-auth">
-                <!-- Fallback: zichtbaar vóór topbar.js initialiseert -->
+                <!-- Fallback zichtbaar vóór topbar.js initialiseert -->
                 <button onclick="TopBarAuth && TopBarAuth.openModal()" style="color:#000000; background:none; border:none; cursor:pointer; font-family:Arial,sans-serif; font-size:0.9rem; padding:0;">Login</button>
             </div>
         </div>
@@ -18,10 +17,24 @@
             <span style="color:#000000; font-weight:bold;">MyFamTreeCollab</span>
         </div>
 
-        <!-- Rechts: taalwisseling -->
-        <div class="top-right" style="margin-right:10px;">
-            <a href="#" class="lang-link" data-lang="nl" style="color:#000000; text-decoration:none;">NL</a> |
-            <a href="#" class="lang-link" data-lang="en" style="color:#000000; text-decoration:none;">EN</a>
+        <!-- Rechts: Ko-fi knop + taalwisseling -->
+        <div class="top-right" style="margin-right:10px; display:flex; align-items:center; gap:12px;">
+
+            <!-- Ko-fi knop — opent in nieuw tabblad zodat gebruiker de app niet verlaat -->
+            <a href="https://ko-fi.com/myfamtreecollab"
+               target="_blank"
+               rel="noopener noreferrer"
+               style="display:inline-flex; align-items:center; gap:5px; padding:4px 12px; background:#FF5E5B; color:#fff; text-decoration:none; border-radius:5px; font-size:0.82rem; font-weight:bold;">
+                ☕ Steun
+            </a>
+
+            <!-- Taalwisseling -->
+            <span>
+                <a href="#" class="lang-link" data-lang="nl" style="color:#000000; text-decoration:none;">NL</a>
+                |
+                <a href="#" class="lang-link" data-lang="en" style="color:#000000; text-decoration:none;">EN</a>
+            </span>
+
         </div>
 
     </div>
