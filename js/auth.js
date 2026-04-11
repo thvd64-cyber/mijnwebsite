@@ -19,8 +19,8 @@
   // ---------------------------------------------------------------------------
   // CONFIGURATION — vul hier je eigen Supabase gegevens in
   // ---------------------------------------------------------------------------
-  const SUPABASE_URL  = "https://xpufzrjncivyzyukwcmn.supabase.co/";             // bv. https://xyzxyz.supabase.co
-  const SUPABASE_ANON = "sb_publishable_4Pg_TkSymTbA-uX29z0Zaw_d1A1c5lE";       // sb_publishable_...
+  const SUPABASE_URL  = "https://xpufzrjncivyzyukwcmn.supabase.co";             // bv. https://xyzxyz.supabase.co
+  const SUPABASE_ANON = "sb_publishable_4Pg_TkSymTbA-uX29z0Zaw_d1A1c5lE";       // sb_publishable_... 
 
   // ---------------------------------------------------------------------------
   // Supabase client — eenmalig aangemaakt, overal hergebruikt
