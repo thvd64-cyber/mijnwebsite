@@ -1,0 +1,199 @@
+<!-- ======================= home/reset.html v1.0.0 =======================
+     Wachtwoord resetten — gebruiker komt hier via de resetlink in zijn mail
+     Supabase logt de gebruiker automatisch in via de token in de URL
+     Scripts: supabase → utils.js → auth.js → reset.js
+     ======================================================================= -->
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyFamTreeCollab - Wachtwoord instellen</title>
+
+    <!-- ===== Favicon / App-icoon ===== -->
+    <link rel="icon" type="image/x-icon" href="/MyFamTreeCollab/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/MyFamTreeCollab/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/MyFamTreeCollab/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/MyFamTreeCollab/favicon-192x192.png">
+
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* ======================= RESET BLOK ======================= */
+        .reset-blok {                          /* Centraal formulierblok */
+            max-width: 420px;
+            margin: 60px auto;
+            padding: 32px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .reset-blok h1 {                       /* Paginatitel */
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin: 0 0 8px 0;
+            color: #222;
+        }
+        .reset-blok .subtitel {               /* Uitlegzin onder de titel */
+            font-size: 0.9rem;
+            color: #555;
+            margin: 0 0 24px 0;
+            line-height: 1.5;
+        }
+
+        /* ======================= VELDEN ======================= */
+        .reset-veld {                          /* Één invoerveld met label */
+            margin-bottom: 16px;
+        }
+        .reset-veld label {                    /* Label boven het invoerveld */
+            display: block;
+            font-size: 0.88rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: #333;
+        }
+        .reset-veld input {                    /* Wachtwoordinvoerveld */
+            width: 100%;
+            padding: 9px 11px;
+            font-size: 0.95rem;
+            border: 1px solid #bbb;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        .reset-veld input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        /* ======================= KNOP ======================= */
+        .knop-reset {                          /* Primaire opslaan-knop */
+            width: 100%;
+            padding: 10px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+        .knop-reset:hover    { background: #1d4ed8; }
+        .knop-reset:disabled { background: #93c5fd; cursor: default; }
+
+        /* ======================= FEEDBACK ======================= */
+        .reset-msg {                           /* Feedback bericht onder de knop */
+            margin-top: 14px;
+            padding: 10px 13px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            display: none;                     /* Verborgen tot er een bericht is */
+        }
+        .reset-msg.error   { background: #fee2e2; color: #991b1b; display: block; }
+        .reset-msg.success { background: #dcfce7; color: #166534; display: block; }
+
+        /* ======================= ONGELDIGE TOKEN ======================= */
+        .reset-ongeldig {                      /* Blok bij ongeldige of verlopen resetlink */
+            display: none;                     /* Verborgen tot JS bepaalt dat token ongeldig is */
+            text-align: center;
+            padding: 16px 0;
+        }
+        .reset-ongeldig p {
+            font-size: 0.95rem;
+            color: #555;
+            margin: 0 0 16px 0;
+        }
+        .knop-home {                           /* Knop terug naar home */
+            display: inline-block;
+            padding: 10px 24px;
+            background: #1E90FF;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 0.95rem;
+            font-weight: bold;
+        }
+        .knop-home:hover { background: #1278d4; }
+    </style>
+</head>
+<body>
+
+<!-- ======================= TopBar ======================= -->
+<div id="topbar-placeholder"></div>
+
+<!-- ======================= Navbar ======================= -->
+<div id="navbar-placeholder"></div>
+
+<!-- ======================= Hoofd content ======================= -->
+<main>
+    <div class="reset-blok">
+
+        <!-- Formulier voor nieuw wachtwoord — standaard zichtbaar -->
+        <div id="reset-formulier">
+            <h1>Nieuw wachtwoord instellen</h1>
+            <p class="subtitel">Kies een nieuw wachtwoord van minimaal 6 tekens.</p>
+
+            <div class="reset-veld">
+                <label for="reset-pwd">Nieuw wachtwoord</label>
+                <input type="password" id="reset-pwd" placeholder="Minimaal 6 tekens" autocomplete="new-password" />
+            </div>
+            <div class="reset-veld">
+                <label for="reset-pwd2">Wachtwoord herhalen</label>
+                <input type="password" id="reset-pwd2" placeholder="Herhaal wachtwoord" autocomplete="new-password" />
+            </div>
+
+            <button class="knop-reset" id="btn-reset">Wachtwoord opslaan</button>
+            <div class="reset-msg" id="reset-msg"></div>
+        </div>
+
+        <!-- Blok bij ongeldige of verlopen resetlink — standaard verborgen -->
+        <div class="reset-ongeldig" id="reset-ongeldig">
+            <p>Deze resetlink is ongeldig of verlopen.<br>Vraag een nieuwe link aan via de loginpagina.</p>
+            <a href="/MyFamTreeCollab/" class="knop-home">Terug naar Home</a>
+        </div>
+
+    </div>
+</main>
+
+<!-- ======================= Footer ======================= -->
+<div id="footer-placeholder"></div>
+
+<!-- =============================================================
+     SCRIPTS — volgorde verplicht:
+     supabase → utils.js → auth.js → [TopBar fetch → topbar.js]
+     → navbar/footer fetch → reset.js
+     ============================================================= -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+
+<script>
+    // TopBar laden — topbar.js pas injecteren nadat #top-auth in de DOM zit
+    fetch('/MyFamTreeCollab/Layout/TopBar.html')
+        .then(resp => resp.text())
+        .then(function(data) {
+            document.getElementById('topbar-placeholder').innerHTML = data;
+            var s = document.createElement('script');
+            s.src = '../js/topbar.js';
+            document.body.appendChild(s);
+        });
+
+    // Navbar laden
+    fetch('/MyFamTreeCollab/Layout/Navbar.html')
+        .then(resp => resp.text())
+        .then(function(data) {
+            document.getElementById('navbar-placeholder').innerHTML = data;
+        });
+
+    // Footer laden
+    fetch('/MyFamTreeCollab/Layout/Footer.html')
+        .then(resp => resp.text())
+        .then(function(data) {
+            document.getElementById('footer-placeholder').innerHTML = data;
+        });
+</script>
+
+<!-- Reset logica — altijd als laatste -->
+<script src="../js/reset.js"></script>
+
+</body>
+</html>
