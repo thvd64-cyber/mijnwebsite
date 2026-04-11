@@ -1,10 +1,9 @@
-<!-- ======================= home/about.html v2.0.2 =======================
+<!-- ======================= home/about.html v2.0.3 =======================
      Over-pagina: tijdelijk niet beschikbaar, consistente opmaak
-     Wijziging v2.0.0: facelift — Navbar + TopBar + 'komt binnenkort' blok,
-                       geen aparte header meer, script.js verwijderd
+     Wijziging v2.0.0: facelift — Navbar + TopBar + 'komt binnenkort' blok
      Wijziging v2.0.1: login scripts
-     Wijziging v2.0.2: Favicon / App-icoon + scripts opgeschoond,
-                       dubbele fetch-blokken verwijderd, topbar.js via createElement
+     Wijziging v2.0.2: Favicon / App-icoon + scripts opgeschoond
+     Wijziging v2.0.3: Ko-fi donatie knop toegevoegd
      ======================================================================= -->
 <!DOCTYPE html>
 <html lang="nl">
@@ -44,7 +43,9 @@
             line-height: 1.6;
             margin: 0 0 24px 0;
         }
-        .knop-home {
+
+        /* ======================= KNOPPEN ======================= */
+        .knop-home {                           /* Knop terug naar home */
             display: inline-block;
             padding: 10px 24px;
             background: #1E90FF;
@@ -55,6 +56,36 @@
             font-weight: bold;
         }
         .knop-home:hover { background: #1278d4; }
+
+        /* ======================= KO-FI SECTIE ======================= */
+        .kofi-sectie {                         /* Blok rondom de donatie-knop */
+            margin-top: 32px;
+            padding-top: 28px;
+            border-top: 1px solid #eee;        /* Subtiele scheidingslijn boven de sectie */
+        }
+        .kofi-sectie p {                       /* Uitlegzin boven de Ko-fi knop */
+            font-size: 0.9rem;
+            color: #666;
+            margin: 0 0 14px 0;
+            line-height: 1.5;
+        }
+        .knop-kofi {                           /* Ko-fi donatie knop */
+            display: inline-flex;              /* Flex zodat icoon en tekst naast elkaar staan */
+            align-items: center;
+            gap: 8px;                          /* Ruimte tussen icoon en tekst */
+            padding: 11px 22px;
+            background: #FF5E5B;               /* Officiële Ko-fi rode kleur */
+            color: #fff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .knop-kofi:hover { background: #e54d4a; } /* Iets donkerder rood bij hover */
+        .knop-kofi .kofi-icoon {               /* Koffiekopje icoon */
+            font-size: 1.1rem;
+        }
     </style>
 </head>
 <body>
@@ -68,14 +99,36 @@
 <!-- ======================= Hoofd content ======================= -->
 <main>
     <div class="binnenkort-blok">
+
+        <!-- Decoratief icoon -->
         <div class="icoon">🌳</div>
+
+        <!-- Paginatitel -->
         <h1>Over MyFamTreeCollab</h1>
+
+        <!-- Uitlegparagraaf -->
         <p>
             Deze pagina is momenteel in ontwikkeling.<br>
             Binnenkort vind je hier meer informatie over het project,
             de makers en hoe de app werkt.
         </p>
+
+        <!-- Knop terug naar home -->
         <a href="/MyFamTreeCollab/" class="knop-home">Terug naar Home</a>
+
+        <!-- Ko-fi donatie sectie -->
+        <div class="kofi-sectie">
+            <p>
+                Vind je MyFamTreeCollab handig? <br>
+                Steun de ontwikkeling met een kleine bijdrage — elk kopje koffie helpt! ☕
+            </p>
+            <!-- Ko-fi knop — opent in nieuw tabblad zodat gebruiker de app niet verlaat -->
+            <a href="https://ko-fi.com/myfamtreecollab" target="_blank" rel="noopener noreferrer" class="knop-kofi">
+                <span class="kofi-icoon">☕</span>
+                Steun dit project
+            </a>
+        </div>
+
     </div>
 </main>
 
@@ -83,12 +136,7 @@
 <div id="footer-placeholder"></div>
 
 <!-- =============================================================
-     SCRIPTS — volgorde verplicht:
-     1. Supabase SDK        — vereist door auth.js
-     2. utils.js            — vereist door alle andere modules
-     3. auth.js             — vereist door topbar.js
-     4. TopBar fetch        — laadt HTML, daarna pas topbar.js
-     5. Navbar + Footer     — onafhankelijk, mag parallel
+     SCRIPTS — volgorde verplicht
      about.html heeft geen pagina-specifieke scripts
      ============================================================= -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -96,7 +144,6 @@
 <script src="../js/auth.js"></script>
 
 <script>
-    // TopBar laden — topbar.js pas injecteren nadat #top-auth in de DOM zit
     fetch('/MyFamTreeCollab/Layout/TopBar.html')
         .then(resp => resp.text())
         .then(function(data) {
@@ -106,14 +153,12 @@
             document.body.appendChild(s);
         });
 
-    // Navbar laden — geen auth-afhankelijkheid
     fetch('/MyFamTreeCollab/Layout/Navbar.html')
         .then(resp => resp.text())
         .then(function(data) {
             document.getElementById('navbar-placeholder').innerHTML = data;
         });
 
-    // Footer laden
     fetch('/MyFamTreeCollab/Layout/Footer.html')
         .then(resp => resp.text())
         .then(function(data) {
