@@ -1,9 +1,13 @@
 // =============================================================================
 // auth.js — Supabase Authentication Module
-// MyFamTreeCollab v2.1.0
+// MyFamTreeCollab v2.2.0
 // -----------------------------------------------------------------------------
-// Handles registration, login, logout, session management and user profiles.
-// Exposes window.AuthModule for use across all pages.
+// Handles registration, login, logout, session management, profiles
+// and password reset flow.
+//
+// Nieuw in v2.2.0:
+// - resetPassword(email)   — stuurt resetmail via Supabase
+// - updatePassword(pwd)    — slaat nieuw wachtwoord op na reset
 //
 // Dependencies: Supabase JS SDK (loaded via CDN before this script)
 // Load order:   utils.js → auth.js → topbar.js → [pagina].js
@@ -15,8 +19,8 @@
   // ---------------------------------------------------------------------------
   // CONFIGURATION — vul hier je eigen Supabase gegevens in
   // ---------------------------------------------------------------------------
-  const SUPABASE_URL  = "https://xpufzrjncivyzyukwcmn.supabase.co";
-  const SUPABASE_ANON = "sb_publishable_4Pg_TkSymTbA-uX29z0Zaw_d1A1c5lE";
+  const SUPABASE_URL  = "JOUW_SUPABASE_URL_HIER";  // bv. https://xyzxyz.supabase.co
+  const SUPABASE_ANON = "JOUW_ANON_KEY_HIER";       // sb_publishable_...
 
   // ---------------------------------------------------------------------------
   // Supabase client — eenmalig aangemaakt, overal hergebruikt
@@ -30,10 +34,11 @@
   function _errMsg(error) {
     if (!error) return null;
     const msg = error.message || "Onbekende fout";
-    if (msg.includes("Invalid login credentials")) return "E-mailadres of wachtwoord onjuist.";
-    if (msg.includes("Email not confirmed"))       return "Bevestig eerst je e-mailadres via de ontvangen mail.";
-    if (msg.includes("User already registered"))   return "Dit e-mailadres is al in gebruik.";
-    if (msg.includes("Password should be"))        return "Wachtwoord moet minimaal 6 tekens bevatten.";
+    if (msg.includes("Invalid login credentials"))  return "E-mailadres of wachtwoord onjuist.";
+    if (msg.includes("Email not confirmed"))        return "Bevestig eerst je e-mailadres via de ontvangen mail.";
+    if (msg.includes("User already registered"))    return "Dit e-mailadres is al in gebruik.";
+    if (msg.includes("Password should be"))         return "Wachtwoord moet minimaal 6 tekens bevatten.";
+    if (msg.includes("Email rate limit exceeded"))  return "Te veel pogingen. Probeer het later opnieuw.";
     return msg;
   }
 
@@ -44,6 +49,7 @@
   // Returns { user, error }
   // ---------------------------------------------------------------------------
   async function register(email, password, username) {
+    // Valideer alle velden voor verzending naar Supabase
     if (!email || !password || !username) {
       return { user: null, error: "Vul alle velden in." };
     }
@@ -55,7 +61,7 @@
       email,
       password,
       options: {
-        // Username in metadata — database trigger leest dit uit
+        // Username meegeven als metadata — database trigger slaat dit op in profiles
         data: { username: username.trim() }
       }
     });
@@ -66,10 +72,12 @@
 
   // ---------------------------------------------------------------------------
   // login(email, password)
-  // Logt een bestaande gebruiker in. Sessie wordt automatisch opgeslagen.
+  // Logt een bestaande gebruiker in. Sessie wordt automatisch opgeslagen
+  // in localStorage door de Supabase client.
   // Returns { user, error }
   // ---------------------------------------------------------------------------
   async function login(email, password) {
+    // Valideer velden voor verzending
     if (!email || !password) return { user: null, error: "Vul e-mailadres en wachtwoord in." };
 
     const { data, error } = await _client.auth.signInWithPassword({ email, password });
@@ -80,12 +88,52 @@
 
   // ---------------------------------------------------------------------------
   // logout()
-  // Logt de huidige gebruiker uit en wist de sessie.
+  // Logt de huidige gebruiker uit en wist de sessie uit localStorage.
   // Returns { error }
   // ---------------------------------------------------------------------------
   async function logout() {
     const { error } = await _client.auth.signOut();
     return { error: _errMsg(error) };
+  }
+
+  // ---------------------------------------------------------------------------
+  // resetPassword(email)
+  // Stuurt een wachtwoord-resetmail via Supabase.
+  // De link in de mail stuurt de gebruiker naar reset.html met een token in de URL.
+  // redirectTo moet overeenkomen met de URL in Supabase → Authentication → URL Configuration.
+  // Returns { error }
+  // ---------------------------------------------------------------------------
+  async function resetPassword(email) {
+    // Valideer e-mailadres voor verzending
+    if (!email) return { error: "Vul je e-mailadres in." };
+
+    const { error } = await _client.auth.resetPasswordForEmail(email, {
+      // Supabase stuurt de gebruiker na klikken op de resetlink naar deze URL
+      // Zorg dat deze URL staat in Supabase → Authentication → URL Configuration → Redirect URLs
+      redirectTo: "https://thvd64-cyber.github.io/MyFamTreeCollab/home/reset.html"
+    });
+
+    if (error) return { error: _errMsg(error) };
+    return { error: null };
+  }
+
+  // ---------------------------------------------------------------------------
+  // updatePassword(newPassword)
+  // Slaat een nieuw wachtwoord op voor de ingelogde gebruiker.
+  // Alleen bruikbaar nadat de gebruiker via de resetlink is ingelogd
+  // (Supabase logt de gebruiker automatisch in via de resetlink).
+  // Returns { error }
+  // ---------------------------------------------------------------------------
+  async function updatePassword(newPassword) {
+    // Valideer het nieuwe wachtwoord
+    if (!newPassword || newPassword.length < 6) {
+      return { error: "Wachtwoord moet minimaal 6 tekens bevatten." };
+    }
+
+    const { error } = await _client.auth.updateUser({ password: newPassword });
+
+    if (error) return { error: _errMsg(error) };
+    return { error: null };
   }
 
   // ---------------------------------------------------------------------------
@@ -168,15 +216,17 @@
   // Publieke API
   // ---------------------------------------------------------------------------
   window.AuthModule = {
-    register,       // (email, password, username) → { user, error }
-    login,          // (email, password)            → { user, error }
-    logout,         // ()                           → { error }
-    getSession,     // ()                           → session | null
-    getUser,        // ()                           → user | null
-    getProfile,     // ()                           → { profile, error }
-    updateUsername, // (username)                   → { error }
-    onAuthChange,   // (callback)                   → void
-    getClient,      // ()                           → supabase client
+    register,        // (email, password, username) → { user, error }
+    login,           // (email, password)            → { user, error }
+    logout,          // ()                           → { error }
+    resetPassword,   // (email)                      → { error }
+    updatePassword,  // (newPassword)                → { error }
+    getSession,      // ()                           → session | null
+    getUser,         // ()                           → user | null
+    getProfile,      // ()                           → { profile, error }
+    updateUsername,  // (username)                   → { error }
+    onAuthChange,    // (callback)                   → void
+    getClient,       // ()                           → supabase client
   };
 
 })();
