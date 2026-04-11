@@ -1,13 +1,16 @@
 // =============================================================================
 // topbar.js — TopBar Auth Modal & Status
-// MyFamTreeCollab v2.0.0
+// MyFamTreeCollab v2.0.1
 // -----------------------------------------------------------------------------
-// Manages the login/register modal triggered from the TopBar.
-// Shows username + logout button when logged in, Login link when logged out.
+// Fixes v2.0.1:
+// - doLogin: knop wordt altijd weer enabled na success of error
+// - doRegister: knop wordt altijd weer enabled na success of error
+// - _renderTopBar: robuuste fallback als profile nog niet bestaat in DB
+// - onAuthChange: profile fetch wrapped in try/catch zodat fouten de UI
+//   niet blokkeren
 //
 // Dependencies: Supabase SDK, auth.js
 // Load order:   utils.js → auth.js → topbar.js → [pagina].js
-// HTML vereiste: id="top-auth" in TopBar.html, id="auth-modal-root" in <body>
 // =============================================================================
 
 (function () {
@@ -16,10 +19,8 @@
   // ---------------------------------------------------------------------------
   // _injectModal()
   // Injects the modal HTML into the page once on load.
-  // The modal contains two tabs: login and register.
   // ---------------------------------------------------------------------------
   function _injectModal() {
-    // Avoid duplicate injection
     if (document.getElementById("auth-modal-root")) return;
 
     const root = document.createElement("div");
@@ -28,10 +29,8 @@
       <div id="auth-modal-backdrop" onclick="TopBarAuth.closeModal()"></div>
       <div id="auth-modal-box" role="dialog" aria-modal="true" aria-label="Inloggen">
 
-        <!-- Close button -->
         <button id="auth-modal-close" onclick="TopBarAuth.closeModal()" aria-label="Sluiten">&times;</button>
 
-        <!-- Tab switcher -->
         <div class="auth-tabs">
           <button class="auth-tab active" id="tab-btn-login"    onclick="TopBarAuth.switchTab('login')">Inloggen</button>
           <button class="auth-tab"        id="tab-btn-register" onclick="TopBarAuth.switchTab('register')">Account aanmaken</button>
@@ -82,7 +81,6 @@
 
   // ---------------------------------------------------------------------------
   // _injectStyles()
-  // Adds all modal and TopBar auth widget CSS to the page.
   // ---------------------------------------------------------------------------
   function _injectStyles() {
     if (document.getElementById("auth-modal-styles")) return;
@@ -90,7 +88,6 @@
     const style = document.createElement("style");
     style.id = "auth-modal-styles";
     style.textContent = `
-      /* Backdrop */
       #auth-modal-backdrop {
         display: none;
         position: fixed;
@@ -98,8 +95,6 @@
         background: rgba(0,0,0,0.45);
         z-index: 1000;
       }
-
-      /* Modal box */
       #auth-modal-box {
         display: none;
         position: fixed;
@@ -115,14 +110,10 @@
         box-shadow: 0 8px 32px rgba(0,0,0,0.18);
         font-family: Arial, sans-serif;
       }
-
-      /* Open state */
       #auth-modal-root.open #auth-modal-backdrop,
       #auth-modal-root.open #auth-modal-box {
         display: block;
       }
-
-      /* Close button */
       #auth-modal-close {
         position: absolute;
         top: 12px;
@@ -135,8 +126,6 @@
         line-height: 1;
       }
       #auth-modal-close:hover { color: #333; }
-
-      /* Tabs */
       .auth-tabs {
         display: flex;
         border-bottom: 2px solid #e5e7eb;
@@ -157,12 +146,8 @@
         color: #2563eb;
         border-bottom-color: #2563eb;
       }
-
-      /* Form sections */
       .auth-form-section        { display: none; }
       .auth-form-section.active { display: block; }
-
-      /* Fields */
       .auth-field { margin-bottom: 14px; }
       .auth-field label {
         display: block;
@@ -178,13 +163,12 @@
         border: 1px solid #bbb;
         border-radius: 6px;
         box-sizing: border-box;
+        font-weight: normal;
       }
       .auth-field input:focus {
         outline: none;
         border-color: #2563eb;
       }
-
-      /* Primary button */
       .auth-btn-primary {
         width: 100%;
         padding: 9px;
@@ -197,15 +181,11 @@
         cursor: pointer;
         margin-top: 4px;
       }
-      .auth-btn-primary:hover     { background: #1d4ed8; }
-      .auth-btn-primary:disabled  { background: #93c5fd; cursor: default; }
-
-      /* Feedback messages */
+      .auth-btn-primary:hover    { background: #1d4ed8; }
+      .auth-btn-primary:disabled { background: #93c5fd; cursor: default; }
       .auth-msg { margin-top: 12px; padding: 9px 13px; border-radius: 6px; font-size: 0.88rem; display: none; }
       .auth-msg.error   { background: #fee2e2; color: #991b1b; display: block; }
       .auth-msg.success { background: #dcfce7; color: #166534; display: block; }
-
-      /* TopBar auth widget */
       #top-auth {
         display: flex;
         align-items: center;
@@ -240,6 +220,7 @@
         border: none;
         padding: 0;
         font-family: Arial, sans-serif;
+        font-weight: normal;
       }
       .top-auth-login:hover { text-decoration: underline; }
     `;
@@ -248,26 +229,25 @@
   }
 
   // ---------------------------------------------------------------------------
-  // _renderTopBar(profile)
-  // Updates the #top-auth slot in the TopBar.
-  // Shows username + logout when logged in, Login button when logged out.
+  // _renderTopBar(username)
+  // Toont gebruikersnaam + uitloggen, of Login knop.
+  // Ontvangt direct een string (username) of null — geen async profile fetch hier.
   // ---------------------------------------------------------------------------
-  function _renderTopBar(profile) {
+  function _renderTopBar(username) {
     const slot = document.getElementById("top-auth");
     if (!slot) return;
 
-    if (profile) {
-      // Logged in: show username and logout button
+    if (username) {
+      // Ingelogd: toon gebruikersnaam en uitlogknop
       slot.innerHTML = `
-        <span class="top-auth-username" title="${profile.username}">👤 ${profile.username}</span>
+        <span class="top-auth-username" title="${username}">👤 ${username}</span>
         <button class="top-auth-logout" id="btn-topbar-logout">Uitloggen</button>
       `;
       document.getElementById("btn-topbar-logout").addEventListener("click", async () => {
         await AuthModule.logout();
-        // onAuthChange will re-render automatically
       });
     } else {
-      // Logged out: show Login trigger button
+      // Uitgelogd: toon Login knop
       slot.innerHTML = `
         <button class="top-auth-login" onclick="TopBarAuth.openModal()">Login</button>
       `;
@@ -275,54 +255,56 @@
   }
 
   // ---------------------------------------------------------------------------
-  // openModal()
-  // Opens the auth modal. Resets to login tab.
+  // _getUsernameFromSession(session)
+  // Haalt username op uit profile, met fallback naar e-mail als profile leeg is.
+  // Gooit nooit een error — altijd een string terug.
+  // ---------------------------------------------------------------------------
+  async function _getUsernameFromSession(session) {
+    if (!session) return null;
+
+    try {
+      // Probeer profile op te halen uit de database
+      const { profile } = await AuthModule.getProfile();
+      if (profile && profile.username) return profile.username;
+    } catch (e) {
+      // Profile bestaat nog niet (trigger nog bezig) — geen probleem
+    }
+
+    // Fallback: gebruik e-mailadres vóór het @-teken
+    const email = session.user.email || "";
+    return email.split("@")[0] || "Gebruiker";
+  }
+
+  // ---------------------------------------------------------------------------
+  // openModal / closeModal / switchTab
   // ---------------------------------------------------------------------------
   function openModal() {
     _injectModal();
     switchTab("login");
     document.getElementById("auth-modal-root").classList.add("open");
-    // Focus first input for accessibility
     setTimeout(() => {
       const first = document.getElementById("auth-login-email");
       if (first) first.focus();
     }, 50);
   }
 
-  // ---------------------------------------------------------------------------
-  // closeModal()
-  // Closes the auth modal and clears all feedback messages.
-  // ---------------------------------------------------------------------------
   function closeModal() {
     const root = document.getElementById("auth-modal-root");
     if (root) root.classList.remove("open");
-    // Clear feedback messages
     ["auth-msg-login", "auth-msg-register"].forEach(id => {
       const el = document.getElementById(id);
       if (el) { el.textContent = ""; el.className = "auth-msg"; }
     });
   }
 
-  // ---------------------------------------------------------------------------
-  // switchTab(tab)
-  // Switches between 'login' and 'register' form sections.
-  // ---------------------------------------------------------------------------
   function switchTab(tab) {
     const isLogin = tab === "login";
-
-    // Update tab button active states
     document.getElementById("tab-btn-login")   .classList.toggle("active",  isLogin);
     document.getElementById("tab-btn-register").classList.toggle("active", !isLogin);
-
-    // Show correct form section
     document.getElementById("auth-section-login")   .classList.toggle("active",  isLogin);
     document.getElementById("auth-section-register").classList.toggle("active", !isLogin);
   }
 
-  // ---------------------------------------------------------------------------
-  // _showMsg(id, text, type)
-  // Displays a feedback message. type is 'error' or 'success'.
-  // ---------------------------------------------------------------------------
   function _showMsg(id, text, type) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -332,7 +314,7 @@
 
   // ---------------------------------------------------------------------------
   // doLogin()
-  // Reads login form, calls AuthModule.login(), closes modal on success.
+  // Knop wordt altijd weer enabled — ook bij success.
   // ---------------------------------------------------------------------------
   async function doLogin() {
     const email    = document.getElementById("auth-login-email").value.trim();
@@ -344,24 +326,23 @@
 
     const { user, error } = await AuthModule.login(email, password);
 
+    // Knop altijd terugzetten — ongeacht resultaat
+    btn.disabled    = false;
+    btn.textContent = "Inloggen";
+
     if (error) {
       _showMsg("auth-msg-login", error, "error");
-      btn.disabled    = false;
-      btn.textContent = "Inloggen";
       return;
     }
 
-    // Success: close modal — onAuthChange will update the TopBar
+    // Success: toon bevestiging en sluit modal na korte pauze
     _showMsg("auth-msg-login", "Ingelogd!", "success");
     setTimeout(() => closeModal(), 800);
-    btn.disabled    = false;
-    btn.textContent = "Inloggen";
   }
 
   // ---------------------------------------------------------------------------
   // doRegister()
-  // Reads register form, validates, calls AuthModule.register().
-  // On success: switches to login tab with a success message.
+  // Knop wordt altijd weer enabled — ook bij success.
   // ---------------------------------------------------------------------------
   async function doRegister() {
     const username  = document.getElementById("auth-reg-username").value.trim();
@@ -370,7 +351,7 @@
     const password2 = document.getElementById("auth-reg-password2").value;
     const btn       = document.getElementById("auth-btn-register");
 
-    // Client-side validation
+    // Client-side validatie vóór API-call
     if (password !== password2) {
       _showMsg("auth-msg-register", "Wachtwoorden komen niet overeen.", "error");
       return;
@@ -381,76 +362,68 @@
 
     const { user, error } = await AuthModule.register(email, password, username);
 
+    // Knop altijd terugzetten — ongeacht resultaat
+    btn.disabled    = false;
+    btn.textContent = "Account aanmaken";
+
     if (error) {
       _showMsg("auth-msg-register", error, "error");
-      btn.disabled    = false;
-      btn.textContent = "Account aanmaken";
       return;
     }
 
-    // Success: switch to login tab with confirmation message
+    // Success: switch naar login tab met instructie
     switchTab("login");
     _showMsg("auth-msg-login",
-      "Account aangemaakt! Controleer je e-mail en log daarna in.",
+      "Account aangemaakt! Controleer je e-mail en bevestig je adres, log daarna in.",
       "success"
     );
-    btn.disabled    = false;
-    btn.textContent = "Account aanmaken";
   }
 
   // ---------------------------------------------------------------------------
   // init()
-  // Called once on DOMContentLoaded. Renders TopBar state and subscribes
-  // to auth changes so the TopBar updates automatically on login/logout.
   // ---------------------------------------------------------------------------
   async function init() {
     _injectModal();
 
-    // Render current state immediately to avoid flash
-    const user = await AuthModule.getUser();
-    if (user) {
-      const { profile } = await AuthModule.getProfile();
-      _renderTopBar(profile);
+    // Render huidige status direct — voorkom flicker
+    const session = await AuthModule.getSession();
+    if (session) {
+      const username = await _getUsernameFromSession(session);
+      _renderTopBar(username);
     } else {
       _renderTopBar(null);
     }
 
-    // Subscribe to future auth changes
+    // Reageer op toekomstige auth-wijzigingen
     AuthModule.onAuthChange(async (event, session) => {
       if (session) {
-        // Just logged in: fetch profile and update TopBar
-        const { profile } = await AuthModule.getProfile();
-        _renderTopBar(profile);
+        const username = await _getUsernameFromSession(session);
+        _renderTopBar(username);
       } else {
-        // Just logged out: show Login button
         _renderTopBar(null);
       }
     });
 
-    // Close modal on Escape key
+    // Escape sluit modal
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") closeModal();
     });
   }
 
-  // ---------------------------------------------------------------------------
-  // Auto-init on DOMContentLoaded
-  // ---------------------------------------------------------------------------
+  // Auto-init
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
     init();
   }
 
-  // ---------------------------------------------------------------------------
-  // Publieke API — aangeroepen vanuit inline onclick handlers in de modal HTML
-  // ---------------------------------------------------------------------------
+  // Publieke API
   window.TopBarAuth = {
-    openModal,   // Opent de login modal
-    closeModal,  // Sluit de login modal
-    switchTab,   // Wisselt tussen login en register tab
-    doLogin,     // Verwerkt het login formulier
-    doRegister,  // Verwerkt het registratie formulier
+    openModal,
+    closeModal,
+    switchTab,
+    doLogin,
+    doRegister,
   };
 
 })();
