@@ -16,7 +16,7 @@
   // CONFIGURATION — vul hier je eigen Supabase gegevens in
   // ---------------------------------------------------------------------------
   const SUPABASE_URL  = "https://xpufzrjncivyzyukwcmn.supabase.co";
-  const SUPABASE_ANON = "sb_publishable_Gx4Qtmo85SbzfbLdwq-zFw_mBDuKjDQ";
+  const SUPABASE_ANON = "sb_publishable_4Pg_TkSymTbA-uX29z0Zaw_d1A1c5lE";
 
   // ---------------------------------------------------------------------------
   // Supabase client — eenmalig aangemaakt, overal hergebruikt
