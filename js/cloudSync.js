@@ -60,7 +60,7 @@
         if (!window.StamboomStorage) {
             return { success: false, error: 'storage_unavailable' };
         }
-        var allPersons = window.StamboomStorage.getAll();
+        var allPersons = window.StamboomStorage.get();                     // get() returns the array directly
 
         // Enforce the free person limit before saving to cloud
         if (allPersons.length > MAX_PERSONS_FREE) {
