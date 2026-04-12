@@ -1,178 +1,228 @@
-# MyFamTreeCollab — Backlog
+# MyFamTreeCollab — Project Roadmap
 
-> Dit bestand bevat alle taken georganiseerd per fase en prioriteit.
-> Status: 📋 Open · 🔄 In uitvoering · ✅ Gedaan · ❌ Geannuleerd · 🔮 Toekomst
-
----
-
-## Fase 0 — Audit & opschoning ✅ AFGEROND
-
-| ID    | Taak                                          | Status |
-|-------|-----------------------------------------------|--------|
-| F0-01 | ZIP analyseren en alle bestanden inventariseren | ✅ Gedaan |
-| F0-02 | `js/DeleteRow.js` verwijderen (leeg bestand)   | ✅ Gedaan |
-| F0-03 | `js/schemaGlobal.js` verwijderen (verouderd)   | ✅ Gedaan |
-| F0-04 | Alle dubbele functies in kaart brengen         | ✅ Gedaan |
-| F0-05 | Kapotte bestanden identificeren                | ✅ Gedaan |
+> Commerciële heritage & genealogie webapplicatie.
+> Privacy first — data blijft standaard lokaal in de browser.
+> Gebouwd met vanilla HTML, CSS en JavaScript + Supabase backend.
 
 ---
 
-## Fase 1 — Structuur & centrale modules ✅ AFGEROND
+## Project status
 
-| ID    | Taak                                                        | Status |
-|-------|-------------------------------------------------------------|--------|
-| F1-01 | `idGenerator.js` herbouwen als centrale module (v2.0.0)     | ✅ Gedaan |
-| F1-02 | `utils.js` aanmaken met `safe()`, `formatDate()`, `parseBirthday()` | ✅ Gedaan |
-| F1-03 | Lokale `safe()` verwijderen uit `view.js`, `timeline.js`, `manage.js`, `LiveSearch.js`, `relatieEngine.js` | ✅ Gedaan |
-| F1-04 | `computeRelaties()` uit `manage.js` verwijderen → centrale `relatieEngine.js` | ✅ Gedaan |
-| F1-05 | `LiveSearch.js` volledig in IIFE wikkelen (bugfix: `safe` already declared) | ✅ Gedaan |
-| F1-06 | `utils.js` als eerste script toevoegen aan `manage.html`, `view.html`, `timeline.html` | ✅ Gedaan |
-| F1-07 | `relatieEngine.js` toevoegen aan `manage.html` (ontbrak)    | ✅ Gedaan |
-
----
-
-## Fase 2 — Kapotte bestanden repareren ✅ AFGEROND
-
-| ID    | Taak                                                        | Status |
-|-------|-------------------------------------------------------------|--------|
-| F2-01 | `export.js` herschrijven als centrale module met CSV + JSON | ✅ Gedaan |
-| F2-02 | `export.html` repareren: `storage.js` + `schema.js` laden  | ✅ Gedaan |
-| F2-03 | `export.html` uitbreiden met JSON-knop en knoppen van `storage.html` | ✅ Gedaan |
-| F2-04 | `storage.html` exportcode vervangen door centrale `export.js` | ✅ Gedaan |
-| F2-05 | Export JSON/CSV knoppen verwijderen uit `storage.html`      | ✅ Gedaan |
-| F2-06 | `storage.js` herschrijven: `migrate()` niet meer bij elke `get()` | ✅ Gedaan |
-| F2-07 | `storage.js`: `migrate()` geeft `null` bij ongeldig record  | ✅ Gedaan |
-| F2-08 | `storage.js`: `console.log` bij laden verwijderd            | ✅ Gedaan |
-| F2-09 | `js/LSD.js` dubbele `DOMContentLoaded`                      | ❌ Geannuleerd — buiten scope |
+| Onderdeel | Status | Versie |
+|-----------|--------|--------|
+| Kernstructuur | ✅ Stabiel | — |
+| JS centrale modules | ✅ Opgeschoond | v2.0.0 |
+| CSS Tree layout | ✅ Opgeschoond | v2.0.0 |
+| Export | ✅ Gecentraliseerd + facelift | v2.1.0 |
+| Storage | ✅ Opgeschoond | v2.0.0 |
+| Facelift alle NL pagina's | ✅ Gedaan | v2.0.0 |
+| Auth — login/registratie/reset | ✅ Volledig werkend | v2.2.0 |
+| TopBar login modal | ✅ Werkend op alle pagina's | v2.0.2 |
+| Ko-fi donatie knop | ✅ Toegevoegd | v1.5 |
+| SMTP e-mail (Gmail) | ✅ Werkend | — |
+| Cloud backup (Fase A+) | 🔄 Volgende stap | — |
+| Zoekfunctie | ⚠️ Basisversie | v2.0.0 |
+| Stamboomweergave | ⚠️ Basisversie | v2.0.0 |
+| Tijdlijn | ⚠️ Basisversie | v2.0.0 |
+| Relaties | ⚠️ Basisversie | v2.0.0 |
+| Engelse versies | ❌ Onvolledig | — |
 
 ---
 
-## Fase 3 — Kernfeatures verbeteren 🔄 HUIDIG
+## Fasering
 
-### 3A — Zoekfunctie
-| ID    | Prioriteit | Taak                                                        | Status |
-|-------|-----------|-------------------------------------------------------------|--------|
-| F3-01 | 🔴 Hoog   | Zoekresultaten highlighten (zoekterm vetgedrukt in resultaat) | 📋 Open |
-| F3-02 | 🔴 Hoog   | Zoeken op meerdere velden tegelijk (bijv. voornaam + achternaam) | 📋 Open |
-| F3-03 | 🟡 Middel | Popup-stijl verplaatsen van inline JS naar `style.css`      | 📋 Open |
-| F3-04 | 🟡 Middel | Keyboard navigatie in zoekpopup (pijltoetsen + Enter)       | 📋 Open |
-| F3-05 | 🟢 Laag   | Zoekgeschiedenis (recent gezochte personen)                 | 📋 Open |
-
-### 3B — Relaties
-| ID    | Prioriteit | Taak                                                        | Status |
-|-------|-----------|-------------------------------------------------------------|--------|
-| F3-06 | 🔴 Hoog   | Meerdere partners ondersteunen (PartnerID als array met `\|`) | 📋 Open |
-| F3-07 | 🔴 Hoog   | Relatie toevoegen vanuit `manage.html` (dropdown + zoekbalk) | 📋 Open |
-| F3-08 | 🟡 Middel | Grootouders en kleinkinderen tonen in view.html             | 📋 Open |
-| F3-09 | 🟡 Middel | Halfbroers/halfzussen correct onderscheiden van broers/zussen | 📋 Open |
-| F3-10 | 🟢 Laag   | Relatie-labels vertalen (VHoofdID → Vader, MHoofdID → Moeder) | 📋 Open |
-
-### 3C — Stamboomvisualisatie (view.html)
-| ID    | Prioriteit | Taak                                                        | Status |
-|-------|-----------|-------------------------------------------------------------|--------|
-| F3-11 | 🔴 Hoog   | Verbindingslijnen tekenen tussen nodes (SVG of CSS)         | 📋 Open |
-| F3-12 | 🔴 Hoog   | Foto/avatar toevoegen aan persoon-node                      | 📋 Open |
-| F3-13 | 🟡 Middel | Klikbare nodes navigeren naar die persoon als nieuw hoofd   | 📋 Open |
-| F3-14 | 🟡 Middel | Zoom en pan op de stamboomweergave                          | 📋 Open |
-| F3-15 | 🟢 Laag   | Uitklappen/inklappen van takken                             | 📋 Open |
-
-### 3D — Tijdlijn (timeline.html)
-| ID    | Prioriteit | Taak                                                        | Status |
-|-------|-----------|-------------------------------------------------------------|--------|
-| F3-16 | 🔴 Hoog   | Overlijdensdatum tonen op tijdlijn naast geboortedatum      | 📋 Open |
-| F3-17 | 🟡 Middel | Levensspanne als balk weergeven (geboorte → overlijden)     | 📋 Open |
-| F3-18 | 🟡 Middel | Schaalbare tijdas (zoom in op bepaalde periode)             | 📋 Open |
-| F3-19 | 🟢 Laag   | Historische gebeurtenissen toevoegen aan tijdlijn           | 📋 Open |
-
-### 3E — Import / export
-| ID    | Prioriteit | Taak                                                        | Status |
-|-------|-----------|-------------------------------------------------------------|--------|
-| F3-20 | 🔴 Hoog   | `import.js` herschrijven met inline commentaar              | 📋 Open |
-| F3-21 | 🔴 Hoog   | Import validatie: dubbele ID's detecteren en melden         | 📋 Open |
-| F3-22 | 🟡 Middel | Import preview tonen vóór opslaan                          | 📋 Open |
-| F3-23 | 🟡 Middel | GEDCOM-formaat importeren (standaard stamboomformaat)       | 📋 Open |
-
-### 3F — Overige pagina's ✅ F3-29 gedaan
-| ID    | Prioriteit | Taak                                                        | Status |
-|-------|-----------|-------------------------------------------------------------|--------|
-| F3-24 | 🔴 Hoog   | `stamboom/manage-en.html` repareren (mist bijna alle scripts) | 📋 Open |
-| F3-25 | 🔴 Hoog   | `home/export-en.html` synchroniseren met `export.html`      | 📋 Open |
-| F3-26 | 🟡 Middel | `stats.html` inline JS verplaatsen naar apart `stats.js`    | 📋 Open |
-| F3-27 | 🟡 Middel | `home/print.html` implementeren (printweergave stamboom)    | 📋 Open |
-| F3-28 | 🟢 Laag   | `schema.js` herschrijven met inline commentaar              | 📋 Open |
-| F3-29 | 🟡 Middel | `export.html` facelift: welkomstblok, CSV en JSON als aparte secties | ✅ Gedaan |
+### Fase 0 — Audit & opschoning ✅ AFGEROND
+### Fase 1 — Structuur & centrale modules ✅ AFGEROND
+### Fase 2 — Kapotte bestanden repareren ✅ AFGEROND
+### Fase 3 — Kernfeatures verbeteren 🔄 HUIDIG
+### Fase A — Account & donaties ✅ AFGEROND
+### Fase A+ — Cloud backup 🔄 VOLGENDE
+### Fase 4 — Nieuwe features 📋 GEPLAND
+### Fase 5 — Cloud & accounts (uitgebreid) 🔮 TOEKOMST
 
 ---
 
-## Fase 4 — Nieuwe features 📋 GEPLAND
+## Architectuurbeslissingen (ADR)
 
-### 4A — Persoonsbeheer
-| ID    | Prioriteit | Taak                                                        | Status |
-|-------|-----------|-------------------------------------------------------------|--------|
-| F4-01 | 🔴 Hoog   | Persoon verwijderen vanuit `manage.html` (DeleteRow.js implementeren) | 📋 Open |
-| F4-02 | 🔴 Hoog   | Persoon dupliceren als startpunt voor vergelijkbaar record  | 📋 Open |
-| F4-03 | 🟡 Middel | Foto uploaden en koppelen aan persoon (base64 in localStorage) | 📋 Open |
-| F4-04 | 🟡 Middel | Notities/opmerkingen per persoon uitbreiden (rijke tekst)   | 📋 Open |
+### ADR-001: Geen server, alleen localStorage (lokale versie)
+**Beslissing:** de app werkt volledig in de browser zonder backend voor basisfunctionaliteit.
+**Reden:** eenvoud, geen hosting nodig, werkt offline.
+**Gevolg:** cloud-sync vereist Supabase (zie ADR-007).
 
-### 4B — Zoeken & filteren
-| ID    | Prioriteit | Taak                                                        | Status |
-|-------|-----------|-------------------------------------------------------------|--------|
-| F4-05 | 🟡 Middel | Geavanceerd zoeken: filteren op geboortejaar, geslacht, relatie | 📋 Open |
-| F4-06 | 🟡 Middel | Personen sorteren op achternaam, geboortedatum              | 📋 Open |
-| F4-07 | 🟢 Laag   | Zoeken over meerdere stambomen tegelijk                     | 📋 Open |
+### ADR-002: Centrale JS-modules via window.*
+**Beslissing:** gedeelde functies worden geëxporteerd als `window.ModuleNaam`.
+**Reden:** geen bundler/npm, scripts worden via `<script src>` geladen.
+**Gevolg:** laadvolgorde in HTML is verplicht.
 
-### 4C — Statistieken (stats.html)
-| ID    | Prioriteit | Taak                                                        | Status |
-|-------|-----------|-------------------------------------------------------------|--------|
-| F4-08 | 🟡 Middel | Grafiek: verdeling geboortejaren per decennium              | 📋 Open |
-| F4-09 | 🟡 Middel | Grafiek: verhouding M/V/X in de stamboom                    | 📋 Open |
-| F4-10 | 🟢 Laag   | Oudste en jongste persoon highlighten                       | 📋 Open |
-| F4-11 | 🟢 Laag   | Gemiddelde leeftijd berekenen                               | 📋 Open |
+### ADR-003: Schema als single source of truth
+**Beslissing:** alle veldnamen komen uit `window.StamboomSchema.fields`.
+**Reden:** één aanpassing in schema.js werkt door in import, export, manage en storage.
 
-### 4D — UX verbeteringen
-| ID    | Prioriteit | Taak                                                        | Status |
-|-------|-----------|-------------------------------------------------------------|--------|
-| F4-12 | 🟡 Middel | Donkere modus ondersteuning (CSS variabelen)                | 📋 Open |
-| F4-13 | 🟡 Middel | Mobielvriendelijke weergave voor manage en view             | 📋 Open |
-| F4-14 | 🟡 Middel | Ongedaan maken (undo) bij verwijderen of wijzigen           | 📋 Open |
-| F4-15 | 🟢 Laag   | Toetsenbordsnelkoppelingen voor veelgebruikte acties        | 📋 Open |
+### ADR-004: Export alleen via export.html
+**Beslissing:** CSV en JSON export zit alleen op de exportpagina.
+**Reden:** één plek voor exportlogica, geen duplicaten.
 
----
+### ADR-005: Versienummering vanaf v2.0.0
+**Beslissing:** alle nieuwe of door ons aangepaste bestanden starten op v2.0.0.
+**Reden:** duidelijk onderscheid tussen originele code en onze versie.
 
-## Fase 5 — Cloud & accounts 🔮 TOEKOMST
+### ADR-006: Consistente UI-standaarden
+**Beslissing:** alle pagina's volgen dezelfde opmaakstandaard.
+**Standaard:**
+- Welkomstblok bovenaan elke pagina
+- Zoekbalk: width 50%, padding 9px 12px
+- Knoppen: padding 9px 18px, font-weight bold
+- Kleurcodes: grijs=neutraal, groen=aanmaken, blauw=primaire actie, rood=destructief
 
-| ID    | Taak                                                        | Status |
-|-------|-------------------------------------------------------------|--------|
-| F5-01 | Backend kiezen (Firebase / Supabase / eigen server)         | 🔮 Toekomst |
-| F5-02 | Gebruikersaccounts: registreren, inloggen, uitloggen        | 🔮 Toekomst |
-| F5-03 | Data sync tussen apparaten                                  | 🔮 Toekomst |
-| F5-04 | Stamboom delen met andere gebruikers (leesrechten)          | 🔮 Toekomst |
-| F5-05 | Samenwerkingsmodus: meerdere gebruikers bewerken samen      | 🔮 Toekomst |
-| F5-06 | Versiebeheer per persoon (wijzigingshistorie)               | 🔮 Toekomst |
+### ADR-007: Supabase als backend
+**Beslissing:** Supabase gekozen als backend voor auth en cloud-opslag.
+**Reden:** gratis tier, PostgreSQL, ingebouwde auth, realtime support, geen eigen server nodig.
+**Project URL:** `https://xpufzrjncivyzyukwcmn.supabase.co`
+**Gevolg:** auth werkt via `js/auth.js` met `window.AuthModule`.
 
----
+### ADR-008: TopBar auth modal via topbar.js
+**Beslissing:** login/registratie via popup modal in de TopBar, niet via aparte pagina.
+**Reden:** professioneler, gebruiker verliest geen context.
+**Gevolg:** `topbar.js` moet geladen worden via `createElement` NADAT TopBar HTML in DOM zit.
 
-## Technische schuld
-
-> Bekende problemen die opgelost moeten worden maar nog niet gepland zijn.
-
-| ID    | Omschrijving                                                | Ernst |
-|-------|-------------------------------------------------------------|-------|
-| TD-01 | `js/Sandbox.js` — testbestand staat nog in de repo          | 🟢 Laag |
-| TD-02 | `js/script.js` — doet alleen `console.log`, wordt op 9 pagina's geladen | 🟡 Middel |
-| TD-03 | `js/LSD.js` — dubbele `DOMContentLoaded` event listener     | 🟢 Laag |
-| TD-04 | `Layout/*.html` worden via `fetch()` geladen — werkt niet op `file://` protocol | 🟡 Middel |
-| TD-05 | Popup-stijlen in `LiveSearch.js` zijn hardcoded inline CSS  | 🟢 Laag |
-| TD-06 | `home/import-en.html` laadt `import.js` zonder `schema.js` en `storage.js` | 🔴 Hoog |
+### ADR-009: Scripts laadvolgorde met fetch
+**Beslissing:** TopBar, Navbar en Footer worden via fetch() geladen onderaan body.
+**Reden:** fetch() werkt niet op file:// protocol — alleen op HTTPS.
+**Gevolg:** topbar.js wordt via createElement geladen NA de TopBar fetch.
 
 ---
 
-## Definitie of Done
+## Laadvolgorde scripts (verplicht)
 
-Een taak is **klaar** als:
-- [ ] De code werkt zoals bedoeld
-- [ ] Inline commentaar aanwezig op elke coderegel
-- [ ] Bestandsheader bijgewerkt met nieuw versienummer
-- [ ] `PROJECT_LOG.md` bijgewerkt met wijzigingen
-- [ ] `BACKLOG.md` bijgewerkt: taak op ✅ Gedaan gezet
-- [ ] Getest in de browser (geen console-errors)
+```
+<!-- Altijd onderaan <body>, vóór </body> -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+
+<script>
+    // TopBar eerst laden, dan topbar.js injecteren
+    fetch('/MyFamTreeCollab/Layout/TopBar.html')
+        .then(resp => resp.text())
+        .then(function(data) {
+            document.getElementById('topbar-placeholder').innerHTML = data;
+            var s = document.createElement('script');
+            s.src = '../js/topbar.js';
+            document.body.appendChild(s);
+        });
+    fetch('/MyFamTreeCollab/Layout/Navbar.html')...
+    fetch('/MyFamTreeCollab/Layout/Footer.html')...
+</script>
+
+<!-- Pagina-specifieke scripts altijd als laatste -->
+schema.js → idGenerator.js → storage.js → [pagina].js
+```
+
+**Let op voor index.html (root):** paden zijn `/MyFamTreeCollab/js/` niet `../js/`
+
+---
+
+## Supabase tabellen
+
+```
+auth.users          ← ingebouwd door Supabase Auth
+profiles            ← username, avatar_id (gekoppeld aan auth.users.id)
+stambomen           ← (Fase A+) user_id, data JSON, updated_at
+```
+
+## Globale exports (window.*)
+
+| Export | Bron |
+|---|---|
+| `window.ftSafe`, `window.ftFormatDate`, `window.ftParseBirthday` | utils.js |
+| `window.genereerCode` | idGenerator.js |
+| `window.StamboomSchema` | schema.js |
+| `window.StamboomStorage` | storage.js |
+| `window.RelatieEngine.computeRelaties` | relatieEngine.js |
+| `window.liveSearch`, `window.initLiveSearch` | LiveSearch.js |
+| `window.ExportModule.exportCSV`, `window.ExportModule.exportJSON` | export.js |
+| `window.AuthModule` | auth.js |
+| `window.TopBarAuth` | topbar.js |
+
+---
+
+## Bestandsstatus
+
+| Bestand | Versie | Status |
+|---|---|---|
+| js/utils.js | v2.0.0 | ✅ stabiel |
+| js/schema.js | v0.1.0 | ⚠️ nog te doen |
+| js/idGenerator.js | v2.0.0 | ✅ stabiel |
+| js/storage.js | v2.0.0 | ✅ stabiel |
+| js/LiveSearch.js | v2.0.0 | ✅ stabiel |
+| js/relatieEngine.js | v2.0.0 | ✅ stabiel |
+| js/create.js | v2.0.0 | ✅ stabiel |
+| js/manage.js | v2.0.0 | ✅ stabiel |
+| js/view.js | v2.0.0 | ✅ stabiel |
+| js/timeline.js | v2.0.0 | ✅ stabiel |
+| js/export.js | v2.0.0 | ✅ stabiel |
+| js/import.js | v2.0.3 | ⚠️ nog te doen |
+| js/auth.js | v2.2.0 | ✅ stabiel |
+| js/topbar.js | v2.0.2 | ✅ stabiel |
+| js/reset.js | v1.0.0 | ✅ stabiel |
+| js/cloudSync.js | — | 📋 Fase A+ |
+| js/LSD.js | v0.0.0 | ❌ kapot (lage prio) |
+| home/reset.html | v1.0.0 | ✅ stabiel |
+| home/login.html | — | ❌ vervangen door modal |
+| Layout/TopBar.html | v0.4 | ✅ stabiel |
+| Layout/Footer.html | v1.5 | ✅ stabiel |
+| bronnen/handleiding.html | v1.0.0 | ✅ nieuw |
+
+---
+
+## Mapstructuur
+
+```
+MyFamTreeCollab/
+├── index.html                  ← startpagina (v2.0.2)
+├── PROJECT.md                  ← roadmap en beslissingen
+├── PROJECT_LOG.md              ← bestandsoverzicht en sessiehistorie
+├── BACKLOG.md                  ← alle taken per fase
+├── js/
+│   ├── utils.js                ← centrale hulpfuncties (v2.0.0)
+│   ├── schema.js               ← datastructuur definitie (v0.1.0)
+│   ├── idGenerator.js          ← ID generatie (v2.0.0)
+│   ├── storage.js              ← localStorage API (v2.0.0)
+│   ├── LiveSearch.js           ← zoekfunctie (v2.0.0)
+│   ├── relatieEngine.js        ← relatie berekening (v2.0.0)
+│   ├── create.js               ← eerste persoon aanmaken (v2.0.0)
+│   ├── manage.js               ← stamboom beheren (v2.0.0)
+│   ├── view.js                 ← stamboom visualiseren (v2.0.0)
+│   ├── timeline.js             ← tijdlijn visualisatie (v2.0.0)
+│   ├── import.js               ← CSV/TXT importeren (v2.0.3)
+│   ├── export.js               ← CSV/JSON exporteren (v2.0.0)
+│   ├── auth.js                 ← Supabase authenticatie (v2.2.0)
+│   ├── topbar.js               ← TopBar auth modal (v2.0.2)
+│   ├── reset.js                ← wachtwoord reset (v1.0.0)
+│   └── cloudSync.js            ← cloud backup (Fase A+ — nog te bouwen)
+├── css/
+│   ├── style.css               ← globale stijlen (v1.0.6)
+│   ├── Tree.css                ← stamboom stijlen (v2.0.0)
+│   ├── timeline.css            ← tijdlijn stijlen (v1.3.0)
+│   └── RelationColors.css      ← kleurcodering relaties (v1.0.1)
+├── home/
+│   ├── create.html             ← eerste persoon aanmaken (v2.0.1)
+│   ├── import.html             ← data importeren (v2.0.0)
+│   ├── export.html             ← data exporteren (v2.1.1)
+│   ├── about.html              ← over de app + Ko-fi (v2.0.3)
+│   ├── print.html              ← afdrukken — binnenkort (v2.0.0)
+│   └── reset.html              ← wachtwoord resetten (v1.0.0)
+├── stamboom/
+│   ├── manage.html             ← stamboom beheren (v2.0.0)
+│   ├── view.html               ← stamboom bekijken (v2.0.0)
+│   ├── timeline.html           ← tijdlijn bekijken (v2.0.0)
+│   ├── stats.html              ← statistieken (v2.0.0)
+│   └── storage.html            ← data inzien en resetten (v2.0.0)
+├── bronnen/
+│   ├── template.html           ← CSV template download (v2.0.0)
+│   └── handleiding.html        ← gebruikershandleiding (v1.0.0)
+└── Layout/
+    ├── Navbar.html
+    ├── TopBar.html             ← v0.4 met Ko-fi knop
+    └── Footer.html             ← v1.5 met Ko-fi knop
+```
