@@ -1,14 +1,14 @@
-<!-- ======================= bronnen/handleiding.html v0.1.0 =======================
-consistente opmaak — Navbar + TopBar + 'komt binnenkort' blok, geen aparte header meer, 
- script.js verwijderd. Login + Favicon / App-icoon toegevoegd
-======================================================================= -->
+<!-- ======================= bronnen/handleiding.html v1.0.0 =======================
+     Gebruikershandleiding voor MyFamTreeCollab
+     Beschrijft alle functies van de applicatie stap voor stap
+     ======================================================================= -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyFamTreeCollab - Afdrukken</title>
-        
+    <title>MyFamTreeCollab - Handleiding</title>
+
     <!-- ===== Favicon / App-icoon ===== -->
     <link rel="icon" type="image/x-icon" href="/MyFamTreeCollab/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/MyFamTreeCollab/favicon-32x32.png">
@@ -17,61 +17,453 @@ consistente opmaak — Navbar + TopBar + 'komt binnenkort' blok, geen aparte hea
 
     <link rel="stylesheet" href="../css/style.css">
     <style>
-        /* ======================= BINNENKORT BLOK ======================= */
-        .binnenkort-blok {                                                 /* Centraal informatieblok */
-            max-width: 520px;                                              /* Niet te breed */
-            margin: 0 auto;                                                /* Horizontaal centreren */
-            text-align: center;                                            /* Tekst centreren */
-            padding: 48px 24px;                                            /* Ruimte rondom de inhoud */
+        /* ======================= PAGINA LAYOUT ======================= */
+        .handleiding-wrapper {
+            max-width: 760px;              /* Prettige leeslengte */
+            margin: 0 auto;
+            padding: 0 20px 60px;
         }
-        .binnenkort-blok .icoon { font-size: 3rem; margin-bottom: 16px; } /* Groot icoon boven de tekst */
-        .binnenkort-blok h1 { font-size: 1.4rem; font-weight: bold; margin: 0 0 12px 0; color: #222; }
-        .binnenkort-blok p  { font-size: 0.95rem; color: #555; line-height: 1.6; margin: 0 0 24px 0; }
-        .knop-home {                                                       /* Knop terug naar home */
-            display: inline-block; padding: 10px 24px;
-            background: #1E90FF; color: #fff; text-decoration: none;
-            border-radius: 5px; font-size: 0.95rem; font-weight: bold;
+
+        /* ======================= WELKOMSTBLOK ======================= */
+        .welkom-blok {
+            margin-bottom: 32px;
         }
-        .knop-home:hover { background: #1278d4; }
+        .welkom-blok h1 {
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin: 0 0 8px 0;
+            color: #222;
+        }
+        .welkom-blok p {
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* ======================= INHOUDSOPGAVE ======================= */
+        .inhoudsopgave {
+            background: #f8f8f5;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 20px 24px;
+            margin-bottom: 40px;
+        }
+        .inhoudsopgave h2 {
+            font-size: 1rem;
+            font-weight: bold;
+            margin: 0 0 12px 0;
+            color: #333;
+        }
+        .inhoudsopgave ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .inhoudsopgave li {
+            margin-bottom: 6px;
+            font-size: 0.92rem;
+        }
+        .inhoudsopgave a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .inhoudsopgave a:hover { text-decoration: underline; }
+
+        /* ======================= SECTIES ======================= */
+        .sectie {
+            margin-bottom: 48px;
+            scroll-margin-top: 20px;       /* Ruimte bij anchor-navigatie */
+        }
+        .sectie h2 {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin: 0 0 16px 0;
+            color: #222;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #eee; /* Subtiele scheidingslijn onder sectietitel */
+        }
+        .sectie h3 {
+            font-size: 1rem;
+            font-weight: bold;
+            margin: 24px 0 8px 0;
+            color: #333;
+        }
+        .sectie p {
+            font-size: 0.95rem;
+            color: #444;
+            line-height: 1.7;
+            margin: 0 0 12px 0;
+        }
+        .sectie ul, .sectie ol {
+            margin: 0 0 12px 20px;
+        }
+        .sectie li {
+            font-size: 0.95rem;
+            color: #444;
+            line-height: 1.7;
+            margin-bottom: 4px;
+        }
+
+        /* ======================= STAPPEN BLOK ======================= */
+        .stappen {
+            counter-reset: stap;           /* Reset teller voor genummerde stappen */
+            list-style: none;
+            padding: 0;
+            margin: 0 0 16px 0;
+        }
+        .stappen li {
+            counter-increment: stap;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+            color: #444;
+            line-height: 1.6;
+        }
+        .stappen li::before {
+            content: counter(stap);        /* Stap nummer */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 26px;
+            height: 26px;
+            background: #2563eb;
+            color: white;
+            border-radius: 50%;
+            font-size: 0.8rem;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        /* ======================= TIP BLOK ======================= */
+        .tip {
+            background: #eff6ff;
+            border-left: 4px solid #2563eb;
+            border-radius: 0 6px 6px 0;
+            padding: 12px 16px;
+            margin: 16px 0;
+            font-size: 0.9rem;
+            color: #1e40af;
+            line-height: 1.5;
+        }
+        .tip strong { color: #1e3a8a; }
+
+        /* ======================= WAARSCHUWING BLOK ======================= */
+        .waarschuwing {
+            background: #fff7ed;
+            border-left: 4px solid #f97316;
+            border-radius: 0 6px 6px 0;
+            padding: 12px 16px;
+            margin: 16px 0;
+            font-size: 0.9rem;
+            color: #9a3412;
+            line-height: 1.5;
+        }
+
+        /* ======================= TERUG NAAR TOP ======================= */
+        .terug-top {
+            display: inline-block;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .terug-top:hover { text-decoration: underline; }
+
+        /* ======================= VERSIE BADGE ======================= */
+        .versie-badge {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #0369a1;
+            font-size: 0.78rem;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
 
 <!-- ======================= TopBar ======================= -->
 <div id="topbar-placeholder"></div>
-     
-<!-- Scripts: Supabase + auth ALTIJD vóór topbar.js -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/js/utils.js"></script>
-<script src="/js/auth.js"></script>
-     
-<script>
-fetch('/MyFamTreeCollab/Layout/TopBar.html')
-    .then(resp => resp.text())
-    .then(data => document.getElementById('topbar-placeholder').innerHTML = data);
-</script>
 
 <!-- ======================= Navbar ======================= -->
-<div id="Navbar-placeholder"></div>
-<script>
-fetch('/MyFamTreeCollab/Layout/Navbar.html')
-    .then(resp => resp.text())
-    .then(data => {
-        const placeholder = document.getElementById('Navbar-placeholder');
-        if (placeholder) placeholder.innerHTML = data;
-    });
-</script>
+<div id="navbar-placeholder"></div>
 
 <!-- ======================= Hoofd content ======================= -->
 <main>
-    <div class="binnenkort-blok">
-        <div class="icoon">🛠️</div>                <!-- icoon passend bij pagina functie -->
-        <h1>Handleiding</h1>
-        <p>
-            De handleiding pagina is momenteel in ontwikkeling.<br>
-            Binnenkort kun je hier de stamboom handleidingen raadplegen.
-        </p>
-        <a href="/MyFamTreeCollab/" class="knop-home">Terug naar Home</a>
+    <div class="handleiding-wrapper">
+
+        <!-- ======================= Welkomstblok ======================= -->
+        <div class="welkom-blok">
+            <h1>Handleiding <span class="versie-badge">v1.0.0</span></h1>
+            <p>
+                Welkom bij de handleiding van MyFamTreeCollab. Hier vind je stap voor stap uitleg
+                over alle functies van de applicatie — van je eerste persoon aanmaken tot je stamboom
+                exporteren en je account beheren.
+            </p>
+        </div>
+
+        <!-- ======================= Inhoudsopgave ======================= -->
+        <div class="inhoudsopgave">
+            <h2>Inhoudsopgave</h2>
+            <ol>
+                <li><a href="#aan-de-slag">Aan de slag</a></li>
+                <li><a href="#account">Account aanmaken en inloggen</a></li>
+                <li><a href="#persoon-aanmaken">Eerste persoon aanmaken</a></li>
+                <li><a href="#stamboom-beheren">Stamboom beheren</a></li>
+                <li><a href="#stamboom-bekijken">Stamboom bekijken</a></li>
+                <li><a href="#tijdlijn">Tijdlijn</a></li>
+                <li><a href="#statistieken">Statistieken</a></li>
+                <li><a href="#importeren">Importeren</a></li>
+                <li><a href="#exporteren">Exporteren</a></li>
+                <li><a href="#wachtwoord-reset">Wachtwoord vergeten</a></li>
+                <li><a href="#steun">Steun dit project</a></li>
+            </ol>
+        </div>
+
+        <!-- ======================= 1. Aan de slag ======================= -->
+        <div class="sectie" id="aan-de-slag">
+            <h2>1. Aan de slag</h2>
+            <p>
+                MyFamTreeCollab werkt volledig in je browser. Je hebt geen installatie nodig —
+                open gewoon de website en begin. Je data wordt standaard lokaal opgeslagen op je
+                eigen apparaat, in de browser.
+            </p>
+            <div class="tip">
+                <strong>Tip:</strong> Maak een account aan om later je stamboom veilig op te slaan
+                in de cloud. Zonder account werkt alles ook — je data blijft dan alleen lokaal.
+            </div>
+            <p>
+                De navigatie bovenaan de pagina brengt je naar alle onderdelen van de app:
+                Beheren, Stamboom, Tijdlijn, Statistieken en Exporteren.
+            </p>
+            <a href="#" class="terug-top">↑ Terug naar boven</a>
+        </div>
+
+        <!-- ======================= 2. Account ======================= -->
+        <div class="sectie" id="account">
+            <h2>2. Account aanmaken en inloggen</h2>
+            <p>
+                Een account geeft je toegang tot cloud-opslag en synchronisatie tussen apparaten.
+                Registreren is gratis.
+            </p>
+
+            <h3>Account aanmaken</h3>
+            <ul class="stappen">
+                <li>Klik op <strong>Login</strong> in de balk bovenaan de pagina.</li>
+                <li>Klik op het tabblad <strong>"Account aanmaken"</strong>.</li>
+                <li>Vul je gebruikersnaam, e-mailadres en wachtwoord in.</li>
+                <li>Klik op <strong>"Account aanmaken"</strong>.</li>
+                <li>Je kunt nu direct inloggen.</li>
+            </ul>
+
+            <h3>Inloggen</h3>
+            <ul class="stappen">
+                <li>Klik op <strong>Login</strong> in de balk bovenaan.</li>
+                <li>Vul je e-mailadres en wachtwoord in.</li>
+                <li>Klik op <strong>"Inloggen"</strong>.</li>
+                <li>Je gebruikersnaam verschijnt bovenaan de pagina.</li>
+            </ul>
+
+            <h3>Uitloggen</h3>
+            <p>Klik op <strong>"Uitloggen"</strong> naast je gebruikersnaam bovenaan de pagina.</p>
+
+            <a href="#" class="terug-top">↑ Terug naar boven</a>
+        </div>
+
+        <!-- ======================= 3. Eerste persoon ======================= -->
+        <div class="sectie" id="persoon-aanmaken">
+            <h2>3. Eerste persoon aanmaken</h2>
+            <p>
+                Elke stamboom begint met één persoon — de <strong>Hoofd-ID</strong>. Dit is
+                meestal jijzelf of de persoon van wie je de stamboom opbouwt.
+            </p>
+            <ul class="stappen">
+                <li>Ga naar <strong>Start Nu</strong> op de homepagina, of klik op <strong>Beheren</strong> in de navigatie.</li>
+                <li>Klik op <strong>"Nieuwe stamboom"</strong> als je nog geen personen hebt.</li>
+                <li>Vul de gegevens in: Roepnaam en Achternaam zijn verplicht, de rest is optioneel.</li>
+                <li>Klik op <strong>"Opslaan"</strong>.</li>
+                <li>Controleer de gegevens in het preview-venster.</li>
+                <li>Klik op <strong>"Bevestigen &amp; ga naar Manage"</strong>.</li>
+            </ul>
+            <div class="tip">
+                <strong>Tip:</strong> Je kunt later altijd gegevens aanpassen via de Beheer-pagina.
+            </div>
+            <a href="#" class="terug-top">↑ Terug naar boven</a>
+        </div>
+
+        <!-- ======================= 4. Stamboom beheren ======================= -->
+        <div class="sectie" id="stamboom-beheren">
+            <h2>4. Stamboom beheren</h2>
+            <p>
+                Op de Beheer-pagina voeg je familieleden toe, bewerk je bestaande personen
+                en leg je relaties vast.
+            </p>
+
+            <h3>Persoon toevoegen</h3>
+            <ul class="stappen">
+                <li>Ga naar <strong>Beheren</strong> in de navigatie.</li>
+                <li>Klik op <strong>"Persoon toevoegen"</strong>.</li>
+                <li>Vul de gegevens in — velden als VHoofdID (vader) en MHoofdID (moeder) koppelen de persoon aan anderen.</li>
+                <li>Klik op <strong>"Opslaan"</strong>.</li>
+            </ul>
+
+            <h3>Persoon bewerken</h3>
+            <ul class="stappen">
+                <li>Zoek de persoon via de zoekbalk bovenaan.</li>
+                <li>Klik op de naam van de persoon in de lijst.</li>
+                <li>Pas de gegevens aan en klik <strong>"Opslaan"</strong>.</li>
+            </ul>
+
+            <h3>Relaties vastleggen</h3>
+            <p>Relaties leg je vast via de velden:</p>
+            <ul>
+                <li><strong>VHoofdID</strong> — ID van de vader</li>
+                <li><strong>MHoofdID</strong> — ID van de moeder</li>
+                <li><strong>PartnerID</strong> — ID van de partner</li>
+            </ul>
+            <div class="tip">
+                <strong>Tip:</strong> Het ID van een persoon vind je in de lijst op de Beheer-pagina,
+                links van de naam.
+            </div>
+            <a href="#" class="terug-top">↑ Terug naar boven</a>
+        </div>
+
+        <!-- ======================= 5. Stamboom bekijken ======================= -->
+        <div class="sectie" id="stamboom-bekijken">
+            <h2>5. Stamboom bekijken</h2>
+            <p>
+                De Stamboom-pagina toont een visueel overzicht van de familieleden en hun
+                onderlinge relaties.
+            </p>
+            <ul class="stappen">
+                <li>Klik op <strong>Stamboom</strong> in de navigatie.</li>
+                <li>Zoek een persoon via de zoekbalk.</li>
+                <li>De stamboom toont de geselecteerde persoon met zijn/haar ouders, kinderen en partner.</li>
+            </ul>
+            <div class="waarschuwing">
+                <strong>Let op:</strong> De stamboomweergave is momenteel een basisversie.
+                Verbindingslijnen en uitgebreide navigatie komen in een volgende update.
+            </div>
+            <a href="#" class="terug-top">↑ Terug naar boven</a>
+        </div>
+
+        <!-- ======================= 6. Tijdlijn ======================= -->
+        <div class="sectie" id="tijdlijn">
+            <h2>6. Tijdlijn</h2>
+            <p>
+                De Tijdlijn toont alle personen op een chronologische as op basis van hun geboortedatum.
+            </p>
+            <ul class="stappen">
+                <li>Klik op <strong>Tijdlijn</strong> in de navigatie.</li>
+                <li>Je ziet alle personen gesorteerd op geboortejaar.</li>
+                <li>Klik op een persoon voor meer details.</li>
+            </ul>
+            <a href="#" class="terug-top">↑ Terug naar boven</a>
+        </div>
+
+        <!-- ======================= 7. Statistieken ======================= -->
+        <div class="sectie" id="statistieken">
+            <h2>7. Statistieken</h2>
+            <p>
+                De Statistieken-pagina geeft een overzicht van je stamboom: aantal personen,
+                verdeling mannen/vrouwen, oudste en jongste persoon.
+            </p>
+            <ul class="stappen">
+                <li>Klik op <strong>Statistieken</strong> in de navigatie.</li>
+                <li>De statistieken worden automatisch berekend op basis van je stamboomdata.</li>
+            </ul>
+            <a href="#" class="terug-top">↑ Terug naar boven</a>
+        </div>
+
+        <!-- ======================= 8. Importeren ======================= -->
+        <div class="sectie" id="importeren">
+            <h2>8. Importeren</h2>
+            <p>
+                Je kunt bestaande stamboomdata importeren via een CSV-bestand. Dit is handig
+                als je data hebt uit Excel of een ander programma.
+            </p>
+            <ul class="stappen">
+                <li>Download eerst het <a href="/MyFamTreeCollab/bronnen/template.html">CSV-sjabloon</a> om de juiste opmaak te zien.</li>
+                <li>Vul het sjabloon in met je familiegegevens.</li>
+                <li>Ga naar <strong>Importeren</strong> via de navigatie.</li>
+                <li>Klik op <strong>"Bestand kiezen"</strong> en selecteer je CSV-bestand.</li>
+                <li>Klik op <strong>"Importeren"</strong>.</li>
+            </ul>
+            <div class="waarschuwing">
+                <strong>Let op:</strong> Importeren overschrijft bestaande data. Maak eerst een
+                export als back-up voordat je importeert.
+            </div>
+            <a href="#" class="terug-top">↑ Terug naar boven</a>
+        </div>
+
+        <!-- ======================= 9. Exporteren ======================= -->
+        <div class="sectie" id="exporteren">
+            <h2>9. Exporteren</h2>
+            <p>
+                Je kunt je stamboom exporteren als CSV (voor Excel) of JSON (volledige back-up).
+            </p>
+
+            <h3>CSV exporteren</h3>
+            <ul class="stappen">
+                <li>Ga naar <strong>Exporteren</strong> via de navigatie.</li>
+                <li>Klik op <strong>"Exporteer CSV"</strong>.</li>
+                <li>Het bestand wordt opgeslagen in je downloadmap.</li>
+            </ul>
+
+            <h3>JSON exporteren</h3>
+            <ul class="stappen">
+                <li>Ga naar <strong>Exporteren</strong> via de navigatie.</li>
+                <li>Klik op <strong>"Export JSON"</strong>.</li>
+                <li>Bewaar dit bestand op een veilige plek als back-up.</li>
+            </ul>
+            <div class="tip">
+                <strong>Tip:</strong> Maak regelmatig een JSON-export als back-up van je stamboom.
+                Zo ben je nooit data kwijt.
+            </div>
+            <a href="#" class="terug-top">↑ Terug naar boven</a>
+        </div>
+
+        <!-- ======================= 10. Wachtwoord vergeten ======================= -->
+        <div class="sectie" id="wachtwoord-reset">
+            <h2>10. Wachtwoord vergeten</h2>
+            <p>
+                Ben je je wachtwoord vergeten? Je kunt via je e-mailadres een nieuw wachtwoord
+                instellen.
+            </p>
+            <ul class="stappen">
+                <li>Klik op <strong>Login</strong> bovenaan de pagina.</li>
+                <li>Klik op <strong>"Wachtwoord vergeten?"</strong> onder het inlogformulier.</li>
+                <li>Vul je e-mailadres in en klik <strong>"Resetlink versturen"</strong>.</li>
+                <li>Controleer je e-mail — ook je spammap.</li>
+                <li>Klik op de link in de mail.</li>
+                <li>Vul je nieuwe wachtwoord in en klik <strong>"Wachtwoord opslaan"</strong>.</li>
+            </ul>
+            <a href="#" class="terug-top">↑ Terug naar boven</a>
+        </div>
+
+        <!-- ======================= 11. Steun ======================= -->
+        <div class="sectie" id="steun">
+            <h2>11. Steun dit project</h2>
+            <p>
+                MyFamTreeCollab is gratis te gebruiken. Als je de app waardevol vindt,
+                kun je de ontwikkeling steunen via Ko-fi. Elk kopje koffie helpt om
+                de app verder te verbeteren.
+            </p>
+            <a href="https://ko-fi.com/myfamtreecollab"
+               target="_blank"
+               rel="noopener noreferrer"
+               style="display:inline-flex; align-items:center; gap:7px; padding:10px 22px; background:#FF5E5B; color:#fff; text-decoration:none; border-radius:6px; font-size:0.95rem; font-weight:bold;">
+                ☕ Steun dit project
+            </a>
+            <a href="#" class="terug-top" style="display:block; margin-top:16px;">↑ Terug naar boven</a>
+        </div>
+
     </div>
 </main>
 
@@ -79,39 +471,29 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
 <div id="footer-placeholder"></div>
 
 <!-- =============================================================
-     SCRIPTS — volgorde is verplicht:
-     1. Supabase SDK        — vereist door auth.js
-     2. utils.js            — vereist door alle andere modules
-     3. auth.js             — vereist door topbar.js
-     4. TopBar fetch        — laadt TopBar HTML, daarna topbar.js
-     5. Navbar fetch        — onafhankelijk, mag parallel
-     6. Pagina-scripts      — altijd als laatste
+     SCRIPTS — volgorde verplicht
+     handleiding.html heeft geen pagina-specifieke scripts
      ============================================================= -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/utils.js"></script>
 <script src="../js/auth.js"></script>
 
 <script>
-    // Stap 1: TopBar HTML laden, daarna PAS topbar.js injecteren
-    // Dit garandeert dat #top-auth in de DOM zit vóór topbar.js initialiseert
     fetch('/MyFamTreeCollab/Layout/TopBar.html')
         .then(resp => resp.text())
         .then(function(data) {
             document.getElementById('topbar-placeholder').innerHTML = data;
-            // #top-auth bestaat nu — veilig om topbar.js te laden
             var s = document.createElement('script');
             s.src = '../js/topbar.js';
             document.body.appendChild(s);
         });
 
-    // Stap 2: Navbar laden — geen auth-afhankelijkheid, mag parallel
     fetch('/MyFamTreeCollab/Layout/Navbar.html')
         .then(resp => resp.text())
         .then(function(data) {
             document.getElementById('navbar-placeholder').innerHTML = data;
         });
 
-    // Stap 3: Footer laden
     fetch('/MyFamTreeCollab/Layout/Footer.html')
         .then(resp => resp.text())
         .then(function(data) {
@@ -119,8 +501,5 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
         });
 </script>
 
-<!-- Pagina-specifieke scripts: ... → ... → -->
-
 </body>
 </html>
-
