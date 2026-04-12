@@ -1,7 +1,10 @@
-/* ======================= js/storage.js v1.0.0 =======================
+/* ======================= js/storage.js v2.0.1 =======================
    Persistente opslag voor MyFamTreeCollab via localStorage
-   Exporteert: window.StamboomStorage (get, set, add, update, clear)
+   Exporteert: window.StamboomStorage (get, set, add, update, clear, replaceAll)
    Vereist: schema.js (voor veldnamen), idGenerator.js (voor ID-fallback)
+
+   Wijzigingen v2.0.1:
+   - replaceAll(array) toegevoegd — vereist door cloudSync.js (Fase A+)
 
    Wijzigingen v1.0.0 t.o.v. v0.0.4:
    - migrate() wordt niet meer bij élke get() aangeroepen — alleen bij add()
@@ -156,14 +159,39 @@
         return true;                                                       // Bevestig dat de data verwijderd is
     }
 
+    /* ======================= REPLACE ALL ======================= */
+
+    /**
+     * Overschrijft de volledige localStorage dataset met een nieuwe array.
+     * Gebruikt door cloudSync.js bij het laden van een cloud backup.
+     * Valideert de invoer vóór het wegschrijven — schrijft nooit ongeldige data.
+     * @param  {Array}   dataset - De array van persoon-objecten uit de cloud
+     * @returns {boolean}        - true bij succes, false bij ongeldige invoer of schrijffout
+     */
+    function replaceAll(dataset) {
+        if (!Array.isArray(dataset)) {                                     // Controleer of de invoer een array is — cloudSync levert altijd een array, maar valideer defensief
+            console.error('storage.js: replaceAll() verwacht een array.');// Fout in console: dit is een programmeerfout, geen gebruikersfout
+            return false;                                                  // Geef false terug zodat cloudSync.js de fout kan doorgeven aan de UI
+        }
+
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset));   // Schrijf de cloud-array rechtstreeks naar localStorage onder dezelfde sleutel als get()/set()
+            return true;                                                   // Bevestig succesvolle overschrijving
+        } catch (e) {
+            console.error('storage.js: replaceAll() localStorage schrijffout:', e); // Kan falen bij volle opslag (QuotaExceededError) — log de oorzaak
+            return false;                                                  // Geef false terug zodat de UI een foutmelding kan tonen
+        }
+    }
+
     /* ======================= PUBLIEKE API ======================= */
     window.StamboomStorage = {                                             // Exporteer alle functies onder één globaal object
-        get,                                                               // window.StamboomStorage.get()                  — volledige dataset ophalen
-        set,                                                               // window.StamboomStorage.set(dataset)           — dataset volledig overschrijven
-        add,                                                               // window.StamboomStorage.add(person)            — één persoon toevoegen
-        update,                                                            // window.StamboomStorage.update(id, updates)    — één persoon bijwerken
-        clear,                                                             // window.StamboomStorage.clear()                — alle data verwijderen
-        version: 'v1.0.0'                                                  // Versienummer voor gebruik in storage.html info-balk
+        get,                                                               // window.StamboomStorage.get()                     — volledige dataset ophalen
+        set,                                                               // window.StamboomStorage.set(dataset)              — dataset volledig overschrijven
+        add,                                                               // window.StamboomStorage.add(person)               — één persoon toevoegen
+        update,                                                            // window.StamboomStorage.update(id, updates)       — één persoon bijwerken
+        clear,                                                             // window.StamboomStorage.clear()                   — alle data verwijderen
+        replaceAll,                                                        // window.StamboomStorage.replaceAll(dataset)       — cloud backup inladen (Fase A+)
+        version: 'v2.0.1'                                                  // Versienummer voor gebruik in storage.html info-balk
     };
 
 })();                                                                      // Sluit en voer de zelfuitvoerende functie direct uit
