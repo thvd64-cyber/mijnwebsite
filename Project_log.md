@@ -1,349 +1,72 @@
-# MyFamTreeCollab — Project Log & Bestandsoverzicht
+# MyFamTreeCollab — Project Log
 
-> **Doel van dit bestand:** centraal overzicht van alle JS-bestanden, hun versie,
-> wat ze doen, wat ze vereisen, en wat er per sessie gewijzigd is.
-> Dit bestand wordt bijgewerkt na elke code-sessie.
+> Chronologisch overzicht van alle sessies en wijzigingen.
 
 ---
 
-## Laadvolgorde in HTML (verplicht)
+## Sessie 10 — Fase A: Auth, Login Modal, Ko-fi, SMTP & Wachtwoord Reset
 
-```
-utils.js          ← altijd EERSTE
-schema.js
-idGenerator.js    ← alleen op pagina's met formulier (create, manage)
-storage.js
-LiveSearch.js
-relatieEngine.js  ← vóór view.js / manage.js / timeline.js
-[pagina].js       ← altijd LAATSTE
-```
+**Datum:** april 2026
+**Doel:** Supabase authenticatie opzetten, login modal bouwen, Ko-fi integreren, SMTP werkend krijgen en wachtwoord-reset flow implementeren.
 
----
+### Nieuwe bestanden
 
-## Bestandsoverzicht
+| Bestand | Versie | Omschrijving |
+|---------|--------|--------------|
+| `js/auth.js` | v2.2.0 | Supabase auth module: register, login, logout, resetPassword, updatePassword, getProfile |
+| `js/topbar.js` | v2.0.2 | TopBar auth modal: login, registratie, wachtwoord vergeten tabs |
+| `js/reset.js` | v1.0.0 | Wachtwoord reset logica voor reset.html |
+| `home/reset.html` | v1.0.0 | Wachtwoord instellen pagina na resetlink uit mail |
+| `bronnen/handleiding.html` | v1.0.0 | Gebruikershandleiding |
 
----
+### Gewijzigde bestanden
 
-### js/utils.js `v2.0.0` ✅ nieuw aangemaakt
-```
-Centrale hulpfuncties voor MyFamTreeCollab
-Exporteert: window.FTUtils, window.ftSafe, window.ftFormatDate, window.ftParseBirthday
-Vervangt lokale kopieën in: view.js, timeline.js, manage.js, LiveSearch.js, relatieEngine.js
-Vereist: niets (moet als EERSTE geladen worden)
-```
-**Functies:**
-- `safe(val)` — zet elke waarde veilig om naar getrimde string, voorkomt null-crashes
-- `formatDate(d)` — datumstring naar leesbare Nederlandse weergave (bijv. "12 mrt 1954")
-- `parseBirthday(d)` — datumstring naar Date-object voor gebruik in `.sort()`
+| Bestand | Van | Naar | Wijziging |
+|---------|-----|------|-----------|
+| `Layout/TopBar.html` | v0.2 | v0.4 | Auth slot + Ko-fi knop toegevoegd |
+| `Layout/Footer.html` | v1.4 | v1.5 | Ko-fi knop toegevoegd |
+| `home/about.html` | v2.0.2 | v2.0.3 | Ko-fi sectie toegevoegd |
+| `home/create.html` | v2.0.0 | v2.0.1 | Supabase scripts + correcte laadvolgorde |
+| `home/export.html` | v2.1.0 | v2.1.1 | Supabase scripts + correcte laadvolgorde |
+| `index.html` | v2.0.1 | v2.0.2 | Supabase scripts + correcte laadvolgorde |
 
-**Wijzigingen t.o.v. origineel:** nieuw bestand, vervangt 9 lokale kopieën verspreid over 5 bestanden
+### Supabase configuratie
 
----
+| Onderdeel | Waarde |
+|-----------|--------|
+| Project URL | `https://xpufzrjncivyzyukwcmn.supabase.co` |
+| Tabel | `profiles` (id, username, avatar_id, created_at) |
+| RLS | Aan — gebruiker ziet alleen eigen profiel |
+| Trigger | `handle_new_user` — maakt profiel aan bij registratie |
+| SMTP | Gmail App Password |
+| Redirect URL | `https://thvd64-cyber.github.io/MyFamTreeCollab/home/reset.html` |
+| Site URL | `https://thvd64-cyber.github.io/MyFamTreeCollab` |
 
-### js/idGenerator.js `v2.0.0` ✅ herschreven
-```
-Centrale ID-generator voor MyFamTreeCollab
-Exporteert: window.genereerCode(persoon, bestaandeDataset)
-Vereist: niets
-Gebruikt door: create.js, manage.js, storage.js
-```
-**Functies:**
-- `genereerCode(persoon, bestaandeData)` — genereert uniek ID op basis van naamletters + 3 cijfers
+### Belangrijke beslissingen
 
-**Wijzigingen t.o.v. v1.0.1:**
-- HTML-commentaar (`<!-- -->`) in JS verwijderd — was een syntaxfout
-- Zelf-import (`import './js/idGenerator.js'`) verwijderd
-- Exporteert nu correct als `window.genereerCode`
-- Uniciteitscheck toegevoegd via Set van bestaande ID's
-- Veiligheidsstop na 1000 pogingen toegevoegd
-- Alle letters worden nu consequent naar hoofdletter gezet
+- **Login modal** via popup — niet via aparte pagina
+- **topbar.js** laadt via `createElement` NADAT TopBar HTML in DOM zit
+- **SMTP** via Gmail App Password — tijdelijk, eigen domein aanbevolen later
+- **Ko-fi** op `ko-fi.com/myfamtreecollab`
+- **E-mailbevestiging** uitgeschakeld voor nu — aan te zetten zodra SMTP stabiel
 
----
+### Technische schuld toegevoegd
 
-### js/create.js `v2.0.0` ✅ herschreven
-```
-Verwerkt het formulier voor aanmaken van de eerste persoon (Hoofd-ID)
-Vereist: schema.js, idGenerator.js, storage.js
-Gebruikt door: home/create.html
-```
-**Wijzigingen t.o.v. v1.0.1:**
-- Lokale `genereerCode()` verwijderd — gebruikt nu `window.genereerCode` uit idGenerator.js
-- Hardcoded absolute URL vervangen door relatief pad `../stamboom/manage.html`
-- Inline commentaar toegevoegd op elke regel
+| ID | Omschrijving |
+|----|--------------|
+| TD-07 | SMTP via Gmail — niet ideaal voor productie, eigen domein nodig |
+
+### Volgende sessie: Fase A+
+
+Doel: cloud backup implementeren.
+
+Taken:
+1. `FA+-01` — Supabase tabel `stambomen` aanmaken
+2. `FA+-02` — `js/cloudSync.js` bouwen
+3. `FA+-03` — Knop op `stamboom/storage.html`
+4. `FA+-04` — Gratis limiet (max 100 personen) bewaken
+5. `FA+-05` — Laad vanuit cloud knop
 
 ---
 
-### js/manage.js `v2.0.0` ✅ herschreven
-```
-Beheerpagina: toont stamboom als bewerkbare tabel
-Exporteert: JSON en CSV download
-Vereist: utils.js, schema.js, idGenerator.js, storage.js, LiveSearch.js, relatieEngine.js
-Gebruikt door: stamboom/manage.html
-```
-**Wijzigingen t.o.v. v1.3.20:**
-- Lokale `genereerCode()` (onderaan) verwijderd — gebruikt nu `window.genereerCode`
-- Lokale `safe()` verwijderd — gebruikt nu `window.ftSafe` uit utils.js
-- Volledige lokale `computeRelaties()` (~80 regels) verwijderd — gebruikt nu `window.RelatieEngine.computeRelaties`
-- Inline commentaar toegevoegd op elke regel
-
----
-
-### js/relatieEngine.js `v2.0.0` ✅ herschreven
-```
-Centrale relatie-berekening: berekent alle familierelaties rond een hoofdpersoon
-Exporteert: window.RelatieEngine.computeRelaties(data, hoofdId)
-Vereist: utils.js (voor safe())
-Gebruikt door: view.js, timeline.js, manage.js
-```
-**Relaties die berekend worden:**
-- `VHoofdID` / `MHoofdID` — vader / moeder van hoofd
-- `HoofdID` — de geselecteerde hoofdpersoon zelf
-- `PHoofdID` — partner van hoofd
-- `KindID` — gedeeld kind van hoofd + partner
-- `HKindID` — kind van alleen hoofd
-- `PHKindID` — kind van alleen partner
-- `KindPartnerID` — partner van een kind
-- `BZID` — broer of zus van hoofd
-- `BZPartnerID` — partner van een broer/zus
-
-**Wijzigingen t.o.v. v1.0.0:**
-- Lokale `safe()` verwijderd — gebruikt nu `window.ftSafe` uit utils.js
-- Omgezet naar zelfuitvoerende functie `(function(){ })()` voor betere scope-afscherming
-- Inline commentaar toegevoegd op elke regel
-
----
-
-### js/LiveSearch.js `v2.0.0` ✅ herschreven
-```
-Universele live-zoekmodule: filtert dataset op ID, Roepnaam, Achternaam, Geboortedatum
-Exporteert: window.liveSearch(), window.initLiveSearch()
-Vereist: utils.js (voor safe())
-Gebruikt door: view.js, timeline.js, manage.js
-```
-**Wijzigingen t.o.v. v1.0.3:**
-- Lokale `safe()` verwijderd — gebruikt nu `window.ftSafe` uit utils.js
-- Volledig in één IIFE `(function(){})()` gewikkeld — lost `Uncaught SyntaxError: Identifier 'safe' has already been declared` op
-- `initLiveSearch` en `liveSearch` zitten nu beide binnen dezelfde IIFE scope
-- Inline commentaar toegevoegd op elke regel
-
----
-
-### js/storage.js `v2.0.0` ✅ herschreven
-```
-Persistente opslag via localStorage, volledig schema-driven
-Exporteert: window.StamboomStorage (get, set, add, update, clear)
-Vereist: schema.js, idGenerator.js
-Gebruikt door: alle pagina's
-```
-**Wijzigingen t.o.v. v0.0.4:**
-- migrate() wordt niet meer bij élke get() aangeroepen — alleen bij add()
-- migrate() geeft null terug bij ongeldig record i.p.v. leeg {}
-- console.log bij laden verwijderd
-- safeParse() controleert nu ook of het resultaat een array is
-- Inline commentaar toegevoegd op elke regel
-
----
-
-### js/schema.js `v0.1.0` ⚠️ ongewijzigd (nog te doen)
-```
-Centrale datastructuur: 14 kernvelden, CSV-parsing, header-validatie, legacy-migratie
-Exporteert: window.StamboomSchema
-Vereist: niets
-Gebruikt door: storage.js, import.js, manage.js
-```
-
----
-
-### js/import.js `v2.0.3` ⚠️ ongewijzigd (nog te doen)
-```
-CSV/TXT importer: leest bestanden in, detecteert delimiter, koppelt aan storage
-Vereist: schema.js, storage.js
-Gebruikt door: home/import.html
-```
-
----
-
-### js/export.js `v2.0.0` ✅ herschreven
-```
-Centrale export-module: CSV én JSON export voor de volledige stamboom
-Exporteert: window.ExportModule.exportCSV(statusEl), window.ExportModule.exportJSON(statusEl)
-Vereist: schema.js, storage.js
-Gebruikt door: home/export.html, stamboom/storage.html
-```
-**Wijzigingen t.o.v. v1.2.8:**
-- Volledige herschrijving als centrale IIFE-module
-- Beide exportfuncties (CSV én JSON) in één bestand
-- CSV gebruikt nu `StamboomStorage.get()` en `window.StamboomSchema.fields` (was `get()` met verkeerde veldnamen)
-- CSV heeft datum in bestandsnaam (bijv. "stamboom_20240312.csv")
-- CSV gebruikt `showSaveFilePicker` op moderne browsers (Chrome/Edge + HTTPS) voor "Opslaan als" dialoog
-- CSV heeft fallback naar downloadmap voor andere browsers
-- JSON heeft datum in bestandsnaam
-- Beide functies accepteren optioneel een `statusEl` voor feedback aan de gebruiker
-
----
-
-### js/view.js `v2.0.0` ✅ gedeeltelijk gewijzigd
-```
-Stamboomvisualisatie: rendert boom met nodes per relatietype
-Vereist: utils.js, schema.js, storage.js, relatieEngine.js, LiveSearch.js
-Gebruikt door: stamboom/view.html
-```
-**Wijzigingen t.o.v. origineel:**
-- Lokale `safe()`, `formatDate()`, `parseBirthday()` verwijderd
-- Gebruikt nu `window.ftSafe`, `window.ftFormatDate`, `window.ftParseBirthday` uit utils.js
-
----
-
-### js/timeline.js `v2.2.0` ✅ gedeeltelijk gewijzigd
-```
-Tijdlijnvisualisatie: horizontale as = geboortedatum, verticale as = hiërarchie
-Vereist: utils.js, schema.js, storage.js, LiveSearch.js, relatieEngine.js
-Gebruikt door: stamboom/timeline.html
-```
-**Wijzigingen t.o.v. origineel:**
-- Lokale `safe()`, `formatDate()`, `parseBirthday()` verwijderd
-- Gebruikt nu `window.ftSafe`, `window.ftFormatDate`, `window.ftParseBirthday` uit utils.js
-
----
-
-### home/export.html `v2.0.0` ✅ herschreven
-```
-Exportpagina met CSV- en JSON-exportknoppen
-Vereist: schema.js, storage.js, export.js
-```
-**Wijzigingen t.o.v. v1.0.1:**
-- Laadt nu correct schema.js, storage.js en export.js
-- Inline exportcode volledig verwijderd → gebruikt window.ExportModule
-- Knoppen en kleurstijl overgenomen van storage.html (blauw/lichtblauw)
-- JSON-exportknop toegevoegd (was er niet)
-
----
-
-### js/LSD.js `v0.0.0` ❌ kapot (prioriteit repareren)
-```
-LocalStorage beheer voor admin: bekijken, verwijderen, factory reset
-Vereist: niets
-Gebruikt door: Admin/LSD.html
-```
-**Bekend probleem:**
-- `DOMContentLoaded` event listener staat twee keer geregistreerd → admin menu gedraagt zich onvoorspelbaar
-
----
-
-### stamboom/storage.html `v2.0.0` ✅ bijgewerkt
-```
-Opslagpagina: toont alle data als doorzoekbare tabel, export en reset
-Vereist: schema.js, storage.js, export.js
-```
-**Wijzigingen t.o.v. v1.0:**
-- Inline exportcode (JSON + CSV) verwijderd → gebruikt nu window.ExportModule uit export.js
-- export.js toegevoegd aan scriptlijst
-- Tabel-rendercode en reset-knop ongewijzigd (werkten al goed)
-- Inline commentaar toegevoegd op alle regels
-- Export JSON en Export CSV knoppen verwijderd — export zit nu alleen op export.html
-- CSS-stijlen voor exportknoppen verwijderd
-- export.js niet meer geladen in storage.html
-
----
-
-## Verwijderde bestanden
-
-| Bestand              | Reden                                                         |
-|----------------------|---------------------------------------------------------------|
-| `js/DeleteRow.js`    | Volledig leeg (0 bytes), nooit geïmplementeerd                |
-| `js/schemaGlobal.js` | Oud schema met slechts 6 velden, vervangen door schema.js     |
-
----
-
-## Sessie-overzicht
-
-### Sessie 1 — Audit & eerste opschoning
-- ZIP geanalyseerd: 9 problemen gevonden
-- `DeleteRow.js` en `schemaGlobal.js` verwijderd
-- `idGenerator.js` volledig herschreven (v2.0.0)
-- `create.js` en `manage.js` aangepast: lokale `genereerCode()` verwijderd
-
-### Sessie 9 — Versienummers gestandaardiseerd naar v2.0.0
-Alle door ons aangemaakte of aangepaste bestanden starten vanaf v2.0.0.
-Bestanden bijgewerkt:
-- js/LiveSearch.js: v1.1.0 → v2.0.0
-- js/create.js: v1.1.0 → v2.0.0
-- js/manage.js: v1.4.0 → v2.0.0
-- js/storage.js: v1.0.0 → v2.0.0
-- js/utils.js: v1.0.0 → v2.0.0
-- js/view.js: v1.6.2 → v2.0.0
-- js/timeline.js: v2.2.0 → v2.0.0
-- css/Tree.css: v1.5.8 → v2.0.0
-- bronnen/template.html: v1.0.0 → v2.0.0
-- stamboom/manage.html: v1.3.20 → v2.0.0
-
-### Sessie 8 — bronnen/template.html facelift + versiecorrecties
-- `bronnen/template.html` facelift (v1.0.0): uitleg herschreven van export → template-context
-- Info-blok toegevoegd met invultips (datumformaat, geslacht, PartnerID met pipe)
-- Plaatshouder '...' in lege tabelrijen i.p.v. onzichtbare lege cellen
-- `stamboom/timeline.html` versie gecorrigeerd naar v2.0.0
-- `stamboom/stats.html` versie gecorrigeerd naar v2.0.0
-
-### Sessie 7 — Facelift alle pagina's
-- `home/import.html` facelift (v2.0.0)
-- `home/about.html` facelift (v2.0.0): automatische redirect verwijderd, binnenkort-blok
-- `home/print.html` facelift (v2.0.0): automatische redirect verwijderd, binnenkort-blok
-- `stamboom/stats.html` facelift (v1.0.0): // commentaar boven DOCTYPE verwijderd
-- `stamboom/view.html` facelift (v2.0.0)
-- `stamboom/timeline.html` facelift (v1.0.0): uitgecommentarieerde paginatitel opgeruimd
-- `stamboom/storage.html` facelift (v2.0.0): link naar exportpagina toegevoegd
-- `index.html` facelift (v2.0.0): hardcoded absolute URL vervangen door relatief pad
-
-### Sessie 6 — Create facelift
-- `create.html` facelift (v2.0.0): welkomstblok, alle inline stijlen naar `<style>` blok
-- Formulier in sectiekader met subtitel en verplichte velden gemarkeerd
-- Preview en waarschuwing als herbruikbare CSS-klassen
-- Manage-link sectie onderaan voor gebruikers met bestaande stamboom
-- Losse paginatitel div verwijderd
-- BACKLOG.md bijgewerkt: F3-30 toegevoegd en ✅
-
-### Sessie 5 — Export facelift + backlog/project setup
-- `export.html` facelift (v2.1.0): welkomstblok, CSV en JSON als aparte secties met eigen kader
-- Losse "Export" paginatitel div verwijderd
-- `PROJECT.md` aangemaakt: roadmap, ADR's, mapstructuur, fasering
-- `BACKLOG.md` aangemaakt: 55 taken over 5 fasen, technische schuld, Definition of Done
-- `BACKLOG.md` bijgewerkt: F3-29 (export facelift) toegevoegd en direct ✅
-
-### Sessie 4 — storage.js opschonen
-- `storage.js` volledig herschreven (v1.0.0)
-- migrate() alleen nog bij add(), niet meer bij elke get()
-- migrate() geeft null terug bij ongeldig record
-- console.log verwijderd
-- Inline commentaar toegevoegd
-
-### Sessie 3 — Export centraliseren
-- `export.js` volledig herschreven als centrale module (v2.0.0)
-- `export.html` herschreven: laadt nu schema.js + storage.js + export.js, knoppen overgenomen van storage.html
-- `stamboom/storage.html` bijgewerkt: inline exportcode vervangen door window.ExportModule
-- Beide pagina's gebruiken nu dezelfde exportlogica
-
-### Sessie 2b — Bugfix LiveSearch
-- `LiveSearch.js` volledig in IIFE gewikkeld (v1.1.0)
-- Oorzaak: `const safe` stond op globaal niveau en botste met `const safe` in view.js/timeline.js
-- Foutmelding was: `Uncaught SyntaxError: Identifier 'safe' has already been declared`
-
-### Sessie 2 — Duplicatenronde
-- `utils.js` aangemaakt als centraal hulpbestand (nieuw)
-- `relatieEngine.js` herschreven (v2.0.0): eigen `safe()` vervangen
-- `manage.js` bijgewerkt (v1.4.0): lokale `computeRelaties()` verwijderd
-- `LiveSearch.js` bijgewerkt: lokale `safe()` vervangen
-- `view.js` en `timeline.js` bijgewerkt: alle 3 lokale helpers vervangen
-- `manage.html`, `view.html`, `timeline.html`: `utils.js` als eerste script toegevoegd
-- `manage.html`: `relatieEngine.js` toegevoegd (ontbrak)
-
----
-
-## Volgende stappen (fase 2)
-
-- [x] `home/export.html` gerepareerd en uitgebreid met JSON-knop
-- [x] `js/export.js` herschreven als centrale module
-- [x] `stamboom/storage.html` bijgewerkt naar centrale export.js
-- [ ] `js/LSD.js` — bewust overgeslagen (buiten scope)
-- [ ] Zoekfunctie verbeteren
-- [ ] Relaties ouder/kind/partner uitbreiden
-- [ ] Stamboomvisualisatie upgrade
+## Sessies 1–9 — Zie eerdere PROJECT_LOG.md entries
