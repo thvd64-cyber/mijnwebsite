@@ -1,197 +1,218 @@
-/* ======================= js/storage.js v2.0.1 =======================
+/* ======================= js/storage.js v2.0.2 =======================
    Persistente opslag voor MyFamTreeCollab via localStorage
-   Exporteert: window.StamboomStorage (get, set, add, update, clear, replaceAll)
+   Exporteert: window.StamboomStorage (get, set, add, update, clear, replaceAll, canAdd)
    Vereist: schema.js (voor veldnamen), idGenerator.js (voor ID-fallback)
+
+   Wijzigingen v2.0.2:
+   - canAdd() toegevoegd — controleert lokaal persoonslimiet voor free gebruikers
+   - add() controleert limiet via canAdd() voor free gebruikers
+   - MAX_LOCAL_FREE exporteerd als constante
 
    Wijzigingen v2.0.1:
    - replaceAll(array) toegevoegd — vereist door cloudSync.js (Fase A+)
 
-   Wijzigingen v1.0.0 t.o.v. v0.0.4:
-   - migrate() wordt niet meer bij élke get() aangeroepen — alleen bij add()
-   - migrate() geeft null terug bij ongeldig record i.p.v. leeg object
+   Wijzigingen v1.0.0:
+   - migrate() alleen bij add(), niet bij get()
+   - migrate() geeft null bij ongeldig record
    - console.log bij laden verwijderd
-   - Inline commentaar toegevoegd op elke regel
    ======================================================================= */
 
-(function () {                                                              // Zelfuitvoerende functie: alle variabelen blijven lokaal, niets lekt globaal
-    'use strict';                                                           // Strikte modus: voorkomt stille JS-fouten
+(function () {
+    'use strict';
 
-    /* ======================= CONSTANTEN ======================= */
-    const STORAGE_KEY = 'stamboomData';                                    // De vaste sleutel waaronder alle stamboomdata in localStorage wordt opgeslagen
+    // Sleutel waaronder stamboomdata in localStorage staat
+    var STORAGE_KEY = 'stamboomData';
+
+    // Sleutel voor lokale wijzigingstimestamp — gebruikt door FA+-06 conflictmelding
+    var MODIFIED_KEY = 'stamboomData_modified';
+
+    // Maximum aantal personen voor gratis (niet-premium) gebruikers lokaal
+    var MAX_LOCAL_FREE = 100;
 
     /* ======================= VEILIGE JSON PARSING ======================= */
 
-    /**
-     * Parseert een JSON-string veilig naar een array.
-     * Geeft een lege array terug als de string leeg of corrupt is.
-     * @param  {string} json - De ruwe JSON-string uit localStorage
-     * @returns {Array}      - Geparseerde array, of [] bij fout
-     */
     function safeParse(json) {
-        if (!json) return [];                                              // Lege of null waarde → geef direct lege array terug, geen verdere verwerking
+        if (!json) return [];                                              // Lege waarde → lege array
         try {
-            const parsed = JSON.parse(json);                              // Probeer de JSON-string om te zetten naar een JavaScript object/array
-            return Array.isArray(parsed) ? parsed : [];                   // Alleen een array is geldig — geef lege array als het iets anders is
+            var parsed = JSON.parse(json);                                // Parseer JSON string
+            return Array.isArray(parsed) ? parsed : [];                   // Alleen arrays zijn geldig
         } catch (e) {
-            console.warn('storage.js: corrupte JSON in localStorage, dataset gereset.'); // Waarschuw in de console als de JSON onleesbaar is
-            return [];                                                     // Geef lege array terug zodat de app gewoon door kan werken
+            console.warn('storage.js: corrupte JSON in localStorage, dataset gereset.');
+            return [];
         }
     }
 
-    /* ======================= MIGRATIE FUNCTIE ======================= */
+    /* ======================= MIGRATIE ======================= */
 
-    /**
-     * Zorgt dat een persoon-record alle velden uit het schema heeft.
-     * Vult ontbrekende velden aan met een lege string.
-     * Genereert een ID als dat ontbreekt.
-     * Wordt alleen aangeroepen bij add() — NIET bij elke get().
-     * @param  {Object} record - Het persoon-object om te migreren
-     * @returns {Object|null}  - Gemigreerd object, of null als het record onbruikbaar is
-     */
     function migrate(record) {
-        if (!record || typeof record !== 'object') return null;            // Ongeldig record (null, string, getal) → geef null terug zodat de aanroeper het kan overslaan
+        if (!record || typeof record !== 'object') return null;           // Ongeldig record
 
-        const migrated = { ...record };                                    // Maak een ondiepe kopie zodat het originele object niet gewijzigd wordt
+        var migrated = Object.assign({}, record);                         // Ondiepe kopie
 
-        if (window.StamboomSchema && Array.isArray(window.StamboomSchema.fields)) { // Controleer of schema.js correct geladen is
-            window.StamboomSchema.fields.forEach(field => {               // Loop door alle veldnamen uit het centrale schema
-                if (!(field in migrated)) migrated[field] = '';           // Voeg het veld toe als het ontbreekt, met lege string als standaardwaarde
+        if (window.StamboomSchema && Array.isArray(window.StamboomSchema.fields)) {
+            window.StamboomSchema.fields.forEach(function(field) {
+                if (!(field in migrated)) migrated[field] = '';           // Ontbrekend veld aanvullen
             });
         } else {
-            console.warn('storage.js: StamboomSchema niet geladen — migratie overgeslagen.'); // Waarschuw als schema.js nog niet geladen is
+            console.warn('storage.js: StamboomSchema niet geladen — migratie overgeslagen.');
         }
 
-        if (!migrated.ID || migrated.ID.trim() === '') {                  // Controleer of het record een geldig ID heeft
-            migrated.ID = window.genereerCode                             // Gebruik de centrale ID-generator als die beschikbaar is
-                ? window.genereerCode(migrated, [])                       // Geef lege dataset mee: uniekheid t.o.v. bestaande records wordt elders geborgd
-                : 'P' + Date.now();                                       // Noodoplossing als idGenerator.js niet geladen is: timestamp-gebaseerd ID
+        if (!migrated.ID || migrated.ID.trim() === '') {
+            migrated.ID = window.genereerCode                             // ID genereren via centrale module
+                ? window.genereerCode(migrated, [])
+                : 'P' + Date.now();                                       // Noodoplossing zonder idGenerator
         }
 
-        return migrated;                                                   // Geef het volledig gemigreerde record terug
+        return migrated;
+    }
+
+    /* ======================= TIMESTAMP BIJWERKEN ======================= */
+
+    // Schrijft de huidige tijd als ISO-string naar localStorage
+    // Wordt aangeroepen bij elke wijziging (add, update, clear, replaceAll)
+    function _updateModified() {
+        try {
+            localStorage.setItem(MODIFIED_KEY, new Date().toISOString()); // Sla huidige tijd op
+        } catch (e) {
+            console.warn('storage.js: kon modified timestamp niet opslaan:', e);
+        }
     }
 
     /* ======================= GET ======================= */
 
-    /**
-     * Haalt de volledige dataset op uit localStorage.
-     * Voert GEEN migratie uit — geeft de data terug zoals opgeslagen.
-     * @returns {Array} - Array van persoon-objecten, of [] als er niets is
-     */
     function get() {
-        const raw    = localStorage.getItem(STORAGE_KEY);                 // Haal de ruwe JSON-string op uit localStorage
-        const parsed = safeParse(raw);                                     // Parseer de JSON veilig naar een array
-        return parsed;                                                     // Geef de array direct terug — geen migratie bij elke get()
+        var raw = localStorage.getItem(STORAGE_KEY);                      // Haal ruwe JSON op
+        return safeParse(raw);                                             // Parseer en geef terug
+    }
+
+    /* ======================= GET MODIFIED ======================= */
+
+    // Geeft de timestamp van de laatste lokale wijziging terug, of null
+    function getModified() {
+        return localStorage.getItem(MODIFIED_KEY) || null;                // null als nog nooit gewijzigd
     }
 
     /* ======================= SET ======================= */
 
-    /**
-     * Slaat een volledige dataset op in localStorage.
-     * Overschrijft de bestaande data volledig.
-     * @param  {Array}   dataset - De te bewaren array van persoon-objecten
-     * @returns {boolean}        - true bij succes, false bij ongeldige invoer
-     */
     function set(dataset) {
-        if (!Array.isArray(dataset)) {                                     // Controleer of de invoer een array is
-            console.warn('storage.js: set() verwacht een array.');        // Waarschuw als iemand per ongeluk een object of string meegeeft
-            return false;                                                  // Geef false terug zodat de aanroeper weet dat opslaan mislukt is
+        if (!Array.isArray(dataset)) {
+            console.warn('storage.js: set() verwacht een array.');
+            return false;
         }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset));       // Zet de array om naar JSON en sla op in localStorage
-        return true;                                                       // Bevestig succesvolle opslag
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset));       // Sla op als JSON
+        _updateModified();                                                 // Bijwerken timestamp
+        return true;
+    }
+
+    /* ======================= CAN ADD ======================= */
+
+    // Controleert of een nieuwe persoon toegevoegd mag worden.
+    // Gratis gebruikers (tier 'free' of niet ingelogd) zijn beperkt tot MAX_LOCAL_FREE.
+    // Premium en admin gebruikers hebben geen lokaal limiet.
+    // Returns: { allowed: true } of { allowed: false, count, max }
+    async function canAdd() {
+        var current = get().length;                                        // Huidig aantal personen
+
+        // Haal tier op — geeft 'free' als niet ingelogd of AuthModule niet beschikbaar
+        var tier = 'free';
+        if (window.AuthModule && typeof window.AuthModule.getTier === 'function') {
+            tier = await window.AuthModule.getTier();                      // Wacht op tier uit Supabase
+        }
+
+        // Admin en premium tiers hebben geen lokaal limiet
+        if (tier !== 'free') {
+            return { allowed: true };
+        }
+
+        // Free gebruikers mogen maximaal MAX_LOCAL_FREE personen opslaan
+        if (current >= MAX_LOCAL_FREE) {
+            return { allowed: false, count: current, max: MAX_LOCAL_FREE };
+        }
+
+        return { allowed: true };
     }
 
     /* ======================= ADD ======================= */
 
-    /**
-     * Voegt één nieuwe persoon toe aan de dataset.
-     * Voert migratie uit op het nieuwe record zodat alle velden aanwezig zijn.
-     * @param  {Object}  person - Het toe te voegen persoon-object
-     * @returns {boolean}       - true bij succes, false bij ongeldige invoer
-     */
-    function add(person) {
-        if (typeof person !== 'object' || person === null) {              // Controleer of de invoer een geldig object is
-            console.warn('storage.js: add() verwacht een object.');       // Waarschuw bij ongeldige invoer
-            return false;                                                  // Geef false terug zodat de aanroeper weet dat toevoegen mislukt is
+    async function add(person) {
+        if (typeof person !== 'object' || person === null) {
+            console.warn('storage.js: add() verwacht een object.');
+            return false;
         }
 
-        const migrated = migrate(person);                                  // Voer migratie uit: vul ontbrekende velden aan en genereer ID indien nodig
-        if (!migrated) {                                                   // migrate() geeft null terug als het record onbruikbaar is
-            console.warn('storage.js: add() ongeldig record, niet opgeslagen.'); // Waarschuw dat het record overgeslagen wordt
-            return false;                                                  // Geef false terug
+        // Controleer lokaal limiet voor gratis gebruikers
+        var check = await canAdd();
+        if (!check.allowed) {
+            console.warn('storage.js: add() geblokkeerd — limiet bereikt (' + check.count + '/' + check.max + ')');
+            return { blocked: true, count: check.count, max: check.max }; // Geef blockinfo terug voor UI
         }
 
-        const dataset = get();                                             // Haal de huidige dataset op
-        dataset.push(migrated);                                            // Voeg het gemigreerde record toe aan het einde van de array
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset));       // Sla de bijgewerkte dataset direct op (geen set() aanroep om dubbele validatie te vermijden)
-        return true;                                                       // Bevestig succesvolle toevoeging
+        var migrated = migrate(person);                                    // Migreer het record
+        if (!migrated) {
+            console.warn('storage.js: add() ongeldig record, niet opgeslagen.');
+            return false;
+        }
+
+        var dataset = get();                                               // Haal huidige dataset op
+        dataset.push(migrated);                                            // Voeg toe aan array
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset));       // Sla op
+        _updateModified();                                                 // Bijwerken timestamp
+        return true;
     }
 
     /* ======================= UPDATE ======================= */
 
-    /**
-     * Werkt één bestaand persoon-record bij met nieuwe veldwaarden.
-     * Bestaande velden die niet in updates staan blijven ongewijzigd.
-     * @param  {string}  personID - Het ID van de te updaten persoon
-     * @param  {Object}  updates  - Object met de te wijzigen velden en hun nieuwe waarden
-     * @returns {boolean}         - true als de persoon gevonden en bijgewerkt is, false als niet gevonden
-     */
     function update(personID, updates) {
-        const dataset = get();                                             // Haal de huidige dataset op
-        const idx = dataset.findIndex(p => p.ID === personID);            // Zoek de index van de persoon met het opgegeven ID
-        if (idx === -1) {                                                  // Persoon niet gevonden in de dataset
-            console.warn(`storage.js: update() persoon ${personID} niet gevonden.`); // Waarschuw met het ID zodat debuggen makkelijker is
-            return false;                                                  // Geef false terug zodat de aanroeper weet dat de update mislukt is
+        var dataset = get();
+        var idx = dataset.findIndex(function(p) { return p.ID === personID; });
+        if (idx === -1) {
+            console.warn('storage.js: update() persoon ' + personID + ' niet gevonden.');
+            return false;
         }
-        dataset[idx] = { ...dataset[idx], ...updates };                   // Merge: bewaar alle bestaande velden en overschrijf met de nieuwe waarden
-        set(dataset);                                                      // Sla de bijgewerkte dataset op via set() zodat validatie plaatsvindt
-        return true;                                                       // Bevestig succesvolle update
+        dataset[idx] = Object.assign({}, dataset[idx], updates);          // Merge updates
+        set(dataset);                                                      // Sla op + update timestamp
+        return true;
     }
 
     /* ======================= CLEAR ======================= */
 
-    /**
-     * Verwijdert de volledige stamboomdataset uit localStorage.
-     * Kan niet ongedaan gemaakt worden — gebruik alleen na bevestiging van de gebruiker.
-     * @returns {boolean} - Altijd true (localStorage.removeItem gooit geen fouten)
-     */
     function clear() {
-        localStorage.removeItem(STORAGE_KEY);                             // Verwijder de stamboomdata-sleutel volledig uit localStorage
-        return true;                                                       // Bevestig dat de data verwijderd is
+        localStorage.removeItem(STORAGE_KEY);                             // Verwijder stamboomdata
+        _updateModified();                                                 // Bijwerken timestamp
+        return true;
     }
 
     /* ======================= REPLACE ALL ======================= */
 
-    /**
-     * Overschrijft de volledige localStorage dataset met een nieuwe array.
-     * Gebruikt door cloudSync.js bij het laden van een cloud backup.
-     * Valideert de invoer vóór het wegschrijven — schrijft nooit ongeldige data.
-     * @param  {Array}   dataset - De array van persoon-objecten uit de cloud
-     * @returns {boolean}        - true bij succes, false bij ongeldige invoer of schrijffout
-     */
+    // Overschrijft de volledige localStorage dataset met een nieuwe array.
+    // Gebruikt door cloudSync.js bij het laden van een cloud backup.
     function replaceAll(dataset) {
-        if (!Array.isArray(dataset)) {                                     // Controleer of de invoer een array is — cloudSync levert altijd een array, maar valideer defensief
-            console.error('storage.js: replaceAll() verwacht een array.');// Fout in console: dit is een programmeerfout, geen gebruikersfout
-            return false;                                                  // Geef false terug zodat cloudSync.js de fout kan doorgeven aan de UI
+        if (!Array.isArray(dataset)) {
+            console.error('storage.js: replaceAll() verwacht een array.');
+            return false;
         }
-
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset));   // Schrijf de cloud-array rechtstreeks naar localStorage onder dezelfde sleutel als get()/set()
-            return true;                                                   // Bevestig succesvolle overschrijving
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(dataset));   // Schrijf cloud data weg
+            _updateModified();                                             // Bijwerken timestamp
+            return true;
         } catch (e) {
-            console.error('storage.js: replaceAll() localStorage schrijffout:', e); // Kan falen bij volle opslag (QuotaExceededError) — log de oorzaak
-            return false;                                                  // Geef false terug zodat de UI een foutmelding kan tonen
+            console.error('storage.js: replaceAll() localStorage schrijffout:', e);
+            return false;
         }
     }
 
     /* ======================= PUBLIEKE API ======================= */
-    window.StamboomStorage = {                                             // Exporteer alle functies onder één globaal object
-        get,                                                               // window.StamboomStorage.get()                     — volledige dataset ophalen
-        set,                                                               // window.StamboomStorage.set(dataset)              — dataset volledig overschrijven
-        add,                                                               // window.StamboomStorage.add(person)               — één persoon toevoegen
-        update,                                                            // window.StamboomStorage.update(id, updates)       — één persoon bijwerken
-        clear,                                                             // window.StamboomStorage.clear()                   — alle data verwijderen
-        replaceAll,                                                        // window.StamboomStorage.replaceAll(dataset)       — cloud backup inladen (Fase A+)
-        version: 'v2.0.1'                                                  // Versienummer voor gebruik in storage.html info-balk
+    window.StamboomStorage = {
+        get,                    // ()                  → Array
+        set,                    // (dataset)           → boolean
+        add,                    // (person)            → true | false | { blocked, count, max }
+        update,                 // (id, updates)       → boolean
+        clear,                  // ()                  → boolean
+        replaceAll,             // (dataset)           → boolean
+        canAdd,                 // ()                  → { allowed } of { allowed: false, count, max }
+        getModified,            // ()                  → ISO string of null
+        MAX_LOCAL_FREE,         // 100
+        version: 'v2.0.2'
     };
 
-})();                                                                      // Sluit en voer de zelfuitvoerende functie direct uit
+})();
