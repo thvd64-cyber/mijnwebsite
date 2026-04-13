@@ -1,14 +1,14 @@
-<!-- ======================= stamboom/storage.html v2.2.0 =======================
+<!-- ======================= stamboom/storage.html v2.3.0 =======================
      Opslagpagina: tabbladen voor lokale data en cloud backup
 
-     Wijzigingen v2.2.0:
-     - Tabbladen toegevoegd: "Mijn data" en "Cloud backup"
-     - Cloud backup sectie verplaatst naar eigen tabblad
-     - Actieve tab wordt onthouden via URL hash (#data / #cloud)
+     Wijzigingen v2.3.0:
+     - Tier-gebaseerde meldingen in cloud tabblad
+     - FA+-06: conflictmelding als cloud nieuwer is dan lokale data
+     - Gratis gebruikers zien upgrade melding met Ko-fi link
+     - Viewer tier ziet aparte melding
 
-     Wijzigingen v2.1.0:
-     - Cloud backup sectie toegevoegd
-     - cloudSync.js toegevoegd aan laadvolgorde
+     Wijzigingen v2.2.0:
+     - Tabbladen: Mijn data + Cloud backup
 
      Scripts: schema.js → storage.js → cloudSync.js (verplichte volgorde)
      ======================================================================= -->
@@ -19,7 +19,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyFamTreeCollab - Opslag</title>
 
-    <!-- ===== Favicon / App-icoon ===== -->
     <link rel="icon" type="image/x-icon" href="/MyFamTreeCollab/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/MyFamTreeCollab/favicon-32x32.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/MyFamTreeCollab/apple-touch-icon.png">
@@ -37,11 +36,9 @@
         /* ======================= TABBLADEN ======================= */
         .tabs {
             display: flex;
-            gap: 0;
             border-bottom: 2px solid #e5e7eb;
             margin-bottom: 28px;
         }
-
         .tab-knop {
             padding: 10px 22px;
             font-size: 0.95rem;
@@ -50,26 +47,15 @@
             background: none;
             border: none;
             border-bottom: 3px solid transparent;
-            margin-bottom: -2px;           /* Overlapt de border-bottom van .tabs */
+            margin-bottom: -2px;
             cursor: pointer;
             transition: color 0.15s, border-color 0.15s;
         }
-
         .tab-knop:hover { color: #2563eb; }
+        .tab-knop.actief { color: #2563eb; border-bottom-color: #2563eb; }
 
-        .tab-knop.actief {
-            color: #2563eb;
-            border-bottom-color: #2563eb;  /* Blauwe streep onder actief tabblad */
-        }
-
-        /* ======================= TAB INHOUD ======================= */
-        .tab-inhoud {
-            display: none;                 /* Verborgen tenzij JS .zichtbaar toevoegt */
-        }
-
-        .tab-inhoud.zichtbaar {
-            display: block;
-        }
+        .tab-inhoud { display: none; }
+        .tab-inhoud.zichtbaar { display: block; }
 
         /* ======================= ACTIE BALK ======================= */
         .actie-balk {
@@ -79,13 +65,9 @@
             margin-bottom: 16px;
             flex-wrap: wrap;
         }
+        .storage-info { font-size: 0.88rem; color: #666; }
 
-        .storage-info {
-            font-size: 0.88rem;
-            color: #666;
-        }
-
-        /* ======================= RESET KNOP ======================= */
+        /* ======================= KNOPPEN ======================= */
         .btn-reset {
             padding: 8px 16px;
             background: #d9534f;
@@ -98,97 +80,72 @@
         }
         .btn-reset:hover { background: #c9302c; }
 
-        /* ======================= SCROLL WRAPPER ======================= */
-        .storage-tabel-wrapper {
-            overflow-x: auto;
-            margin-top: 10px;
-        }
-
         /* ======================= TABEL ======================= */
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 4px;
-            font-size: 0.9rem;
-            white-space: nowrap;
-        }
-
-        th, td {
-            border: 1px solid #ddd;
-            padding: 7px 10px;
-            text-align: left;
-        }
-
-        th {
-            background: #f4f4f4;
-            font-weight: bold;
-            color: #333;
-        }
-
-        th input {
-            width: 95%;
-            padding: 3px 5px;
-            font-size: 0.85rem;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-        }
-
-        .empty {
-            font-style: italic;
-            color: #888;
-            padding: 20px 0;
-        }
+        .storage-tabel-wrapper { overflow-x: auto; margin-top: 10px; }
+        table { border-collapse: collapse; width: 100%; font-size: 0.9rem; white-space: nowrap; }
+        th, td { border: 1px solid #ddd; padding: 7px 10px; text-align: left; }
+        th { background: #f4f4f4; font-weight: bold; color: #333; }
+        th input { width: 95%; padding: 3px 5px; font-size: 0.85rem; border: 1px solid #ccc; border-radius: 3px; }
+        .empty { font-style: italic; color: #888; padding: 20px 0; }
 
         /* ======================= CLOUD SECTIE ======================= */
-        .cloud-intro {
-            font-size: 0.95rem;
-            color: #555;
-            line-height: 1.6;
-            margin: 0 0 20px 0;
-        }
+        .cloud-intro { font-size: 0.95rem; color: #555; line-height: 1.6; margin: 0 0 20px 0; }
 
-        /* Status banner */
-        .cloud-status {
-            padding: 10px 16px;
+        /* Status / conflict banners */
+        .cloud-banner {
+            padding: 12px 16px;
             border-radius: 6px;
             font-size: 0.92rem;
             margin-bottom: 16px;
             font-weight: bold;
             display: none;
+            line-height: 1.5;
         }
-        .cloud-status.succes { display: block; background: #f0fdf4; color: #166534; border-left: 4px solid #22c55e; }
-        .cloud-status.fout   { display: block; background: #fef2f2; color: #991b1b; border-left: 4px solid #ef4444; }
-        .cloud-status.info   { display: block; background: #eff6ff; color: #1e40af; border-left: 4px solid #3b82f6; }
+        .cloud-banner.succes  { display: block; background: #f0fdf4; color: #166534; border-left: 4px solid #22c55e; }
+        .cloud-banner.fout    { display: block; background: #fef2f2; color: #991b1b; border-left: 4px solid #ef4444; }
+        .cloud-banner.info    { display: block; background: #eff6ff; color: #1e40af; border-left: 4px solid #3b82f6; }
+        .cloud-banner.waarsch { display: block; background: #fff7ed; color: #9a3412; border-left: 4px solid #f97316; }
 
-        /* Cloud kaart */
+        /* Upgrade melding voor gratis gebruikers */
+        .upgrade-blok {
+            background: #f8f9fa;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            display: none;
+        }
+        .upgrade-blok.zichtbaar { display: block; }
+        .upgrade-blok h3 { font-size: 1.05rem; font-weight: bold; color: #222; margin: 0 0 8px 0; }
+        .upgrade-blok p  { font-size: 0.92rem; color: #555; margin: 0 0 16px 0; line-height: 1.6; }
+        .btn-kofi {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 10px 22px;
+            background: #FF5E5B;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: bold;
+        }
+        .btn-kofi:hover { background: #e54543; }
+
+        /* Cloud kaarten */
         .cloud-kaart {
             background: #f8f9fa;
             border: 1px solid #e5e7eb;
             border-radius: 8px;
             padding: 20px 24px;
             margin-bottom: 16px;
+            display: none;
         }
+        .cloud-kaart.zichtbaar { display: block; }
+        .cloud-kaart h3 { font-size: 1rem; font-weight: bold; color: #222; margin: 0 0 6px 0; }
+        .cloud-kaart p  { font-size: 0.88rem; color: #666; margin: 0 0 14px 0; line-height: 1.5; }
 
-        .cloud-kaart h3 {
-            font-size: 1rem;
-            font-weight: bold;
-            color: #222;
-            margin: 0 0 6px 0;
-        }
-
-        .cloud-kaart p {
-            font-size: 0.88rem;
-            color: #666;
-            margin: 0 0 14px 0;
-            line-height: 1.5;
-        }
-
-        /* Knoppen */
-        .cloud-knoppen {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
+        .cloud-knoppen { display: flex; gap: 12px; flex-wrap: wrap; }
 
         .btn-cloud-save {
             padding: 9px 20px;
@@ -216,17 +173,11 @@
         .btn-cloud-load:hover:not(:disabled) { background: #f3f4f6; }
         .btn-cloud-load:disabled { color: #aaa; cursor: not-allowed; }
 
-        /* Backup meta */
-        .cloud-meta {
-            font-size: 0.85rem;
-            color: #777;
-            margin: 12px 0 0 0;
-            display: none;
-        }
+        .cloud-meta { font-size: 0.85rem; color: #777; margin: 12px 0 0 0; display: none; }
         .cloud-meta.zichtbaar { display: block; }
 
-        /* Niet ingelogd waarschuwing */
-        .cloud-login-waarschuwing {
+        /* Niet ingelogd melding */
+        .cloud-login-warn {
             background: #fff7ed;
             border-left: 4px solid #f97316;
             border-radius: 0 6px 6px 0;
@@ -235,7 +186,7 @@
             color: #9a3412;
             display: none;
         }
-        .cloud-login-waarschuwing.zichtbaar { display: block; }
+        .cloud-login-warn.zichtbaar { display: block; }
 
         @media (max-width: 768px) {
             table, th, td { font-size: 0.82rem; }
@@ -245,20 +196,14 @@
 
     </style>
 </head>
-
 <body>
 
-<!-- ======================= TopBar ======================= -->
 <div id="topbar-placeholder"></div>
-
-<!-- ======================= Navbar ======================= -->
 <div id="navbar-placeholder"></div>
 
-<!-- ======================= MAIN ======================= -->
 <main>
     <div class="container">
 
-        <!-- ======================= WELKOM ======================= -->
         <div class="welkom-blok">
             <h1>Opslag</h1>
             <p>Bekijk je lokale data of sla je stamboom op in de cloud.</p>
@@ -266,12 +211,8 @@
 
         <!-- ======================= TABBLADEN ======================= -->
         <div class="tabs">
-            <button class="tab-knop actief" data-tab="data">
-                📋 Mijn data
-            </button>
-            <button class="tab-knop" data-tab="cloud">
-                ☁️ Cloud backup
-            </button>
+            <button class="tab-knop actief" data-tab="data">📋 Mijn data</button>
+            <button class="tab-knop" data-tab="cloud">☁️ Cloud backup</button>
         </div>
 
         <!-- ======================= TAB: MIJN DATA ======================= -->
@@ -291,20 +232,37 @@
 
             <p class="cloud-intro">
                 Sla je stamboom op in de cloud en laad hem terug op elk apparaat.
-                Je hebt een account nodig. Gratis tot 100 personen.
             </p>
 
-            <!-- Status banner -->
-            <div id="cloudStatus" class="cloud-status"></div>
+            <!-- FA+-06: Conflictmelding — cloud nieuwer dan lokaal -->
+            <div id="conflictBanner" class="cloud-banner waarsch"></div>
 
-            <!-- Niet ingelogd melding -->
-            <div id="cloudLoginWaarschuwing" class="cloud-login-waarschuwing">
+            <!-- Statusbanner voor opslaan/laden feedback -->
+            <div id="cloudStatus" class="cloud-banner"></div>
+
+            <!-- Niet ingelogd -->
+            <div id="cloudLoginWarn" class="cloud-login-warn">
                 <strong>Je bent niet ingelogd.</strong>
                 Log in via de balk bovenaan om de cloud backup te gebruiken.
             </div>
 
-            <!-- Opslaan kaart -->
-            <div class="cloud-kaart">
+            <!-- Gratis gebruiker: upgrade melding -->
+            <div id="upgradeBlok" class="upgrade-blok">
+                <h3>☁️ Cloud backup</h3>
+                <p>
+                    Cloud backup is beschikbaar voor donateurs en abonnees.<br>
+                    Steun het project via Ko-fi en krijg toegang.
+                </p>
+                <a href="https://ko-fi.com/myfamtreecollab"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="btn-kofi">
+                    ☕ Steun via Ko-fi
+                </a>
+            </div>
+
+            <!-- Opslaan kaart — alleen zichtbaar voor premium/admin -->
+            <div id="kaartOpslaan" class="cloud-kaart">
                 <h3>☁️ Opslaan in cloud</h3>
                 <p>Bewaar een kopie van je huidige lokale stamboom in de cloud.</p>
                 <div class="cloud-knoppen">
@@ -314,8 +272,8 @@
                 </div>
             </div>
 
-            <!-- Laden kaart -->
-            <div class="cloud-kaart">
+            <!-- Laden kaart — alleen zichtbaar voor premium/admin -->
+            <div id="kaartLaden" class="cloud-kaart">
                 <h3>⬇️ Laden vanuit cloud</h3>
                 <p>Laad je cloud backup terug naar dit apparaat. Dit overschrijft je huidige lokale data.</p>
                 <div class="cloud-knoppen">
@@ -331,20 +289,14 @@
     </div>
 </main>
 
-<!-- ======================= Footer ======================= -->
 <div id="footer-placeholder"></div>
 
-<!-- =============================================================
-     SCRIPTS — verplichte volgorde:
-     Supabase SDK → utils.js → auth.js → TopBar fetch → topbar.js
-     → schema.js → storage.js → cloudSync.js
-     ============================================================= -->
+<!-- Scripts — verplichte volgorde -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/utils.js"></script>
 <script src="../js/auth.js"></script>
 
 <script>
-    // TopBar laden, daarna topbar.js injecteren
     fetch('/MyFamTreeCollab/Layout/TopBar.html')
         .then(resp => resp.text())
         .then(function(data) {
@@ -353,18 +305,12 @@
             s.src = '../js/topbar.js';
             document.body.appendChild(s);
         });
-
     fetch('/MyFamTreeCollab/Layout/Navbar.html')
         .then(resp => resp.text())
-        .then(function(data) {
-            document.getElementById('navbar-placeholder').innerHTML = data;
-        });
-
+        .then(function(data) { document.getElementById('navbar-placeholder').innerHTML = data; });
     fetch('/MyFamTreeCollab/Layout/Footer.html')
         .then(resp => resp.text())
-        .then(function(data) {
-            document.getElementById('footer-placeholder').innerHTML = data;
-        });
+        .then(function(data) { document.getElementById('footer-placeholder').innerHTML = data; });
 </script>
 
 <script src="../js/schema.js"></script>
@@ -376,33 +322,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ======================= TAB NAVIGATIE =======================
 
-    var tabKnoppen  = document.querySelectorAll('.tab-knop');    // Alle tab knoppen
-    var tabInhouden = document.querySelectorAll('.tab-inhoud');  // Alle tab panelen
+    var tabKnoppen  = document.querySelectorAll('.tab-knop');
+    var tabInhouden = document.querySelectorAll('.tab-inhoud');
 
-    // Activeer een tabblad op naam ('data' of 'cloud')
     function activeerTab(naam) {
-        tabKnoppen.forEach(function(knop) {
-            knop.classList.toggle('actief', knop.dataset.tab === naam);
+        tabKnoppen.forEach(function(k) {
+            k.classList.toggle('actief', k.dataset.tab === naam);
         });
-        tabInhouden.forEach(function(inhoud) {
-            inhoud.classList.toggle('zichtbaar', inhoud.id === 'tab-' + naam);
+        tabInhouden.forEach(function(i) {
+            i.classList.toggle('zichtbaar', i.id === 'tab-' + naam);
         });
-        // Sla actieve tab op in URL hash zodat refresh de juiste tab toont
         window.location.hash = naam;
     }
 
-    // Koppel klikgebeurtenis aan elke tabknop
-    tabKnoppen.forEach(function(knop) {
-        knop.addEventListener('click', function() {
-            activeerTab(knop.dataset.tab);
-        });
+    tabKnoppen.forEach(function(k) {
+        k.addEventListener('click', function() { activeerTab(k.dataset.tab); });
     });
 
-    // Herstel actieve tab vanuit URL hash bij laden
     var hash = window.location.hash.replace('#', '');
-    if (hash === 'data' || hash === 'cloud') {
-        activeerTab(hash);
-    }
+    if (hash === 'data' || hash === 'cloud') activeerTab(hash);
 
     // ======================= LOKALE DATA TABEL =======================
 
@@ -411,21 +349,14 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
-    var container = document.getElementById('storageContainer'); // Tabel container
-    var info      = document.getElementById('storageInfo');      // Record teller
-    var resetBtn  = document.getElementById('resetBtn');         // Reset knop
+    var container = document.getElementById('storageContainer');
+    var info      = document.getElementById('storageInfo');
+    var resetBtn  = document.getElementById('resetBtn');
+    var columns   = window.StamboomSchema ? window.StamboomSchema.fields.slice() : [];
 
-    // Kolomnamen uit het centrale schema
-    var columns = window.StamboomSchema
-        ? window.StamboomSchema.fields.slice()
-        : [];
-
-    // Render de datatable met filterrij
     function renderTable() {
-
         var data = StamboomStorage.get();
         container.innerHTML = '';
-
         info.innerHTML = 'Versie: ' + StamboomStorage.version + ' | ' + data.length + ' records';
 
         if (!data.length) {
@@ -433,14 +364,12 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Scroll wrapper voor brede tabel op mobiel
         var wrapper = document.createElement('div');
         wrapper.className = 'storage-tabel-wrapper';
 
         var table = document.createElement('table');
         var thead = document.createElement('thead');
 
-        // Kolomkoppen
         var headerRow = document.createElement('tr');
         columns.forEach(function(col) {
             var th = document.createElement('th');
@@ -449,26 +378,20 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         thead.appendChild(headerRow);
 
-        // Filterrij
         var filterRow = document.createElement('tr');
         var filters   = {};
-
         columns.forEach(function(col) {
             var th    = document.createElement('th');
             var input = document.createElement('input');
-
             input.type        = 'text';
             input.placeholder = 'Filter...';
-
             input.addEventListener('input', function() {
                 filters[col] = this.value.toLowerCase();
                 applyFilters();
             });
-
             th.appendChild(input);
             filterRow.appendChild(th);
         });
-
         thead.appendChild(filterRow);
         table.appendChild(thead);
 
@@ -477,46 +400,32 @@ document.addEventListener('DOMContentLoaded', function () {
         wrapper.appendChild(table);
         container.appendChild(wrapper);
 
-        // Filter en render de datarijen
         function applyFilters() {
             tbody.innerHTML = '';
-            var fragment = document.createDocumentFragment();
-
-            var gefilterd = data.filter(function(persoon) {
+            var fragment  = document.createDocumentFragment();
+            var gefilterd = data.filter(function(p) {
                 return columns.every(function(col) {
                     if (!filters[col]) return true;
-                    return (persoon[col] || '')
-                        .toString()
-                        .toLowerCase()
-                        .includes(filters[col]);
+                    return (p[col] || '').toString().toLowerCase().includes(filters[col]);
                 });
             });
-
-            gefilterd.forEach(function(persoon) {
+            gefilterd.forEach(function(p) {
                 var rij = document.createElement('tr');
                 columns.forEach(function(col) {
                     var td = document.createElement('td');
-                    td.textContent = persoon[col] || '';
+                    td.textContent = p[col] || '';
                     rij.appendChild(td);
                 });
                 fragment.appendChild(rij);
             });
-
             tbody.appendChild(fragment);
         }
-
         applyFilters();
     }
 
-    // Reset stamboom na bevestiging
     resetBtn.addEventListener('click', function() {
         if (!StamboomStorage.get().length) return;
-
-        var bevestiging =
-            '⚠️ WAARSCHUWING ⚠️\n\nAlle data wordt verwijderd.\nMaak eerst een export.\nKlik OK om te bevestigen.';
-
-        if (!confirm(bevestiging)) return;
-
+        if (!confirm('⚠️ WAARSCHUWING ⚠️\n\nAlle data wordt verwijderd.\nMaak eerst een export.\nKlik OK om te bevestigen.')) return;
         StamboomStorage.clear();
         renderTable();
     });
@@ -525,34 +434,36 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ======================= CLOUD BACKUP =======================
 
-    var btnSave   = document.getElementById('btnSaveCloud');           // Opslaan knop
-    var btnLoad   = document.getElementById('btnLoadCloud');           // Laden knop
-    var statusEl  = document.getElementById('cloudStatus');            // Status banner
-    var metaEl    = document.getElementById('cloudMeta');              // Backup info
-    var loginWarn = document.getElementById('cloudLoginWaarschuwing'); // Login waarschuwing
+    var btnSave       = document.getElementById('btnSaveCloud');
+    var btnLoad       = document.getElementById('btnLoadCloud');
+    var statusEl      = document.getElementById('cloudStatus');
+    var conflictEl    = document.getElementById('conflictBanner');
+    var metaEl        = document.getElementById('cloudMeta');
+    var loginWarn     = document.getElementById('cloudLoginWarn');
+    var upgradeBlok   = document.getElementById('upgradeBlok');
+    var kaartOpslaan  = document.getElementById('kaartOpslaan');
+    var kaartLaden    = document.getElementById('kaartLaden');
 
-    // Toon statusbericht in de banner
+    // Toon statusbanner
     function toonStatus(tekst, type) {
         statusEl.textContent = tekst;
-        statusEl.className   = 'cloud-status ' + type;
+        statusEl.className   = 'cloud-banner ' + type;
     }
 
-    // Verberg statusbanner
     function verbergStatus() {
-        statusEl.className = 'cloud-status';
+        statusEl.className = 'cloud-banner';
     }
 
     // Formatteer ISO-datum naar leesbare Nederlandse schrijfwijze
-    function formateerDatum(isoString) {
-        if (!isoString) return '?';
-        var d = new Date(isoString);
-        return d.toLocaleDateString('nl-BE', {
+    function formateerDatum(iso) {
+        if (!iso) return '?';
+        return new Date(iso).toLocaleDateString('nl-BE', {
             day: '2-digit', month: 'long', year: 'numeric',
             hour: '2-digit', minute: '2-digit'
         });
     }
 
-    // Initialiseer cloud sectie: controleer login en bestaande backup
+    // Initialiseer cloud tabblad
     async function initCloud() {
 
         if (!window.CloudSync) {
@@ -562,30 +473,54 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var meta = await window.CloudSync.getCloudMeta();
 
+        // Niet ingelogd
         if (meta.error === 'not_logged_in') {
-            // Niet ingelogd — toon waarschuwing, knoppen blijven uitgeschakeld
             loginWarn.classList.add('zichtbaar');
             return;
         }
 
-        // Ingelogd — activeer knoppen
-        btnSave.disabled = false;
-        btnLoad.disabled = !meta.exists; // Laden alleen actief als backup bestaat
+        // Gratis gebruiker of viewer — toon upgrade melding
+        if (!meta.hasAccess) {
+            upgradeBlok.classList.add('zichtbaar');
+            return;
+        }
 
-        // Toon info over bestaande backup
+        // Premium of admin — toon kaarten
+        kaartOpslaan.classList.add('zichtbaar');
+        kaartLaden.classList.add('zichtbaar');
+        btnSave.disabled = false;
+        btnLoad.disabled = !meta.exists;
+
+        // Backup info tonen
         if (meta.exists) {
             metaEl.textContent =
                 'Laatste backup: ' + formateerDatum(meta.updatedAt) +
                 ' (' + meta.count + ' personen)';
+            metaEl.classList.add('zichtbaar');
+
+            // FA+-06: Conflictmelding — vergelijk cloud timestamp met lokale modified timestamp
+            var lokalModified = StamboomStorage.getModified();
+            if (lokalModified) {
+                var cloudTijd = new Date(meta.updatedAt).getTime();       // Cloud timestamp in ms
+                var lokaalTijd = new Date(lokalModified).getTime();       // Lokale timestamp in ms
+
+                if (cloudTijd > lokaalTijd) {
+                    // Cloud is nieuwer dan lokaal — toon conflictmelding
+                    conflictEl.innerHTML =
+                        '⚠️ Je cloud backup (<strong>' + formateerDatum(meta.updatedAt) + '</strong>) ' +
+                        'is nieuwer dan je lokale data (<strong>' + formateerDatum(lokalModified) + '</strong>). ' +
+                        'Wil je de cloud backup laden?';
+                    conflictEl.className = 'cloud-banner waarsch';
+                }
+            }
         } else {
             metaEl.textContent = 'Nog geen cloud backup aangemaakt.';
+            metaEl.classList.add('zichtbaar');
         }
-        metaEl.classList.add('zichtbaar');
     }
 
     // Opslaan in cloud
     btnSave.addEventListener('click', async function() {
-
         if (!window.CloudSync) return;
 
         btnSave.disabled    = true;
@@ -599,35 +534,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (result.success) {
             toonStatus('✅ Stamboom opgeslagen in cloud (' + result.count + ' personen).', 'succes');
-            await initCloud(); // Ververs timestamp
+            conflictEl.className = 'cloud-banner';                        // Verberg conflictmelding na opslaan
+            await initCloud();
 
         } else if (result.error === 'not_logged_in') {
-            toonStatus('❌ Je bent niet ingelogd. Log in via de balk bovenaan.', 'fout');
+            toonStatus('❌ Je bent niet ingelogd.', 'fout');
+
+        } else if (result.error === 'no_cloud_access') {
+            toonStatus('❌ Cloud backup is niet beschikbaar voor je huidige abonnement.', 'fout');
 
         } else if (result.error === 'limit_exceeded') {
             toonStatus(
                 '❌ Je stamboom heeft ' + result.count + ' personen. ' +
-                'Het gratis maximum is ' + result.max + '. ' +
-                'Verwijder personen of upgrade je account.',
+                'Het maximum is ' + result.max + '.',
                 'fout'
             );
-
         } else {
             toonStatus('❌ Opslaan mislukt: ' + result.error, 'fout');
         }
     });
 
-    // Laden vanuit cloud — overschrijft lokale data na bevestiging
+    // Laden vanuit cloud
     btnLoad.addEventListener('click', async function() {
-
         if (!window.CloudSync) return;
 
-        var bevestigd = confirm(
+        if (!confirm(
             'Wil je de cloud backup laden?\n\n' +
             'Dit overschrijft je huidige lokale stamboom. ' +
             'Maak eerst een lokale export als je dat wilt bewaren.'
-        );
-        if (!bevestigd) return;
+        )) return;
 
         btnLoad.disabled    = true;
         btnLoad.textContent = 'Bezig met laden…';
@@ -644,24 +579,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 'Backup van: ' + formateerDatum(result.updatedAt),
                 'succes'
             );
-            // Herlaad pagina zodat de datatable de nieuwe lokale data toont
-            setTimeout(function() { location.reload(); }, 1800);
+            conflictEl.className = 'cloud-banner';                        // Verberg conflictmelding na laden
+            setTimeout(function() { location.reload(); }, 1800);         // Herlaad pagina na 1.8s
 
         } else if (result.error === 'not_logged_in') {
             toonStatus('❌ Je bent niet ingelogd.', 'fout');
-
         } else if (result.error === 'no_backup') {
-            toonStatus('ℹ️ Er is nog geen cloud backup beschikbaar voor dit account.', 'info');
-
+            toonStatus('ℹ️ Er is nog geen cloud backup beschikbaar.', 'info');
         } else if (result.error === 'invalid_data') {
             toonStatus('❌ Cloud backup bevat ongeldige data.', 'fout');
-
         } else {
             toonStatus('❌ Laden mislukt: ' + result.error, 'fout');
         }
     });
 
-    // Start cloud initialisatie
     initCloud();
 
 });
