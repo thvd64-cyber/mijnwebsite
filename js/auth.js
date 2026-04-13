@@ -1,9 +1,13 @@
 // =============================================================================
 // auth.js — Supabase Authentication Module
-// MyFamTreeCollab v2.2.0
+// MyFamTreeCollab v2.3.0
 // -----------------------------------------------------------------------------
 // Handles registration, login, logout, session management, profiles
 // and password reset flow.
+//
+// Nieuw in v2.3.0:
+// - getProfile() haalt nu ook tier, is_admin, is_premium op
+// - getTier()    — handige shortcut die alleen de tier teruggeeft
 //
 // Nieuw in v2.2.0:
 // - resetPassword(email)   — stuurt resetmail via Supabase
@@ -17,10 +21,10 @@
   "use strict";
 
   // ---------------------------------------------------------------------------
-  // CONFIGURATION — vul hier je eigen Supabase gegevens in
+  // CONFIGURATION
   // ---------------------------------------------------------------------------
-  const SUPABASE_URL  = "https://xpufzrjncivyzyukwcmn.supabase.co";             // bv. https://xyzxyz.supabase.co
-  const SUPABASE_ANON = "sb_publishable_4Pg_TkSymTbA-uX29z0Zaw_d1A1c5lE";       // sb_publishable_... 
+  const SUPABASE_URL  = "https://xpufzrjncivyzyukwcmn.supabase.co";
+  const SUPABASE_ANON = "sb_publishable_4Pg_TkSymTbA-uX29z0Zaw_d1A1c5lE";
 
   // ---------------------------------------------------------------------------
   // Supabase client — eenmalig aangemaakt, overal hergebruikt
@@ -44,12 +48,8 @@
 
   // ---------------------------------------------------------------------------
   // register(email, password, username)
-  // Maakt een nieuw account aan. Username wordt via metadata doorgegeven
-  // aan de database trigger die het opslaat in de profiles tabel.
-  // Returns { user, error }
   // ---------------------------------------------------------------------------
   async function register(email, password, username) {
-    // Valideer alle velden voor verzending naar Supabase
     if (!email || !password || !username) {
       return { user: null, error: "Vul alle velden in." };
     }
@@ -60,10 +60,7 @@
     const { data, error } = await _client.auth.signUp({
       email,
       password,
-      options: {
-        // Username meegeven als metadata — database trigger slaat dit op in profiles
-        data: { username: username.trim() }
-      }
+      options: { data: { username: username.trim() } }
     });
 
     if (error) return { user: null, error: _errMsg(error) };
@@ -72,12 +69,8 @@
 
   // ---------------------------------------------------------------------------
   // login(email, password)
-  // Logt een bestaande gebruiker in. Sessie wordt automatisch opgeslagen
-  // in localStorage door de Supabase client.
-  // Returns { user, error }
   // ---------------------------------------------------------------------------
   async function login(email, password) {
-    // Valideer velden voor verzending
     if (!email || !password) return { user: null, error: "Vul e-mailadres en wachtwoord in." };
 
     const { data, error } = await _client.auth.signInWithPassword({ email, password });
@@ -88,8 +81,6 @@
 
   // ---------------------------------------------------------------------------
   // logout()
-  // Logt de huidige gebruiker uit en wist de sessie uit localStorage.
-  // Returns { error }
   // ---------------------------------------------------------------------------
   async function logout() {
     const { error } = await _client.auth.signOut();
@@ -98,18 +89,11 @@
 
   // ---------------------------------------------------------------------------
   // resetPassword(email)
-  // Stuurt een wachtwoord-resetmail via Supabase.
-  // De link in de mail stuurt de gebruiker naar reset.html met een token in de URL.
-  // redirectTo moet overeenkomen met de URL in Supabase → Authentication → URL Configuration.
-  // Returns { error }
   // ---------------------------------------------------------------------------
   async function resetPassword(email) {
-    // Valideer e-mailadres voor verzending
     if (!email) return { error: "Vul je e-mailadres in." };
 
     const { error } = await _client.auth.resetPasswordForEmail(email, {
-      // Supabase stuurt de gebruiker na klikken op de resetlink naar deze URL
-      // Zorg dat deze URL staat in Supabase → Authentication → URL Configuration → Redirect URLs
       redirectTo: "https://thvd64-cyber.github.io/MyFamTreeCollab/home/reset.html"
     });
 
@@ -119,13 +103,8 @@
 
   // ---------------------------------------------------------------------------
   // updatePassword(newPassword)
-  // Slaat een nieuw wachtwoord op voor de ingelogde gebruiker.
-  // Alleen bruikbaar nadat de gebruiker via de resetlink is ingelogd
-  // (Supabase logt de gebruiker automatisch in via de resetlink).
-  // Returns { error }
   // ---------------------------------------------------------------------------
   async function updatePassword(newPassword) {
-    // Valideer het nieuwe wachtwoord
     if (!newPassword || newPassword.length < 6) {
       return { error: "Wachtwoord moet minimaal 6 tekens bevatten." };
     }
@@ -138,7 +117,6 @@
 
   // ---------------------------------------------------------------------------
   // getSession()
-  // Geeft het huidige sessie-object terug, of null als niet ingelogd.
   // ---------------------------------------------------------------------------
   async function getSession() {
     const { data } = await _client.auth.getSession();
@@ -147,7 +125,6 @@
 
   // ---------------------------------------------------------------------------
   // getUser()
-  // Geeft het huidige gebruikersobject terug, of null als niet ingelogd.
   // ---------------------------------------------------------------------------
   async function getUser() {
     const session = await getSession();
@@ -156,8 +133,9 @@
 
   // ---------------------------------------------------------------------------
   // getProfile()
-  // Haalt username en avatar_id op uit de profiles tabel.
+  // Haalt het volledige profiel op inclusief tier, is_admin en is_premium.
   // Returns { profile, error }
+  // profile bevat: username, avatar_id, tier, is_admin, is_premium, tier_until
   // ---------------------------------------------------------------------------
   async function getProfile() {
     const user = await getUser();
@@ -165,7 +143,7 @@
 
     const { data, error } = await _client
       .from("profiles")
-      .select("username, avatar_id")
+      .select("username, avatar_id, tier, is_admin, is_premium, tier_until")  // Nieuw: tier + rollen
       .eq("id", user.id)
       .single();
 
@@ -174,9 +152,20 @@
   }
 
   // ---------------------------------------------------------------------------
+  // getTier()
+  // Handige shortcut — geeft alleen de tier string terug van de ingelogde gebruiker.
+  // Geeft 'free' terug als niet ingelogd of bij fout.
+  // Gebruikt door cloudSync.js en storage.js voor toegangscontrole.
+  // Returns: 'free' | 'viewer' | 'supporter' | 'personal' | 'family' | 'researcher' | 'admin'
+  // ---------------------------------------------------------------------------
+  async function getTier() {
+    const { profile, error } = await getProfile();
+    if (error || !profile) return 'free';       // Niet ingelogd of fout → behandel als gratis
+    return profile.tier || 'free';              // Fallback naar 'free' als kolom leeg is
+  }
+
+  // ---------------------------------------------------------------------------
   // updateUsername(username)
-  // Past de gebruikersnaam aan in de profiles tabel.
-  // Returns { error }
   // ---------------------------------------------------------------------------
   async function updateUsername(username) {
     const user = await getUser();
@@ -195,8 +184,6 @@
 
   // ---------------------------------------------------------------------------
   // onAuthChange(callback)
-  // Abonneert op auth-statuswijzigingen (login, logout, token refresh).
-  // callback ontvangt (event, session)
   // ---------------------------------------------------------------------------
   function onAuthChange(callback) {
     _client.auth.onAuthStateChange((event, session) => {
@@ -206,7 +193,6 @@
 
   // ---------------------------------------------------------------------------
   // getClient()
-  // Geeft de ruwe Supabase client terug voor gebruik in andere modules.
   // ---------------------------------------------------------------------------
   function getClient() {
     return _client;
@@ -224,6 +210,7 @@
     getSession,      // ()                           → session | null
     getUser,         // ()                           → user | null
     getProfile,      // ()                           → { profile, error }
+    getTier,         // ()                           → tier string
     updateUsername,  // (username)                   → { error }
     onAuthChange,    // (callback)                   → void
     getClient,       // ()                           → supabase client
