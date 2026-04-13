@@ -138,8 +138,8 @@
 | ID | Prioriteit | Taak | Status |
 |----|-----------|------|--------|
 | FA-01 | 🔴 Hoog | Supabase project aanmaken + API-key configureren | ✅ Gedaan |
-| FA-02 | 🔴 Hoog | `js/auth.js` aanmaken: registreren, inloggen, uitloggen (v2.2.0) | ✅ Gedaan |
-| FA-03 | 🔴 Hoog | Login modal via `js/topbar.js`: popup met tabs inloggen/registreren (v2.0.2) | ✅ Gedaan |
+| FA-02 | 🔴 Hoog | `js/auth.js` aanmaken: registreren, inloggen, uitloggen (v2.3.0) | ✅ Gedaan |
+| FA-03 | 🔴 Hoog | Login modal via `js/topbar.js`: popup met tabs inloggen/registreren (v2.0.3) | ✅ Gedaan |
 | FA-04 | 🔴 Hoog | TopBar uitbreiden: gebruikersnaam + uitlogknop via `topbar.js` | ✅ Gedaan |
 | FA-05 | 🟡 Middel | Sessie bewaren na pagina-refresh (Supabase session) | ✅ Gedaan |
 | FA-06 | 🟡 Middel | Ko-fi donatie knop in TopBar en Footer | ✅ Gedaan |
@@ -148,21 +148,25 @@
 | FA-09 | 🟡 Middel | Supabase redirect URL instellen naar live GitHub Pages site | ✅ Gedaan |
 | FA-10 | 🟡 Middel | Supabase profiles tabel aanmaken met username + avatar_id + RLS | ✅ Gedaan |
 | FA-11 | 🟢 Laag | Donateurs-badge (toekomstig — na Ko-fi webhook integratie) | 🔮 Toekomst |
+| FA-12 | 🟡 Middel | E-mail templates huisstijl (alle 5 templates) | ✅ Gedaan |
+| FA-13 | 🔴 Hoog | Admin dropdown verbergen voor niet-admins | ✅ Gedaan |
 
 ---
 
-## Fase A+ — Cloud backup 🔄 VOLGENDE
+## Fase A+ — Cloud backup ✅ AFGEROND
 
 | ID | Prioriteit | Taak | Status |
 |----|-----------|------|--------|
-| FA+-01 | 🔴 Hoog | Supabase tabel `stambomen` aanmaken (user_id, data JSON, updated_at) | 📋 Open |
-| FA+-02 | 🔴 Hoog | `js/cloudSync.js` aanmaken: `saveToCloud()` en `loadFromCloud()` | 📋 Open |
-| FA+-03 | 🔴 Hoog | `stamboom/storage.html` uitbreiden: "Opslaan in cloud" knop | 📋 Open |
-| FA+-04 | 🔴 Hoog | Gratis limiet bewaken: max 100 personen vóór opslaan controleren | 📋 Open |
-| FA+-05 | 🟡 Middel | "Laad vanuit cloud" knop op `storage.html` | 📋 Open |
-| FA+-06 | 🟡 Middel | Conflictmelding tonen als cloud-versie nieuwer is dan lokale versie | 📋 Open |
-| FA+-07 | 🟡 Middel | `home/account.html` aanmaken: overzicht van opgeslagen backups | 📋 Open |
-| FA+-08 | 🟢 Laag | Timestamp tonen van laatste cloud-backup op `storage.html` | 📋 Open |
+| FA+-01 | 🔴 Hoog | Supabase tabel `stambomen` aanmaken (user_id, data JSON, updated_at) | ✅ Gedaan |
+| FA+-02 | 🔴 Hoog | `js/cloudSync.js` aanmaken: `saveToCloud()`, `loadFromCloud()`, `getCloudMeta()` | ✅ Gedaan |
+| FA+-03 | 🔴 Hoog | `stamboom/storage.html` tabbladen: Mijn data + Cloud backup | ✅ Gedaan |
+| FA+-04 | 🔴 Hoog | Gratis limiet bewaken: max 100 personen lokaal voor free tier | ✅ Gedaan |
+| FA+-05 | 🟡 Middel | "Laad vanuit cloud" knop op `storage.html` | ✅ Gedaan |
+| FA+-06 | 🟡 Middel | Conflictmelding tonen als cloud-versie nieuwer is dan lokale versie | ✅ Gedaan |
+| FA+-07 | 🟡 Middel | `home/account.html` aanmaken — uitgesteld naar meerdere stambomen fase | 🔮 Toekomst |
+| FA+-08 | 🟢 Laag | Timestamp tonen van laatste cloud-backup op `storage.html` | ✅ Gedaan |
+| FA+-09 | 🔴 Hoog | Tier/rollen systeem: is_admin, is_premium, tier, tier_until in profiles | ✅ Gedaan |
+| FA+-10 | 🔴 Hoog | Cloud toegang alleen voor premium/admin — gratis gebruikers zien upgrade melding | ✅ Gedaan |
 
 ---
 
@@ -211,10 +215,15 @@
 |----|------|--------|
 | F5-01 | Backend: Supabase ✅ gekozen en opgezet | ✅ Gedaan |
 | F5-02 | Gebruikersaccounts: registreren, inloggen, uitloggen | ✅ Gedaan |
-| F5-03 | Data sync tussen apparaten | 🔄 In uitvoering (Fase A+) |
-| F5-04 | Stamboom delen met andere gebruikers (leesrechten) | 🔮 Toekomst |
+| F5-03 | Data sync tussen apparaten | ✅ Gedaan (Fase A+) |
+| F5-04 | Stamboom delen met andere gebruikers (leesrechten / viewer tier) | 🔮 Toekomst |
 | F5-05 | Samenwerkingsmodus: meerdere gebruikers bewerken samen | 🔮 Toekomst |
 | F5-06 | Versiebeheer per persoon (wijzigingshistorie) | 🔮 Toekomst |
+| F5-07 | Meerdere stambomen per gebruiker in cloud | 🔮 Toekomst |
+| F5-08 | account.html — overzicht stambomen, backups, profiel | 🔮 Toekomst |
+| F5-09 | Promotiecodes voor cloud toegang | 🔮 Toekomst |
+| F5-10 | Abonnementen en betaaltiers verder uitwerken | 🔮 Toekomst |
+| F5-11 | Ko-fi webhook integratie voor donateur-badge | 🔮 Toekomst |
 
 ---
 
