@@ -14,13 +14,16 @@
 | JS centrale modules | ✅ Opgeschoond | v2.0.0 |
 | CSS Tree layout | ✅ Opgeschoond | v2.0.0 |
 | Export | ✅ Gecentraliseerd + facelift | v2.1.0 |
-| Storage | ✅ Opgeschoond | v2.0.0 |
+| Storage | ✅ Opgeschoond | v2.0.2 |
 | Facelift alle NL pagina's | ✅ Gedaan | v2.0.0 |
-| Auth — login/registratie/reset | ✅ Volledig werkend | v2.2.0 |
-| TopBar login modal | ✅ Werkend op alle pagina's | v2.0.2 |
+| Auth — login/registratie/reset | ✅ Volledig werkend | v2.3.0 |
+| TopBar login modal | ✅ Werkend op alle pagina's | v2.0.3 |
 | Ko-fi donatie knop | ✅ Toegevoegd | v1.5 |
 | SMTP e-mail (Gmail) | ✅ Werkend | — |
-| Cloud backup (Fase A+) | 🔄 Volgende stap | — |
+| E-mail templates (alle 5) | ✅ Huisstijl toegepast | — |
+| Cloud backup (Fase A+) | ✅ Afgerond | v1.1.0 |
+| Admin dropdown beveiliging | ✅ Alleen zichtbaar voor admin | — |
+| Tier/rollen systeem | ✅ Placeholder aangemaakt | — |
 | Zoekfunctie | ⚠️ Basisversie | v2.0.0 |
 | Stamboomweergave | ⚠️ Basisversie | v2.0.0 |
 | Tijdlijn | ⚠️ Basisversie | v2.0.0 |
@@ -36,7 +39,7 @@
 ### Fase 2 — Kapotte bestanden repareren ✅ AFGEROND
 ### Fase 3 — Kernfeatures verbeteren 🔄 HUIDIG
 ### Fase A — Account & donaties ✅ AFGEROND
-### Fase A+ — Cloud backup 🔄 VOLGENDE
+### Fase A+ — Cloud backup ✅ AFGEROND
 ### Fase 4 — Nieuwe features 📋 GEPLAND
 ### Fase 5 — Cloud & accounts (uitgebreid) 🔮 TOEKOMST
 
@@ -90,6 +93,18 @@
 **Reden:** fetch() werkt niet op file:// protocol — alleen op HTTPS.
 **Gevolg:** topbar.js wordt via createElement geladen NA de TopBar fetch.
 
+### ADR-010: Tier/rollen systeem in Supabase profiles
+**Beslissing:** toegangscontrole via `tier` kolom in profiles tabel.
+**Tiers:** free | viewer | supporter | personal | family | researcher | admin
+**Admin:** thvd64@gmail.com — geen limieten, ziet Administrator dropdown in navbar.
+**Free gebruikers:** max 100 personen lokaal, geen cloud toegang.
+**Cloud toegang:** alleen voor betaalde tiers en donateurs (supporter+).
+**Gevolg:** cloudSync.js en storage.js controleren tier via AuthModule.getTier().
+
+### ADR-011: Admin dropdown verborgen voor niet-admins
+**Beslissing:** `#adminDropdown` in Navbar staat standaard `display:none`.
+**Gevolg:** topbar.js maakt het zichtbaar na `is_admin` check via getProfile().
+
 ---
 
 ## Laadvolgorde scripts (verplicht)
@@ -115,7 +130,7 @@
 </script>
 
 <!-- Pagina-specifieke scripts altijd als laatste -->
-schema.js → idGenerator.js → storage.js → [pagina].js
+schema.js → idGenerator.js → storage.js → cloudSync.js (alleen op storage.html) → [pagina].js
 ```
 
 **Let op voor index.html (root):** paden zijn `/MyFamTreeCollab/js/` niet `../js/`
@@ -125,9 +140,25 @@ schema.js → idGenerator.js → storage.js → [pagina].js
 ## Supabase tabellen
 
 ```
-auth.users          ← ingebouwd door Supabase Auth
-profiles            ← username, avatar_id (gekoppeld aan auth.users.id)
-stambomen           ← (Fase A+) user_id, data JSON, updated_at
+auth.users    ← ingebouwd door Supabase Auth
+profiles      ← username, avatar_id, is_admin, is_premium, tier, tier_until
+stambomen     ← user_id, data JSON, updated_at (één rij per gebruiker)
+```
+
+## Supabase e-mail templates (alle bijgewerkt in huisstijl)
+
+| Template | Status |
+|----------|--------|
+| Confirm signup | ✅ |
+| Reset password | ✅ |
+| Invite user | ✅ |
+| Magic Link | ✅ |
+| Change Email | ✅ |
+
+## Toekomstige Supabase tabellen (gepland)
+
+```
+stamboom_shares  ← stamboom_id, owner_id, viewer_id (Fase 5 — viewer toegang)
 ```
 
 ## Globale exports (window.*)
@@ -143,6 +174,7 @@ stambomen           ← (Fase A+) user_id, data JSON, updated_at
 | `window.ExportModule.exportCSV`, `window.ExportModule.exportJSON` | export.js |
 | `window.AuthModule` | auth.js |
 | `window.TopBarAuth` | topbar.js |
+| `window.CloudSync` | cloudSync.js |
 
 ---
 
@@ -153,7 +185,7 @@ stambomen           ← (Fase A+) user_id, data JSON, updated_at
 | js/utils.js | v2.0.0 | ✅ stabiel |
 | js/schema.js | v0.1.0 | ⚠️ nog te doen |
 | js/idGenerator.js | v2.0.0 | ✅ stabiel |
-| js/storage.js | v2.0.0 | ✅ stabiel |
+| js/storage.js | v2.0.2 | ✅ stabiel |
 | js/LiveSearch.js | v2.0.0 | ✅ stabiel |
 | js/relatieEngine.js | v2.0.0 | ✅ stabiel |
 | js/create.js | v2.0.0 | ✅ stabiel |
@@ -162,16 +194,18 @@ stambomen           ← (Fase A+) user_id, data JSON, updated_at
 | js/timeline.js | v2.0.0 | ✅ stabiel |
 | js/export.js | v2.0.0 | ✅ stabiel |
 | js/import.js | v2.0.3 | ⚠️ nog te doen |
-| js/auth.js | v2.2.0 | ✅ stabiel |
-| js/topbar.js | v2.0.2 | ✅ stabiel |
+| js/auth.js | v2.3.0 | ✅ stabiel |
+| js/topbar.js | v2.0.3 | ✅ stabiel |
 | js/reset.js | v1.0.0 | ✅ stabiel |
-| js/cloudSync.js | — | 📋 Fase A+ |
+| js/cloudSync.js | v1.1.0 | ✅ stabiel |
 | js/LSD.js | v0.0.0 | ❌ kapot (lage prio) |
 | home/reset.html | v1.0.0 | ✅ stabiel |
 | home/login.html | — | ❌ vervangen door modal |
 | Layout/TopBar.html | v0.4 | ✅ stabiel |
+| Layout/Navbar.html | v0.0.2 | ✅ stabiel |
 | Layout/Footer.html | v1.5 | ✅ stabiel |
-| bronnen/handleiding.html | v1.0.0 | ✅ nieuw |
+| stamboom/storage.html | v2.3.0 | ✅ stabiel |
+| bronnen/handleiding.html | v1.1.0 | ✅ bijgewerkt |
 
 ---
 
@@ -187,7 +221,7 @@ MyFamTreeCollab/
 │   ├── utils.js                ← centrale hulpfuncties (v2.0.0)
 │   ├── schema.js               ← datastructuur definitie (v0.1.0)
 │   ├── idGenerator.js          ← ID generatie (v2.0.0)
-│   ├── storage.js              ← localStorage API (v2.0.0)
+│   ├── storage.js              ← localStorage API (v2.0.2)
 │   ├── LiveSearch.js           ← zoekfunctie (v2.0.0)
 │   ├── relatieEngine.js        ← relatie berekening (v2.0.0)
 │   ├── create.js               ← eerste persoon aanmaken (v2.0.0)
@@ -196,10 +230,10 @@ MyFamTreeCollab/
 │   ├── timeline.js             ← tijdlijn visualisatie (v2.0.0)
 │   ├── import.js               ← CSV/TXT importeren (v2.0.3)
 │   ├── export.js               ← CSV/JSON exporteren (v2.0.0)
-│   ├── auth.js                 ← Supabase authenticatie (v2.2.0)
-│   ├── topbar.js               ← TopBar auth modal (v2.0.2)
+│   ├── auth.js                 ← Supabase authenticatie (v2.3.0)
+│   ├── topbar.js               ← TopBar auth modal + admin check (v2.0.3)
 │   ├── reset.js                ← wachtwoord reset (v1.0.0)
-│   └── cloudSync.js            ← cloud backup (Fase A+ — nog te bouwen)
+│   └── cloudSync.js            ← cloud backup met tiercontrole (v1.1.0)
 ├── css/
 │   ├── style.css               ← globale stijlen (v1.0.6)
 │   ├── Tree.css                ← stamboom stijlen (v2.0.0)
@@ -217,12 +251,12 @@ MyFamTreeCollab/
 │   ├── view.html               ← stamboom bekijken (v2.0.0)
 │   ├── timeline.html           ← tijdlijn bekijken (v2.0.0)
 │   ├── stats.html              ← statistieken (v2.0.0)
-│   └── storage.html            ← data inzien en resetten (v2.0.0)
+│   └── storage.html            ← data + cloud backup tabbladen (v2.3.0)
 ├── bronnen/
 │   ├── template.html           ← CSV template download (v2.0.0)
-│   └── handleiding.html        ← gebruikershandleiding (v1.0.0)
+│   └── handleiding.html        ← gebruikershandleiding (v1.1.0)
 └── Layout/
-    ├── Navbar.html
+    ├── Navbar.html             ← v0.0.2 — admin dropdown verborgen by default
     ├── TopBar.html             ← v0.4 met Ko-fi knop
     └── Footer.html             ← v1.5 met Ko-fi knop
 ```
