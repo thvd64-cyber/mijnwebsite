@@ -4,6 +4,96 @@
 
 ---
 
+## Sessie 12 — Fase A+: Tier systeem, admin beveiliging & e-mail templates
+
+**Datum:** april 2026
+**Doel:** Tier/rollen systeem opzetten, admin dropdown beveiligen, e-mail templates in huisstijl.
+
+### Nieuwe bestanden
+
+| Bestand | Versie | Omschrijving |
+|---------|--------|--------------|
+| — | — | Geen nieuwe bestanden |
+
+### Gewijzigde bestanden
+
+| Bestand | Van | Naar | Wijziging |
+|---------|-----|------|-----------|
+| `js/auth.js` | v2.2.0 | v2.3.0 | `getTier()` toegevoegd, `getProfile()` haalt nu ook tier, is_admin, is_premium op |
+| `js/cloudSync.js` | v1.0.0 | v1.1.0 | Tiercontrole: alleen premium/admin mag cloud gebruiken |
+| `js/storage.js` | v2.0.1 | v2.0.2 | `canAdd()` toegevoegd (lokaal limiet 100 voor free), `getModified()` voor conflictdetectie |
+| `js/topbar.js` | v2.0.2 | v2.0.3 | `_showAdminDropdown()` toegevoegd — admin check na login |
+| `Layout/Navbar.html` | v0.0.1 | v0.0.2 | `#adminDropdown` standaard `display:none` |
+| `stamboom/storage.html` | v2.2.0 | v2.3.0 | Tier meldingen, FA+-06 conflictmelding, upgrade melding voor free gebruikers |
+| `bronnen/handleiding.html` | v1.0.0 | v1.1.0 | Tekstverbeteringen doorgevoerd |
+
+### Supabase wijzigingen
+
+| Onderdeel | Wijziging |
+|-----------|-----------|
+| `profiles` tabel | Kolommen toegevoegd: `is_admin`, `is_premium`, `tier`, `tier_until` |
+| Constraint | `profiles_tier_check` — geldige tiers: free, viewer, supporter, personal, family, researcher, admin |
+| Admin account | `thvd64@gmail.com` ingesteld als `is_admin=true, is_premium=true, tier=admin` |
+| SQL bestand | "MyFamTreeCollab — roles & tiers" opgeslagen in PRIVATE queries |
+
+### E-mail templates (alle bijgewerkt in huisstijl)
+
+| Template | Status |
+|----------|--------|
+| Confirm signup | ✅ Huisstijl toegepast |
+| Reset password | ✅ Huisstijl toegepast |
+| Invite user | ✅ Huisstijl toegepast |
+| Magic Link | ✅ Huisstijl toegepast |
+| Change Email | ✅ Huisstijl toegepast |
+
+### Tier structuur vastgelegd
+
+| Tier | Lokaal | Cloud | Opmerkingen |
+|------|--------|-------|-------------|
+| free | 100 personen | ❌ | Gratis, geen account vereist |
+| viewer | — | ❌ eigen | ✅ gedeelde stambomen bekijken (Fase 5) |
+| supporter | Onbeperkt | ✅ | Ko-fi donateur |
+| personal | Onbeperkt | ✅ | Betaald abonnement |
+| family | Onbeperkt | ✅ | Betaald abonnement |
+| researcher | Onbeperkt | ✅ | Betaald abonnement |
+| admin | Onbeperkt | ✅ geen limiet | thvd64@gmail.com |
+
+### Toekomstige beslissingen vastgelegd (backlog)
+
+- Meerdere stambomen per gebruiker → Fase 5 (F5-07)
+- account.html → Fase 5 (F5-08)
+- Promotiecodes → Fase 5 (F5-09)
+- Abonnementsprijzen → nog te definiëren (F5-10)
+
+---
+
+## Sessie 11 — Fase A+: Cloud backup
+
+**Datum:** april 2026
+**Doel:** Cloud backup implementeren via Supabase tabel `stambomen`.
+
+### Nieuwe bestanden
+
+| Bestand | Versie | Omschrijving |
+|---------|--------|--------------|
+| `js/cloudSync.js` | v1.0.0 | Cloud sync module: `saveToCloud()`, `loadFromCloud()`, `getCloudMeta()` |
+
+### Gewijzigde bestanden
+
+| Bestand | Van | Naar | Wijziging |
+|---------|-----|------|-----------|
+| `stamboom/storage.html` | v2.0.2 | v2.2.0 | Tabbladen Mijn data + Cloud backup, cloud UI |
+| `js/storage.js` | v1.0.0 | v2.0.1 | `replaceAll()` methode toegevoegd |
+
+### Supabase wijzigingen
+
+| Tabel | Kolommen | RLS |
+|-------|----------|-----|
+| `stambomen` | `id, user_id, data (jsonb), updated_at` | Aan — eigen rij per gebruiker |
+| Constraint | `stambomen_user_id_unique` | Één rij per gebruiker — vereist voor upsert |
+
+---
+
 ## Sessie 10 — Fase A: Auth, Login Modal, Ko-fi, SMTP & Wachtwoord Reset
 
 **Datum:** april 2026
@@ -41,31 +131,6 @@
 | SMTP | Gmail App Password |
 | Redirect URL | `https://thvd64-cyber.github.io/MyFamTreeCollab/home/reset.html` |
 | Site URL | `https://thvd64-cyber.github.io/MyFamTreeCollab` |
-
-### Belangrijke beslissingen
-
-- **Login modal** via popup — niet via aparte pagina
-- **topbar.js** laadt via `createElement` NADAT TopBar HTML in DOM zit
-- **SMTP** via Gmail App Password — tijdelijk, eigen domein aanbevolen later
-- **Ko-fi** op `ko-fi.com/myfamtreecollab`
-- **E-mailbevestiging** uitgeschakeld voor nu — aan te zetten zodra SMTP stabiel
-
-### Technische schuld toegevoegd
-
-| ID | Omschrijving |
-|----|--------------|
-| TD-07 | SMTP via Gmail — niet ideaal voor productie, eigen domein nodig |
-
-### Volgende sessie: Fase A+
-
-Doel: cloud backup implementeren.
-
-Taken:
-1. `FA+-01` — Supabase tabel `stambomen` aanmaken
-2. `FA+-02` — `js/cloudSync.js` bouwen
-3. `FA+-03` — Knop op `stamboom/storage.html`
-4. `FA+-04` — Gratis limiet (max 100 personen) bewaken
-5. `FA+-05` — Laad vanuit cloud knop
 
 ---
 
