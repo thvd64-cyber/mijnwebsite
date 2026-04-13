@@ -1,6 +1,9 @@
-<!-- ======================= bronnen/handleiding.html v1.0.0 =======================
+<!-- ======================= bronnen/handleiding.html v1.1.0 =======================
      Gebruikershandleiding voor MyFamTreeCollab
      Beschrijft alle functies van de applicatie stap voor stap
+
+     Wijzigingen v1.1.0:
+     - Tekstverbeteringen doorgevoerd in secties 1, 4 en account
      ======================================================================= -->
 <!DOCTYPE html>
 <html lang="nl">
@@ -19,27 +22,15 @@
     <style>
         /* ======================= PAGINA LAYOUT ======================= */
         .handleiding-wrapper {
-            max-width: 760px;              /* Prettige leeslengte */
+            max-width: 760px;
             margin: 0 auto;
             padding: 0 20px 60px;
         }
 
         /* ======================= WELKOMSTBLOK ======================= */
-        .welkom-blok {
-            margin-bottom: 32px;
-        }
-        .welkom-blok h1 {
-            font-size: 1.6rem;
-            font-weight: bold;
-            margin: 0 0 8px 0;
-            color: #222;
-        }
-        .welkom-blok p {
-            font-size: 0.95rem;
-            color: #555;
-            line-height: 1.6;
-            margin: 0;
-        }
+        .welkom-blok { margin-bottom: 32px; }
+        .welkom-blok h1 { font-size: 1.6rem; font-weight: bold; margin: 0 0 8px 0; color: #222; }
+        .welkom-blok p  { font-size: 0.95rem; color: #555; line-height: 1.6; margin: 0; }
 
         /* ======================= INHOUDSOPGAVE ======================= */
         .inhoudsopgave {
@@ -49,140 +40,65 @@
             padding: 20px 24px;
             margin-bottom: 40px;
         }
-        .inhoudsopgave h2 {
-            font-size: 1rem;
-            font-weight: bold;
-            margin: 0 0 12px 0;
-            color: #333;
-        }
-        .inhoudsopgave ol {
-            margin: 0;
-            padding-left: 20px;
-        }
-        .inhoudsopgave li {
-            margin-bottom: 6px;
-            font-size: 0.92rem;
-        }
-        .inhoudsopgave a {
-            color: #2563eb;
-            text-decoration: none;
-        }
+        .inhoudsopgave h2 { font-size: 1rem; font-weight: bold; margin: 0 0 12px 0; color: #333; }
+        .inhoudsopgave ol { margin: 0; padding-left: 20px; }
+        .inhoudsopgave li { margin-bottom: 6px; font-size: 0.92rem; }
+        .inhoudsopgave a  { color: #2563eb; text-decoration: none; }
         .inhoudsopgave a:hover { text-decoration: underline; }
 
         /* ======================= SECTIES ======================= */
-        .sectie {
-            margin-bottom: 48px;
-            scroll-margin-top: 20px;       /* Ruimte bij anchor-navigatie */
-        }
+        .sectie { margin-bottom: 48px; scroll-margin-top: 20px; }
         .sectie h2 {
-            font-size: 1.25rem;
-            font-weight: bold;
-            margin: 0 0 16px 0;
-            color: #222;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #eee; /* Subtiele scheidingslijn onder sectietitel */
+            font-size: 1.25rem; font-weight: bold; margin: 0 0 16px 0; color: #222;
+            padding-bottom: 8px; border-bottom: 2px solid #eee;
         }
-        .sectie h3 {
-            font-size: 1rem;
-            font-weight: bold;
-            margin: 24px 0 8px 0;
-            color: #333;
-        }
-        .sectie p {
-            font-size: 0.95rem;
-            color: #444;
-            line-height: 1.7;
-            margin: 0 0 12px 0;
-        }
-        .sectie ul, .sectie ol {
-            margin: 0 0 12px 20px;
-        }
-        .sectie li {
-            font-size: 0.95rem;
-            color: #444;
-            line-height: 1.7;
-            margin-bottom: 4px;
-        }
+        .sectie h3 { font-size: 1rem; font-weight: bold; margin: 24px 0 8px 0; color: #333; }
+        .sectie p  { font-size: 0.95rem; color: #444; line-height: 1.7; margin: 0 0 12px 0; }
+        .sectie ul, .sectie ol { margin: 0 0 12px 20px; }
+        .sectie li { font-size: 0.95rem; color: #444; line-height: 1.7; margin-bottom: 4px; }
 
         /* ======================= STAPPEN BLOK ======================= */
-        .stappen {
-            counter-reset: stap;           /* Reset teller voor genummerde stappen */
-            list-style: none;
-            padding: 0;
-            margin: 0 0 16px 0;
-        }
+        .stappen { counter-reset: stap; list-style: none; padding: 0; margin: 0 0 16px 0; }
         .stappen li {
             counter-increment: stap;
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-            margin-bottom: 12px;
-            font-size: 0.95rem;
-            color: #444;
-            line-height: 1.6;
+            display: flex; gap: 12px; align-items: flex-start;
+            margin-bottom: 12px; font-size: 0.95rem; color: #444; line-height: 1.6;
         }
         .stappen li::before {
-            content: counter(stap);        /* Stap nummer */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 26px;
-            height: 26px;
-            background: #2563eb;
-            color: white;
-            border-radius: 50%;
-            font-size: 0.8rem;
-            font-weight: bold;
-            flex-shrink: 0;
-            margin-top: 1px;
+            content: counter(stap);
+            display: flex; align-items: center; justify-content: center;
+            min-width: 26px; height: 26px;
+            background: #2563eb; color: white; border-radius: 50%;
+            font-size: 0.8rem; font-weight: bold; flex-shrink: 0; margin-top: 1px;
         }
 
         /* ======================= TIP BLOK ======================= */
         .tip {
-            background: #eff6ff;
-            border-left: 4px solid #2563eb;
-            border-radius: 0 6px 6px 0;
-            padding: 12px 16px;
-            margin: 16px 0;
-            font-size: 0.9rem;
-            color: #1e40af;
-            line-height: 1.5;
+            background: #eff6ff; border-left: 4px solid #2563eb;
+            border-radius: 0 6px 6px 0; padding: 12px 16px; margin: 16px 0;
+            font-size: 0.9rem; color: #1e40af; line-height: 1.5;
         }
         .tip strong { color: #1e3a8a; }
 
         /* ======================= WAARSCHUWING BLOK ======================= */
         .waarschuwing {
-            background: #fff7ed;
-            border-left: 4px solid #f97316;
-            border-radius: 0 6px 6px 0;
-            padding: 12px 16px;
-            margin: 16px 0;
-            font-size: 0.9rem;
-            color: #9a3412;
-            line-height: 1.5;
+            background: #fff7ed; border-left: 4px solid #f97316;
+            border-radius: 0 6px 6px 0; padding: 12px 16px; margin: 16px 0;
+            font-size: 0.9rem; color: #9a3412; line-height: 1.5;
         }
 
         /* ======================= TERUG NAAR TOP ======================= */
         .terug-top {
-            display: inline-block;
-            margin-top: 8px;
-            font-size: 0.85rem;
-            color: #2563eb;
-            text-decoration: none;
+            display: inline-block; margin-top: 8px;
+            font-size: 0.85rem; color: #2563eb; text-decoration: none;
         }
         .terug-top:hover { text-decoration: underline; }
 
         /* ======================= VERSIE BADGE ======================= */
         .versie-badge {
-            display: inline-block;
-            background: #e0f2fe;
-            color: #0369a1;
-            font-size: 0.78rem;
-            font-weight: bold;
-            padding: 2px 8px;
-            border-radius: 4px;
-            margin-left: 8px;
-            vertical-align: middle;
+            display: inline-block; background: #e0f2fe; color: #0369a1;
+            font-size: 0.78rem; font-weight: bold; padding: 2px 8px;
+            border-radius: 4px; margin-left: 8px; vertical-align: middle;
         }
     </style>
 </head>
@@ -200,10 +116,10 @@
 
         <!-- ======================= Welkomstblok ======================= -->
         <div class="welkom-blok">
-            <h1>Handleiding <span class="versie-badge">v1.0.0</span></h1>
+            <h1>Handleiding <span class="versie-badge">v1.1.0</span></h1>
             <p>
                 Welkom bij de handleiding van MyFamTreeCollab. Hier vind je stap voor stap uitleg
-                over alle functies van de applicatie, van je eerste persoon aanmaken tot je stamboom
+                over alle functies van de applicatie — van je eerste persoon aanmaken tot je stamboom
                 exporteren en je account beheren.
             </p>
         </div>
@@ -230,13 +146,14 @@
         <div class="sectie" id="aan-de-slag">
             <h2>1. Aan de slag</h2>
             <p>
-                MyFamTreeCollab werkt volledig in je browser. 
-                 Je hebt geen installatie nodi open gewoon de website en begin. 
-                 Je data wordt standaard lokaal opgeslagen op je eigen apparaat, in de browser.
+                MyFamTreeCollab werkt volledig in je browser. Je hebt geen installatie nodig —
+                open gewoon de website en begin. Je data wordt standaard lokaal opgeslagen op je
+                eigen apparaat, in de browser.
             </p>
             <div class="tip">
-                <strong>Tip:</strong> Maak een account aan om later je stamboom veilig op te slaan in de cloud. 
-                 Zonder account werkt alles ook je data blijft dan alleen lokaal werken met bestanden en je kunt niet online delen of samenwerken.
+                <strong>Tip:</strong> Maak een account aan om later je stamboom veilig op te slaan
+                in de cloud. Zonder account werkt alles ook — je data blijft dan alleen lokaal.
+                Je kunt dan niet online delen of samenwerken.
             </div>
             <p>
                 De navigatie bovenaan de pagina brengt je naar alle onderdelen van de app:
@@ -259,7 +176,8 @@
                 <li>Klik op het tabblad <strong>"Account aanmaken"</strong>.</li>
                 <li>Vul je gebruikersnaam, e-mailadres en wachtwoord in.</li>
                 <li>Klik op <strong>"Account aanmaken"</strong>.</li>
-                <li>Je kunt nu direct inloggen.</li>
+                <li>Je ontvangt een bevestigingsmail — klik op de link om je account te activeren.</li>
+                <li>Je kunt daarna inloggen.</li>
             </ul>
 
             <h3>Inloggen</h3>
@@ -280,7 +198,7 @@
         <div class="sectie" id="persoon-aanmaken">
             <h2>3. Eerste persoon aanmaken</h2>
             <p>
-                Elke stamboom begint met één persoon, de <strong>Hoofd-ID</strong>. Dit is
+                Elke stamboom begint met één persoon — de <strong>Hoofd-ID</strong>. Dit is
                 meestal jijzelf of de persoon van wie je de stamboom opbouwt.
             </p>
             <ul class="stappen">
@@ -309,7 +227,7 @@
             <ul class="stappen">
                 <li>Ga naar <strong>Beheren</strong> in de navigatie.</li>
                 <li>Klik op <strong>"Persoon toevoegen"</strong>.</li>
-                <li>Vul de gegevens in, in de velden als vader (VaderID), moeder (MoederID) en partner (PartnerID) koppelen de persoon aan anderen.</li>
+                <li>Vul de gegevens in. De velden Vader (VaderID), Moeder (MoederID) en Partner (PartnerID) koppelen de persoon aan anderen in de stamboom.</li>
                 <li>Klik op <strong>"Opslaan"</strong>.</li>
             </ul>
 
@@ -440,7 +358,7 @@
                 <li>Klik op <strong>Login</strong> bovenaan de pagina.</li>
                 <li>Klik op <strong>"Wachtwoord vergeten?"</strong> onder het inlogformulier.</li>
                 <li>Vul je e-mailadres in en klik <strong>"Resetlink versturen"</strong>.</li>
-                <li>Controleer je e-mail, ook je spammap.</li>
+                <li>Controleer je e-mail — ook je spammap.</li>
                 <li>Klik op de link in de mail.</li>
                 <li>Vul je nieuwe wachtwoord in en klik <strong>"Wachtwoord opslaan"</strong>.</li>
             </ul>
@@ -458,7 +376,9 @@
             <a href="https://ko-fi.com/myfamtreecollab"
                target="_blank"
                rel="noopener noreferrer"
-               style="display:inline-flex; align-items:center; gap:7px; padding:10px 22px; background:#FF5E5B; color:#fff; text-decoration:none; border-radius:6px; font-size:0.95rem; font-weight:bold;">
+               style="display:inline-flex; align-items:center; gap:7px; padding:10px 22px;
+                      background:#FF5E5B; color:#fff; text-decoration:none;
+                      border-radius:6px; font-size:0.95rem; font-weight:bold;">
                 ☕ Steun dit project
             </a>
             <a href="#" class="terug-top" style="display:block; margin-top:16px;">↑ Terug naar boven</a>
@@ -472,7 +392,6 @@
 
 <!-- =============================================================
      SCRIPTS — volgorde verplicht
-     handleiding.html heeft geen pagina-specifieke scripts
      ============================================================= -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/utils.js"></script>
