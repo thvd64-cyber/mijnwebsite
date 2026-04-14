@@ -1,6 +1,10 @@
-// ======================= js/view.js v1.6.4 =======================
+// ======================= js/view.js v1.7.0 =======================
 // Boom rendering + Live search >> in LiveSearch.js + optimezed code structure
 // Relatie logica komt nu uit externe relatieEngine.js en partner kind voor BZID verwijderd
+// Wijziging v1.7.0: meerdere partners ondersteuning via pipe-gescheiden PartnerID (F3-48)
+// - Hoofdpersoon: alle partners uit PartnerID als aparte PHoofdID-nodes naast hoofd
+// - Kinderen: PartnerID split op | zodat alle partners als aparte PKindID-node worden getoond
+// - Broers/zussen: zelfde split-logica voor hun partners
 // Wijziging v1.6.4: lokale sortering verwijderd — relatieEngine.js sorteert nu centraal
 
 (function(){
@@ -127,8 +131,13 @@ function buildTree(rootID){
     rootWrapper.appendChild(createTreeNode(root,'HoofdID')); 
 
     if(root.PartnerID){
-        const partner = findPerson(safe(root.PartnerID)); 
-        if(partner) rootWrapper.appendChild(createTreeNode(partner,'PHoofdID'));
+        root.PartnerID.split('|')                                         // Splits op pipe: meerdere partners mogelijk
+            .map(id => id.trim())                                         // Witruimte rondom elk ID verwijderen
+            .filter(Boolean)                                              // Lege strings na split verwijderen
+            .forEach(pid => {                                             // Loop door elk partner-ID
+                const partner = findPerson(pid);                         // Zoek partner in dataset
+                if(partner) rootWrapper.appendChild(createTreeNode(partner,'PHoofdID')); // Voeg elke partner als node toe
+            });
     }
 
     treeBox.appendChild(rootWrapper);
@@ -167,9 +176,14 @@ if(children.length > 0){
 
         kidGroup.appendChild(createTreeNode(k, k.Relatie));   // Voeg kind toe
 
-        if(k.PartnerID){                                      // Controleer of kind een partner heeft
-            const kPartner = findPerson(safe(k.PartnerID));   // Zoek partner in dataset
-            if(kPartner) kidGroup.appendChild(createTreeNode(kPartner,'PKindID')); // Voeg partner toe naast kind
+        if(k.PartnerID){                                          // Controleer of kind partner(s) heeft
+            k.PartnerID.split('|')                                // Splits op pipe: meerdere partners mogelijk
+                .map(id => id.trim())                             // Witruimte rondom elk ID verwijderen
+                .filter(Boolean)                                  // Lege strings na split verwijderen
+                .forEach(pid => {                                 // Loop door elk partner-ID
+                    const kPartner = findPerson(pid);             // Zoek partner in dataset
+                    if(kPartner) kidGroup.appendChild(createTreeNode(kPartner,'PKindID')); // Voeg partner naast kind toe
+                });
         }
 
         kidsWrap.appendChild(kidGroup);                        // Voeg groep toe aan wrapper
@@ -192,8 +206,13 @@ if(children.length > 0){
         bzGroup.appendChild(createTreeNode(b, 'BZID')); 
 
         if(b.PartnerID){
-            const bPartner = findPerson(safe(b.PartnerID));
-            if(bPartner) bzGroup.appendChild(createTreeNode(bPartner,'PBZID'));
+            b.PartnerID.split('|')                                // Splits op pipe: meerdere partners mogelijk
+                .map(id => id.trim())                             // Witruimte rondom elk ID verwijderen
+                .filter(Boolean)                                  // Lege strings na split verwijderen
+                .forEach(pid => {                                 // Loop door elk partner-ID
+                    const bPartner = findPerson(pid);             // Zoek partner in dataset
+                    if(bPartner) bzGroup.appendChild(createTreeNode(bPartner,'PBZID')); // Voeg partner naast broer/zus toe
+                });
         }
 
         BZBox.appendChild(bzGroup);                   
