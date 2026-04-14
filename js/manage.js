@@ -1,6 +1,11 @@
-/* ======================= js/manage.js v2.3.2 =======================
+/* ======================= js/manage.js v2.4.0 =======================
    Beheerpagina: toont stamboom als tabel, live search, add/save/refresh
    Vereist: schema.js, idGenerator.js, storage.js, LiveSearch.js, relatieEngine.js
+   Wijziging v2.4.0:
+   - Meerdere partners ondersteuning via pipe-gescheiden PartnerID (F3-48)
+   - Kinderen: PartnerID split op | zodat alle partners als aparte rij worden getoond
+   - Broers/zussen: zelfde split-logica voor hun partners
+   - Hoofdpersoon: extra partners (2e, 3e, ...) worden als extra Partner-rijen getoond
    Wijziging v2.3.2:
    - Delete-knop werkt nu op alle bestaande rijen (fix: Acties als eerste in if-chain)
    - Delete cleanup: verwijderd ID wordt ook gewist uit VaderID, MoederID en PartnerID
@@ -158,16 +163,33 @@
         if (hoofd) renderQueue.push(hoofd);                               // Voeg hoofdpersoon toe na de ouders
 
         contextData
-            .filter(p => p.Relatie === 'PHoofdID')                       // Partner van de hoofdpersoon
-            .forEach(p => renderQueue.push(p));                           // Voeg partner toe na hoofd
+            .filter(p => p.Relatie === 'PHoofdID')                       // Eerste partner via relatieEngine (primaire partner)
+            .forEach(p => renderQueue.push(p));                           // Voeg eerste partner toe na hoofd
+
+        // Extra partners van de hoofdpersoon: 2e, 3e, ... uit de pipe-lijst
+        if (hoofd && safe(hoofd.PartnerID)) {
+            hoofd.PartnerID.split('|')                                    // Splits op pipe: meerdere partners mogelijk
+                .map(id => id.trim())                                     // Witruimte rondom elk ID verwijderen
+                .filter(Boolean)                                          // Lege strings verwijderen
+                .slice(1)                                                 // Eerste partner overslaan — al toegevoegd via PHoofdID
+                .forEach(pid => {                                         // Loop door elk extra partner-ID
+                    const ep = dataset.find(p => safe(p.ID) === pid);    // Zoek extra partner in dataset
+                    if (ep) renderQueue.push({ ...ep, Relatie: 'PHoofdID' }); // Toon als PHoofdID zodat kleurcodering klopt
+                });
+        }
 
         contextData
             .filter(p => ['KindID', 'HKindID', 'PHKindID'].includes(p.Relatie)) // Alle drie kindscenario's meenemen
             .forEach(k => {
                 renderQueue.push(k);                                      // Voeg het kind toe aan de queue
-                if (safe(k.PartnerID)) {                                  // Controleer of kind een partner heeft
-                    const kp = dataset.find(p => safe(p.ID) === safe(k.PartnerID)); // Zoek partner rechtstreeks in dataset
-                    if (kp) renderQueue.push({ ...kp, Relatie: 'Partner' }); // Partner direct na kind
+                if (safe(k.PartnerID)) {                                  // Controleer of kind partner(s) heeft
+                    k.PartnerID.split('|')                                // Splits op pipe: meerdere partners mogelijk
+                        .map(id => id.trim())                             // Witruimte rondom elk ID verwijderen
+                        .filter(Boolean)                                  // Lege strings na split verwijderen
+                        .forEach(pid => {                                 // Loop door elk partner-ID
+                            const kp = dataset.find(p => safe(p.ID) === pid); // Zoek partner in dataset
+                            if (kp) renderQueue.push({ ...kp, Relatie: 'Partner' }); // Partner direct na kind
+                        });
                 }
             });
 
@@ -175,9 +197,14 @@
             .filter(p => p.Relatie === 'BZID')                           // Loop door alle broers/zussen
             .forEach(s => {
                 renderQueue.push(s);                                      // Voeg de broer/zus toe aan de queue
-                if (safe(s.PartnerID)) {                                  // Controleer of broer/zus een partner heeft
-                    const bzP = dataset.find(p => safe(p.ID) === safe(s.PartnerID)); // Zoek partner rechtstreeks in dataset
-                    if (bzP) renderQueue.push({ ...bzP, Relatie: 'Partner' }); // Partner direct na broer/zus
+                if (safe(s.PartnerID)) {                                  // Controleer of broer/zus partner(s) heeft
+                    s.PartnerID.split('|')                                // Splits op pipe: meerdere partners mogelijk
+                        .map(id => id.trim())                             // Witruimte rondom elk ID verwijderen
+                        .filter(Boolean)                                  // Lege strings na split verwijderen
+                        .forEach(pid => {                                 // Loop door elk partner-ID
+                            const bzP = dataset.find(p => safe(p.ID) === pid); // Zoek partner in dataset
+                            if (bzP) renderQueue.push({ ...bzP, Relatie: 'Partner' }); // Partner direct na broer/zus
+                        });
                 }
             });
 
