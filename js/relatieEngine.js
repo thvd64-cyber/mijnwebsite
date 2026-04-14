@@ -1,10 +1,16 @@
-/* ======================= js/relatieEngine.js v2.3.0 =======================
+/* ======================= js/relatieEngine.js v2.4.0 =======================
    Centrale relatie-berekening voor MyFamTreeCollab
    Berekent alle familierelaties rond een geselecteerde hoofdpersoon
    Exporteert: window.RelatieEngine.computeRelaties(data, hoofdId)
 
    Vereist: utils.js (voor safe()) — moet eerder geladen zijn in HTML
    Gebruikt door: view.js, timeline.js, manage.js
+
+   Wijziging v2.4.0 t.o.v. v2.3.0:
+   - PHoofdID bepaald via split('|')[0]: eerste partner uit pipe-gescheiden
+     PartnerID wordt gebruikt als primaire partner voor de scenario-logica.
+     Overige partners worden niet meegenomen in de relatieberekening —
+     view.js en manage.js tonen extra partners via eigen split-logica.
 
    Wijziging v2.3.0 t.o.v. v2.2.0:
    - KindPartnerID verwijderd — bestaat niet in de specificatie, partners van
@@ -60,7 +66,7 @@
         const sid      = safe(hoofdId);                                    // Veilige string van hoofdId
         const VHoofdID = safe(hoofd.VaderID);                              // Vader van hoofdpersoon
         const MHoofdID = safe(hoofd.MoederID);                             // Moeder van hoofdpersoon
-        const PHoofdID = safe(hoofd.PartnerID);                            // Partner van hoofdpersoon
+        const PHoofdID = safe(hoofd.PartnerID).split('|')[0].trim();         // Eerste partner uit pipe-lijst — gebruikt als primaire partner in scenario-logica
 
         /* ======================= KINDEREN — 3 SCENARIO'S ======================= */
         /*
