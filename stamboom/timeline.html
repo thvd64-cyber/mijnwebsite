@@ -1,5 +1,8 @@
-<!-- ======================= stamboom/timeline.html v2.1.1 =======================
+<!-- ======================= stamboom/timeline.html v2.2.0 =======================
      Tijdlijnpagina: visualiseert personen op een horizontale tijdas via HTML5 Canvas
+     Wijziging v2.2.0: sticky generatiekolom
+     - #timelineContainer gesplitst in #tlStickyCol (sticky links) + #tlScrollArea (canvas)
+     - Bij horizontaal scrollen blijft de generatiekolom zichtbaar aan de linkerkant
      Wijziging v2.1.0: canvas-rendering vervangen DOM-nodes, container aangepast,
                        tooltip-overlay toegevoegd, welkomstblok behouden
      v2.1.1 Login + Favicon / App-icoon
@@ -11,13 +14,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyFamTreeCollab - Tijdlijn</title>
-   
-       <!-- ===== Favicon / App-icoon ===== -->
+
+    <!-- ===== Favicon / App-icoon ===== -->
     <link rel="icon" type="image/x-icon" href="/MyFamTreeCollab/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/MyFamTreeCollab/favicon-32x32.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/MyFamTreeCollab/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/MyFamTreeCollab/favicon-192x192.png">
-     
+
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/timeline.css">
     <style>
@@ -27,58 +30,86 @@
         .welkom-blok p  { font-size: 0.95rem; color: #555; line-height: 1.6; margin: 0; }
 
         /* ======================= ZOEKBALK ======================= */
-        .zoek-sectie { margin-bottom: 20px; }                             /* Ruimte onder de zoeksectie */
-        #sandboxSearch {                                                   /* Zoekveld voor persoon selectie */
-            width: 50%;                                                    /* Halve paginabreedte */
-            padding: 9px 12px;                                             /* Ruim klikgebied */
-            font-size: 1rem;                                               /* Leesbare tekstgrootte */
-            border: 1px solid #bbb;                                        /* Subtiele rand */
-            border-radius: 5px;                                            /* Afgeronde hoeken */
-            box-sizing: border-box;                                        /* Padding telt mee in breedte */
+        .zoek-sectie { margin-bottom: 20px; }
+        #sandboxSearch {
+            width: 50%;
+            padding: 9px 12px;
+            font-size: 1rem;
+            border: 1px solid #bbb;
+            border-radius: 5px;
+            box-sizing: border-box;
         }
-        #sandboxSearch:focus {                                             /* Focusstijl */
+        #sandboxSearch:focus {
             outline: none;
-            border-color: #1E90FF;                                         /* Blauwe rand bij focus */
+            border-color: #1E90FF;
         }
 
-        /* ======================= TIJDLIJN CONTAINER ======================= */
-        #timelineContainer {                                               /* Wrapper voor canvas + tooltip */
-            position: relative;                                            /* Anker voor absoluut gepositioneerde tooltip */
-            overflow-x: auto;                                              /* Horizontaal scrollen als canvas breed is */
-            border: 1px solid #ddd;                                        /* Subtiele rand */
-            border-radius: 6px;                                            /* Afgeronde hoeken */
-            background: #fafafa;                                           /* Lichtgrijze achtergrond */
-            min-height: 120px;                                             /* Minimale hoogte zodat container zichtbaar is */
+        /* ======================= TIJDLIJN BUITENSTE WRAPPER ======================= */
+        /* overflow-x: auto zit hier zodat sticky werkt binnen de scrollbare context  */
+        #timelineContainer {
+            position: relative;            /* Ankerpunt voor tooltip */
+            display: flex;                 /* Sticky kolom + canvas naast elkaar */
+            flex-direction: row;           /* Horizontale layout */
+            align-items: stretch;          /* Beide kolommen even hoog */
+            overflow-x: auto;              /* Horizontale scroll op de hele container */
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fafafa;
+            min-height: 120px;
+        }
+
+        /* ======================= STICKY GENERATIEKOLOM ======================= */
+        /* Blijft zichtbaar aan de linkerkant bij horizontaal scrollen             */
+        #tlStickyCol {
+            position: sticky;              /* Plakt aan de linkerkant bij scrollen */
+            left: 0;                       /* Altijd zichtbaar aan linkerzijde */
+            width: 155px;                  /* Zelfde breedte als LABEL_COL_W in timeline.js */
+            flex-shrink: 0;               /* Kolom mag niet krimpen */
+            background: rgba(248,248,248,0.97); /* Lichte achtergrond — dekt canvas af */
+            border-right: 1px solid #e0e0e0;   /* Scheidingslijn tussen kolom en canvas */
+            z-index: 20;                   /* Boven het canvas zodat labels altijd zichtbaar zijn */
+            font-family: sans-serif;
+            font-size: 10px;
+            color: #666;
+            overflow: hidden;              /* Labels die buiten de kolom vallen worden afgekapt */
+            pointer-events: none;          /* Klikken gaan door naar canvas */
+        }
+
+        /* ======================= SCROLL GEBIED (canvas) ======================= */
+        #tlScrollArea {
+            position: relative;            /* Ankerpunt voor absoluut gepositioneerde tooltip */
+            flex: 1;                       /* Neemt resterende breedte in */
+            min-width: 0;                  /* Voorkomt dat flex-child buiten container groeit */
         }
 
         /* ======================= CANVAS ======================= */
-        #timelineCanvas {                                                  /* Het canvas waarop timeline.js tekent */
-            display: block;                                                /* Geen inline witruimte onder canvas */
-            cursor: default;                                               /* Standaard cursor; timeline.js wisselt naar pointer op hover */
+        #timelineCanvas {
+            display: block;                /* Geen inline witruimte onder canvas */
+            cursor: default;
         }
 
         /* ======================= PLACEHOLDER TEKST ======================= */
-        #timelinePlaceholder {                                             /* Melding wanneer nog geen persoon gekozen is */
-            padding: 40px 20px;                                            /* Ruim wit rondom tekst */
-            text-align: center;                                            /* Gecentreerd */
-            color: #999;                                                   /* Gedempte kleur */
-            font-size: 0.95rem;                                            /* Zelfde als welkomst p */
+        #timelinePlaceholder {
+            padding: 40px 20px;
+            text-align: center;
+            color: #999;
+            font-size: 0.95rem;
         }
 
         /* ======================= TOOLTIP ======================= */
-        #timelineTooltip {                                                 /* Hover-tooltip getekend door timeline.js */
-            position: absolute;                                            /* Zweeft boven canvas */
-            pointer-events: none;                                          /* Tooltip vangt geen muisevents op */
-            background: rgba(30, 30, 30, 0.92);                           /* Donkere achtergrond */
-            color: #fff;                                                   /* Witte tekst */
-            font-size: 0.82rem;                                            /* Klein maar leesbaar */
-            line-height: 1.5;                                              /* Ruime regelafstand */
-            padding: 8px 12px;                                             /* Ruimte rondom tekst */
-            border-radius: 5px;                                            /* Afgeronde hoeken */
-            white-space: pre-line;                                         /* Regeleinden in tooltip-tekst respecteren */
-            max-width: 240px;                                              /* Maximale breedte om overflow te voorkomen */
-            display: none;                                                 /* Standaard verborgen; timeline.js toont/verbergt */
-            z-index: 100;                                                  /* Boven alle andere content */
+        #timelineTooltip {
+            position: absolute;            /* Zweeft boven canvas, relatief aan #tlScrollArea */
+            pointer-events: none;
+            background: rgba(30, 30, 30, 0.92);
+            color: #fff;
+            font-size: 0.82rem;
+            line-height: 1.5;
+            padding: 8px 12px;
+            border-radius: 5px;
+            white-space: pre-line;
+            max-width: 240px;
+            display: none;
+            z-index: 100;
         }
     </style>
 </head>
@@ -119,21 +150,29 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
 
         <!-- ======================= Zoekbalk ======================= -->
         <div class="zoek-sectie">
-            <input type="text" id="sandboxSearch" placeholder="Zoek op naam, ID of geboortedatum..."> <!-- Zoekveld gekoppeld aan LiveSearch + timeline.js -->
+            <input type="text" id="sandboxSearch" placeholder="Zoek op naam, ID of geboortedatum...">
         </div>
 
         <!-- ======================= Tijdlijn container ======================= -->
         <div id="timelineContainer">
 
-            <!-- Placeholder: zichtbaar zolang geen persoon geselecteerd is -->
-            <div id="timelinePlaceholder">Zoek een persoon om de tijdlijn te laden.</div>
+            <!-- Sticky generatiekolom: blijft zichtbaar bij horizontaal scrollen -->
+            <!-- timeline.js vult deze kolom met generatielabels via updateGenLabels() -->
+            <div id="tlStickyCol"></div>
 
-            <!-- Canvas: timeline.js tekent hier de balkjes, tijdas en verbindingslijnen -->
-            <!-- Breedte en hoogte worden dynamisch ingesteld door timeline.js -->
-            <canvas id="timelineCanvas" style="display: none;"></canvas>
+            <!-- Scrollgebied: bevat canvas en tooltip -->
+            <div id="tlScrollArea">
 
-            <!-- Tooltip: wordt door timeline.js gepositioneerd en gevuld op hover -->
-            <div id="timelineTooltip"></div>
+                <!-- Placeholder: zichtbaar zolang geen persoon geselecteerd is -->
+                <div id="timelinePlaceholder">Zoek een persoon om de tijdlijn te laden.</div>
+
+                <!-- Canvas: timeline.js tekent hier de balkjes en tijdas -->
+                <canvas id="timelineCanvas" style="display: none;"></canvas>
+
+                <!-- Tooltip: wordt door timeline.js gepositioneerd op hover -->
+                <div id="timelineTooltip"></div>
+
+            </div>
 
         </div>
 
@@ -157,40 +196,35 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
 <script src="../js/auth.js"></script>
 
 <script>
-    // Stap 1: TopBar HTML laden, daarna PAS topbar.js injecteren
-    // Dit garandeert dat #top-auth in de DOM zit vóór topbar.js initialiseert
     fetch('/MyFamTreeCollab/Layout/TopBar.html')
         .then(resp => resp.text())
         .then(function(data) {
             document.getElementById('topbar-placeholder').innerHTML = data;
-            // #top-auth bestaat nu — veilig om topbar.js te laden
             var s = document.createElement('script');
             s.src = '../js/topbar.js';
             document.body.appendChild(s);
         });
 
-    // Stap 2: Navbar laden — geen auth-afhankelijkheid, mag parallel
     fetch('/MyFamTreeCollab/Layout/Navbar.html')
         .then(resp => resp.text())
         .then(function(data) {
             document.getElementById('navbar-placeholder').innerHTML = data;
         });
 
-    // Stap 3: Footer laden
     fetch('/MyFamTreeCollab/Layout/Footer.html')
         .then(resp => resp.text())
         .then(function(data) {
             document.getElementById('footer-placeholder').innerHTML = data;
         });
 </script>
-     
+
 <!-- ======================= Scripts (volgorde verplicht) ======================= -->
-<script src="../js/utils.js"></script>      <!-- 1e: hulpfuncties (ftSafe, ftFormatDate, ftParseBirthday) -->
-<script src="../js/schema.js"></script>     <!-- 2e: veldnamen en CSV-definitie -->
-<script src="../js/storage.js"></script>    <!-- 3e: localStorage API -->
-<script src="../js/LiveSearch.js"></script> <!-- 4e: live zoekfunctie -->
-<script src="../js/relatieEngine.js"></script> <!-- 5e: familierelaties berekenen -->
-<script src="../js/timeline.js"></script>   <!-- 6e (laatste): canvas rendering en interactie -->
+<script src="../js/utils.js"></script>
+<script src="../js/schema.js"></script>
+<script src="../js/storage.js"></script>
+<script src="../js/LiveSearch.js"></script>
+<script src="../js/relatieEngine.js"></script>
+<script src="../js/timeline.js"></script>
 
 </body>
 </html>
