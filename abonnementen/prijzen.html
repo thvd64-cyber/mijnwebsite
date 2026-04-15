@@ -1,4 +1,4 @@
-<!-- ======================= abonnementen/prijzen.html v0.1.0 ======================= 
+<!-- ======================= abonnementen/prijzen.html v1.2.0 ======================= 
 consistente opmaak — Navbar + TopBar + 'komt binnenkort' blok, geen aparte header meer, 
     script.js verwijderd. Login + Favicon / App-icoon toegevoegd
      ======================================================================= -->
@@ -63,17 +63,119 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
 </script>
 
 <!-- ======================= Hoofd content ======================= -->
-<main>
-    <div class="binnenkort-blok">
-        <div class="icoon">📰</div>                                        <!-- Printer icoon passend bij afdrukfunctie -->
-        <h1>Prijzen</h1>
-        <p>
-            De Prijzen pagina is momenteel in ontwikkeling.<br>
-            Binnenkort kun je hier de prijzen van een abonnement op de MyFamTreeColab website bekijken.
-        </p>
-        <a href="/MyFamTreeCollab/" class="knop-home">Terug naar Home</a>
+
+<main class="pricing-container">
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1>Abonnementen & Prijzen</h1>
+    <p>
+      Kies een plan dat past bij jouw rol: bekijken, bijdragen of volledige familiebeheer-functionaliteit.
+    </p>
+  </section>
+
+  <!-- FREE LAYER -->
+  <section class="pricing-tier free">
+    <h2>🟢 Gratis toegang</h2>
+
+    <div class="card">
+      <h3>Guest</h3>
+      <p class="price">€0 / maand</p>
+      <ul>
+        <li>Alleen demo of beperkte familieweergave</li>
+        <li>Geen bewerkingen</li>
+        <li>Basis zoekfunctie</li>
+      </ul>
     </div>
+
+    <div class="card">
+      <h3>Member</h3>
+      <p class="price">€0 / maand</p>
+      <ul>
+        <li>Eigen familieboom bekijken</li>
+        <li>Eigen profiel beheren</li>
+        <li>Beperkte interactie</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- CORE PAID -->
+  <section class="pricing-tier paid">
+    <h2>🟣 Samenwerken & beheren</h2>
+
+    <div class="card">
+      <h3>Editor</h3>
+      <p class="price">€3 / maand (optioneel)</p>
+      <ul>
+        <li>Personen toevoegen en wijzigen</li>
+        <li>Relaties beheren</li>
+        <li>Foto’s en documenten uploaden</li>
+      </ul>
+    </div>
+
+    <div class="card highlight">
+      <h3>Family Admin</h3>
+      <p class="price">€7 / maand</p>
+      <ul>
+        <li>Volledige familiecontrole</li>
+        <li>Goedkeuren en corrigeren van data</li>
+        <li>Structuur en takken beheren</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Family Owner</h3>
+      <p class="price">€15 / maand</p>
+      <ul>
+        <li>Volledige familie governance</li>
+        <li>Admins beheren</li>
+        <li>Privacy en toegang instellen</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SPECIAL ROLES -->
+  <section class="pricing-tier special">
+    <h2>🧠 Speciale rollen</h2>
+
+    <div class="card">
+      <h3>Historian</h3>
+      <p class="price">€5 / maand</p>
+      <ul>
+        <li>Read-only + archief tools</li>
+        <li>Tijdlijnen en bronnen</li>
+        <li>Export functionaliteit</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SUPPORTER MODEL -->
+  <section class="pricing-tier support">
+    <h2>☕ Supporter (donaties)</h2>
+
+    <div class="card">
+      <h3>Community Support</h3>
+      <ul>
+        <li>€5 – Supporter badge</li>
+        <li>€10 – Export + extra opslag</li>
+        <li>€25 – Early access + voting</li>
+      </ul>
+
+      <p class="note">
+        Supporters krijgen geen extra toegang tot familie-data, enkel erkenning en lichte features.
+      </p>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <h2>Start gratis vandaag</h2>
+    <p>Kies een rol en begin met het bouwen van jouw familieboom.</p>
+    <a href="overzicht.html" class="btn">Terug naar overzicht</a>
+  </section>
+
 </main>
+<!-- ======================= END PRIJZEN ======================= -->
 
 <!-- ======================= Footer ======================= -->
 <div id="footer-placeholder"></div>
