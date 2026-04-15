@@ -1,4 +1,4 @@
-<!-- ======================= abonnementen/overzicht.html v0.1.0 ======================= 
+<!-- ======================= abonnementen/overzicht.html v1.2.0 ======================= 
   consistente opmaak — Navbar + TopBar + 'komt binnenkort' blok, geen aparte header meer, 
     script.js verwijderd. Login + Favicon / App-icoon toegevoegd
      ======================================================================= -->
@@ -63,17 +63,64 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
 </script>
 
 <!-- ======================= Hoofd content ======================= -->
-<main>
-    <div class="binnenkort-blok">
-        <div class="icoon">🔎</div>                                        <!-- Printer icoon passend bij afdrukfunctie -->
-        <h1>Overzicht</h1>
-        <p>
-            De overzicht pagina is momenteel in ontwikkeling.<br>
-            Binnenkort kun je hier de stamboom overzicht bekijken.
-        </p>
-        <a href="/MyFamTreeCollab/" class="knop-home">Terug naar Home</a>
-    </div>
+
+<main class="page-container">
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1>MyFamTreeCollab Abonnementen</h1>
+    <p>
+      Kies het juiste toegangsniveau voor jouw rol binnen de stamboom.
+      Van gratis bekijken tot volledige samenwerking en beheer.
+    </p>
+  </section>
+
+  <!-- INTRO UITLEG -->
+  <section class="intro">
+    <h2>Hoe werkt toegang?</h2>
+    <p>
+      MyFamTreeCollab werkt met rollen. Elke rol bepaalt wat je kan zien en bewerken binnen een familieboom.
+      Alle basisgebruikers starten gratis. Uitgebreide samenwerking en beheer zijn beschikbaar via abonnementen.
+    </p>
+  </section>
+
+  <!-- STRUCTUUR UITLEG -->
+  <section class="structure">
+    <h2>Toegangsstructuur</h2>
+
+    <ul>
+      <li>🟢 Guest – alleen bekijken (demo)</li>
+      <li>🔵 Member – eigen familie bekijken</li>
+      <li>🟣 Editor – gegevens aanpassen</li>
+      <li>🔴 Admin – volledige controle binnen familie</li>
+      <li>⚫ System Admin – platformbeheer</li>
+    </ul>
+  </section>
+
+  <!-- DONATIE MODEL -->
+  <section class="donations">
+    <h2>Community & Donaties</h2>
+    <p>
+      Naast abonnementen is er een supporter-model. Donaties helpen het platform groeien en zorgen voor nieuwe functies.
+      Supporters krijgen erkenning en lichte extra functies, maar geen extra toegang tot data.
+    </p>
+
+    <ul>
+      <li>☕ €5 – Supporter badge</li>
+      <li>☕☕ €10 – Export + extra opslag</li>
+      <li>☕☕☕ €25 – Early access + feature voting</li>
+    </ul>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <h2>Klaar om te starten?</h2>
+    <p>Start gratis of kies een rol die past bij jouw samenwerking in de familieboom.</p>
+    <a href="prijzen.html" class="btn">Bekijk prijzen</a>
+  </section>
+
 </main>
+<!-- ======================= END OVERZICHT ======================= -->
 
 <!-- ======================= Footer ======================= -->
 <div id="footer-placeholder"></div>
