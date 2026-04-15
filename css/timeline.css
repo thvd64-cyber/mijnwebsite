@@ -1,102 +1,116 @@
-/* ======================= css/timeline.css v1.3.0a ======================= */
-/* Timeline styling voor absolute X/Y nodes: behoud kleuren, hover-effecten en levels */
+/* ======================= css/timeline.css v1.4.0 ======================= */
+/* Wijziging v1.4.0:
+   - #timelineContainer: display:flex toegevoegd voor sticky kolom layout
+   - #tlStickyCol toegevoegd: sticky generatiekolom links van canvas
+   - #tlScrollArea toegevoegd: scrollgebied rechts met canvas
+   - Verouderde .timeline-node stijlen behouden voor backwards compatibility
+*/
 
-/* ======================= TIMELINE CONTAINER ======================= */
+/* ======================= TIJDLIJN BUITENSTE CONTAINER ======================= */
 #timelineContainer {
-    position: relative;           /* Absolute posities van nodes zijn relatief t.o.v. deze container */
-    width: 100%;                  /* Container vult breedte van pagina */
-    min-height: 200px;            /* Beginhoogte, wordt later automatisch aangepast via JS */
-    margin: 20px 0;               /* Ruimte boven en onder */
-    padding: 10px;                /* Binnenruimte rondom nodes */
-    border: 1px solid #ccc;       /* Rand voor visuele afbakening */
-    border-radius: 6px;           /* Afgeronde hoeken */
-    background-color: #fdfdfd;    /* Lichte achtergrondkleur */
+    position: relative;            /* Ankerpunt voor tooltip */
+    display: flex;                 /* Sticky kolom + scrollgebied naast elkaar */
+    flex-direction: row;
+    align-items: stretch;          /* Beide kolommen even hoog */
+    overflow-x: auto;              /* Horizontale scroll op de hele container */
+    width: 100%;
+    min-height: 200px;
+    margin: 20px 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fdfdfd;
 }
 
-/* ======================= TIMELINE YEAR MARKERS ======================= */
+/* ======================= STICKY GENERATIEKOLOM ======================= */
+/* Blijft zichtbaar aan de linkerkant bij horizontaal scrollen            */
+#tlStickyCol {
+    position: sticky;              /* Plakt aan de linkerkant bij scrollen */
+    left: 0;                       /* Altijd zichtbaar aan linkerzijde */
+    width: 155px;                  /* Moet overeenkomen met LABEL_COL_W in timeline.js */
+    flex-shrink: 0;                /* Kolom mag niet krimpen */
+    background: rgba(248,248,248,0.97); /* Lichte achtergrond — dekt canvas af */
+    border-right: 1px solid #e0e0e0;   /* Scheidingslijn naar canvas */
+    z-index: 20;                   /* Boven canvas — labels altijd zichtbaar */
+    font-family: sans-serif;
+    font-size: 10px;
+    color: #666;
+    overflow: hidden;
+    pointer-events: none;          /* Klikken gaan door naar canvas */
+}
+
+/* ======================= SCROLL GEBIED ======================= */
+#tlScrollArea {
+    position: relative;            /* Ankerpunt voor tooltip */
+    flex: 1;                       /* Neemt resterende breedte */
+    min-width: 0;                  /* Voorkomt overflow buiten flex-container */
+}
+
+/* ======================= TIJDLIJN JAAR MARKERS ======================= */
 .timeline-year-wrapper {
-    display: flex;                 /* Flexbox voor gelijkmatige verdeling */
-    justify-content: space-between; /* Spreid jaarlabels over container */
-    margin-bottom: 10px;           /* Ruimte tussen jaarlabels en nodes */
-    font-size: 12px;               /* Klein lettertype */
-    color: #666;                   /* Grijze kleur voor contrast */
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: #666;
 }
 
-/* ======================= BASIS NODE STYLING ======================= */
+/* ======================= BASIS NODE STYLING (backwards compat) ======================= */
 .timeline-node {
-    position: absolute;            /* Absolute X/Y voor datum en level */
-    display: flex;                 /* Flex voor id/naam/birth/death */
-    flex-direction: row;           
-    align-items: center;           /* Verticaal gecentreerd */
-    gap: 6px;                      
-    padding: 8px 12px;             
-    border: 1px solid #888;       
-    border-radius: 20px;           
-    background-color: #f0f0f0;    
-    cursor: pointer;              
-    font-size: 13px;              
-    width: max-content;            
-    min-width: 150px;              
-    max-width: 400px;              
-    white-space: nowrap;           
-    z-index: 1;                    
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: 1px solid #888;
+    border-radius: 20px;
+    background-color: #f0f0f0;
+    cursor: pointer;
+    font-size: 13px;
+    width: max-content;
+    min-width: 150px;
+    max-width: 400px;
+    white-space: nowrap;
+    z-index: 1;
 }
 
 /* ======================= NODE RELATIES EN KLEUREN ======================= */
-.timeline-node.HoofdID        { background-color: #ffd700; }   /* Geel voor hoofd */
-.timeline-node.PHoofdID       { background-color: #ffecb3; }   /* Lichtgeel voor partner hoofd */
-.timeline-node.VHoofdID, 
-.timeline-node.MHoofdID       { background-color: #c8e6c9; }   /* Groen voor ouders */
-.timeline-node.KindID, 
-.timeline-node.HKindID, 
-.timeline-node.PHKindID       { background-color: #90caf9; }   /* Lichtblauw voor kinderen */
-.timeline-node.partner         { background-color: #ccc; }      /* Grijs voor partner kind */
-.timeline-node.BZID            { background-color: #ffab91; }   /* Oranje voor broer/zus */
-.timeline-node.PBZID           { background-color: #ff8a65; }   /* Donkeroranje voor partner broer/zus */
+.timeline-node.HoofdID        { background-color: #ffd700; }
+.timeline-node.PHoofdID       { background-color: #ffecb3; }
+.timeline-node.VHoofdID,
+.timeline-node.MHoofdID       { background-color: #c8e6c9; }
+.timeline-node.KindID,
+.timeline-node.HKindID,
+.timeline-node.PHKindID       { background-color: #90caf9; }
+.timeline-node.partner        { background-color: #ccc; }
+.timeline-node.BZID           { background-color: #ffab91; }
+.timeline-node.PBZID          { background-color: #ff8a65; }
 
 /* ======================= NODE HOVER EFFECT ======================= */
 .timeline-node:hover {
-    background-color: #e0f0ff;  /* Lichte blauwe highlight bij hover */
-    border-color: #004080;       /* Donkerblauwe rand bij hover */
+    background-color: #e0f0ff;
+    border-color: #004080;
 }
 
 /* ======================= NODE CONTENT ======================= */
-.timeline-node .id {
-    font-weight: bold;           
-    margin-right: 6px;           
-}
-.timeline-node .name {
-    font-weight: 600;            
-    margin-right: 6px;           
-}
-.timeline-node .birth {
-    font-style: normal;          
-    color: #333;                 
-}
-.timeline-node .death {
-    font-style: italic;          
-    color: #888;                 
-    margin-left: 4px;            
-    font-size: 12px;             
-}
+.timeline-node .id    { font-weight: bold; margin-right: 6px; }
+.timeline-node .name  { font-weight: 600; margin-right: 6px; }
+.timeline-node .birth { font-style: normal; color: #333; }
+.timeline-node .death { font-style: italic; color: #888; margin-left: 4px; font-size: 12px; }
 
-/* ======================= KIND + PARTNER GROEP (optioneel) ======================= */
+/* ======================= KIND + PARTNER GROEP ======================= */
 .tree-kid-group {
-    display: flex;               
-    flex-direction: row;         
-    gap: 4px;                    
-    align-items: center;         
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    align-items: center;
 }
 
-/* ======================= HIËRARCHIE LEVELS VERTICAAL (X/Y absolute) ======================= */
-/* JS bepaalt exacte top per node, deze classes zijn optioneel voor styling of achtergrondkleur per level */
+/* ======================= HIËRARCHIE LEVELS ======================= */
 .level-ouders        {}
-.level-hoofd          {}
-.level-partnerHoofd   {}
-.level-kinderen       {}
-.level-partnerKind    {}
-.level-broerZus       {}
-.level-partnerBZ      {}
-
-
-}
+.level-hoofd         {}
+.level-partnerHoofd  {}
+.level-kinderen      {}
+.level-partnerKind   {}
+.level-broerZus      {}
+.level-partnerBZ     {}
