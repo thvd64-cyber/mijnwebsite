@@ -1,4 +1,9 @@
-/* ============ css/Tree.css v2.0.0 ================== */
+/* ============ css/Tree.css v2.1.0 ================== */
+/* Wijziging v2.1.0:
+   - #treeContainer krijgt position:relative zodat de SVG-overlay
+     correct gepositioneerd kan worden door view.js (F3-53)
+*/
+
 /* ======================= ROOT VARIABLES ======================= */
 :root{
     --color-hoofd: #fff9c4;            /* licht geel voor HoofdID */
@@ -85,12 +90,9 @@
     text-align: center;         /* Center tekst in nodes */
 }
 
-/* Wrapper voor hele boom + BZBox naast elkaar.
-   Let op: de flex-layout wordt nu via .stamboom-wrapper in view.html geregeld.
-   .container hier is verwijderd om conflicten met de pagina-brede container te voorkomen. */
-
-/* Boom container */
+/* Boom container — position:relative vereist voor SVG-overlay (F3-53) */
 #treeContainer {
+    position: relative;         /* Ankerpunt voor de absolute SVG-overlay van drawLines() */
     flex: 1;                    /* Neemt beschikbare ruimte in container */
     min-height: 200px;          /* Min hoogte zodat nodes altijd zichtbaar zijn */
     margin-top: 20px;           /* Ruimte boven de tree */
@@ -113,6 +115,24 @@
 /* Nodes binnen BZBox spacing */
 #BZBox .tree-node {
     margin-bottom: 5px;         /* Ruimte tussen BZ nodes */
+}
+
+/* ======================= SVG OVERLAY ======================= */
+#treeSVG {
+    position: absolute;         /* Overlay over treeContainer — vereist position:relative op parent */
+    top: 0;                     /* Uitlijnen op bovenkant container */
+    left: 0;                    /* Uitlijnen op linkerkant container */
+    width: 100%;                /* Volledige breedte van container */
+    height: 100%;               /* Volledige hoogte van container */
+    pointer-events: none;       /* Klikken gaan door SVG heen naar nodes eronder */
+    overflow: visible;          /* Lijnen mogen buiten viewBox vallen */
+    z-index: 0;                 /* Achter de nodes — nodes krijgen z-index:1 */
+}
+
+/* Nodes voor de SVG zodat ze klikbaar blijven */
+.tree-node {
+    position: relative;         /* Zorgt dat nodes boven de SVG-overlay vallen */
+    z-index: 1;                 /* Nodes altijd boven de SVG-lijnen */
 }
 
 /* ======================= HOVER EFFECT ======================= */
