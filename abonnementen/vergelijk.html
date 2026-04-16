@@ -1,4 +1,4 @@
-<!-- ======================= abonnementen/vergelijk.html v0.0.0 ======================= 
+<!-- ======================= abonnementen/vergelijk.html v1.1.0 ======================= 
   consistente opmaak — Navbar + TopBar + 'komt binnenkort' blok, geen aparte header meer, 
     script.js verwijderd. Login + Favicon / App-icoon toegevoegd
      ======================================================================= -->
@@ -64,17 +64,103 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
 
 <!-- ======================= Hoofd content ======================= -->
 <main>
-    <div class="binnenkort-blok">
-        <div class="icoon">⚖️</div>                                        <!-- Printer icoon passend bij afdrukfunctie -->
-        <h1>Vergelijk</h1>
-        <p>
-            De vergelijk pagina is momenteel in ontwikkeling.<br>
-            Binnenkort kun je hier de stamboom vergelijken met anderen.
-        </p>
-        <a href="/MyFamTreeCollab/" class="knop-home">Terug naar Home</a>
+    <div class="vergelijk-container">
+
+        <!-- ======================= Header ======================= -->
+        <div class="vergelijk-header">
+            <div class="icoon">🔍</div> <!-- Vergelijk / analyse icoon -->
+            <h1>Abonnementen vergelijken</h1>
+            <p>
+                Kies het plan dat past bij jouw manier van werken.<br>
+                Van lokaal gebruik tot cloud en samenwerking — jij behoudt altijd controle over je data.
+            </p>
+        </div>
+
+        <!-- ======================= Pricing cards ======================= -->
+        <div class="pricing-grid">
+
+            <!-- ======================= FREE PLAN ======================= -->
+            <div class="pricing-card free">
+                <div class="badge">FREE / LOCAL</div> <!-- status badge -->
+                <h2>Gratis</h2>
+                <div class="prijs">€0</div>
+                <p class="subtekst">Volledig lokaal, zonder account</p>
+
+                <ul>
+                    <li>✔ Stamboom beheer in browser</li>
+                    <li>✔ Lokale opslag (localStorage)</li>
+                    <li>✔ Personen beheren</li>
+                    <li>✔ Export CSV / JSON</li>
+                    <li>✔ Tijdlijn & statistieken</li>
+                </ul>
+
+                <div class="cta">
+                    <a href="/MyFamTreeCollab/" class="knop-primary">Start gratis</a>
+                </div>
+            </div>
+
+            <!-- ======================= CLOUD PLAN ======================= -->
+            <div class="pricing-card cloud">
+                <div class="badge">CLOUD SYNC</div> <!-- status badge -->
+                <h2>Cloud</h2>
+                <div class="prijs">€2,99</div>
+                <p class="subtekst">Synchronisatie op al je apparaten</p>
+
+                <ul>
+                    <li>✔ Alles van gratis plan</li>
+                    <li>✔ Cloud opslag</li>
+                    <li>✔ Account login</li>
+                    <li>✔ Automatische back-ups</li>
+                    <li>✔ Meerdere stambomen</li>
+                </ul>
+
+                <div class="cta">
+                    <a href="/MyFamTreeCollab/account.html" class="knop-primary">Upgrade naar Cloud</a>
+                </div>
+            </div>
+
+            <!-- ======================= FUTURE COLLAB PLAN ======================= -->
+            <div class="pricing-card pro">
+                <div class="badge">COLLAB (toekomst)</div> <!-- status badge -->
+                <h2>Samenwerken</h2>
+                <div class="prijs">€5,99</div>
+                <p class="subtekst">Samen bouwen aan één stamboom</p>
+
+                <ul>
+                    <li>✔ Alles van Cloud</li>
+                    <li>✔ Samenwerken met anderen</li>
+                    <li>✔ Gedeelde stambomen</li>
+                    <li>✔ Versiebeheer per persoon</li>
+                    <li>✔ Wijzigingsgeschiedenis</li>
+                </ul>
+
+                <div class="cta">
+                    <a href="#" class="knop-secondary">Wachtlijst</a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ======================= Support block ======================= -->
+        <div class="support-blok">
+            <h3>☕ Support het project</h3>
+            <p>
+                Help mee om nieuwe functies sneller te ontwikkelen.<br>
+                Alles blijft bruikbaar zonder betaling.
+            </p>
+
+            <div class="support-cta">
+                <a href="https://www.buymeacoffee.com/" target="_blank" class="knop-coffee">
+                    ☕ Buy Me a Coffee
+                </a>
+                <a href="/MyFamTreeCollab/" class="knop-home">
+                    Terug naar Home
+                </a>
+            </div>
+        </div>
+
     </div>
 </main>
-
 <!-- ======================= Footer ======================= -->
 <div id="footer-placeholder"></div>
 
