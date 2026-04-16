@@ -12,7 +12,7 @@
 |-----------|--------|--------|
 | Kernstructuur | ✅ Stabiel | — |
 | JS centrale modules | ✅ Opgeschoond | v2.0.0 |
-| CSS Tree layout | ✅ Opgeschoond | v2.0.0 |
+| CSS Tree layout | ✅ Opgeschoond | v2.1.0 |
 | Export | ✅ Gecentraliseerd + facelift | v2.1.0 |
 | Storage | ✅ Opgeschoond | v2.0.2 |
 | Facelift alle NL pagina's | ✅ Gedaan | v2.0.0 |
@@ -24,10 +24,11 @@
 | Cloud backup (Fase A+) | ✅ Afgerond | v1.1.0 |
 | Admin dropdown beveiliging | ✅ Alleen zichtbaar voor admin | — |
 | Tier/rollen systeem | ✅ Placeholder aangemaakt | — |
-| Zoekfunctie | ⚠️ Basisversie | v2.0.0 |
-| Stamboomweergave | ⚠️ Basisversie | v2.0.0 |
-| Tijdlijn | ⚠️ Basisversie | v2.0.0 |
-| Relaties | ⚠️ Basisversie | v2.0.0 |
+| Meerdere partners (pipe) | ✅ Gedaan | v2.4.0 |
+| Zoekfunctie | ✅ Multi-veld werkend | v2.0.0 |
+| Stamboomweergave | ⚠️ Basisversie | v1.8.0 |
+| Tijdlijn — sticky generatiekolom | ✅ Gedaan | v2.3.5 |
+| Relaties | ✅ Meerdere partners | v2.4.0 |
 | Engelse versies | ❌ Onvolledig | — |
 
 ---
@@ -41,7 +42,7 @@
 ### Fase A — Account & donaties ✅ AFGEROND
 ### Fase A+ — Cloud backup ✅ AFGEROND
 ### Fase 4 — Nieuwe features 📋 GEPLAND
-### Fase 5 — Cloud & accounts (uitgebreid) 🔮 TOEKOMST
+### Fase 5 — Cloud & accounts (uitgebreid) 🔄 HUIDIG
 
 ---
 
@@ -104,6 +105,17 @@
 ### ADR-011: Admin dropdown verborgen voor niet-admins
 **Beslissing:** `#adminDropdown` in Navbar staat standaard `display:none`.
 **Gevolg:** topbar.js maakt het zichtbaar na `is_admin` check via getProfile().
+
+### ADR-012: PartnerID als pipe-gescheiden string
+**Beslissing:** meerdere partners worden opgeslagen als `P-001|P-003` in het PartnerID veld.
+**Reden:** backwards compatibel — bestaande enkelvoudige waarden blijven geldig.
+**Gevolg:** relatieEngine.js gebruikt `split('|')[0]` voor de primaire partner in scenario-logica.
+view.js en manage.js splitsen op `|` om alle partners te tonen.
+
+### ADR-013: Tijdlijn sticky generatiekolom
+**Beslissing:** generatielabels staan in een aparte sticky `#tlStickyCol` div, niet als canvas-overlay.
+**Reden:** bij horizontaal scrollen blijft de kolom zichtbaar — canvas-overlay scrollt mee.
+**Gevolg:** `#timelineContainer` heeft `display:flex`, canvas zit in `#tlScrollArea`.
 
 ---
 
@@ -187,11 +199,11 @@ stamboom_shares  ← stamboom_id, owner_id, viewer_id (Fase 5 — viewer toegang
 | js/idGenerator.js | v2.0.0 | ✅ stabiel |
 | js/storage.js | v2.0.2 | ✅ stabiel |
 | js/LiveSearch.js | v2.0.0 | ✅ stabiel |
-| js/relatieEngine.js | v2.0.0 | ✅ stabiel |
+| js/relatieEngine.js | v2.4.0 | ✅ stabiel |
 | js/create.js | v2.0.0 | ✅ stabiel |
-| js/manage.js | v2.0.0 | ✅ stabiel |
-| js/view.js | v2.0.0 | ✅ stabiel |
-| js/timeline.js | v2.0.0 | ✅ stabiel |
+| js/manage.js | v2.4.0 | ✅ stabiel |
+| js/view.js | v1.8.0 | ✅ stabiel |
+| js/timeline.js | v2.3.5 | ✅ stabiel |
 | js/export.js | v2.0.0 | ✅ stabiel |
 | js/import.js | v2.0.3 | ⚠️ nog te doen |
 | js/auth.js | v2.3.0 | ✅ stabiel |
@@ -199,13 +211,16 @@ stamboom_shares  ← stamboom_id, owner_id, viewer_id (Fase 5 — viewer toegang
 | js/reset.js | v1.0.0 | ✅ stabiel |
 | js/cloudSync.js | v1.1.0 | ✅ stabiel |
 | js/LSD.js | v0.0.0 | ❌ kapot (lage prio) |
+| css/Tree.css | v2.1.0 | ✅ stabiel |
+| css/timeline.css | v1.4.0 | ✅ stabiel |
 | home/reset.html | v1.0.0 | ✅ stabiel |
 | home/login.html | — | ❌ vervangen door modal |
 | Layout/TopBar.html | v0.4 | ✅ stabiel |
 | Layout/Navbar.html | v0.0.2 | ✅ stabiel |
 | Layout/Footer.html | v1.5 | ✅ stabiel |
 | stamboom/storage.html | v2.3.0 | ✅ stabiel |
-| bronnen/handleiding.html | v1.1.0 | ✅ bijgewerkt |
+| stamboom/timeline.html | v2.2.0 | ✅ stabiel |
+| bronnen/handleiding.html | v1.2.0 | ✅ bijgewerkt |
 
 ---
 
@@ -223,11 +238,11 @@ MyFamTreeCollab/
 │   ├── idGenerator.js          ← ID generatie (v2.0.0)
 │   ├── storage.js              ← localStorage API (v2.0.2)
 │   ├── LiveSearch.js           ← zoekfunctie (v2.0.0)
-│   ├── relatieEngine.js        ← relatie berekening (v2.0.0)
+│   ├── relatieEngine.js        ← relatie berekening (v2.4.0)
 │   ├── create.js               ← eerste persoon aanmaken (v2.0.0)
-│   ├── manage.js               ← stamboom beheren (v2.0.0)
-│   ├── view.js                 ← stamboom visualiseren (v2.0.0)
-│   ├── timeline.js             ← tijdlijn visualisatie (v2.0.0)
+│   ├── manage.js               ← stamboom beheren (v2.4.0)
+│   ├── view.js                 ← stamboom visualiseren (v1.8.0)
+│   ├── timeline.js             ← tijdlijn visualisatie (v2.3.5)
 │   ├── import.js               ← CSV/TXT importeren (v2.0.3)
 │   ├── export.js               ← CSV/JSON exporteren (v2.0.0)
 │   ├── auth.js                 ← Supabase authenticatie (v2.3.0)
@@ -236,8 +251,8 @@ MyFamTreeCollab/
 │   └── cloudSync.js            ← cloud backup met tiercontrole (v1.1.0)
 ├── css/
 │   ├── style.css               ← globale stijlen (v1.0.6)
-│   ├── Tree.css                ← stamboom stijlen (v2.0.0)
-│   ├── timeline.css            ← tijdlijn stijlen (v1.3.0)
+│   ├── Tree.css                ← stamboom stijlen (v2.1.0)
+│   ├── timeline.css            ← tijdlijn stijlen (v1.4.0)
 │   └── RelationColors.css      ← kleurcodering relaties (v1.0.1)
 ├── home/
 │   ├── create.html             ← eerste persoon aanmaken (v2.0.1)
@@ -247,14 +262,14 @@ MyFamTreeCollab/
 │   ├── print.html              ← afdrukken — binnenkort (v2.0.0)
 │   └── reset.html              ← wachtwoord resetten (v1.0.0)
 ├── stamboom/
-│   ├── manage.html             ← stamboom beheren (v2.0.0)
-│   ├── view.html               ← stamboom bekijken (v2.0.0)
-│   ├── timeline.html           ← tijdlijn bekijken (v2.0.0)
+│   ├── manage.html             ← stamboom beheren (v2.2.3)
+│   ├── view.html               ← stamboom bekijken (v2.0.1)
+│   ├── timeline.html           ← tijdlijn bekijken (v2.2.0)
 │   ├── stats.html              ← statistieken (v2.0.0)
 │   └── storage.html            ← data + cloud backup tabbladen (v2.3.0)
 ├── bronnen/
 │   ├── template.html           ← CSV template download (v2.0.0)
-│   └── handleiding.html        ← gebruikershandleiding (v1.1.0)
+│   └── handleiding.html        ← gebruikershandleiding (v1.2.0)
 └── Layout/
     ├── Navbar.html             ← v0.0.2 — admin dropdown verborgen by default
     ├── TopBar.html             ← v0.4 met Ko-fi knop
