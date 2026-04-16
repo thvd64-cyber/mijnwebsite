@@ -1,4 +1,4 @@
-<!-- ======================= abonnementen/voordelen.html v0.1.0 ======================= 
+<!-- ======================= abonnementen/voordelen.html v1.2.0 ======================= 
   consistente opmaak — Navbar + TopBar + 'komt binnenkort' blok, geen aparte header meer, 
     script.js verwijderd. Login + Favicon / App-icoon toegevoegd
      ======================================================================= -->
@@ -64,14 +64,110 @@ fetch('/MyFamTreeCollab/Layout/Navbar.html')
 
 <!-- ======================= Hoofd content ======================= -->
 <main>
-    <div class="binnenkort-blok">
-        <div class="icoon">📈</div>                                        <!-- Printer icoon passend bij afdrukfunctie -->
-        <h1>Voordelen</h1>
-        <p>
-            De voordelen pagina is momenteel in ontwikkeling.<br>
-            Binnenkort kun je hier de voordelen van deze stamboom website bekijken.
-        </p>
-        <a href="/MyFamTreeCollab/" class="knop-home">Terug naar Home</a>
+    <div class="voordelen-container">
+
+        <!-- ======================= Header ======================= -->
+        <div class="voordelen-header">
+            <div class="icoon">✨</div> <!-- voordelen / highlight icoon -->
+            <h1>Waarom MyFamTreeCollab?</h1>
+            <p>
+                Een moderne, privacy-first stamboomtool die groeit met jouw behoeften.<br>
+                Van lokaal beheer tot samenwerking — jij bepaalt.
+            </p>
+        </div>
+
+        <!-- ======================= Voordelen grid ======================= -->
+        <div class="voordelen-grid">
+
+            <!-- ======================= PRIVACY ======================= -->
+            <div class="voordeel-card">
+                <div class="badge">PRIVACY FIRST</div>
+                <h2>Volledige controle over je data</h2>
+                <p>
+                    Jouw stamboom blijft standaard lokaal in je browser.
+                    Geen verplicht account, geen tracking.
+                </p>
+                <ul>
+                    <li>✔ Data lokaal opgeslagen</li>
+                    <li>✔ Geen verplicht account</li>
+                    <li>✔ Jij bepaalt wat gedeeld wordt</li>
+                </ul>
+            </div>
+
+            <!-- ======================= EXPORT ======================= -->
+            <div class="voordeel-card">
+                <div class="badge">OPEN STANDAARDEN</div>
+                <h2>Altijd exporteerbaar</h2>
+                <p>
+                    Je data zit nooit vast in het systeem.
+                    Exporteren kan altijd in open formaten.
+                </p>
+                <ul>
+                    <li>✔ CSV export</li>
+                    <li>✔ JSON export</li>
+                    <li>✔ GEDCOM voorbereid (toekomst)</li>
+                </ul>
+            </div>
+
+            <!-- ======================= VISUALISATIE ======================= -->
+            <div class="voordeel-card">
+                <div class="badge">VISUALISATIE</div>
+                <h2>Heldere stamboomweergave</h2>
+                <p>
+                    Bouw en bekijk je familiegeschiedenis op een visuele manier.
+                </p>
+                <ul>
+                    <li>✔ Stamboom view</li>
+                    <li>✔ Tijdlijn weergave</li>
+                    <li>✔ Statistieken dashboard</li>
+                </ul>
+            </div>
+
+            <!-- ======================= FLEXIBILITEIT ======================= -->
+            <div class="voordeel-card">
+                <div class="badge">FLEXIBEL</div>
+                <h2>Van lokaal naar cloud</h2>
+                <p>
+                    Start gratis lokaal en groei mee naar cloud of samenwerking wanneer jij dat wil.
+                </p>
+                <ul>
+                    <li>✔ Local-first start</li>
+                    <li>✔ Optionele cloud sync</li>
+                    <li>✔ Toekomstige samenwerking</li>
+                </ul>
+            </div>
+
+            <!-- ======================= SAMENWERKING ======================= -->
+            <div class="voordeel-card highlight">
+                <div class="badge">TOEKOMST</div>
+                <h2>Samen bouwen aan familiegeschiedenis</h2>
+                <p>
+                    Werk samen met familieleden aan één gedeelde stamboom.
+                </p>
+                <ul>
+                    <li>✔ Gedeelde stambomen</li>
+                    <li>✔ Rechtenbeheer</li>
+                    <li>✔ Versiebeheer per persoon</li>
+                </ul>
+
+                <div class="cta">
+                    <a href="#" class="knop-secondary">Bekijk roadmap</a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ======================= CTA ======================= -->
+        <div class="voordelen-cta">
+            <h3>Klaar om te starten?</h3>
+            <p>Begin gratis en breid later uit wanneer je wil.</p>
+
+            <div class="cta-buttons">
+                <a href="/MyFamTreeCollab/" class="knop-primary">Start gratis</a>
+                <a href="/MyFamTreeCollab/abonnementen/vergelijk.html" class="knop-secondary">Bekijk abonnementen</a>
+            </div>
+        </div>
+
     </div>
 </main>
 
