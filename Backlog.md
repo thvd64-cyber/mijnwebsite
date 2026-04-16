@@ -1,7 +1,7 @@
 # MyFamTreeCollab — Backlog
 
 > Alle taken georganiseerd per fase en prioriteit.
-> Status: 📋 Open · 🔄 In uitvoering · ✅ Gedaan · ❌ Geannuleerd · 🔮 Toekomst
+> Status: 📋 Open · 🔄 In uitvoering · ✅ Gedaan · ❌ Geannuleerd · ⏸️ Uitgesteld · 🔮 Toekomst
 
 ---
 
@@ -72,8 +72,8 @@
 
 | ID | Prioriteit | Taak | Status |
 |----|-----------|------|--------|
-| F3-43 | 🔴 Hoog | Zoekresultaten highlighten (zoekterm vetgedrukt in resultaat) | 📋 Open |
-| F3-44 | 🔴 Hoog | Zoeken op meerdere velden tegelijk (voornaam + achternaam) | 📋 Open |
+| F3-43 | 🔴 Hoog | Zoekresultaten highlighten (zoekterm vetgedrukt in resultaat) | ❌ Geannuleerd — geen noodzaak |
+| F3-44 | 🔴 Hoog | Zoeken op meerdere velden tegelijk (voornaam + achternaam) | ✅ Gedaan — al werkend |
 | F3-45 | 🟡 Middel | Popup-stijlen verplaatsen van inline JS naar `style.css` | 📋 Open |
 | F3-46 | 🟡 Middel | Keyboard navigatie in zoekpopup (pijltoetsen + Enter) | 📋 Open |
 | F3-47 | 🟢 Laag | Zoekgeschiedenis (recent gezochte personen) | 📋 Open |
@@ -82,8 +82,8 @@
 
 | ID | Prioriteit | Taak | Status |
 |----|-----------|------|--------|
-| F3-48 | 🔴 Hoog | Meerdere partners ondersteunen (PartnerID als array met `\|`) | 📋 Open |
-| F3-49 | 🔴 Hoog | Relatie toevoegen vanuit `manage.html` (dropdown + zoekbalk) | 📋 Open |
+| F3-48 | 🔴 Hoog | Meerdere partners ondersteunen (PartnerID als pipe-gescheiden string) | ✅ Gedaan — v2.4.0 |
+| F3-49 | 🔴 Hoog | Relatie toevoegen vanuit `manage.html` (dropdown + zoekbalk) | ❌ Geannuleerd — textarea met pipe volstaat |
 | F3-50 | 🟡 Middel | Grootouders en kleinkinderen tonen in view.html | 📋 Open |
 | F3-51 | 🟡 Middel | Halfbroers/halfzussen correct onderscheiden | 📋 Open |
 | F3-52 | 🟢 Laag | Relatie-labels vertalen (VHoofdID → Vader, MHoofdID → Moeder) | 📋 Open |
@@ -92,8 +92,8 @@
 
 | ID | Prioriteit | Taak | Status |
 |----|-----------|------|--------|
-| F3-53 | 🔴 Hoog | Verbindingslijnen tekenen tussen nodes (SVG of CSS) | 📋 Open |
-| F3-54 | 🔴 Hoog | Foto/avatar toevoegen aan persoon-node | 📋 Open |
+| F3-53 | 🔴 Hoog | Verbindingslijnen tekenen tussen nodes (SVG) | ⏸️ Uitgesteld — basisversie te complex, later fase |
+| F3-54 | 🔴 Hoog | Foto/avatar toevoegen aan persoon-node | ⏸️ Uitgesteld — later fase |
 | F3-55 | 🟡 Middel | Zoom en pan op de stamboomweergave | 📋 Open |
 | F3-56 | 🟢 Laag | Uitklappen/inklappen van takken | 📋 Open |
 
@@ -101,8 +101,9 @@
 
 | ID | Prioriteit | Taak | Status |
 |----|-----------|------|--------|
-| F3-57 | 🔴 Hoog | Overlijdensdatum tonen op tijdlijn | 📋 Open |
-| F3-58 | 🟡 Middel | Levensspanne als balk weergeven (geboorte → overlijden) | 📋 Open |
+| F3-57 | 🔴 Hoog | Overlijdensdatum tonen op tijdlijn | ✅ Gedaan — v2.3.x |
+| F3-57b | 🟡 Middel | Generatiekolom sticky bij horizontaal scrollen | ✅ Gedaan — v2.3.5 |
+| F3-58 | 🟡 Middel | Levensspanne als balk weergeven (geboorte → overlijden) | ✅ Gedaan — v2.3.x |
 | F3-59 | 🟡 Middel | Schaalbare tijdas (zoom in op bepaalde periode) | 📋 Open |
 | F3-60 | 🟢 Laag | Historische gebeurtenissen toevoegen aan tijdlijn | 📋 Open |
 
@@ -119,9 +120,9 @@
 
 | ID | Prioriteit | Taak | Status |
 |----|-----------|------|--------|
-| F3-65 | 🔴 Hoog | `stamboom/manage-en.html` repareren en facelift | 📋 Open |
-| F3-66 | 🔴 Hoog | `home/export-en.html` synchroniseren met `export.html` | 📋 Open |
-| F3-67 | 🔴 Hoog | `home/import-en.html` repareren: mist schema.js + storage.js | 📋 Open |
+| F3-65 | 🔴 Hoog | `stamboom/manage-en.html` repareren en facelift | ⏸️ Uitgesteld — later fase |
+| F3-66 | 🔴 Hoog | `home/export-en.html` synchroniseren met `export.html` | ⏸️ Uitgesteld — later fase |
+| F3-67 | 🔴 Hoog | `home/import-en.html` repareren: mist schema.js + storage.js | ⏸️ Uitgesteld — later fase |
 
 ### 3H — Overige
 
@@ -176,7 +177,7 @@
 
 | ID | Prioriteit | Taak | Status |
 |----|-----------|------|--------|
-| F4-01 | 🔴 Hoog | Persoon verwijderen vanuit `manage.html` | 📋 Open |
+| F4-01 | 🔴 Hoog | Persoon verwijderen vanuit `manage.html` | ✅ Gedaan — v2.3.2 |
 | F4-02 | 🔴 Hoog | Persoon dupliceren als startpunt voor vergelijkbaar record | 📋 Open |
 | F4-03 | 🟡 Middel | Foto uploaden en koppelen aan persoon (base64 in localStorage) | 📋 Open |
 | F4-04 | 🟡 Middel | Notities/opmerkingen uitbreiden (rijke tekst) | 📋 Open |
@@ -209,21 +210,21 @@
 
 ---
 
-## Fase 5 — Cloud & accounts 🔮 TOEKOMST
+## Fase 5 — Cloud & accounts 🔄 HUIDIG
 
 | ID | Taak | Status |
 |----|------|--------|
 | F5-01 | Backend: Supabase ✅ gekozen en opgezet | ✅ Gedaan |
 | F5-02 | Gebruikersaccounts: registreren, inloggen, uitloggen | ✅ Gedaan |
 | F5-03 | Data sync tussen apparaten | ✅ Gedaan (Fase A+) |
-| F5-04 | Stamboom delen met andere gebruikers (leesrechten / viewer tier) | 🔮 Toekomst |
-| F5-05 | Samenwerkingsmodus: meerdere gebruikers bewerken samen | 🔮 Toekomst |
-| F5-06 | Versiebeheer per persoon (wijzigingshistorie) | 🔮 Toekomst |
-| F5-07 | Meerdere stambomen per gebruiker in cloud | 🔮 Toekomst |
-| F5-08 | account.html — overzicht stambomen, backups, profiel | 🔮 Toekomst |
-| F5-09 | Promotiecodes voor cloud toegang | 🔮 Toekomst |
-| F5-10 | Abonnementen en betaaltiers verder uitwerken | 🔮 Toekomst |
-| F5-11 | Ko-fi webhook integratie voor donateur-badge | 🔮 Toekomst |
+| F5-04 | Stamboom delen met andere gebruikers (leesrechten / viewer tier) | 📋 Open |
+| F5-05 | Samenwerkingsmodus: meerdere gebruikers bewerken samen | 📋 Open |
+| F5-06 | Versiebeheer per persoon (wijzigingshistorie) | 📋 Open |
+| F5-07 | Meerdere stambomen per gebruiker in cloud | 📋 Open |
+| F5-08 | account.html — overzicht stambomen, backups, profiel | 📋 Open |
+| F5-09 | Promotiecodes voor cloud toegang | 📋 Open |
+| F5-10 | Abonnementen en betaaltiers verder uitwerken | 📋 Open |
+| F5-11 | Ko-fi webhook integratie voor donateur-badge | 📋 Open |
 
 ---
 
