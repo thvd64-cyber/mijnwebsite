@@ -1,4 +1,4 @@
-<!-- ======================= bronnen/handleiding.html v1.1.0 =======================
+<!-- ======================= bronnen/handleiding.html v1.2.0 =======================
      Gebruikershandleiding voor MyFamTreeCollab
      Beschrijft alle functies van de applicatie stap voor stap
 
@@ -116,7 +116,7 @@
 
         <!-- ======================= Welkomstblok ======================= -->
         <div class="welkom-blok">
-            <h1>Handleiding <span class="versie-badge">v1.1.0</span></h1>
+            <h1>Handleiding <span class="versie-badge">v1.2.0</span></h1>
             <p>
                 Welkom bij de handleiding van MyFamTreeCollab. Hier vind je stap voor stap uitleg
                 over alle functies van de applicatie — van je eerste persoon aanmaken tot je stamboom
@@ -226,28 +226,35 @@
             <h3>Persoon toevoegen</h3>
             <ul class="stappen">
                 <li>Ga naar <strong>Beheren</strong> in de navigatie.</li>
-                <li>Klik op <strong>"Persoon toevoegen"</strong>.</li>
-                <li>Vul de gegevens in. De velden Vader (VaderID), Moeder (MoederID) en Partner (PartnerID) koppelen de persoon aan anderen in de stamboom.</li>
+                <li>Klik op <strong>"+ Toevoegen"</strong>.</li>
+                <li>Vul de gegevens in. De velden VaderID, MoederID en PartnerID koppelen de persoon aan anderen in de stamboom.</li>
                 <li>Klik op <strong>"Opslaan"</strong>.</li>
             </ul>
 
             <h3>Persoon bewerken</h3>
             <ul class="stappen">
                 <li>Zoek de persoon via de zoekbalk bovenaan.</li>
-                <li>Klik op de naam van de persoon in de lijst.</li>
-                <li>Pas de gegevens aan en klik <strong>"Opslaan"</strong>.</li>
+                <li>De tabel toont de geselecteerde persoon met zijn/haar familie.</li>
+                <li>Pas de gegevens direct aan in de tabel en klik <strong>"Opslaan"</strong>.</li>
+            </ul>
+
+            <h3>Persoon verwijderen</h3>
+            <ul class="stappen">
+                <li>Zoek de persoon via de zoekbalk.</li>
+                <li>Klik op het 🗑️ icoon links van de rij.</li>
+                <li>Bevestig de verwijdering. Het ID wordt automatisch opgeruimd uit VaderID, MoederID en PartnerID van alle andere personen.</li>
             </ul>
 
             <h3>Relaties vastleggen</h3>
-            <p>Relaties leg je vast via de velden:</p>
+            <p>Relaties leg je vast via de velden in de tabel:</p>
             <ul>
-                <li><strong>VHoofdID</strong> — ID van de vader</li>
-                <li><strong>MHoofdID</strong> — ID van de moeder</li>
-                <li><strong>PartnerID</strong> — ID van de partner</li>
+                <li><strong>VaderID</strong> — ID van de vader</li>
+                <li><strong>MoederID</strong> — ID van de moeder</li>
+                <li><strong>PartnerID</strong> — ID van de partner. Meerdere partners scheid je met een <code>|</code> teken, bijv. <code>P-001|P-003</code></li>
             </ul>
             <div class="tip">
-                <strong>Tip:</strong> Het ID van een persoon vind je in de lijst op de Beheer-pagina,
-                links van de naam.
+                <strong>Tip:</strong> Het ID van een persoon vind je in de ID-kolom van de tabel.
+                Zoek eerst de partner op om het ID te noteren, vul het dan in bij de andere persoon.
             </div>
             <a href="#" class="terug-top">↑ Terug naar boven</a>
         </div>
@@ -256,17 +263,22 @@
         <div class="sectie" id="stamboom-bekijken">
             <h2>5. Stamboom bekijken</h2>
             <p>
-                De Stamboom-pagina toont een visueel overzicht van de familieleden en hun
-                onderlinge relaties.
+                De Stamboom-pagina toont een visueel overzicht van de familieleden rondom een
+                geselecteerde persoon.
             </p>
             <ul class="stappen">
                 <li>Klik op <strong>Stamboom</strong> in de navigatie.</li>
                 <li>Zoek een persoon via de zoekbalk.</li>
-                <li>De stamboom toont de geselecteerde persoon met zijn/haar ouders, kinderen en partner.</li>
+                <li>De stamboom toont de geselecteerde persoon (geel) met zijn/haar ouders (groen), partner(s) (paars) en kinderen (blauw).</li>
+                <li>Klik op een node om die persoon als nieuw middelpunt te kiezen.</li>
             </ul>
-            <div class="waarschuwing">
-                <strong>Let op:</strong> De stamboomweergave is momenteel een basisversie.
-                Verbindingslijnen en uitgebreide navigatie komen in een volgende update.
+            <p>
+                Rechts van de stamboom zie je de broers en zussen van de geselecteerde persoon,
+                elk met hun partner naast zich.
+            </p>
+            <div class="tip">
+                <strong>Tip:</strong> Heeft iemand meerdere partners? Dan worden alle partners
+                naast de persoon getoond. De kleurcodering helpt je snel het verband te zien.
             </div>
             <a href="#" class="terug-top">↑ Terug naar boven</a>
         </div>
@@ -275,12 +287,35 @@
         <div class="sectie" id="tijdlijn">
             <h2>6. Tijdlijn</h2>
             <p>
-                De Tijdlijn toont alle personen op een chronologische as op basis van hun geboortedatum.
+                De Tijdlijn toont alle familieleden van een geselecteerde persoon op een
+                horizontale tijdas. Elke persoon is een balk van geboortejaar tot overlijdensjaar.
+                Nog levende personen krijgen een stippellijn tot vandaag.
             </p>
             <ul class="stappen">
                 <li>Klik op <strong>Tijdlijn</strong> in de navigatie.</li>
-                <li>Je ziet alle personen gesorteerd op geboortejaar.</li>
-                <li>Klik op een persoon voor meer details.</li>
+                <li>Zoek een persoon via de zoekbalk.</li>
+                <li>De tijdlijn laadt automatisch met alle familieleden gegroepeerd per generatie.</li>
+                <li>Beweeg je muis over een balk voor meer details (naam, geboortedatum, overlijdensdatum, leeftijd).</li>
+                <li>Klik op een balk om die persoon als nieuw middelpunt te kiezen.</li>
+            </ul>
+
+            <h3>Generatiekolom</h3>
+            <p>
+                Links van de tijdlijn staat een kolom met de generatienamen (Betovergrootouders,
+                Grootouders, Ouders, Hoofdpersoon, Kinderen, enzovoort). Deze kolom blijft
+                zichtbaar als je horizontaal scrollt, zodat je altijd weet bij welke generatie
+                je kijkt.
+            </p>
+
+            <h3>Kleuren</h3>
+            <ul>
+                <li><strong>Amber</strong> — Hoofdpersoon</li>
+                <li><strong>Groen</strong> — Ouders en voorouders</li>
+                <li><strong>Paars</strong> — Partner van hoofdpersoon</li>
+                <li><strong>Oranje</strong> — Broers en zussen</li>
+                <li><strong>Blauw</strong> — Kinderen (gen +1)</li>
+                <li><strong>Teal tinten</strong> — Verdere nakomelingen (gen +2, +3, ...)</li>
+                <li><strong>Grijs</strong> — Partners van kinderen en broers/zussen</li>
             </ul>
             <a href="#" class="terug-top">↑ Terug naar boven</a>
         </div>
@@ -309,6 +344,7 @@
             <ul class="stappen">
                 <li>Download eerst het <a href="/MyFamTreeCollab/bronnen/template.html">CSV-sjabloon</a> om de juiste opmaak te zien.</li>
                 <li>Vul het sjabloon in met je familiegegevens.</li>
+                <li>Voor meerdere partners in het PartnerID-veld: scheid de ID's met een <code>|</code> teken, bijv. <code>P-001|P-003</code>.</li>
                 <li>Ga naar <strong>Importeren</strong> via de navigatie.</li>
                 <li>Klik op <strong>"Bestand kiezen"</strong> en selecteer je CSV-bestand.</li>
                 <li>Klik op <strong>"Importeren"</strong>.</li>
