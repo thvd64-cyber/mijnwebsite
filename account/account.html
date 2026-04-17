@@ -1,30 +1,22 @@
+<!-- ======================= account/index.html v1.0.0 =======================
+     Account overzichtspagina — profiel, cloud stambomen, avatar, wachtwoord
+     Standaard paginaformaat: TopBar + Navbar + Footer via fetch()
+     ======================================================================= -->
 <!DOCTYPE html>
-<!--
-  account/index.html — v1.0.0
-  MyFamTreeCollab — Account overview
-  ─────────────────────────────────────────────────────────────
-  Sections:
-    1. Profile card (avatar, username, email, tier, since)
-    2. Cloud stambomen list (load / delete)
-    3. Local data summary
-    4. Avatar selector
-    5. Password change form
-  ─────────────────────────────────────────────────────────────
-  Script load order (required):
-    utils.js → schema.js → storage.js →
-    auth.js → cloudSync.js → topbar.js → account.js
--->
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mijn Account — MyFamTreeCollab</title>
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" href="../../favicon.ico" />
+  <!-- ===== Favicon / App-icoon ===== -->
+  <link rel="icon" type="image/x-icon" href="/MyFamTreeCollab/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/MyFamTreeCollab/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/MyFamTreeCollab/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/MyFamTreeCollab/favicon-192x192.png">
 
   <!-- Global stylesheet -->
-  <link rel="stylesheet" href="../../css/Tree.css" />
+  <link rel="stylesheet" href="/MyFamTreeCollab/css/style.css" />
 
   <!-- Page-specific styles -->
   <style>
@@ -277,7 +269,7 @@
       transition: border-color .15s, transform .1s;
     }
 
-    .avatar-btn:hover  { border-color: var(--accent, #4f7942); transform: scale(1.08); }
+    .avatar-btn:hover   { border-color: var(--accent, #4f7942); transform: scale(1.08); }
     .avatar-btn--active { border-color: var(--accent, #4f7942); background: #f0fff4; }
 
     /* ── Password form ──────────────────────────────────────── */
@@ -365,8 +357,8 @@
 
     /* ── Responsive ─────────────────────────────────────────── */
     @media (max-width: 600px) {
-      .profile-details   { grid-template-columns: 1fr; }
-      .tree-item         { flex-direction: column; align-items: flex-start; gap: .5rem; }
+      .profile-details    { grid-template-columns: 1fr; }
+      .tree-item          { flex-direction: column; align-items: flex-start; gap: .5rem; }
       .tree-item__actions { width: 100%; justify-content: flex-end; }
     }
 
@@ -374,25 +366,31 @@
 </head>
 <body>
 
-  <!-- ── Topbar (loaded dynamically by topbar.js) ─────────────────────────── -->
-  <div id="topbar-placeholder"></div>
+<!-- ======================= source view enablement ======================= -->
+<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+<script>eruda.init();</script>
 
-  <!-- ── Main content ─────────────────────────────────────────────────────── -->
-  <main class="account-wrapper">
+<!-- ======================= TopBar ======================= -->
+<div id="topbar-placeholder"></div>
+
+<!-- ======================= Navbar ======================= -->
+<div id="navbar-placeholder"></div>
+
+<!-- ======================= Hoofd content ======================= -->
+<main>
+  <div class="account-wrapper">
 
     <!-- Page title -->
     <h1 style="margin:0; font-size:1.6rem; color:var(--heading,#1a202c);">
       👤 Mijn Account
     </h1>
 
-    <!-- ── 1. Profile card ──────────────────────────────────────────────── -->
+    <!-- ── 1. Profiel ──────────────────────────────────────────────────── -->
     <section class="account-card" aria-labelledby="section-profile">
       <h2 id="section-profile">🪪 Profiel</h2>
 
       <div class="profile-header">
-        <!-- Avatar emoji — updated by account.js -->
-        <span class="profile-avatar-display" id="profile-avatar">👤</span>
-
+        <span class="profile-avatar-display" id="profile-avatar">👤</span>    <!-- gevuld door account.js -->
         <div class="profile-meta">
           <strong id="profile-username">Laden...</strong>
           <small id="profile-email"></small>
@@ -405,8 +403,8 @@
           <span class="detail-value">
             <span class="tier-badge badge-free" id="profile-tier">Gratis</span>
           </span>
-          <span style="display:none; font-size:.8rem; color:var(--muted,#718096); margin-top:.2rem;"
-                id="profile-tier-until"></span>
+          <span id="profile-tier-until"
+                style="display:none; font-size:.8rem; color:var(--muted,#718096); margin-top:.2rem;"></span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Lid sinds</span>
@@ -448,41 +446,78 @@
       <h2 id="section-password">🔒 Wachtwoord wijzigen</h2>
 
       <form id="password-form" novalidate>
-
         <div class="form-group">
           <label for="new-password">Nieuw wachtwoord</label>
           <input type="password" id="new-password"
                  placeholder="Minimaal 8 tekens"
                  autocomplete="new-password" required />
         </div>
-
         <div class="form-group">
           <label for="confirm-password">Wachtwoord bevestigen</label>
           <input type="password" id="confirm-password"
                  placeholder="Herhaal wachtwoord"
                  autocomplete="new-password" required />
         </div>
-
         <button type="submit" class="btn-save-password">Opslaan</button>
         <p class="form-status" id="password-status" aria-live="polite"></p>
-
       </form>
     </section>
 
-  </main>
+  </div>
+</main>
 
-  <!-- ── Footer placeholder ───────────────────────────────────────────────── -->
-  <div id="footer-placeholder"></div>
+<!-- ======================= Footer ======================= -->
+<div id="footer-placeholder"></div>
 
-  <!-- ── Scripts — verplichte laadvolgorde ────────────────────────────────── -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../../js/utils.js"></script>
-  <script src="../../js/schema.js"></script>
-  <script src="../../js/storage.js"></script>
-  <script src="../../js/auth.js"></script>
-  <script src="../../js/cloudSync.js"></script>
-  <script src="../../js/topbar.js"></script>
-  <script src="account.js"></script>
+<!-- =============================================================
+     SCRIPTS — volgorde is verplicht:
+     1. Supabase SDK        — vereist door auth.js
+     2. utils.js            — vereist door alle andere modules
+     3. schema.js           — vereist door storage.js
+     4. storage.js          — vereist door account.js
+     5. auth.js             — vereist door topbar.js + account.js
+     6. cloudSync.js        — vereist door account.js
+     7. TopBar fetch        — laadt TopBar HTML, daarna topbar.js
+     8. Navbar + Footer     — onafhankelijk, mag parallel
+     9. account.js          — altijd als laatste
+     ============================================================= -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/MyFamTreeCollab/js/utils.js"></script>
+<script src="/MyFamTreeCollab/js/schema.js"></script>
+<script src="/MyFamTreeCollab/js/storage.js"></script>
+<script src="/MyFamTreeCollab/js/auth.js"></script>
+<script src="/MyFamTreeCollab/js/cloudSync.js"></script>
+
+<script>
+    // Stap 1: TopBar HTML laden, daarna PAS topbar.js injecteren
+    // Dit garandeert dat #top-auth in de DOM zit vóór topbar.js initialiseert
+    fetch('/MyFamTreeCollab/Layout/TopBar.html')
+        .then(resp => resp.text())
+        .then(function(data) {
+            document.getElementById('topbar-placeholder').innerHTML = data;
+            // #top-auth bestaat nu — veilig om topbar.js te laden
+            var s = document.createElement('script');
+            s.src = '/MyFamTreeCollab/js/topbar.js';
+            document.body.appendChild(s);
+        });
+
+    // Stap 2: Navbar laden — geen auth-afhankelijkheid, mag parallel
+    fetch('/MyFamTreeCollab/Layout/Navbar.html')
+        .then(resp => resp.text())
+        .then(function(data) {
+            document.getElementById('navbar-placeholder').innerHTML = data;
+        });
+
+    // Stap 3: Footer laden
+    fetch('/MyFamTreeCollab/Layout/Footer.html')
+        .then(resp => resp.text())
+        .then(function(data) {
+            document.getElementById('footer-placeholder').innerHTML = data;
+        });
+</script>
+
+<!-- Pagina-specifiek: account.js altijd als laatste -->
+<script src="/MyFamTreeCollab/account/account.js"></script>
 
 </body>
 </html>
