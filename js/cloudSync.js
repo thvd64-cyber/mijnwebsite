@@ -1,26 +1,31 @@
-// ========================= js/cloudSync.js v1.1.0 =========================
-// Cloud backup module for MyFamTreeCollab
-// Saves and loads family tree data to/from Supabase (table: stambomen)
+// ========================= js/cloudSync.js v2.0.0 =========================
+// Cloud sync module for MyFamTreeCollab
+// Manages multiple family trees per user in Supabase (table: stambomen)
 // Requires: auth.js (window.AuthModule), storage.js (window.StamboomStorage)
 // Exported as: window.CloudSync
 //
-// Nieuw in v1.1.0:
-// - Tiercontrole: alleen premium/admin mag opslaan in cloud
-// - Gratis gebruikers krijgen 'no_cloud_access' fout
-// - Admin heeft geen persoonslimiet
+// Nieuw in v2.0.0 (F5-07):
+// - Meerdere stambomen per gebruiker (niet langer één rij per user_id)
+// - saveToCloud(naam, stamboumId) — opslaan als nieuw of bestaande overschrijven
+// - loadFromCloud(stamboumId)     — laad specifieke stamboom op UUID
+// - listStambomen()               — geeft alle stambomen van de gebruiker
+// - deleteFromCloud(stamboumId)   — verwijdert één stamboom uit de cloud
+// - getCloudMeta()                — geeft lijst-overzicht (vervangt single-check)
+//
+// Verwijderd in v2.0.0:
+// - upsert op user_id (was één rij per gebruiker)
 // ==========================================================================
 
 (function () {
     'use strict';
 
-    // Tiers die cloud backup mogen gebruiken (behalve admin — die wordt apart gecheckt)
+    // Tiers die cloud backup mogen gebruiken
     var CLOUD_TIERS = ['supporter', 'personal', 'family', 'researcher', 'admin'];
 
-    // Maximum aantal personen voor niet-admin cloud gebruikers
-    // Admin heeft geen limiet
+    // Maximum aantal personen per stamboom voor niet-admin gebruikers
     var MAX_PERSONS = 500;
 
-    // Naam van de Supabase tabel voor cloud opslag
+    // Naam van de Supabase tabel
     var TABLE = 'stambomen';
 
     // -----------------------------------------------------------------------
@@ -32,7 +37,7 @@
             console.error('[cloudSync] AuthModule niet beschikbaar');
             return null;
         }
-        return window.AuthModule.getClient();
+        return window.AuthModule.getClient();                              // Supabase client instantie
     }
 
     // -----------------------------------------------------------------------
@@ -53,10 +58,10 @@
     // -----------------------------------------------------------------------
     // _checkCloudAccess
     // Controleert of de ingelogde gebruiker cloud backup mag gebruiken.
-    // Returns: { allowed: true, isAdmin: bool } of { allowed: false, error: string }
+    // Returns: { allowed: true, isAdmin: bool, tier: string }
+    //       of { allowed: false, error: string, tier: string }
     // -----------------------------------------------------------------------
     async function _checkCloudAccess() {
-        // Haal tier op via AuthModule — geeft 'free' als niet ingelogd
         if (!window.AuthModule || typeof window.AuthModule.getTier !== 'function') {
             return { allowed: false, error: 'not_logged_in' };
         }
@@ -64,170 +69,259 @@
         var tier = await window.AuthModule.getTier();                      // Haal tier op uit profiles tabel
 
         if (tier === 'free') {
-            // Gratis gebruikers hebben geen cloud toegang
             return { allowed: false, error: 'no_cloud_access', tier: tier };
         }
 
         if (!CLOUD_TIERS.includes(tier)) {
-            // Onbekende tier — blokkeer als voorzorgsmaatregel
             return { allowed: false, error: 'no_cloud_access', tier: tier };
         }
 
         return {
             allowed: true,
             isAdmin: tier === 'admin',                                     // Admin heeft geen persoonslimiet
-            tier: tier
+            tier:    tier
         };
     }
 
     // -----------------------------------------------------------------------
-    // saveToCloud
-    // Slaat de lokale stamboom op in Supabase.
-    // Controleert eerst tier en persoonslimiet.
-    // Returns: { success: true } of { success: false, error: string }
+    // listStambomen
+    // Geeft een lijst van alle cloud stambomen van de ingelogde gebruiker.
+    // Elke entry bevat: id, naam, updated_at, aantal_personen
+    // Returns: { success: true, stambomen: [...] }
+    //       of { success: false, error: string }
     // -----------------------------------------------------------------------
-    async function saveToCloud() {
+    async function listStambomen() {
+        var userId = await _getCurrentUserId();
+        if (!userId) return { success: false, error: 'not_logged_in' };
+
+        var access = await _checkCloudAccess();
+        if (!access.allowed) return { success: false, error: access.error, tier: access.tier };
+
+        var client = _getClient();
+
+        // Haal alle rijen op voor deze gebruiker — data niet ophalen (te groot), alleen metadata
+        var result = await client
+            .from(TABLE)
+            .select('id, naam, updated_at, data')                          // data nodig voor telling
+            .eq('user_id', userId)
+            .order('updated_at', { ascending: false });                    // Nieuwste bovenaan
+
+        if (result.error) {
+            console.error('[cloudSync] listStambomen fout:', result.error);
+            return { success: false, error: result.error.message };
+        }
+
+        // Bouw een compacte lijst met tellling maar zonder de volledige data
+        var stambomen = (result.data || []).map(function(rij) {
+            return {
+                id:             rij.id,                                    // UUID van de rij
+                naam:           rij.naam || 'Naamloos',                   // Naam van de stamboom
+                updatedAt:      rij.updated_at,                            // Laatste wijzigingstijd
+                aantalPersonen: Array.isArray(rij.data) ? rij.data.length : 0  // Aantal personen
+            };
+        });
+
+        return { success: true, stambomen: stambomen, isAdmin: access.isAdmin, tier: access.tier };
+    }
+
+    // -----------------------------------------------------------------------
+    // saveToCloud(naam, stamboumId)
+    // Slaat de huidige lokale stamboom op in de cloud.
+    // - naam:        naam voor de stamboom (verplicht bij nieuw aanmaken)
+    // - stamboumId:  UUID van bestaande rij om te overschrijven (optioneel)
+    //                Als leeg → nieuwe rij aanmaken
+    // Returns: { success: true, id, naam, count }
+    //       of { success: false, error: string }
+    // -----------------------------------------------------------------------
+    async function saveToCloud(naam, stamboumId) {
         // Stap 1: controleer login
         var userId = await _getCurrentUserId();
-        if (!userId) {
-            return { success: false, error: 'not_logged_in' };
-        }
+        if (!userId) return { success: false, error: 'not_logged_in' };
 
         // Stap 2: controleer cloud toegang op basis van tier
         var access = await _checkCloudAccess();
-        if (!access.allowed) {
-            return { success: false, error: access.error, tier: access.tier };
-        }
+        if (!access.allowed) return { success: false, error: access.error, tier: access.tier };
 
         // Stap 3: haal lokale data op
-        if (!window.StamboomStorage) {
-            return { success: false, error: 'storage_unavailable' };
-        }
+        if (!window.StamboomStorage) return { success: false, error: 'storage_unavailable' };
         var allPersons = window.StamboomStorage.get();                     // Array van persoon-objecten
 
         // Stap 4: controleer persoonslimiet — admin heeft geen limiet
         if (!access.isAdmin && allPersons.length > MAX_PERSONS) {
-            return {
-                success: false,
-                error: 'limit_exceeded',
-                count: allPersons.length,
-                max: MAX_PERSONS
-            };
+            return { success: false, error: 'limit_exceeded', count: allPersons.length, max: MAX_PERSONS };
         }
 
-        // Stap 5: sla op via upsert — één rij per gebruiker
-        var client = _getClient();
-        var payload = {
-            user_id:    userId,
-            data:       allPersons,
-            updated_at: new Date().toISOString()                           // Huidige timestamp
-        };
+        var client  = _getClient();
+        var stamNaam = (naam || '').trim() || 'Mijn stamboom';            // Fallback naam
+        var nu      = new Date().toISOString();                            // Huidige timestamp
 
-        var result = await client
-            .from(TABLE)
-            .upsert(payload, { onConflict: 'user_id' });                   // Update als rij al bestaat
+        var result;
+
+        if (stamboumId) {
+            // ---- Bestaande stamboom overschrijven ----
+            // Controleer eerst of de rij van deze gebruiker is (veiligheidscheck naast RLS)
+            result = await client
+                .from(TABLE)
+                .update({
+                    naam:       stamNaam,                                  // Naam bijwerken
+                    data:       allPersons,                                // Personen bijwerken
+                    updated_at: nu                                         // Timestamp bijwerken
+                })
+                .eq('id', userId)                                          // Verplicht: alleen eigen rij
+                .eq('id', stamboumId);                                     // Specifieke stamboom
+
+            // Correctie: RLS doet de user_id check — filter op id + user_id
+            result = await client
+                .from(TABLE)
+                .update({
+                    naam:       stamNaam,
+                    data:       allPersons,
+                    updated_at: nu
+                })
+                .eq('id', stamboumId)
+                .eq('user_id', userId);                                    // Extra veiligheid naast RLS
+
+        } else {
+            // ---- Nieuwe stamboom aanmaken ----
+            result = await client
+                .from(TABLE)
+                .insert({
+                    user_id:    userId,                                    // Koppel aan ingelogde gebruiker
+                    naam:       stamNaam,                                  // Naam van de stamboom
+                    data:       allPersons,                                // Stamboom data
+                    updated_at: nu                                         // Aanmaaktijdstip
+                })
+                .select('id')                                              // Geef het nieuwe UUID terug
+                .single();
+        }
 
         if (result.error) {
             console.error('[cloudSync] saveToCloud fout:', result.error);
             return { success: false, error: result.error.message };
         }
 
-        return { success: true, count: allPersons.length };
+        // Bij insert: sla het nieuwe UUID op als actieve stamboom
+        var nieuwId = stamboumId || (result.data && result.data.id);
+        if (nieuwId) {
+            window.StamboomStorage.setActiveTreeId(nieuwId);              // Onthoud welke stamboom actief is
+        }
+
+        return { success: true, id: nieuwId, naam: stamNaam, count: allPersons.length };
     }
 
     // -----------------------------------------------------------------------
-    // loadFromCloud
-    // Laadt de cloud backup naar localStorage — overschrijft lokale data.
-    // Returns: { success: true, count, updatedAt } of { success: false, error: string }
+    // loadFromCloud(stamboumId)
+    // Laadt een specifieke cloud stamboom naar localStorage.
+    // Overschrijft de huidige lokale data.
+    // Returns: { success: true, naam, count, updatedAt }
+    //       of { success: false, error: string }
     // -----------------------------------------------------------------------
-    async function loadFromCloud() {
-        // Controleer login
-        var userId = await _getCurrentUserId();
-        if (!userId) {
-            return { success: false, error: 'not_logged_in' };
-        }
+    async function loadFromCloud(stamboumId) {
+        if (!stamboumId) return { success: false, error: 'geen_id' };
 
-        // Controleer cloud toegang
+        var userId = await _getCurrentUserId();
+        if (!userId) return { success: false, error: 'not_logged_in' };
+
         var access = await _checkCloudAccess();
-        if (!access.allowed) {
-            return { success: false, error: access.error, tier: access.tier };
-        }
+        if (!access.allowed) return { success: false, error: access.error, tier: access.tier };
 
         var client = _getClient();
 
-        // Haal de rij op voor deze gebruiker
+        // Haal de specifieke rij op — RLS garandeert dat het van de gebruiker is
         var result = await client
             .from(TABLE)
-            .select('data, updated_at')
-            .eq('user_id', userId)
+            .select('id, naam, data, updated_at')                          // Volledige data ophalen
+            .eq('id', stamboumId)
+            .eq('user_id', userId)                                         // Extra check naast RLS
             .single();
 
         if (result.error) {
-            if (result.error.code === 'PGRST116') {                        // PGRST116 = geen rij gevonden
-                return { success: false, error: 'no_backup' };
-            }
             console.error('[cloudSync] loadFromCloud fout:', result.error);
             return { success: false, error: result.error.message };
         }
 
-        var cloudData = result.data.data;                                  // Array van persoon-objecten
-        var updatedAt = result.data.updated_at;                            // Timestamp van laatste opslag
+        var cloudData  = result.data.data;                                 // Array van persoon-objecten
+        var stamNaam   = result.data.naam;
+        var updatedAt  = result.data.updated_at;
 
-        // Valideer dat we een array ontvangen hebben
         if (!Array.isArray(cloudData)) {
             return { success: false, error: 'invalid_data' };
         }
 
-        // Overschrijf localStorage met cloud data
-        if (!window.StamboomStorage) {
-            return { success: false, error: 'storage_unavailable' };
-        }
-        window.StamboomStorage.replaceAll(cloudData);
+        if (!window.StamboomStorage) return { success: false, error: 'storage_unavailable' };
 
-        return { success: true, count: cloudData.length, updatedAt: updatedAt };
+        // Overschrijf localStorage met de gekozen stamboom
+        window.StamboomStorage.replaceAll(cloudData);                     // Schrijf personen weg
+        window.StamboomStorage.setActiveTreeId(stamboumId);               // Onthoud actieve stamboom
+        window.StamboomStorage.setActiveTreeName(stamNaam);               // Onthoud naam
+
+        return { success: true, naam: stamNaam, count: cloudData.length, updatedAt: updatedAt };
+    }
+
+    // -----------------------------------------------------------------------
+    // deleteFromCloud(stamboumId)
+    // Verwijdert één stamboom uit de cloud (alleen eigen stambomen via RLS).
+    // Returns: { success: true } of { success: false, error: string }
+    // -----------------------------------------------------------------------
+    async function deleteFromCloud(stamboumId) {
+        if (!stamboumId) return { success: false, error: 'geen_id' };
+
+        var userId = await _getCurrentUserId();
+        if (!userId) return { success: false, error: 'not_logged_in' };
+
+        var access = await _checkCloudAccess();
+        if (!access.allowed) return { success: false, error: access.error, tier: access.tier };
+
+        var client = _getClient();
+
+        var result = await client
+            .from(TABLE)
+            .delete()
+            .eq('id', stamboumId)                                          // Specifieke stamboom
+            .eq('user_id', userId);                                        // Alleen eigen stambomen
+
+        if (result.error) {
+            console.error('[cloudSync] deleteFromCloud fout:', result.error);
+            return { success: false, error: result.error.message };
+        }
+
+        // Als de verwijderde stamboom de actieve was, wis dan de actieve ID
+        var actieveId = window.StamboomStorage.getActiveTreeId();
+        if (actieveId === stamboumId) {
+            window.StamboomStorage.setActiveTreeId(null);                  // Geen actieve stamboom meer
+            window.StamboomStorage.setActiveTreeName(null);
+        }
+
+        return { success: true };
     }
 
     // -----------------------------------------------------------------------
     // getCloudMeta
-    // Geeft metadata over de bestaande cloud backup zonder data te laden.
-    // Geeft ook aan of de gebruiker cloud toegang heeft.
-    // Returns: { exists, count, updatedAt, hasAccess, tier }
+    // Geeft een overzicht van de cloud stambomen zonder volledige data te laden.
+    // Vervangt de oude single-stamboom versie.
+    // Returns: { hasAccess, tier, stambomen: [...] }
+    //       of { hasAccess: false, error, tier }
     // -----------------------------------------------------------------------
     async function getCloudMeta() {
-        // Controleer login
         var userId = await _getCurrentUserId();
-        if (!userId) return { exists: false, hasAccess: false, error: 'not_logged_in' };
+        if (!userId) return { hasAccess: false, error: 'not_logged_in' };
 
-        // Controleer tier
         var access = await _checkCloudAccess();
         if (!access.allowed) {
-            // Geen toegang — geef tier mee zodat UI juiste melding kan tonen
-            return { exists: false, hasAccess: false, tier: access.tier, error: access.error };
+            return { hasAccess: false, tier: access.tier, error: access.error };
         }
 
-        var client = _getClient();
+        var lijst = await listStambomen();                                 // Haal lijst op
 
-        // Haal metadata op — select alleen updated_at en data voor telling
-        var result = await client
-            .from(TABLE)
-            .select('updated_at, data')
-            .eq('user_id', userId)
-            .single();
-
-        if (result.error) {
-            // Geen backup gevonden is geen fout — gewoon nog niet opgeslagen
-            return { exists: false, hasAccess: true, tier: access.tier };
+        if (!lijst.success) {
+            return { hasAccess: true, tier: access.tier, stambomen: [], error: lijst.error };
         }
-
-        var count = Array.isArray(result.data.data) ? result.data.data.length : 0;
 
         return {
-            exists:     true,
             hasAccess:  true,
             tier:       access.tier,
             isAdmin:    access.isAdmin,
-            count:      count,
-            updatedAt:  result.data.updated_at
+            stambomen:  lijst.stambomen                                    // Array van stamboom-objecten
         };
     }
 
@@ -235,10 +329,12 @@
     // Publieke API
     // -----------------------------------------------------------------------
     window.CloudSync = {
-        saveToCloud:  saveToCloud,   // () → { success, count } of { success: false, error }
-        loadFromCloud: loadFromCloud, // () → { success, count, updatedAt } of { success: false, error }
-        getCloudMeta: getCloudMeta,  // () → { exists, hasAccess, tier, count, updatedAt }
-        MAX_PERSONS:  MAX_PERSONS    // Persoonslimiet voor niet-admin gebruikers
+        saveToCloud:    saveToCloud,    // (naam, id?) → { success, id, naam, count }
+        loadFromCloud:  loadFromCloud,  // (id)        → { success, naam, count, updatedAt }
+        deleteFromCloud: deleteFromCloud, // (id)       → { success }
+        listStambomen:  listStambomen,  // ()          → { success, stambomen }
+        getCloudMeta:   getCloudMeta,   // ()          → { hasAccess, tier, stambomen }
+        MAX_PERSONS:    MAX_PERSONS     // Persoonslimiet voor niet-admin gebruikers
     };
 
 })();
