@@ -1,5 +1,133 @@
+<!-- ======================= account.html v1.0.0 =======================
+    Account dashboard — profiel + stambomen beheer
+    Gebaseerd op standaardpagina template (TopBar + Navbar + auth flow)
+======================================================================= -->
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account</title>
+
+    <!-- ===== Favicon ===== -->
+    <link rel="icon" type="image/x-icon" href="/MyFamTreeCollab/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/MyFamTreeCollab/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/MyFamTreeCollab/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/MyFamTreeCollab/favicon-192x192.png">
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        /* ======================= ACCOUNT DASHBOARD ======================= */
+        .account-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .section-block {
+            background: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+
+        .tree-card {
+            border: 1px solid #ddd;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 6px;
+        }
+
+        .tree-card button {
+            margin-top: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- ======================= ERUDA (DEV ONLY) ======================= -->
+<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+<script>eruda.init();</script>
+
+<!-- ======================= TopBar ======================= -->
+<div id="topbar-placeholder"></div>
+
+<!-- ======================= NAVBAR ======================= -->
+<div id="navbar-placeholder"></div>
+
+<!-- ======================= MAIN ======================= -->
+<main>
+    <div class="account-container">
+
+        <!-- ================= PROFIEL ================= -->
+        <div class="section-block">
+            <h2>👤 Profiel</h2>
+            <div id="profileInfo">Laden...</div>
+        </div>
+
+        <!-- ================= STAMBOMEN ================= -->
+        <div class="section-block">
+            <h2>🌳 Jouw stambomen</h2>
+
+            <select id="treeDropdown"></select>
+
+            <div id="treeCards"></div>
+
+            <button id="createTreeBtn">+ Nieuwe stamboom</button>
+        </div>
+
+    </div>
+</main>
+
+<!-- ======================= FOOTER ======================= -->
+<div id="footer-placeholder"></div>
+
+<!-- ======================= CORE SCRIPTS ======================= -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/utils.js"></script>
-<script src="../js/schema.js"></script>
-<script src="../js/storage.js"></script>
-<script src="../js/relatieEngine.js"></script>
-<script src="account.js"></script>
+<script src="../js/auth.js"></script>
+
+<!-- ======================= LAYOUT LOADER ======================= -->
+<script>
+    // ======================= TOPBAR =======================
+    fetch('/MyFamTreeCollab/Layout/TopBar.html')
+        .then(r => r.text())
+        .then(data => {
+            document.getElementById('topbar-placeholder').innerHTML = data;
+
+            const s = document.createElement('script');
+            s.src = '../js/topbar.js';
+            document.body.appendChild(s);
+        });
+
+    // ======================= NAVBAR =======================
+    fetch('/MyFamTreeCollab/Layout/Navbar.html')
+        .then(r => r.text())
+        .then(data => {
+            document.getElementById('navbar-placeholder').innerHTML = data;
+        });
+
+    // ======================= FOOTER =======================
+    fetch('/MyFamTreeCollab/Layout/Footer.html')
+        .then(r => r.text())
+        .then(data => {
+            document.getElementById('footer-placeholder').innerHTML = data;
+        });
+</script>
+
+<!-- ======================= PAGE SCRIPT ======================= -->
+<script src="../js/account.js"></script>
+
+</body>
+</html>
