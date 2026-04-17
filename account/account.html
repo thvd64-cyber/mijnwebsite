@@ -1,6 +1,6 @@
-<!-- ======================= account.html v1.0.0 =======================
+<!-- ======================= account.html v1.0.1 =======================
     Account dashboard — profiel + stambomen beheer
-    Gebaseerd op standaardpagina template (TopBar + Navbar + auth flow)
+    FIX: Supabase init toegevoegd + correcte load order
 ======================================================================= -->
 <!DOCTYPE html>
 <html lang="nl">
@@ -60,6 +60,17 @@
 <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
 <script>eruda.init();</script>
 
+<!-- ======================= SUPABASE INIT (CRITICAL FIX) ======================= -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+    // Initialize Supabase BEFORE any app logic
+    window.supabase = supabase.createClient(
+        "https://xpufzrjncivyzyukwcmn.supabase.co",
+        "YOUR_PUBLIC_ANON_KEY_HERE"
+    );
+</script>
+
 <!-- ======================= TopBar ======================= -->
 <div id="topbar-placeholder"></div>
 
@@ -94,7 +105,6 @@
 <div id="footer-placeholder"></div>
 
 <!-- ======================= CORE SCRIPTS ======================= -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/utils.js"></script>
 <script src="../js/auth.js"></script>
 
