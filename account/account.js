@@ -1,142 +1,186 @@
-// ======================= ACCOUNT MODULE v1.0.0  =======================
-// MyFamTreeCollab - Cloud profile & tree dashboard logic
+// ======================= account/account.js v1.0.1 =======================
+// MyFamTreeCollab - Account dashboard logic (clean Supabase separation)
 
 // ======================= GLOBAL STATE =======================
-let currentUser = null; // Active logged-in Supabase user
-let userProfile = null; // Profile data from user_profiles table
-let userTrees = []; // All trees belonging to user
+let currentUser = null; // Logged-in Supabase user
+let userProfile = null; // Profile from user_profiles table
+let userTrees = []; // All stambomen for user
 let activeTreeId = null; // Currently selected tree
 
 // ======================= INIT =======================
 document.addEventListener("DOMContentLoaded", async () => {
-    await initAccount(); // Start account initialization flow
+    await initAccount(); // Start account flow after DOM is ready
 });
 
-// ======================= MAIN INIT FLOW =======================
+// ======================= MAIN FLOW =======================
 async function initAccount() {
-    await loadUser(); // Step 1: get logged-in user
-    if (!currentUser) return; // Stop if no user logged in
+    await loadUser(); // Get logged-in user
 
-    await ensureProfile(); // Step 2: create profile if missing
-    await loadTrees(); // Step 3: load all trees
+    if (!currentUser) {
+        console.warn("No user logged in"); // Debug info
+        return; // Stop if not authenticated
+    }
 
-    renderProfile(); // Step 4: show profile UI
-    renderTreeDropdown(); // Step 5: build dropdown
-    renderTreeCards(); // Step 6: build cards
+    await ensureProfile(); // Create profile if missing
+    await loadTrees(); // Load user trees
+
+    renderProfile(); // Render profile UI
+    renderTreeDropdown(); // Build dropdown selector
+    renderTreeCards(); // Build card overview
 }
 
 // ======================= LOAD USER =======================
 async function loadUser() {
-    // NOTE: assumes Supabase auth is available globally via window.supabase
-    const { data } = await window.supabase.auth.getUser(); // Get current session user
-    currentUser = data?.user || null; // Store user safely
+    try {
+        const { data, error } = await window.supabase.auth.getUser(); // Get session user
+
+        if (error) {
+            console.error("Auth error:", error);
+            return;
+        }
+
+        currentUser = data?.user || null; // Safe assignment
+    } catch (err) {
+        console.error("loadUser failed:", err); // Hard fallback debug
+    }
 }
 
 // ======================= PROFILE UPSERT =======================
 async function ensureProfile() {
-    if (!currentUser) return; // Safety check
+    if (!currentUser) return;
 
-    const { data: existing } = await window.supabase
-        .from("user_profiles")
-        .select("*")
-        .eq("user_id", currentUser.id)
-        .single(); // Try to fetch existing profile
+    try {
+        const { data: existing, error: fetchError } = await window.supabase
+            .from("user_profiles")
+            .select("*")
+            .eq("user_id", currentUser.id)
+            .maybeSingle(); // safer than single()
 
-    if (existing) {
-        userProfile = existing; // Profile exists already
-        return;
+        if (fetchError) {
+            console.error("Profile fetch error:", fetchError);
+        }
+
+        if (existing) {
+            userProfile = existing;
+            return;
+        }
+
+        const { data: created, error: insertError } = await window.supabase
+            .from("user_profiles")
+            .insert([
+                {
+                    user_id: currentUser.id,
+                    display_name: currentUser.email
+                }
+            ])
+            .select()
+            .maybeSingle();
+
+        if (insertError) {
+            console.error("Profile insert error:", insertError);
+        }
+
+        userProfile = created;
+    } catch (err) {
+        console.error("ensureProfile failed:", err);
     }
-
-    const { data: created } = await window.supabase
-        .from("user_profiles")
-        .insert([
-            {
-                user_id: currentUser.id, // Link to auth user
-                display_name: currentUser.email // Default name
-            }
-        ])
-        .select()
-        .single(); // Create new profile
-
-    userProfile = created; // Store created profile
 }
 
 // ======================= LOAD TREES =======================
 async function loadTrees() {
-    const { data } = await window.supabase
-        .from("stambomen")
-        .select("*")
-        .eq("user_id", currentUser.id); // Only user trees
+    if (!currentUser) return;
 
-    userTrees = data || []; // Safe fallback
+    try {
+        const { data, error } = await window.supabase
+            .from("stambomen")
+            .select("*")
+            .eq("user_id", currentUser.id);
 
-    if (userTrees.length > 0) {
-        activeTreeId = userTrees[0].id; // Default first tree active
+        if (error) {
+            console.error("Tree load error:", error);
+        }
+
+        userTrees = data || [];
+
+        if (userTrees.length > 0) {
+            activeTreeId = userTrees[0].id; // default active tree
+        }
+    } catch (err) {
+        console.error("loadTrees failed:", err);
     }
 }
 
-// ======================= RENDER PROFILE =======================
+// ======================= PROFILE UI =======================
 function renderProfile() {
-    const container = document.getElementById("profileInfo"); // Get UI container
-    if (!container || !userProfile) return;
+    const container = document.getElementById("profileInfo");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    const name = userProfile?.display_name || "Onbekend";
+    const email = currentUser?.email || "-";
 
     container.innerHTML = `
-        <p>Naam: ${userProfile.display_name || "Onbekend"}</p>
-        <p>Email: ${currentUser.email}</p>
+        <p><strong>Naam:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
     `;
 }
 
 // ======================= DROPDOWN =======================
 function renderTreeDropdown() {
-    const dropdown = document.getElementById("treeDropdown"); // Get dropdown
+    const dropdown = document.getElementById("treeDropdown");
     if (!dropdown) return;
 
-    dropdown.innerHTML = ""; // Reset options
+    dropdown.innerHTML = "";
 
     userTrees.forEach(tree => {
-        const option = document.createElement("option"); // Create option
-        option.value = tree.id; // Tree ID
-        option.textContent = tree.naam || "Mijn stamboom"; // Display name
-        dropdown.appendChild(option); // Add to dropdown
+        const option = document.createElement("option");
+
+        option.value = tree.id;
+        option.textContent = tree.naam || "Mijn stamboom";
+
+        dropdown.appendChild(option);
     });
 
-    dropdown.value = activeTreeId; // Set active
+    dropdown.value = activeTreeId;
 
-    dropdown.addEventListener("change", (e) => {
-        activeTreeId = e.target.value; // Update active tree
-        renderTreeCards(); // Refresh UI
-    });
+    dropdown.onchange = (e) => {
+        activeTreeId = e.target.value;
+        renderTreeCards();
+    };
 }
 
 // ======================= TREE CARDS =======================
 function renderTreeCards() {
-    const container = document.getElementById("treeCards"); // Get container
+    const container = document.getElementById("treeCards");
     if (!container) return;
 
-    container.innerHTML = ""; // Reset UI
+    container.innerHTML = "";
 
     userTrees.forEach(tree => {
-        const card = document.createElement("div"); // Create card
-        card.className = "tree-card"; // CSS hook
+        const card = document.createElement("div");
+        card.className = "tree-card";
+
+        const isActive = tree.id === activeTreeId;
 
         card.innerHTML = `
             <h3>${tree.naam || "Mijn stamboom"}</h3>
             <p>ID: ${tree.id}</p>
-            <button data-id="${tree.id}">Open</button>
+            <button>Open</button>
         `;
 
-        // Highlight active tree
-        if (tree.id === activeTreeId) {
+        if (isActive) {
             card.style.border = "2px solid green";
         }
 
-        // Open handler
-        card.querySelector("button").addEventListener("click", () => {
-            activeTreeId = tree.id; // Set active
-            document.getElementById("treeDropdown").value = tree.id; // Sync dropdown
-            renderTreeCards(); // Refresh UI
-        });
+        card.querySelector("button").onclick = () => {
+            activeTreeId = tree.id;
+            const dropdown = document.getElementById("treeDropdown");
+            if (dropdown) dropdown.value = tree.id;
 
-        container.appendChild(card); // Add to DOM
+            renderTreeCards();
+        };
+
+        container.appendChild(card);
     });
 }
