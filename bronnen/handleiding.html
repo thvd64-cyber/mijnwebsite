@@ -2,6 +2,11 @@
      Gebruikershandleiding voor MyFamTreeCollab
      Beschrijft alle functies van de applicatie stap voor stap
 
+     Wijzigingen v1.5.0:
+     - Sectie 2 — gebruikersmenu dropdown uitleg toegevoegd
+     - Sectie 10 "Cloud stambomen" — wisselen tussen stambomen uitgelegd incl. wissel modal
+     - Versie badge bijgewerkt naar v1.5.0
+
      Wijzigingen v1.4.0:
      - Sectie 9 "Versiegeschiedenis" toegevoegd (F5-06)
      - Secties 9–13 hernummerd naar 10–14
@@ -142,7 +147,7 @@
 
         <!-- ======================= Welkomstblok ======================= -->
         <div class="welkom-blok">
-            <h1>Handleiding <span class="versie-badge">v1.4.0</span></h1>
+            <h1>Handleiding <span class="versie-badge">v1.5.0</span></h1>
             <p>
                 Welkom bij de handleiding van MyFamTreeCollab. Hier vind je stap voor stap uitleg
                 over alle functies van de applicatie — van je eerste persoon aanmaken tot je stamboom
@@ -218,7 +223,15 @@
             </ul>
 
             <h3>Uitloggen</h3>
-            <p>Klik op <strong>"Uitloggen"</strong> naast je gebruikersnaam bovenaan de pagina.</p>
+            <p>Klik op je gebruikersnaam bovenaan de pagina om het gebruikersmenu te openen. Klik dan op <strong>"🚪 Uitloggen"</strong>.</p>
+
+            <h3>Gebruikersmenu</h3>
+            <p>Als je ingelogd bent verschijnt je gebruikersnaam bovenaan met een pijltje. Klik erop voor het menu:</p>
+            <ul>
+                <li><strong>⚙️ Mijn Account</strong> — profiel, wachtwoord, cloud stambomen</li>
+                <li><strong>📜 Versiegeschiedenis</strong> — bekijk en herstel eerdere versies van je stamboom</li>
+                <li><strong>🚪 Uitloggen</strong> — beëindigt je sessie en wist lokale data</li>
+            </ul>
 
             <a href="#" class="terug-top">↑ Terug naar boven</a>
         </div>
@@ -561,6 +574,20 @@
                 Maak eerst een JSON-export als je de lokale data wilt bewaren.
             </div>
 
+            <h3>Wisselen tussen stambomen</h3>
+            <p>
+                Als je een andere stamboom wilt laden terwijl er al een actieve stamboom met lokale data aanwezig is,
+                verschijnt er een waarschuwingsvenster met drie keuzes:
+            </p>
+            <ul>
+                <li><strong>Annuleren</strong> — niets gebeurt, je blijft op de huidige stamboom</li>
+                <li><strong>Toch laden</strong> — laadt de nieuwe stamboom direct. Je huidige lokale data wordt overschreven zonder opslaan.</li>
+                <li><strong>Eerst opslaan</strong> — slaat de huidige actieve stamboom automatisch op in de cloud, daarna wordt de nieuwe stamboom geladen.</li>
+            </ul>
+            <div class="waarschuwing">
+                <strong>Let op:</strong> Kies "Eerst opslaan" als je niet zeker weet of je laatste wijzigingen al in de cloud staan.
+            </div>
+
             <h3>Stamboom verwijderen uit de cloud</h3>
             <ul class="stappen">
                 <li>Klik op <strong>"🗑️ Verwijderen"</strong> naast de stamboom in de lijst.</li>
@@ -648,7 +675,7 @@
             <h2>14. Steun dit project</h2>
             <p>
                 MyFamTreeCollab is gratis te gebruiken. Als je de app waardevol vindt,
-                kun je de ontwikkeling steunen via Ko-fi. Elk ☕ kopje koffie helpt om
+                kun je de ontwikkeling steunen via Ko-fi. Elk kopje koffie helpt om
                 de app verder te verbeteren.
             </p>
             <a href="https://ko-fi.com/myfamtreecollab"
@@ -657,8 +684,7 @@
                style="display:inline-flex; align-items:center; gap:7px; padding:10px 22px;
                       background:#FF5E5B; color:#fff; text-decoration:none;
                       border-radius:6px; font-size:0.95rem; font-weight:bold;">
-                 <img src="/MyFamTreeCollab/img/Coffee.png" alt="Vorilo Logo" style="height:50px;">
-            Steun dit project
+                ☕ Steun dit project
             </a>
             <a href="#" class="terug-top" style="display:block; margin-top:16px;">↑ Terug naar boven</a>
         </div>
