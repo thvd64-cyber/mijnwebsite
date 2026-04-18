@@ -1,9 +1,11 @@
-<!-- ======================= bronnen/handleiding.html v1.2.0 =======================
+<!-- ======================= bronnen/handleiding.html v1.3.0 =======================
      Gebruikershandleiding voor MyFamTreeCollab
      Beschrijft alle functies van de applicatie stap voor stap
 
-     Wijzigingen v1.1.0:
-     - Tekstverbeteringen doorgevoerd in secties 1, 4 en account
+     Wijzigingen v1.3.0:
+     - Sectie 8 "Mijn Account" toegevoegd (F5-08)
+     - Inhoudsopgave bijgewerkt (secties 8-13 hernummerd)
+     - Versie badge bijgewerkt naar v1.3.0
      ======================================================================= -->
 <!DOCTYPE html>
 <html lang="nl">
@@ -135,6 +137,7 @@
                 <li><a href="#stamboom-bekijken">Stamboom bekijken</a></li>
                 <li><a href="#tijdlijn">Tijdlijn</a></li>
                 <li><a href="#statistieken">Statistieken</a></li>
+                <li><a href="#mijn-account">Mijn Account</a></li>
                 <li><a href="#cloud">Cloud stambomen</a></li>
                 <li><a href="#importeren">Importeren</a></li>
                 <li><a href="#exporteren">Exporteren</a></li>
@@ -335,9 +338,67 @@
             <a href="#" class="terug-top">↑ Terug naar boven</a>
         </div>
 
-        <!-- ======================= 8. Cloud stambomen ======================= -->
+        <!-- ======================= 8. NIEUW — Mijn Account ======================= -->
+        <div class="sectie" id="mijn-account">
+            <h2>8. Mijn Account</h2>
+            <p>
+                De accountpagina geeft je een volledig overzicht van je profiel en instellingen.
+                Bereikbaar via het gebruikersmenu rechtsboven — je moet ingelogd zijn.
+            </p>
+
+            <h3>Profiel</h3>
+            <p>
+                Bovenaan zie je je avatar, gebruikersnaam, e-mailadres, abonnementstype en de datum
+                waarop je lid bent geworden. Je ziet ook of je cloud-toegang hebt.
+            </p>
+
+            <h3>Cloud stambomen beheren</h3>
+            <p>
+                Een overzicht van al je cloud-stambomen met naam en tijdstip van laatste opslag.
+                Per stamboom kun je:
+            </p>
+            <ul>
+                <li><strong>Laden</strong> — laadt de stamboom in je browser. Let op: dit overschrijft je huidige lokale data.</li>
+                <li><strong>Verwijderen</strong> — verwijdert de stamboom permanent uit de cloud.</li>
+            </ul>
+            <div class="waarschuwing">
+                <strong>Let op:</strong> Gratis gebruikers hebben geen cloud-toegang.
+                Je ziet dan een melding met een link naar de abonnementenpagina.
+            </div>
+
+            <h3>Lokale data</h3>
+            <p>
+                Toont hoeveel personen er op dit moment in je browser (localStorage) zijn opgeslagen
+                en welke stamboom actief is.
+            </p>
+
+            <h3>Avatar kiezen</h3>
+            <ul class="stappen">
+                <li>Klik op een van de 8 emoji-avatars.</li>
+                <li>De keuze wordt direct opgeslagen in je account.</li>
+                <li>Je avatar verschijnt meteen bovenaan de profielkaart.</li>
+            </ul>
+
+            <h3>Wachtwoord wijzigen</h3>
+            <ul class="stappen">
+                <li>Vul je nieuwe wachtwoord in (minimaal 8 tekens).</li>
+                <li>Bevestig het wachtwoord in het tweede veld.</li>
+                <li>Klik op <strong>"Opslaan"</strong>.</li>
+                <li>Je ontvangt een bevestiging op de pagina. Je hoeft niet opnieuw in te loggen.</li>
+            </ul>
+
+            <div class="tip">
+                <strong>Tip:</strong> Gebruik de <a href="/MyFamTreeCollab/stamboom/storage.html">Opslag &amp; Cloud</a>-pagina
+                om nieuwe stambomen naar de cloud te uploaden. De accountpagina is alleen voor
+                beheren en laden — niet voor uploaden.
+            </div>
+
+            <a href="#" class="terug-top">↑ Terug naar boven</a>
+        </div>
+
+        <!-- ======================= 9. Cloud stambomen ======================= -->
         <div class="sectie" id="cloud">
-            <h2>8. Cloud stambomen</h2>
+            <h2>9. Cloud stambomen</h2>
             <p>
                 Met een betaald abonnement of donateur-account kun je meerdere stambomen
                 opslaan in de cloud. Ze zijn dan beschikbaar op al je apparaten.
@@ -395,9 +456,9 @@
             <a href="#" class="terug-top">↑ Terug naar boven</a>
         </div>
 
-        <!-- ======================= 9. Importeren ======================= -->
+        <!-- ======================= 10. Importeren ======================= -->
         <div class="sectie" id="importeren">
-            <h2>9. Importeren</h2>
+            <h2>10. Importeren</h2>
             <p>
                 Je kunt bestaande stamboomdata importeren via een CSV-bestand. Dit is handig
                 als je data hebt uit Excel of een ander programma.
@@ -417,9 +478,9 @@
             <a href="#" class="terug-top">↑ Terug naar boven</a>
         </div>
 
-        <!-- ======================= 10. Exporteren ======================= -->
+        <!-- ======================= 11. Exporteren ======================= -->
         <div class="sectie" id="exporteren">
-            <h2>10. Exporteren</h2>
+            <h2>11. Exporteren</h2>
             <p>
                 Je kunt je stamboom exporteren als CSV (voor Excel) of JSON (volledige back-up).
             </p>
@@ -444,9 +505,9 @@
             <a href="#" class="terug-top">↑ Terug naar boven</a>
         </div>
 
-        <!-- ======================= 11. Wachtwoord vergeten ======================= -->
+        <!-- ======================= 12. Wachtwoord vergeten ======================= -->
         <div class="sectie" id="wachtwoord-reset">
-            <h2>11. Wachtwoord vergeten</h2>
+            <h2>12. Wachtwoord vergeten</h2>
             <p>
                 Ben je je wachtwoord vergeten? Je kunt via je e-mailadres een nieuw wachtwoord
                 instellen.
@@ -462,9 +523,9 @@
             <a href="#" class="terug-top">↑ Terug naar boven</a>
         </div>
 
-        <!-- ======================= 12. Steun ======================= -->
+        <!-- ======================= 13. Steun ======================= -->
         <div class="sectie" id="steun">
-            <h2>12. Steun dit project</h2>
+            <h2>13. Steun dit project</h2>
             <p>
                 MyFamTreeCollab is gratis te gebruiken. Als je de app waardevol vindt,
                 kun je de ontwikkeling steunen via Ko-fi. Elk kopje koffie helpt om
