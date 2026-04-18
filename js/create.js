@@ -1,6 +1,11 @@
-// ======================= js/create.js v1.1.0 =======================
+// ======================= js/create.js v1.2.0 =======================
 // Verwerkt het formulier voor het aanmaken van de eerste persoon (Hoofd-ID)
 // Vereist: schema.js, idGenerator.js, storage.js (in die volgorde geladen)
+//
+// Wijziging v1.2.0:
+// - confirmBtn handler async gemaakt zodat await StamboomStorage.add() werkt
+// - Navigatie naar manage.html pas NA het resolven van add()
+// - Geblokkeerde add() (limiet bereikt) toont foutmelding i.p.v. stil te falen
 // ===================================================================
 
 document.addEventListener('DOMContentLoaded', () => {               // Wacht tot de volledige HTML geladen is voordat we DOM-elementen opzoeken
@@ -56,10 +61,39 @@ document.addEventListener('DOMContentLoaded', () => {               // Wacht tot
     });
 
     // ======================= CONFIRM BUTTON HANDLER =======================
-    confirmBtn.addEventListener('click', function() {                // Luister naar klik op de bevestigingsknop onder de preview
+    // async zodat we kunnen wachten op StamboomStorage.add() —
+    // add() doet intern await AuthModule.getTier() en is daardoor async sinds v2.0.2.
+    // Zonder async/await navigeerde de pagina weg vóór add() de persoon had opgeslagen.
+    confirmBtn.addEventListener('click', async function() {          // async: verplicht voor await hieronder
+
+        confirmBtn.disabled = true;                                  // Voorkom dubbelklik tijdens verwerking
+        confirmBtn.textContent = 'Bezig…';                           // Visuele feedback aan de gebruiker
+
         const person = JSON.parse(previewContent.textContent);       // Lees de JSON-tekst uit de preview terug naar een JavaScript object
-        StamboomStorage.add(person);                                 // Voeg de nieuwe persoon toe aan localStorage via storage.js
-        window.location.href = '../stamboom/manage.html';            // Stuur de gebruiker door naar de Manage pagina om verder te gaan
+
+        const result = await StamboomStorage.add(person);            // WACHT tot add() volledig klaar is — persoon staat nu in localStorage
+
+        if (result === true) {
+            // Persoon succesvol opgeslagen — navigeer door naar Manage
+            window.location.href = '../stamboom/manage.html';        // Stuur de gebruiker door naar de Manage pagina
+
+        } else if (result && result.blocked) {
+            // Limiet bereikt — toon foutmelding, blijf op pagina
+            warningMessage.textContent =
+                'Limiet bereikt: je stamboom bevat al ' + result.count +
+                ' personen (maximum voor gratis accounts: ' + result.max + ').'; // Informeer de gebruiker
+            warningMessage.style.display = 'block';                  // Toon het waarschuwingsblok
+            confirmBtn.disabled = false;                             // Knop weer inschakelen
+            confirmBtn.textContent = 'Bevestigen & ga naar Manage';  // Knoptekst herstellen
+
+        } else {
+            // Onverwachte fout — toon generieke melding
+            warningMessage.textContent = 'Er is een fout opgetreden bij het opslaan. Probeer opnieuw.'; // Generieke foutmelding
+            warningMessage.style.display = 'block';                  // Toon het waarschuwingsblok
+            confirmBtn.disabled = false;                             // Knop weer inschakelen
+            confirmBtn.textContent = 'Bevestigen & ga naar Manage';  // Knoptekst herstellen
+        }
+
     });
 
 }); // Einde DOMContentLoaded — alles hierboven wordt pas uitgevoerd als de hele pagina klaar is
