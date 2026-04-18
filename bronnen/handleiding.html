@@ -1,6 +1,12 @@
-<!-- ======================= bronnen/handleiding.html v1.3.0 =======================
+<!-- ======================= bronnen/handleiding.html v1.4.0 =======================
      Gebruikershandleiding voor MyFamTreeCollab
      Beschrijft alle functies van de applicatie stap voor stap
+
+     Wijzigingen v1.4.0:
+     - Sectie 9 "Versiegeschiedenis" toegevoegd (F5-06)
+     - Secties 9–13 hernummerd naar 10–14
+     - Inhoudsopgave bijgewerkt
+     - Versie badge bijgewerkt naar v1.4.0
 
      Wijzigingen v1.3.0:
      - Sectie 8 "Mijn Account" toegevoegd (F5-08)
@@ -102,6 +108,24 @@
             font-size: 0.78rem; font-weight: bold; padding: 2px 8px;
             border-radius: 4px; margin-left: 8px; vertical-align: middle;
         }
+
+        /* ======================= DIFF VOORBEELD BLOK (F5-06) ======================= */
+        .diff-voorbeeld {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin: 16px 0;
+            font-size: 0.88rem;
+        }
+        .diff-voorbeeld-kolom {
+            border-radius: 6px;
+            padding: 10px 14px;
+            line-height: 1.6;
+        }
+        .diff-voorbeeld-kolom strong { display: block; margin-bottom: 4px; font-size: 0.85rem; }
+        .diff-toegevoegd-ex { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+        .diff-gewijzigd-ex  { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; }
+        .diff-verwijderd-ex { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
     </style>
 </head>
 <body>
@@ -118,7 +142,7 @@
 
         <!-- ======================= Welkomstblok ======================= -->
         <div class="welkom-blok">
-            <h1>Handleiding <span class="versie-badge">v1.3.0</span></h1>
+            <h1>Handleiding <span class="versie-badge">v1.4.0</span></h1>
             <p>
                 Welkom bij de handleiding van MyFamTreeCollab. Hier vind je stap voor stap uitleg
                 over alle functies van de applicatie — van je eerste persoon aanmaken tot je stamboom
@@ -138,6 +162,7 @@
                 <li><a href="#tijdlijn">Tijdlijn</a></li>
                 <li><a href="#statistieken">Statistieken</a></li>
                 <li><a href="#mijn-account">Mijn Account</a></li>
+                <li><a href="#versiegeschiedenis">Versiegeschiedenis</a></li>
                 <li><a href="#cloud">Cloud stambomen</a></li>
                 <li><a href="#importeren">Importeren</a></li>
                 <li><a href="#exporteren">Exporteren</a></li>
@@ -338,7 +363,7 @@
             <a href="#" class="terug-top">↑ Terug naar boven</a>
         </div>
 
-        <!-- ======================= 8. NIEUW — Mijn Account ======================= -->
+        <!-- ======================= 8. Mijn Account ======================= -->
         <div class="sectie" id="mijn-account">
             <h2>8. Mijn Account</h2>
             <p>
@@ -396,9 +421,104 @@
             <a href="#" class="terug-top">↑ Terug naar boven</a>
         </div>
 
-        <!-- ======================= 9. Cloud stambomen ======================= -->
+        <!-- ======================= 9. NIEUW — Versiegeschiedenis (F5-06) ======================= -->
+        <div class="sectie" id="versiegeschiedenis">
+            <h2>9. Versiegeschiedenis</h2>
+            <p>
+                Met de Versiegeschiedenis kun je de volledige wijzigingshistorie van een stamboom
+                bekijken, een oude versie previews, twee versies vergelijken en een eerdere versie
+                terugzetten. Elke keer dat je een stamboom opslaat in de cloud, wordt automatisch
+                een snapshot bewaard. Je hebt altijd de laatste 20 versies beschikbaar.
+            </p>
+
+            <div class="tip">
+                <strong>Vereist:</strong> Je moet ingelogd zijn met een account dat cloud-toegang
+                heeft. Versies worden automatisch aangemaakt bij elke cloud-opslag — je hoeft hier
+                niets voor te doen.
+            </div>
+
+            <h3>Versiehistorie openen</h3>
+            <ul class="stappen">
+                <li>Ga naar <strong>Mijn Account</strong> via het gebruikersmenu rechtsboven.</li>
+                <li>Klik op <strong>"📜 Versiegeschiedenis"</strong> in het accountmenu, of navigeer rechtstreeks naar <a href="/MyFamTreeCollab/account/history.html">account/history.html</a>.</li>
+                <li>Kies een stamboom uit de dropdown bovenaan de pagina.</li>
+                <li>De lijst met opgeslagen versies verschijnt, nieuwste bovenaan.</li>
+            </ul>
+
+            <h3>Versie previews</h3>
+            <p>
+                Met Preview bekijk je welke personen in een historische versie aanwezig waren,
+                zonder de versie te laden of je huidige data te wijzigen.
+            </p>
+            <ul class="stappen">
+                <li>Klik op <strong>"👁 Preview"</strong> naast de gewenste versie.</li>
+                <li>Een overzicht van alle personen in die versie verschijnt onderaan de pagina.</li>
+                <li>Klik op een andere versie of sluit het paneel om verder te gaan.</li>
+            </ul>
+
+            <h3>Versie terugzetten</h3>
+            <p>
+                Terugzetten laadt een historische snapshot terug als je actieve stamboom. Je
+                huidige versie wordt vóór het terugzetten automatisch opgeslagen als nieuwe versie,
+                zodat je niets kwijtraakt.
+            </p>
+            <ul class="stappen">
+                <li>Klik op <strong>"⏪ Terugzetten"</strong> naast de gewenste versie.</li>
+                <li>Bevestig de melding in het venster dat verschijnt.</li>
+                <li>Je stamboom wordt teruggezet. De pagina ververst de versie-lijst automatisch.</li>
+            </ul>
+            <div class="waarschuwing">
+                <strong>Let op:</strong> Terugzetten overschrijft zowel je lokale data als de
+                cloud-versie. Je huidige staat wordt wél eerst als nieuwe versie opgeslagen,
+                dus je kunt altijd terug.
+            </div>
+
+            <h3>Twee versies vergelijken</h3>
+            <p>
+                De vergelijkingsfunctie toont wat er veranderd is tussen twee versies: welke
+                personen zijn toegevoegd, welke zijn gewijzigd (inclusief welke velden) en welke
+                zijn verwijderd.
+            </p>
+            <ul class="stappen">
+                <li>Klik op <strong>"🔍 Vergelijk"</strong> naast de eerste versie (de basis). De rij wordt blauw omrand.</li>
+                <li>Klik op <strong>"🔍 Vergelijk"</strong> naast een tweede versie om de vergelijking te starten.</li>
+                <li>Het resultaat verschijnt in drie kolommen onderaan de pagina.</li>
+            </ul>
+
+            <p>De drie kolommen in het vergelijkingsresultaat:</p>
+            <div class="diff-voorbeeld">
+                <div class="diff-voorbeeld-kolom diff-toegevoegd-ex">
+                    <strong>✅ Toegevoegd</strong>
+                    Personen die in de nieuwere versie aanwezig zijn maar niet in de oudere.
+                </div>
+                <div class="diff-voorbeeld-kolom diff-gewijzigd-ex">
+                    <strong>✏️ Gewijzigd</strong>
+                    Personen in beide versies waarbij minstens één veld (bv. geboortedatum) is gewijzigd. Per persoon zie je welk veld veranderd is, met de oude én nieuwe waarde.
+                </div>
+                <div class="diff-voorbeeld-kolom diff-verwijderd-ex">
+                    <strong>🗑️ Verwijderd</strong>
+                    Personen die in de oudere versie aanwezig waren maar niet meer in de nieuwere.
+                </div>
+            </div>
+
+            <div class="tip">
+                <strong>Tip:</strong> Klik nogmaals op <strong>"🔍 Vergelijk"</strong> van dezelfde
+                versie om de selectie te annuleren en opnieuw te beginnen.
+            </div>
+
+            <h3>Automatisch opruimen</h3>
+            <p>
+                Per stamboom worden maximaal 20 versies bewaard. Zodra die grens wordt bereikt,
+                wordt de oudste versie automatisch verwijderd bij de volgende opslag. Je hoeft
+                hier niets voor te doen.
+            </p>
+
+            <a href="#" class="terug-top">↑ Terug naar boven</a>
+        </div>
+
+        <!-- ======================= 10. Cloud stambomen (was 9) ======================= -->
         <div class="sectie" id="cloud">
-            <h2>9. Cloud stambomen</h2>
+            <h2>10. Cloud stambomen</h2>
             <p>
                 Met een betaald abonnement of donateur-account kun je meerdere stambomen
                 opslaan in de cloud. Ze zijn dan beschikbaar op al je apparaten.
@@ -456,9 +576,9 @@
             <a href="#" class="terug-top">↑ Terug naar boven</a>
         </div>
 
-        <!-- ======================= 10. Importeren ======================= -->
+        <!-- ======================= 11. Importeren (was 10) ======================= -->
         <div class="sectie" id="importeren">
-            <h2>10. Importeren</h2>
+            <h2>11. Importeren</h2>
             <p>
                 Je kunt bestaande stamboomdata importeren via een CSV-bestand. Dit is handig
                 als je data hebt uit Excel of een ander programma.
@@ -478,9 +598,9 @@
             <a href="#" class="terug-top">↑ Terug naar boven</a>
         </div>
 
-        <!-- ======================= 11. Exporteren ======================= -->
+        <!-- ======================= 12. Exporteren (was 11) ======================= -->
         <div class="sectie" id="exporteren">
-            <h2>11. Exporteren</h2>
+            <h2>12. Exporteren</h2>
             <p>
                 Je kunt je stamboom exporteren als CSV (voor Excel) of JSON (volledige back-up).
             </p>
@@ -505,9 +625,9 @@
             <a href="#" class="terug-top">↑ Terug naar boven</a>
         </div>
 
-        <!-- ======================= 12. Wachtwoord vergeten ======================= -->
+        <!-- ======================= 13. Wachtwoord vergeten (was 12) ======================= -->
         <div class="sectie" id="wachtwoord-reset">
-            <h2>12. Wachtwoord vergeten</h2>
+            <h2>13. Wachtwoord vergeten</h2>
             <p>
                 Ben je je wachtwoord vergeten? Je kunt via je e-mailadres een nieuw wachtwoord
                 instellen.
@@ -523,9 +643,9 @@
             <a href="#" class="terug-top">↑ Terug naar boven</a>
         </div>
 
-        <!-- ======================= 13. Steun ======================= -->
+        <!-- ======================= 14. Steun (was 13) ======================= -->
         <div class="sectie" id="steun">
-            <h2>13. Steun dit project</h2>
+            <h2>14. Steun dit project</h2>
             <p>
                 MyFamTreeCollab is gratis te gebruiken. Als je de app waardevol vindt,
                 kun je de ontwikkeling steunen via Ko-fi. Elk kopje koffie helpt om
