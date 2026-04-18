@@ -1,7 +1,11 @@
 // =============================================================================
 // topbar.js — TopBar Auth Modal & Status
-// MyFamTreeCollab v2.2.0
+// MyFamTreeCollab v2.2.1
 // -----------------------------------------------------------------------------
+// Nieuw in v2.2.1:
+// - _clearLocalData() alleen bij echte gebruikerswissel (SIGNED_IN met andere user)
+//   NIET bij token refresh — voorkomt wissen van net geladen cloud data
+//
 // Nieuw in v2.2.0:
 // - Gebruikersnaam is nu een klikbare dropdown knop
 // - Dropdown menu: Mijn Account, Versiegeschiedenis, Uitloggen
@@ -25,6 +29,15 @@
 
 (function () {
   "use strict";
+
+  // ---------------------------------------------------------------------------
+  // _currentUserId
+  // Bijhoudt het UUID van de huidig ingelogde gebruiker.
+  // Wordt gebruikt om echte gebruikerswissels te onderscheiden van token refreshes.
+  // Bij een token refresh blijft het user ID gelijk — localStorage NIET wissen.
+  // Bij een echte login met ander account — localStorage WEL wissen.
+  // ---------------------------------------------------------------------------
+  let _currentUserId = null; // null = niemand ingelogd
 
   // ---------------------------------------------------------------------------
   // _clearLocalData()
@@ -329,7 +342,7 @@
               ⚙️ Mijn Account
             </a>
 
-            <a href="/MyFamTreeCollab/account/History.html" role="menuitem">
+            <a href="/MyFamTreeCollab/account/history.html" role="menuitem">
               📜 Versiegeschiedenis
             </a>
 
@@ -557,6 +570,7 @@
     const session = await AuthModule.getSession();
 
     if (session) {
+      _currentUserId = session.user.id;                                    // Onthoud huidige gebruiker bij pageload
       const username = await _getUsernameFromSession(session);
       _renderTopBar(username);
 
@@ -575,8 +589,21 @@
 
     // Reageer op auth-wijzigingen
     AuthModule.onAuthChange(async (event, session) => {
-      if (event === "SIGNED_IN") {
-        _clearLocalData();                                                 // nieuwe sessie = schone lei
+      if (event === "SIGNED_IN" && session) {
+        const inkomendUserId = session.user.id;                            // UUID van inkomende gebruiker
+
+        // Alleen wissen als het een ANDERE gebruiker is dan de huidige sessie
+        // Bij token refresh is het user ID gelijk — dan NIET wissen
+        if (_currentUserId && _currentUserId !== inkomendUserId) {
+          _clearLocalData();                                               // Andere gebruiker — wis data
+        }
+
+        _currentUserId = inkomendUserId;                                   // Bijwerken huidige user ID
+      }
+
+      if (event === "SIGNED_OUT") {
+        _clearLocalData();                                                 // Uitloggen — altijd wissen
+        _currentUserId = null;                                             // Reset huidige user ID
       }
 
       if (session) {
