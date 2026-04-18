@@ -263,10 +263,7 @@
   </style>
 </head>
 <body>
-  <!-- ======================= source view enablement  ======================= -->
-     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-     <script>eruda.init();</script>
-
+  
   <!-- ── TopBar (injected via fetch) ────────────────────────────────────────── -->
   <div id="topbar-placeholder"></div>
 
@@ -337,13 +334,14 @@
   <script>eruda.init();</script>
 
   <!-- ── Script load order (mandatory per project spec) ───────────────────── -->
-  <script src="/MyFamTreeCollab/js/utils.js"></script>
-  <script src="/MyFamTreeCollab/js/schema.js"></script>
-  <script src="/MyFamTreeCollab/js/storage.js"></script>
-  <script src="/MyFamTreeCollab/js/auth.js"></script>
-  <script src="/MyFamTreeCollab/js/cloudSync.js"></script>
-  <script src="/MyFamTreeCollab/js/versionControl.js"></script>
-
+ <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/MyFamTreeCollab/js/utils.js"></script>
+<script src="/MyFamTreeCollab/js/schema.js"></script>
+<script src="/MyFamTreeCollab/js/storage.js"></script>
+<script src="/MyFamTreeCollab/js/auth.js"></script>
+<script src="/MyFamTreeCollab/js/cloudSync.js"></script>
+<script src="/MyFamTreeCollab/js/versionControl.js"></script>
+  
   <!-- TopBar injected AFTER its placeholder, guaranteeing #top-auth in DOM -->
   <script>
     // Inject TopBar HTML via fetch, then load topbar.js to initialise auth state
