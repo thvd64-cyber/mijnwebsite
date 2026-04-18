@@ -1,18 +1,22 @@
 // =============================================================================
 // topbar.js — TopBar Auth Modal & Status
-// MyFamTreeCollab v2.1.0
+// MyFamTreeCollab v2.2.0
 // -----------------------------------------------------------------------------
+// Nieuw in v2.2.0:
+// - Gebruikersnaam is nu een klikbare dropdown knop
+// - Dropdown menu: Mijn Account, Versiegeschiedenis, Uitloggen
+// - Dropdown sluit bij klik buiten het menu of op Escape
+// - Uitloggen staat in het dropdown menu (aparte knop vervallen)
+//
 // Nieuw in v2.1.0:
 // - Uitloggen wist localStorage (stamboomData + actieve stamboom keys)
 // - Inloggen wist localStorage zodat nieuwe sessie altijd schoon begint
-//   (privacy: voorkomt dat ingelogde gebruiker data van vorige sessie ziet)
 //
 // Nieuw in v2.0.3:
 // - Admin dropdown in Navbar zichtbaar gemaakt na is_admin check
 //
 // Nieuw in v2.0.2:
 // - "Wachtwoord vergeten?" link in de login tab
-// - Aparte "vergeten" sectie in de modal met e-mailinvoer + verzendknop
 // - doForgotPassword() — roept AuthModule.resetPassword() aan
 //
 // Dependencies: Supabase SDK, auth.js
@@ -37,7 +41,6 @@
 
   // ---------------------------------------------------------------------------
   // _injectModal()
-  // Injects the modal HTML into the page once on load.
   // ---------------------------------------------------------------------------
   function _injectModal() {
     if (document.getElementById("auth-modal-root")) return;
@@ -123,26 +126,17 @@
     const style = document.createElement("style");
     style.id = "auth-modal-styles";
     style.textContent = `
+      /* ── Auth modal ── */
       #auth-modal-backdrop {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.45);
-        z-index: 1000;
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.45); z-index: 1000;
       }
       #auth-modal-box {
-        display: none;
-        position: fixed;
-        top: 50%;
-        left: 50%;
+        display: none; position: fixed; top: 50%; left: 50%;
         transform: translate(-50%, -50%);
-        background: #ffffff;
-        border-radius: 10px;
-        padding: 28px 32px 24px;
-        width: 100%;
-        max-width: 400px;
-        z-index: 1001;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        background: #ffffff; border-radius: 10px;
+        padding: 28px 32px 24px; width: 100%; max-width: 400px;
+        z-index: 1001; box-shadow: 0 8px 32px rgba(0,0,0,0.18);
         font-family: Arial, sans-serif;
       }
       #auth-modal-root.open #auth-modal-backdrop,
@@ -163,43 +157,143 @@
       .auth-form-section        { display: none; }
       .auth-form-section.active { display: block; }
       .auth-field { margin-bottom: 14px; }
-      .auth-field label { display: block; font-size: 0.88rem; font-weight: bold; margin-bottom: 4px; color: #333; }
+      .auth-field label {
+        display: block; font-size: 0.88rem; font-weight: bold;
+        margin-bottom: 4px; color: #333;
+      }
       .auth-field input {
         width: 100%; padding: 8px 11px; font-size: 0.95rem;
-        border: 1px solid #bbb; border-radius: 6px; box-sizing: border-box; font-weight: normal;
+        border: 1px solid #bbb; border-radius: 6px;
+        box-sizing: border-box; font-weight: normal;
       }
       .auth-field input:focus { outline: none; border-color: #2563eb; }
       .auth-btn-primary {
         width: 100%; padding: 9px; font-size: 0.92rem; font-weight: bold;
-        background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; margin-top: 4px;
+        background: #2563eb; color: white; border: none;
+        border-radius: 6px; cursor: pointer; margin-top: 4px;
       }
       .auth-btn-primary:hover    { background: #1d4ed8; }
       .auth-btn-primary:disabled { background: #93c5fd; cursor: default; }
-      .auth-msg { margin-top: 12px; padding: 9px 13px; border-radius: 6px; font-size: 0.88rem; display: none; }
+      .auth-msg {
+        margin-top: 12px; padding: 9px 13px; border-radius: 6px;
+        font-size: 0.88rem; display: none;
+      }
       .auth-msg.error   { background: #fee2e2; color: #991b1b; display: block; }
       .auth-msg.success { background: #dcfce7; color: #166534; display: block; }
       .auth-forgot-link { margin-top: 10px; font-size: 0.85rem; text-align: right; }
-      .auth-forgot-link a { color: #2563eb; text-decoration: none; }
-      .auth-forgot-link a:hover { text-decoration: underline; }
+      .auth-forgot-link a, .auth-back-link a { color: #2563eb; text-decoration: none; }
+      .auth-forgot-link a:hover, .auth-back-link a:hover { text-decoration: underline; }
       .auth-back-link { font-size: 0.85rem; margin-bottom: 12px; }
-      .auth-back-link a { color: #2563eb; text-decoration: none; }
-      .auth-back-link a:hover { text-decoration: underline; }
       .auth-forgot-intro { font-size: 0.88rem; color: #555; margin-bottom: 14px; line-height: 1.5; }
-      #top-auth { display: flex; align-items: center; gap: 8px; }
-      .top-auth-username {
-        font-size: 0.88rem; color: #333; font-weight: bold;
-        max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      }
-      .top-auth-logout {
-        padding: 4px 12px; font-size: 0.82rem; font-weight: bold;
-        background: #e5e7eb; color: #374151; border: none; border-radius: 4px; cursor: pointer;
-      }
-      .top-auth-logout:hover { background: #d1d5db; }
+
+      /* ── TopBar slot ── */
+      #top-auth { display: flex; align-items: center; gap: 8px; position: relative; }
+
+      /* Login knop (niet ingelogd) */
       .top-auth-login {
-        color: #000000; text-decoration: none; font-size: 0.9rem; cursor: pointer;
-        background: none; border: none; padding: 0; font-family: Arial, sans-serif; font-weight: normal;
+        color: #000; text-decoration: none; font-size: 0.9rem; cursor: pointer;
+        background: none; border: none; padding: 0;
+        font-family: Arial, sans-serif; font-weight: normal;
       }
       .top-auth-login:hover { text-decoration: underline; }
+
+      /* ── Gebruikersmenu dropdown (v2.2.0) ── */
+      .top-user-wrapper {
+        position: relative;                /* ankerpunt voor dropdown */
+        display: inline-block;
+      }
+
+      /* Klikbare gebruikersnaamknop */
+      .top-user-btn {
+        display: flex; align-items: center; gap: 5px;
+        padding: 4px 10px; border-radius: 5px;
+        background: none; border: 1px solid transparent;
+        cursor: pointer; font-size: 0.88rem; font-weight: bold;
+        color: #333; font-family: Arial, sans-serif;
+        transition: background 0.15s, border-color 0.15s;
+        white-space: nowrap;
+      }
+      .top-user-btn:hover,
+      .top-user-btn.open {
+        background: #f3f4f6;
+        border-color: #d1d5db;
+      }
+
+      /* Chevron pijltje */
+      .top-user-chevron {
+        font-size: 0.65rem;
+        color: #888;
+        transition: transform 0.2s;
+        display: inline-block;
+      }
+      .top-user-btn.open .top-user-chevron {
+        transform: rotate(180deg);         /* pijl omhoog als menu open is */
+      }
+
+      /* Dropdown paneel */
+      .top-user-dropdown {
+        display: none;                     /* verborgen tot .open */
+        position: absolute;
+        top: calc(100% + 6px);            /* net onder de knop */
+        right: 0;                          /* rechts uitlijnen */
+        min-width: 190px;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        z-index: 2000;
+        overflow: hidden;
+        padding: 4px 0;
+      }
+      .top-user-wrapper.open .top-user-dropdown {
+        display: block;                    /* zichtbaar als wrapper .open heeft */
+      }
+
+      /* Label boven de items (gebruikersnaam herhalen) */
+      .top-user-dropdown-header {
+        padding: 8px 16px 6px;
+        font-size: 0.78rem;
+        color: #9ca3af;
+        font-weight: normal;
+        border-bottom: 1px solid #f3f4f6;
+        margin-bottom: 4px;
+      }
+
+      /* Elk menu-item */
+      .top-user-dropdown a,
+      .top-user-dropdown button {
+        display: flex; align-items: center; gap: 9px;
+        width: 100%; padding: 9px 16px;
+        text-decoration: none;
+        font-size: 0.88rem; font-weight: normal;
+        color: #374151;
+        background: none; border: none;
+        cursor: pointer; text-align: left;
+        font-family: Arial, sans-serif;
+        transition: background 0.1s;
+        box-sizing: border-box;
+      }
+      .top-user-dropdown a:hover,
+      .top-user-dropdown button:hover {
+        background: #f9fafb;
+        color: #111827;
+      }
+
+      /* Scheidingslijn vóór uitloggen */
+      .top-user-dropdown .dropdown-divider {
+        border: none;
+        border-top: 1px solid #f3f4f6;
+        margin: 4px 0;
+      }
+
+      /* Uitloggen krijgt rode tint */
+      .top-user-dropdown .btn-logout {
+        color: #dc2626;
+      }
+      .top-user-dropdown .btn-logout:hover {
+        background: #fef2f2;
+        color: #b91c1c;
+      }
     `;
 
     document.head.appendChild(style);
@@ -207,21 +301,67 @@
 
   // ---------------------------------------------------------------------------
   // _renderTopBar(username)
+  // Rendert de TopBar auth sectie.
+  // Ingelogd → klikbare gebruikersnaam met dropdown menu
+  // Uitgelogd → Login knop
   // ---------------------------------------------------------------------------
   function _renderTopBar(username) {
     const slot = document.getElementById("top-auth");
     if (!slot) return;
 
     if (username) {
+      // ── Ingelogd: gebruikersmenu dropdown ──────────────────────────────────
       slot.innerHTML = `
-        <span class="top-auth-username" title="${username}">👤 ${username}</span>
-        <button class="top-auth-logout" id="btn-topbar-logout">Uitloggen</button>
+        <div class="top-user-wrapper" id="top-user-wrapper">
+
+          <!-- Klikbare gebruikersnaamknop -->
+          <button class="top-user-btn" id="top-user-btn" aria-haspopup="true" aria-expanded="false">
+            👤 <span>${_escHtml(username)}</span>
+            <span class="top-user-chevron">▼</span>
+          </button>
+
+          <!-- Dropdown paneel -->
+          <div class="top-user-dropdown" role="menu" id="top-user-dropdown">
+
+            <div class="top-user-dropdown-header">${_escHtml(username)}</div>
+
+            <a href="/MyFamTreeCollab/account/account.html" role="menuitem">
+              ⚙️ Mijn Account
+            </a>
+
+            <a href="/MyFamTreeCollab/account/history.html" role="menuitem">
+              📜 Versiegeschiedenis
+            </a>
+
+            <hr class="dropdown-divider">
+
+            <button class="btn-logout" id="btn-dropdown-logout" role="menuitem">
+              🚪 Uitloggen
+            </button>
+
+          </div>
+        </div>
       `;
-      document.getElementById("btn-topbar-logout").addEventListener("click", async () => {
-        _clearLocalData();              // Wis lokale data VOOR uitloggen
-        await AuthModule.logout();      // Sluit Supabase sessie
+
+      // Toggle dropdown bij klik op de knop
+      const wrapper = document.getElementById("top-user-wrapper");
+      const btn     = document.getElementById("top-user-btn");
+
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();                                               // voorkom directe sluiting door document-listener
+        const isOpen = wrapper.classList.toggle("open");                   // toggle open/dicht
+        btn.classList.toggle("open", isOpen);                              // chevron animatie
+        btn.setAttribute("aria-expanded", isOpen);                        // accessibility
       });
+
+      // Uitloggen vanuit dropdown
+      document.getElementById("btn-dropdown-logout").addEventListener("click", async () => {
+        _clearLocalData();                                                 // wis localStorage vóór uitloggen
+        await AuthModule.logout();                                         // sluit Supabase sessie
+      });
+
     } else {
+      // ── Uitgelogd: simpele Login knop ──────────────────────────────────────
       slot.innerHTML = `
         <button class="top-auth-login" onclick="TopBarAuth.openModal()">Login</button>
       `;
@@ -229,24 +369,49 @@
   }
 
   // ---------------------------------------------------------------------------
+  // _escHtml(str)
+  // Escapet HTML-tekens in de gebruikersnaam ter bescherming tegen XSS.
+  // ---------------------------------------------------------------------------
+  function _escHtml(str) {
+    return String(str)
+      .replace(/&/g,  "&amp;")
+      .replace(/</g,  "&lt;")
+      .replace(/>/g,  "&gt;")
+      .replace(/"/g,  "&quot;")
+      .replace(/'/g,  "&#39;");
+  }
+
+  // ---------------------------------------------------------------------------
+  // _closeUserDropdown()
+  // Sluit het gebruikersmenu dropdown (klik buiten, Escape).
+  // ---------------------------------------------------------------------------
+  function _closeUserDropdown() {
+    const wrapper = document.getElementById("top-user-wrapper");
+    const btn     = document.getElementById("top-user-btn");
+    if (!wrapper) return;
+    wrapper.classList.remove("open");
+    if (btn) { btn.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); }
+  }
+
+  // ---------------------------------------------------------------------------
   // _showAdminDropdown(isAdmin)
   // ---------------------------------------------------------------------------
   function _showAdminDropdown(isAdmin) {
-    var attempts   = 0;
+    var attempts    = 0;
     var maxAttempts = 20;
 
-    var interval = setInterval(function() {
-      var dropdown = document.getElementById('adminDropdown');
+    var interval = setInterval(function () {
+      var dropdown = document.getElementById("adminDropdown");
 
       if (dropdown) {
         clearInterval(interval);
-        dropdown.style.display = isAdmin ? 'list-item' : 'none';
+        dropdown.style.display = isAdmin ? "list-item" : "none";
       }
 
       attempts++;
       if (attempts >= maxAttempts) {
         clearInterval(interval);
-        console.warn('[topbar] adminDropdown niet gevonden in Navbar');
+        console.warn("[topbar] adminDropdown niet gevonden in Navbar");
       }
     }, 100);
   }
@@ -284,21 +449,21 @@
   function closeModal() {
     const root = document.getElementById("auth-modal-root");
     if (root) root.classList.remove("open");
-    ["auth-msg-login", "auth-msg-register", "auth-msg-forgot"].forEach(id => {
+    ["auth-msg-login", "auth-msg-register", "auth-msg-forgot"].forEach((id) => {
       const el = document.getElementById(id);
       if (el) { el.textContent = ""; el.className = "auth-msg"; }
     });
   }
 
   function switchTab(tab) {
-    ["login", "register", "forgot"].forEach(function(name) {
+    ["login", "register", "forgot"].forEach(function (name) {
       const section = document.getElementById("auth-section-" + name);
       if (section) section.classList.remove("active");
     });
     const target = document.getElementById("auth-section-" + tab);
     if (target) target.classList.add("active");
     const tabs = document.getElementById("auth-tabs");
-    if (tabs) tabs.style.display = (tab === "forgot") ? "none" : "flex";
+    if (tabs) tabs.style.display = tab === "forgot" ? "none" : "flex";
     const loginBtn    = document.getElementById("tab-btn-login");
     const registerBtn = document.getElementById("tab-btn-register");
     if (loginBtn)    loginBtn.classList.toggle("active",    tab === "login");
@@ -408,12 +573,10 @@
       _showAdminDropdown(false);
     }
 
-    // Reageer op auth-wijzigingen (login / logout / token refresh)
+    // Reageer op auth-wijzigingen
     AuthModule.onAuthChange(async (event, session) => {
-
-      if (event === 'SIGNED_IN') {
-        // Nieuwe sessie — wis altijd eerst lokale data van vorige gebruiker
-        _clearLocalData();
+      if (event === "SIGNED_IN") {
+        _clearLocalData();                                                 // nieuwe sessie = schone lei
       }
 
       if (session) {
@@ -429,14 +592,20 @@
         }
 
       } else {
-        // Sessie beëindigd (uitgelogd of verlopen)
         _renderTopBar(null);
         _showAdminDropdown(false);
       }
     });
 
+    // Sluit dropdown bij klik buiten het menu
+    document.addEventListener("click", () => _closeUserDropdown());
+
+    // Sluit dropdown bij Escape — sluit ook de auth modal
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeModal();
+      if (e.key === "Escape") {
+        _closeUserDropdown();
+        closeModal();
+      }
     });
   }
 
