@@ -1,8 +1,14 @@
-// ========================= js/cloudSync.js v2.0.0 =========================
+// ========================= js/cloudSync.js v2.1.0 =========================
 // Cloud sync module for MyFamTreeCollab
 // Manages multiple family trees per user in Supabase (table: stambomen)
 // Requires: auth.js (window.AuthModule), storage.js (window.StamboomStorage)
+//           versionControl.js (window.VersionControl) — optional, non-fatal if absent
 // Exported as: window.CloudSync
+//
+// Nieuw in v2.1.0 (F5-06):
+// - saveToCloud() slaat na elke succesvolle opslag een versie-snapshot op
+// - enforceLimit() wordt aangeroepen na elke saveToCloud() (max 20 versies)
+// - Vereist: versionControl.js geladen vóór cloudSync.js in HTML
 //
 // Nieuw in v2.0.0 (F5-07):
 // - Meerdere stambomen per gebruiker (niet langer één rij per user_id)
@@ -111,7 +117,7 @@
             return { success: false, error: result.error.message };
         }
 
-        // Bouw een compacte lijst met tellling maar zonder de volledige data
+        // Bouw een compacte lijst met telling maar zonder de volledige data
         var stambomen = (result.data || []).map(function(rij) {
             return {
                 id:             rij.id,                                    // UUID van de rij
@@ -130,6 +136,8 @@
     // - naam:        naam voor de stamboom (verplicht bij nieuw aanmaken)
     // - stamboumId:  UUID van bestaande rij om te overschrijven (optioneel)
     //                Als leeg → nieuwe rij aanmaken
+    // Na elke succesvolle opslag wordt automatisch een versie-snapshot aangemaakt
+    // via window.VersionControl (F5-06). Versie-fouten zijn niet-fataal.
     // Returns: { success: true, id, naam, count }
     //       of { success: false, error: string }
     // -----------------------------------------------------------------------
@@ -151,15 +159,15 @@
             return { success: false, error: 'limit_exceeded', count: allPersons.length, max: MAX_PERSONS };
         }
 
-        var client  = _getClient();
+        var client   = _getClient();
         var stamNaam = (naam || '').trim() || 'Mijn stamboom';            // Fallback naam
-        var nu      = new Date().toISOString();                            // Huidige timestamp
+        var nu       = new Date().toISOString();                           // Huidige timestamp
 
         var result;
 
         if (stamboumId) {
             // ---- Bestaande stamboom overschrijven ----
-            // Controleer eerst of de rij van deze gebruiker is (veiligheidscheck naast RLS)
+            // Filter op id + user_id (extra veiligheid naast RLS)
             result = await client
                 .from(TABLE)
                 .update({
@@ -167,19 +175,8 @@
                     data:       allPersons,                                // Personen bijwerken
                     updated_at: nu                                         // Timestamp bijwerken
                 })
-                .eq('id', userId)                                          // Verplicht: alleen eigen rij
-                .eq('id', stamboumId);                                     // Specifieke stamboom
-
-            // Correctie: RLS doet de user_id check — filter op id + user_id
-            result = await client
-                .from(TABLE)
-                .update({
-                    naam:       stamNaam,
-                    data:       allPersons,
-                    updated_at: nu
-                })
                 .eq('id', stamboumId)
-                .eq('user_id', userId);                                    // Extra veiligheid naast RLS
+                .eq('user_id', userId);                                    // Eigen rij gegarandeerd
 
         } else {
             // ---- Nieuwe stamboom aanmaken ----
@@ -205,6 +202,29 @@
         if (nieuwId) {
             window.StamboomStorage.setActiveTreeId(nieuwId);              // Onthoud welke stamboom actief is
         }
+
+        // ── F5-06: versie-snapshot aanmaken na elke succesvolle cloud-opslag ──
+        // window.VersionControl is optioneel — fouten zijn niet-fataal zodat
+        // de gewone opslag nooit geblokkeerd wordt door een versie-fout.
+        if (window.VersionControl) {
+            try {
+                // Sla een snapshot op in stamboom_versies
+                await window.VersionControl.saveVersion(
+                    nieuwId,     // UUID van de zojuist opgeslagen stamboom
+                    allPersons,  // de data die naar de cloud is geschreven
+                    null         // label: null = auto-gegenereerd door saveVersion()
+                );
+
+                // Verwijder oudste versies als het maximum van 20 bereikt is
+                await window.VersionControl.enforceLimit(nieuwId);
+
+                console.log('[cloudSync] Versie-snapshot aangemaakt voor stamboom:', nieuwId);
+            } catch (versionErr) {
+                // Niet-fataal: log de fout maar geef de opslag als geslaagd terug
+                console.warn('[cloudSync] Versie-snapshot mislukt (niet-fataal):', versionErr.message);
+            }
+        }
+        // ── Einde F5-06 integratie ─────────────────────────────────────────────
 
         return { success: true, id: nieuwId, naam: stamNaam, count: allPersons.length };
     }
@@ -240,9 +260,9 @@
             return { success: false, error: result.error.message };
         }
 
-        var cloudData  = result.data.data;                                 // Array van persoon-objecten
-        var stamNaam   = result.data.naam;
-        var updatedAt  = result.data.updated_at;
+        var cloudData = result.data.data;                                  // Array van persoon-objecten
+        var stamNaam  = result.data.naam;
+        var updatedAt = result.data.updated_at;
 
         if (!Array.isArray(cloudData)) {
             return { success: false, error: 'invalid_data' };
@@ -329,12 +349,12 @@
     // Publieke API
     // -----------------------------------------------------------------------
     window.CloudSync = {
-        saveToCloud:    saveToCloud,    // (naam, id?) → { success, id, naam, count }
-        loadFromCloud:  loadFromCloud,  // (id)        → { success, naam, count, updatedAt }
-        deleteFromCloud: deleteFromCloud, // (id)       → { success }
-        listStambomen:  listStambomen,  // ()          → { success, stambomen }
-        getCloudMeta:   getCloudMeta,   // ()          → { hasAccess, tier, stambomen }
-        MAX_PERSONS:    MAX_PERSONS     // Persoonslimiet voor niet-admin gebruikers
+        saveToCloud:     saveToCloud,     // (naam, id?) → { success, id, naam, count }
+        loadFromCloud:   loadFromCloud,   // (id)        → { success, naam, count, updatedAt }
+        deleteFromCloud: deleteFromCloud, // (id)        → { success }
+        listStambomen:   listStambomen,   // ()          → { success, stambomen }
+        getCloudMeta:    getCloudMeta,    // ()          → { hasAccess, tier, stambomen }
+        MAX_PERSONS:     MAX_PERSONS      // Persoonslimiet voor niet-admin gebruikers
     };
 
 })();
