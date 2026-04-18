@@ -329,7 +329,7 @@
               ⚙️ Mijn Account
             </a>
 
-            <a href="/MyFamTreeCollab/account/history.html" role="menuitem">
+            <a href="/MyFamTreeCollab/account/History.html" role="menuitem">
               📜 Versiegeschiedenis
             </a>
 
