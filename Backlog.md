@@ -8,7 +8,7 @@
 ## Fase 0 — Audit & opschoning ✅ AFGEROND
 
 | ID | Taak | Status |
-|----|------|--------|
+| --- | --- | --- |
 | F0-01 | ZIP analyseren en alle bestanden inventariseren | ✅ Gedaan |
 | F0-02 | `js/DeleteRow.js` verwijderen (leeg bestand) | ✅ Gedaan |
 | F0-03 | `js/schemaGlobal.js` verwijderen (verouderd) | ✅ Gedaan |
@@ -20,7 +20,7 @@
 ## Fase 1 — Structuur & centrale modules ✅ AFGEROND
 
 | ID | Taak | Status |
-|----|------|--------|
+| --- | --- | --- |
 | F1-01 | `idGenerator.js` herbouwen als centrale module (v2.0.0) | ✅ Gedaan |
 | F1-02 | `utils.js` aanmaken met `safe()`, `formatDate()`, `parseBirthday()` | ✅ Gedaan |
 | F1-03 | Lokale `safe()` verwijderen uit alle bestanden | ✅ Gedaan |
@@ -34,7 +34,7 @@
 ## Fase 2 — Kapotte bestanden repareren ✅ AFGEROND
 
 | ID | Taak | Status |
-|----|------|--------|
+| --- | --- | --- |
 | F2-01 | `export.js` herschrijven als centrale module met CSV + JSON | ✅ Gedaan |
 | F2-02 | `export.html` repareren: `storage.js` + `schema.js` laden | ✅ Gedaan |
 | F2-03 | `export.html` uitbreiden met JSON-knop | ✅ Gedaan |
@@ -47,12 +47,12 @@
 
 ---
 
-## Fase 3 — Kernfeatures verbeteren 🔄 HUIDIG
+## Fase 3 — Kernfeatures verbeteren 🔄 LOPEND
 
 ### 3A — Facelift alle pagina's ✅ AFGEROND
 
 | ID | Prioriteit | Taak | Status |
-|----|-----------|------|--------|
+| --- | --- | --- | --- |
 | F3-29 | 🟡 Middel | `home/export.html` facelift (v2.1.0) | ✅ Gedaan |
 | F3-30 | 🟡 Middel | `home/create.html` facelift (v2.0.0) | ✅ Gedaan |
 | F3-31 | 🟡 Middel | `home/import.html` facelift (v2.0.0) | ✅ Gedaan |
@@ -71,9 +71,9 @@
 ### 3B — Zoekfunctie
 
 | ID | Prioriteit | Taak | Status |
-|----|-----------|------|--------|
-| F3-43 | 🔴 Hoog | Zoekresultaten highlighten (zoekterm vetgedrukt in resultaat) | ❌ Geannuleerd — geen noodzaak |
-| F3-44 | 🔴 Hoog | Zoeken op meerdere velden tegelijk (voornaam + achternaam) | ✅ Gedaan — al werkend |
+| --- | --- | --- | --- |
+| F3-43 | 🔴 Hoog | Zoekresultaten highlighten (zoekterm vetgedrukt in resultaat) | ❌ Geannuleerd |
+| F3-44 | 🔴 Hoog | Zoeken op meerdere velden tegelijk (voornaam + achternaam) | ✅ Gedaan |
 | F3-45 | 🟡 Middel | Popup-stijlen verplaatsen van inline JS naar `style.css` | 📋 Open |
 | F3-46 | 🟡 Middel | Keyboard navigatie in zoekpopup (pijltoetsen + Enter) | 📋 Open |
 | F3-47 | 🟢 Laag | Zoekgeschiedenis (recent gezochte personen) | 📋 Open |
@@ -81,9 +81,9 @@
 ### 3C — Relaties
 
 | ID | Prioriteit | Taak | Status |
-|----|-----------|------|--------|
-| F3-48 | 🔴 Hoog | Meerdere partners ondersteunen (PartnerID als pipe-gescheiden string) | ✅ Gedaan — v2.4.0 |
-| F3-49 | 🔴 Hoog | Relatie toevoegen vanuit `manage.html` (dropdown + zoekbalk) | ❌ Geannuleerd — textarea met pipe volstaat |
+| --- | --- | --- | --- |
+| F3-48 | 🔴 Hoog | Meerdere partners ondersteunen (PartnerID als pipe-gescheiden string) | ✅ Gedaan |
+| F3-49 | 🔴 Hoog | Relatie toevoegen vanuit `manage.html` (dropdown + zoekbalk) | ❌ Geannuleerd |
 | F3-50 | 🟡 Middel | Grootouders en kleinkinderen tonen in view.html | 📋 Open |
 | F3-51 | 🟡 Middel | Halfbroers/halfzussen correct onderscheiden | 📋 Open |
 | F3-52 | 🟢 Laag | Relatie-labels vertalen (VHoofdID → Vader, MHoofdID → Moeder) | 📋 Open |
@@ -91,26 +91,26 @@
 ### 3D — Stamboomvisualisatie (view.html)
 
 | ID | Prioriteit | Taak | Status |
-|----|-----------|------|--------|
-| F3-53 | 🔴 Hoog | Verbindingslijnen tekenen tussen nodes (SVG) | ⏸️ Uitgesteld — basisversie te complex, later fase |
-| F3-54 | 🔴 Hoog | Foto/avatar toevoegen aan persoon-node | ⏸️ Uitgesteld — later fase |
+| --- | --- | --- | --- |
+| F3-53 | 🔴 Hoog | Verbindingslijnen tekenen tussen nodes (SVG) | ⏸️ Uitgesteld |
+| F3-54 | 🔴 Hoog | Foto/avatar toevoegen aan persoon-node | ⏸️ Uitgesteld |
 | F3-55 | 🟡 Middel | Zoom en pan op de stamboomweergave | 📋 Open |
 | F3-56 | 🟢 Laag | Uitklappen/inklappen van takken | 📋 Open |
 
 ### 3E — Tijdlijn (timeline.html)
 
 | ID | Prioriteit | Taak | Status |
-|----|-----------|------|--------|
-| F3-57 | 🔴 Hoog | Overlijdensdatum tonen op tijdlijn | ✅ Gedaan — v2.3.x |
-| F3-57b | 🟡 Middel | Generatiekolom sticky bij horizontaal scrollen | ✅ Gedaan — v2.3.5 |
-| F3-58 | 🟡 Middel | Levensspanne als balk weergeven (geboorte → overlijden) | ✅ Gedaan — v2.3.x |
+| --- | --- | --- | --- |
+| F3-57 | 🔴 Hoog | Overlijdensdatum tonen op tijdlijn | ✅ Gedaan |
+| F3-57b | 🟡 Middel | Generatiekolom sticky bij horizontaal scrollen | ✅ Gedaan |
+| F3-58 | 🟡 Middel | Levensspanne als balk weergeven (geboorte → overlijden) | ✅ Gedaan |
 | F3-59 | 🟡 Middel | Schaalbare tijdas (zoom in op bepaalde periode) | 📋 Open |
 | F3-60 | 🟢 Laag | Historische gebeurtenissen toevoegen aan tijdlijn | 📋 Open |
 
 ### 3F — Import / export
 
 | ID | Prioriteit | Taak | Status |
-|----|-----------|------|--------|
+| --- | --- | --- | --- |
 | F3-61 | 🔴 Hoog | `import.js` herschrijven met inline commentaar (v2.0.0) | 📋 Open |
 | F3-62 | 🔴 Hoog | Import validatie: dubbele ID's detecteren en melden | 📋 Open |
 | F3-63 | 🟡 Middel | Import preview tonen vóór opslaan | 📋 Open |
@@ -119,15 +119,15 @@
 ### 3G — Engelse versies
 
 | ID | Prioriteit | Taak | Status |
-|----|-----------|------|--------|
-| F3-65 | 🔴 Hoog | `stamboom/manage-en.html` repareren en facelift | ⏸️ Uitgesteld — later fase |
-| F3-66 | 🔴 Hoog | `home/export-en.html` synchroniseren met `export.html` | ⏸️ Uitgesteld — later fase |
-| F3-67 | 🔴 Hoog | `home/import-en.html` repareren: mist schema.js + storage.js | ⏸️ Uitgesteld — later fase |
+| --- | --- | --- | --- |
+| F3-65 | 🔴 Hoog | `stamboom/manage-en.html` repareren en facelift | ⏸️ Uitgesteld |
+| F3-66 | 🔴 Hoog | `home/export-en.html` synchroniseren met `export.html` | ⏸️ Uitgesteld |
+| F3-67 | 🔴 Hoog | `home/import-en.html` repareren: mist schema.js + storage.js | ⏸️ Uitgesteld |
 
 ### 3H — Overige
 
 | ID | Prioriteit | Taak | Status |
-|----|-----------|------|--------|
+| --- | --- | --- | --- |
 | F3-68 | 🟡 Middel | `stamboom/stats.html` JS verplaatsen naar apart `stats.js` | 📋 Open |
 | F3-69 | 🟡 Middel | `home/print.html` implementeren (printweergave stamboom) | 📋 Open |
 | F3-70 | 🟢 Laag | `schema.js` herschrijven met inline commentaar (v2.0.0) | 📋 Open |
@@ -137,7 +137,7 @@
 ## Fase A — Account & donaties ✅ AFGEROND
 
 | ID | Prioriteit | Taak | Status |
-|----|-----------|------|--------|
+| --- | --- | --- | --- |
 | FA-01 | 🔴 Hoog | Supabase project aanmaken + API-key configureren | ✅ Gedaan |
 | FA-02 | 🔴 Hoog | `js/auth.js` aanmaken: registreren, inloggen, uitloggen (v2.3.0) | ✅ Gedaan |
 | FA-03 | 🔴 Hoog | Login modal via `js/topbar.js`: popup met tabs inloggen/registreren (v2.0.3) | ✅ Gedaan |
@@ -157,14 +157,14 @@
 ## Fase A+ — Cloud backup ✅ AFGEROND
 
 | ID | Prioriteit | Taak | Status |
-|----|-----------|------|--------|
+| --- | --- | --- | --- |
 | FA+-01 | 🔴 Hoog | Supabase tabel `stambomen` aanmaken (user_id, data JSON, updated_at) | ✅ Gedaan |
 | FA+-02 | 🔴 Hoog | `js/cloudSync.js` aanmaken: `saveToCloud()`, `loadFromCloud()`, `getCloudMeta()` | ✅ Gedaan |
 | FA+-03 | 🔴 Hoog | `stamboom/storage.html` tabbladen: Mijn data + Cloud backup | ✅ Gedaan |
 | FA+-04 | 🔴 Hoog | Gratis limiet bewaken: max 100 personen lokaal voor free tier | ✅ Gedaan |
 | FA+-05 | 🟡 Middel | "Laad vanuit cloud" knop op `storage.html` | ✅ Gedaan |
 | FA+-06 | 🟡 Middel | Conflictmelding tonen als cloud-versie nieuwer is dan lokale versie | ✅ Gedaan |
-| FA+-07 | 🟡 Middel | `home/account.html` aanmaken — uitgesteld naar meerdere stambomen fase | 🔮 Toekomst |
+| FA+-07 | 🟡 Middel | `home/account.html` aanmaken — uitgesteld naar meerdere stambomen fase | ✅ Gedaan — zie F5-08 |
 | FA+-08 | 🟢 Laag | Timestamp tonen van laatste cloud-backup op `storage.html` | ✅ Gedaan |
 | FA+-09 | 🔴 Hoog | Tier/rollen systeem: is_admin, is_premium, tier, tier_until in profiles | ✅ Gedaan |
 | FA+-10 | 🔴 Hoog | Cloud toegang alleen voor premium/admin — gratis gebruikers zien upgrade melding | ✅ Gedaan |
@@ -176,8 +176,8 @@
 ### 4A — Persoonsbeheer
 
 | ID | Prioriteit | Taak | Status |
-|----|-----------|------|--------|
-| F4-01 | 🔴 Hoog | Persoon verwijderen vanuit `manage.html` | ✅ Gedaan — v2.3.2 |
+| --- | --- | --- | --- |
+| F4-01 | 🔴 Hoog | Persoon verwijderen vanuit `manage.html` | ✅ Gedaan |
 | F4-02 | 🔴 Hoog | Persoon dupliceren als startpunt voor vergelijkbaar record | 📋 Open |
 | F4-03 | 🟡 Middel | Foto uploaden en koppelen aan persoon (base64 in localStorage) | 📋 Open |
 | F4-04 | 🟡 Middel | Notities/opmerkingen uitbreiden (rijke tekst) | 📋 Open |
@@ -185,7 +185,7 @@
 ### 4B — Zoeken & filteren
 
 | ID | Prioriteit | Taak | Status |
-|----|-----------|------|--------|
+| --- | --- | --- | --- |
 | F4-05 | 🟡 Middel | Geavanceerd zoeken: filteren op geboortejaar, geslacht, relatie | 📋 Open |
 | F4-06 | 🟡 Middel | Personen sorteren op achternaam, geboortedatum | 📋 Open |
 | F4-07 | 🟢 Laag | Zoeken over meerdere stambomen tegelijk | 📋 Open |
@@ -193,7 +193,7 @@
 ### 4C — Statistieken
 
 | ID | Prioriteit | Taak | Status |
-|----|-----------|------|--------|
+| --- | --- | --- | --- |
 | F4-08 | 🟡 Middel | Grafiek: verdeling geboortejaren per decennium | 📋 Open |
 | F4-09 | 🟡 Middel | Grafiek: verhouding M/V/X in de stamboom | 📋 Open |
 | F4-10 | 🟢 Laag | Oudste en jongste persoon highlighten | 📋 Open |
@@ -202,7 +202,7 @@
 ### 4D — UX verbeteringen
 
 | ID | Prioriteit | Taak | Status |
-|----|-----------|------|--------|
+| --- | --- | --- | --- |
 | F4-12 | 🟡 Middel | Donkere modus ondersteuning (CSS variabelen) | 📋 Open |
 | F4-13 | 🟡 Middel | Mobielvriendelijke weergave voor manage en view | 📋 Open |
 | F4-14 | 🟡 Middel | Ongedaan maken (undo) bij verwijderen of wijzigen | 📋 Open |
@@ -213,15 +213,15 @@
 ## Fase 5 — Cloud & accounts 🔄 HUIDIG
 
 | ID | Taak | Status |
-|----|------|--------|
-| F5-01 | Backend: Supabase ✅ gekozen en opgezet | ✅ Gedaan |
+| --- | --- | --- |
+| F5-01 | Backend: Supabase gekozen en opgezet | ✅ Gedaan |
 | F5-02 | Gebruikersaccounts: registreren, inloggen, uitloggen | ✅ Gedaan |
-| F5-03 | Data sync tussen apparaten | ✅ Gedaan (Fase A+) |
-| F5-04 | Stamboom delen met andere gebruikers (leesrechten / viewer tier) | 📋 Open |
-| F5-05 | Samenwerkingsmodus: meerdere gebruikers bewerken samen | 📋 Open |
-| F5-06 | Versiebeheer per persoon (wijzigingshistorie) | 📋 Open |
-| F5-07 | Meerdere stambomen per gebruiker in cloud | 📋 Open |
-| F5-08 | account.html — overzicht stambomen, backups, profiel | 📋 Open |
+| F5-03 | Data sync tussen apparaten | ✅ Gedaan |
+| F5-04 | Stamboom delen met andere gebruikers (leesrechten / viewer tier) | 🔮 Toekomst |
+| F5-05 | Samenwerkingsmodus: meerdere gebruikers bewerken samen | 🔮 Toekomst |
+| F5-06 | Versiebeheer per persoon (wijzigingshistorie) | 📋 Open — volgende sessie |
+| F5-07 | Meerdere stambomen per gebruiker in cloud | ✅ Gedaan |
+| F5-08 | account/ — overzicht stambomen, backups, profiel | ✅ Gedaan |
 | F5-09 | Promotiecodes voor cloud toegang | 📋 Open |
 | F5-10 | Abonnementen en betaaltiers verder uitwerken | 📋 Open |
 | F5-11 | Ko-fi webhook integratie voor donateur-badge | 📋 Open |
@@ -231,23 +231,25 @@
 ## Technische schuld
 
 | ID | Omschrijving | Ernst |
-|----|-------------|-------|
+| --- | --- | --- |
 | TD-01 | `js/Sandbox.js` — testbestand staat nog in de repo | 🟢 Laag |
 | TD-02 | `js/script.js` — doet alleen console.log, geladen op 9 pagina's | 🟡 Middel |
 | TD-03 | `js/LSD.js` — dubbele DOMContentLoaded event listener | 🟢 Laag |
 | TD-04 | `Layout/*.html` via fetch() — werkt niet op file:// protocol | 🟡 Middel |
 | TD-05 | Popup-stijlen in LiveSearch.js zijn hardcoded inline CSS | 🟢 Laag |
 | TD-06 | `home/import-en.html` laadt import.js zonder schema.js en storage.js | 🔴 Hoog |
-| TD-07 | SMTP via Gmail App Password — niet ideaal voor productie, eigen domein nodig | 🟡 Middel |
+| TD-07 | SMTP via Gmail App Password — niet ideaal voor productie | 🟡 Middel |
+| TD-08 | Cloud tabblad vereist handmatige refresh na inloggen | 🟡 Middel |
 
 ---
 
 ## Definition of Done
 
 Een taak is **klaar** als:
-- [ ] De code werkt zoals bedoeld
-- [ ] Inline commentaar aanwezig op elke coderegel
-- [ ] Bestandsheader bijgewerkt met versienummer (v2.0.0+)
-- [ ] `PROJECT_LOG.md` bijgewerkt
-- [ ] `BACKLOG.md` bijgewerkt: taak op ✅ Gedaan
-- [ ] Getest in de browser (geen console-errors)
+- [ ] Code werkt zoals bedoeld (getest in browser, geen console-errors)
+- [ ] Inline commentaar op elke coderegel
+- [ ] Bestandsheader bijgewerkt met versienummer
+- [ ] Project.md bijgewerkt
+- [ ] PROJECT_LOG.md bijgewerkt met sessie-entry
+- [ ] BACKLOG.md bijgewerkt: taak op ✅ Gedaan
+- [ ] Handleiding.html bijgewerkt
