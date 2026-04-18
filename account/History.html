@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <!-- ── Meta ─────────────────────────────────────────────────────────────── -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Versiegeschiedenis — MyFamTreeCollab</title>
+
+  <!-- ── Favicon ──────────────────────────────────────────────────────────── -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/MyFamTreeCollab/img/favicon/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32"  href="/MyFamTreeCollab/img/favicon/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16"  href="/MyFamTreeCollab/img/favicon/favicon-16x16.png" />
+  <link rel="manifest" href="/MyFamTreeCollab/img/favicon/site.webmanifest" />
+
+  <!-- ── Stylesheet ────────────────────────────────────────────────────────── -->
+  <link rel="stylesheet" href="/MyFamTreeCollab/css/style.css" />
+
+  <!-- ── Page-specific styles ─────────────────────────────────────────────── -->
+  <style>
+    /* ── Layout wrapper ─────────────────────────────────────────────── */
+    .history-container {
+      max-width: 960px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    /* ── Section title ──────────────────────────────────────────────── */
+    .history-container h1 {
+      font-size: 1.6rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── Stamboom selector row ──────────────────────────────────────── */
+    .selector-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .selector-row label {
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .selector-row select {
+      flex: 1;
+      min-width: 200px;
+      padding: 0.45rem 0.7rem;
+      border: 1px solid var(--border, #ccc);
+      border-radius: 6px;
+      background: var(--bg-card, #fff);
+      font-size: 0.95rem;
+    }
+
+    /* ── Versions list ──────────────────────────────────────────────── */
+    #versie-lijst {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Single version row card */
+    .versie-rij {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 1rem;
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--border, #e0e0e0);
+      border-radius: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Version badge (e.g. "v12") */
+    .versie-badge {
+      font-weight: 700;
+      color: var(--accent, #5b4fcf);
+      min-width: 2.5rem;
+      font-size: 0.95rem;
+    }
+
+    /* Date and label text */
+    .versie-info {
+      flex: 1;
+      font-size: 0.9rem;
+      color: var(--text-muted, #666);
+    }
+
+    /* Action buttons within a version row */
+    .versie-acties {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .versie-acties button {
+      padding: 0.3rem 0.75rem;
+      border: 1px solid var(--accent, #5b4fcf);
+      border-radius: 5px;
+      background: transparent;
+      color: var(--accent, #5b4fcf);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .versie-acties button:hover {
+      background: var(--accent, #5b4fcf);
+      color: #fff;
+    }
+
+    /* Restore button uses a warning colour */
+    .btn-terugzetten {
+      border-color: #d97706 !important;
+      color: #d97706 !important;
+    }
+
+    .btn-terugzetten:hover {
+      background: #d97706 !important;
+      color: #fff !important;
+    }
+
+    /* ── Preview panel ──────────────────────────────────────────────── */
+    #preview-panel {
+      display: none;            /* hidden until a preview is requested */
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--border, #ccc);
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    #preview-panel h2 {
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    /* Scrollable persons grid inside the preview */
+    #preview-inhoud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    /* Single person chip in preview */
+    .persoon-chip {
+      padding: 0.3rem 0.65rem;
+      background: var(--bg-alt, #f4f4f8);
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+
+    /* ── Diff panel ─────────────────────────────────────────────────── */
+    #diff-panel {
+      display: none;            /* hidden until a comparison is triggered */
+      margin-bottom: 2rem;
+    }
+
+    #diff-panel h2 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Three-column diff layout */
+    .diff-kolommen {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 640px) {
+      /* Stack columns on narrow screens */
+      .diff-kolommen { grid-template-columns: 1fr; }
+    }
+
+    /* Individual diff column */
+    .diff-kolom {
+      background: var(--bg-card, #fff);
+      border: 1px solid var(--border, #e0e0e0);
+      border-radius: 8px;
+      padding: 0.85rem;
+    }
+
+    .diff-kolom h3 {
+      font-size: 0.9rem;
+      margin-bottom: 0.6rem;
+    }
+
+    /* Colour coding per diff type */
+    .diff-toegevoegd h3 { color: #16a34a; }  /* green  = added   */
+    .diff-gewijzigd  h3 { color: #d97706; }  /* orange = changed */
+    .diff-verwijderd h3 { color: #dc2626; }  /* red    = removed */
+
+    /* Individual diff entry */
+    .diff-item {
+      font-size: 0.85rem;
+      padding: 0.3rem 0;
+      border-bottom: 1px solid var(--border, #eee);
+    }
+
+    .diff-item:last-child { border-bottom: none; }
+
+    /* Field-level change line */
+    .diff-veld {
+      font-size: 0.78rem;
+      color: var(--text-muted, #777);
+      padding-left: 0.8rem;
+    }
+
+    .diff-oud  { text-decoration: line-through; color: #dc2626; }
+    .diff-nieuw { color: #16a34a; }
+
+    /* ── Status / feedback messages ─────────────────────────────────── */
+    #status-msg {
+      padding: 0.65rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      display: none;            /* shown dynamically */
+      font-size: 0.9rem;
+    }
+
+    .status-ok    { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .status-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .status-info  { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+
+    /* ── Empty state ────────────────────────────────────────────────── */
+    .leeg-bericht {
+      text-align: center;
+      color: var(--text-muted, #888);
+      padding: 2rem 0;
+      font-size: 0.95rem;
+    }
+
+    /* ── Compare mode selector ──────────────────────────────────────── */
+    .compare-select {
+      display: none;            /* shown inline when compare button clicked */
+      gap: 0.4rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .compare-select select {
+      padding: 0.25rem 0.5rem;
+      border-radius: 5px;
+      border: 1px solid var(--border, #ccc);
+      font-size: 0.82rem;
+    }
+
+    .compare-select button {
+      padding: 0.25rem 0.6rem;
+      border-radius: 5px;
+      background: var(--accent, #5b4fcf);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 0.82rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── TopBar (injected via fetch) ────────────────────────────────────────── -->
+  <div id="topbar-placeholder"></div>
+
+  <!-- ── Navbar (injected via fetch) ───────────────────────────────────────── -->
+  <div id="navbar-placeholder"></div>
+
+  <!-- ── Main content ──────────────────────────────────────────────────────── -->
+  <main class="history-container">
+
+    <h1>📜 Versiegeschiedenis</h1>
+
+    <!-- Status feedback message (shown/hidden dynamically) -->
+    <div id="status-msg" role="alert"></div>
+
+    <!-- Stamboom selector row -->
+    <div class="selector-row">
+      <label for="stamboom-select">Stamboom:</label>
+      <select id="stamboom-select">
+        <option value="">— Kies een stamboom —</option>
+        <!-- Options populated by history.js -->
+      </select>
+    </div>
+
+    <!-- List of version rows (populated by history.js) -->
+    <div id="versie-lijst">
+      <p class="leeg-bericht">Kies een stamboom om de versiehistorie te laden.</p>
+    </div>
+
+    <!-- Preview panel (shown when "Preview" is clicked) -->
+    <section id="preview-panel" aria-live="polite">
+      <h2 id="preview-titel">Versie preview</h2>
+      <div id="preview-inhoud"></div>
+    </section>
+
+    <!-- Diff panel (shown when "Vergelijk" is clicked) -->
+    <section id="diff-panel" aria-live="polite">
+      <h2 id="diff-titel">Vergelijking</h2>
+      <div class="diff-kolommen">
+
+        <!-- Added column -->
+        <div class="diff-kolom diff-toegevoegd">
+          <h3>✅ Toegevoegd (<span id="diff-count-toegevoegd">0</span>)</h3>
+          <div id="diff-toegevoegd-inhoud"></div>
+        </div>
+
+        <!-- Changed column -->
+        <div class="diff-kolom diff-gewijzigd">
+          <h3>✏️ Gewijzigd (<span id="diff-count-gewijzigd">0</span>)</h3>
+          <div id="diff-gewijzigd-inhoud"></div>
+        </div>
+
+        <!-- Removed column -->
+        <div class="diff-kolom diff-verwijderd">
+          <h3>🗑️ Verwijderd (<span id="diff-count-verwijderd">0</span>)</h3>
+          <div id="diff-verwijderd-inhoud"></div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Footer (injected via fetch) ──────────────────────────────────────── -->
+  <div id="footer-placeholder"></div>
+
+  <!-- ── Eruda debug console (development) ─────────────────────────────────── -->
+  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+  <script>eruda.init();</script>
+
+  <!-- ── Script load order (mandatory per project spec) ───────────────────── -->
+  <script src="/MyFamTreeCollab/js/utils.js"></script>
+  <script src="/MyFamTreeCollab/js/schema.js"></script>
+  <script src="/MyFamTreeCollab/js/storage.js"></script>
+  <script src="/MyFamTreeCollab/js/auth.js"></script>
+  <script src="/MyFamTreeCollab/js/cloudSync.js"></script>
+  <script src="/MyFamTreeCollab/js/versionControl.js"></script>
+
+  <!-- TopBar injected AFTER its placeholder, guaranteeing #top-auth in DOM -->
+  <script>
+    // Inject TopBar HTML via fetch, then load topbar.js to initialise auth state
+    fetch("/MyFamTreeCollab/Layout/TopBar.html")
+      .then((r) => r.text())
+      .then((html) => {
+        document.getElementById("topbar-placeholder").innerHTML = html;
+        // Load topbar.js dynamically so it runs AFTER the TopBar DOM exists
+        const s = document.createElement("script");
+        s.src = "/MyFamTreeCollab/js/topbar.js";
+        document.body.appendChild(s);
+      })
+      .catch(() => console.warn("[history] TopBar fetch failed"));
+
+    // Inject Navbar
+    fetch("/MyFamTreeCollab/Layout/Navbar.html")
+      .then((r) => r.text())
+      .then((html) => { document.getElementById("navbar-placeholder").innerHTML = html; })
+      .catch(() => console.warn("[history] Navbar fetch failed"));
+
+    // Inject Footer
+    fetch("/MyFamTreeCollab/Layout/Footer.html")
+      .then((r) => r.text())
+      .then((html) => { document.getElementById("footer-placeholder").innerHTML = html; })
+      .catch(() => console.warn("[history] Footer fetch failed"));
+  </script>
+
+  <!-- Page logic — loaded LAST per project spec -->
+  <script src="/MyFamTreeCollab/account/history.js"></script>
+
+</body>
+</html>
