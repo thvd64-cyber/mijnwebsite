@@ -1,7 +1,12 @@
 // =============================================================================
 // topbar.js — TopBar Auth Modal & Status
-// MyFamTreeCollab v2.0.3
+// MyFamTreeCollab v2.1.0
 // -----------------------------------------------------------------------------
+// Nieuw in v2.1.0:
+// - Uitloggen wist localStorage (stamboomData + actieve stamboom keys)
+// - Inloggen wist localStorage zodat nieuwe sessie altijd schoon begint
+//   (privacy: voorkomt dat ingelogde gebruiker data van vorige sessie ziet)
+//
 // Nieuw in v2.0.3:
 // - Admin dropdown in Navbar zichtbaar gemaakt na is_admin check
 //
@@ -16,6 +21,19 @@
 
 (function () {
   "use strict";
+
+  // ---------------------------------------------------------------------------
+  // _clearLocalData()
+  // Wist alle stamboomdata uit localStorage.
+  // Aangeroepen bij uitloggen EN inloggen — elke sessie begint schoon.
+  // ---------------------------------------------------------------------------
+  function _clearLocalData() {
+    localStorage.removeItem('stamboomData');          // Persoondata van de stamboom
+    localStorage.removeItem('stamboomData_modified'); // Wijzigingstimestamp
+    localStorage.removeItem('stamboomActiefId');      // UUID actieve cloud stamboom
+    localStorage.removeItem('stamboomActiefNaam');    // Naam actieve cloud stamboom
+    console.log('[topbar] Lokale stamboomdata gewist.');
+  }
 
   // ---------------------------------------------------------------------------
   // _injectModal()
@@ -200,7 +218,8 @@
         <button class="top-auth-logout" id="btn-topbar-logout">Uitloggen</button>
       `;
       document.getElementById("btn-topbar-logout").addEventListener("click", async () => {
-        await AuthModule.logout();
+        _clearLocalData();              // Wis lokale data VOOR uitloggen
+        await AuthModule.logout();      // Sluit Supabase sessie
       });
     } else {
       slot.innerHTML = `
@@ -211,25 +230,22 @@
 
   // ---------------------------------------------------------------------------
   // _showAdminDropdown(isAdmin)
-  // Toont of verbergt de Administrator dropdown in de Navbar.
-  // Wacht maximaal 2 seconden op het element — Navbar laadt via fetch().
   // ---------------------------------------------------------------------------
   function _showAdminDropdown(isAdmin) {
-    var attempts = 0;                                                      // Teller voor pogingen
-    var maxAttempts = 20;                                                  // Max 20 pogingen = 2 seconden
+    var attempts   = 0;
+    var maxAttempts = 20;
 
-    // Controleer elke 100ms of het element al in de DOM zit
     var interval = setInterval(function() {
-      var dropdown = document.getElementById('adminDropdown');             // Zoek het element
+      var dropdown = document.getElementById('adminDropdown');
 
       if (dropdown) {
-        clearInterval(interval);                                           // Stop zodra element gevonden
-        dropdown.style.display = isAdmin ? 'list-item' : 'none';          // Toon of verberg
+        clearInterval(interval);
+        dropdown.style.display = isAdmin ? 'list-item' : 'none';
       }
 
       attempts++;
       if (attempts >= maxAttempts) {
-        clearInterval(interval);                                           // Stop na max pogingen
+        clearInterval(interval);
         console.warn('[topbar] adminDropdown niet gevonden in Navbar');
       }
     }, 100);
@@ -369,40 +385,41 @@
 
   // ---------------------------------------------------------------------------
   // init()
-  // Initialiseert TopBar auth status en admin dropdown zichtbaarheid.
   // ---------------------------------------------------------------------------
   async function init() {
     _injectModal();
 
-    // Render huidige auth status
     const session = await AuthModule.getSession();
 
     if (session) {
       const username = await _getUsernameFromSession(session);
       _renderTopBar(username);
 
-      // Controleer of gebruiker admin is via profiel
-      // getProfile() haalt nu ook is_admin op (auth.js v2.3.0)
       try {
         const { profile } = await AuthModule.getProfile();
-        const isAdmin = profile && profile.is_admin === true;             // Expliciet boolean check
-        _showAdminDropdown(isAdmin);                                       // Toon of verberg admin dropdown
+        const isAdmin = profile && profile.is_admin === true;
+        _showAdminDropdown(isAdmin);
       } catch (e) {
-        _showAdminDropdown(false);                                         // Bij fout: verberg dropdown
+        _showAdminDropdown(false);
       }
 
     } else {
       _renderTopBar(null);
-      _showAdminDropdown(false);                                           // Niet ingelogd = geen admin
+      _showAdminDropdown(false);
     }
 
-    // Reageer op toekomstige auth-wijzigingen
+    // Reageer op auth-wijzigingen (login / logout / token refresh)
     AuthModule.onAuthChange(async (event, session) => {
+
+      if (event === 'SIGNED_IN') {
+        // Nieuwe sessie — wis altijd eerst lokale data van vorige gebruiker
+        _clearLocalData();
+      }
+
       if (session) {
         const username = await _getUsernameFromSession(session);
         _renderTopBar(username);
 
-        // Admin check opnieuw uitvoeren bij elke auth-wijziging
         try {
           const { profile } = await AuthModule.getProfile();
           const isAdmin = profile && profile.is_admin === true;
@@ -412,12 +429,12 @@
         }
 
       } else {
+        // Sessie beëindigd (uitgelogd of verlopen)
         _renderTopBar(null);
-        _showAdminDropdown(false);                                         // Uitgelogd = verberg dropdown
+        _showAdminDropdown(false);
       }
     });
 
-    // Escape sluit de modal
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") closeModal();
     });
